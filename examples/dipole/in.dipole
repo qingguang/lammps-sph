@@ -1,7 +1,8 @@
 # Point dipoles in a 2d box
 
 units		lj
-atom_style	hybrid sphere dipole
+#atom_style	hybrid sphere dipole
+atom_style      meso
 dimension	2
 
 lattice		sq2 0.7
