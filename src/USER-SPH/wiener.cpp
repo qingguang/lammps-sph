@@ -11,11 +11,9 @@ using namespace std;
 //----------------------------------------------------------------------------------------
 //                                                      constructor
 //----------------------------------------------------------------------------------------
-Wiener::Wiener()
+Wiener::Wiener(const int dimension):
+  dimension(dimension)
 {
-
-    dimension = 2;
-
     //creat the Wiener matrix
     randoms = new double*[dimension];
     for(int k = 0; k < dimension; k++) randoms[k] = new double[dimension];
@@ -29,22 +27,7 @@ Wiener::Wiener()
     Ranils();
 
 }
-//----------------------------------------------------------------------------------------
-//                                                      constructor
-//----------------------------------------------------------------------------------------
-Wiener::Wiener(int dimension)
-{
-    int k;
 
-    this->dimension = dimension;
-
-    //creat the Wiener matrix
-    randoms = new double*[dimension];
-    for(k = 0; k < dimension; k++) randoms[k] = new double[dimension];
-
-    sym_trclss = new double*[dimension];
-    for(k = 0; k < dimension; k++) sym_trclss[k] = new double[dimension];
-}
 //----------------------------------------------------------------------------------------
 //                                              produce wiener process with Flekkoy's form
 //----------------------------------------------------------------------------------------
