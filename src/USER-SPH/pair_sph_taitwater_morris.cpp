@@ -75,7 +75,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-  Wiener wiener;
+  Wiener wiener(domain->dimension);
   const double sqrtdt = sqrt(update->dt);
   wiener.get_wiener(sqrtdt);
   std::cout << "wiener: " << wiener.Random_p << '\n';
