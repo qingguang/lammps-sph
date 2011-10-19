@@ -1,4 +1,4 @@
-nclude <iostream>
+#include <iostream>
 
 #include <cstdlib>
 #include <cmath>
@@ -163,7 +163,6 @@ void Wiener::Ranils()
         std::cout << __FILE__ << ':' << __LINE__ << std::endl;
         exit(1);
     }
-
 }
 //----------------------------------------------------------------------------------------
 //              get two random numbers y1, y2 with guassian distribution with zero mean and variance one
