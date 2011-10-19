@@ -10,7 +10,7 @@
 /// Wiener process
 class Wiener {
 
-    int dimension;
+    const int dimension;
     double **randoms;
 
     ///for random number generator
@@ -31,8 +31,7 @@ public:
     double Random_p, Random_v;
 
     ///costructure
-    Wiener();
-    Wiener(const int dimension);
+    explicit Wiener(const int dimension);
 
     ///destructor
     ~Wiener();
