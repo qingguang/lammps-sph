@@ -21,6 +21,9 @@
 #include "memory.h"
 #include "error.h"
 #include "domain.h"
+#include "update.h"
+#include "wiener.h"
+#include <iostream>
 
 using namespace LAMMPS_NS;
 
@@ -72,6 +75,10 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
+  Wiener wiener;
+  const double sqrtdt = sqrt(update->dt);
+  wiener.get_wiener(sqrtdt);
+  std::cout << "wiener: " << wiener.Random_p << '\n';
 
   // check consistency of pair coefficients
 
