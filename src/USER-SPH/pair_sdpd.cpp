@@ -13,7 +13,7 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "pair_sph_taitwater_morris.h"
+#include "pair_sdpd.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -29,7 +29,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHTaitwaterMorris::PairSPHTaitwaterMorris(LAMMPS *lmp) :
+PairSDPD::PairSDPD(LAMMPS *lmp) :
   Pair(lmp) {
 
   first = 1;
@@ -37,7 +37,7 @@ PairSPHTaitwaterMorris::PairSPHTaitwaterMorris(LAMMPS *lmp) :
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHTaitwaterMorris::~PairSPHTaitwaterMorris() {
+PairSDPD::~PairSDPD() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
@@ -52,7 +52,7 @@ PairSPHTaitwaterMorris::~PairSPHTaitwaterMorris() {
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
+void PairSDPD::compute(int eflag, int vflag) {
   int i, j, ii, jj, inum, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz, fpair;
 
@@ -210,7 +210,7 @@ void PairSPHTaitwaterMorris::compute(int eflag, int vflag) {
  allocate all arrays
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::allocate() {
+void PairSDPD::allocate() {
   allocated = 1;
   int n = atom->ntypes;
 
@@ -232,20 +232,20 @@ void PairSPHTaitwaterMorris::allocate() {
  global settings
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::settings(int narg, char **arg) {
+void PairSDPD::settings(int narg, char **arg) {
   if (narg != 0)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sph/taitwater/morris");
+        "Illegal number of setting arguments for pair_style sdpd");
 }
 
 /* ----------------------------------------------------------------------
  set coeffs for one or more type pairs
  ------------------------------------------------------------------------- */
 
-void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
+void PairSDPD::coeff(int narg, char **arg) {
   if (narg != 6)
     error->all(FLERR,
-        "Incorrect args for pair_style sph/taitwater/morris coefficients");
+        "Incorrect args for pair_style sdpd coefficients");
   if (!allocated)
     allocate();
 
@@ -282,10 +282,10 @@ void PairSPHTaitwaterMorris::coeff(int narg, char **arg) {
  init for one type pair i,j and corresponding j,i
  ------------------------------------------------------------------------- */
 
-double PairSPHTaitwaterMorris::init_one(int i, int j) {
+double PairSDPD::init_one(int i, int j) {
 
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"Not all pair sph/taitwater/morris coeffs are not set");
+    error->all(FLERR,"Not all pair sdpd coeffs are not set");
   }
 
   cut[j][i] = cut[i][j];
@@ -296,7 +296,7 @@ double PairSPHTaitwaterMorris::init_one(int i, int j) {
 
 /* ---------------------------------------------------------------------- */
 
-double PairSPHTaitwaterMorris::single(int i, int j, int itype, int jtype,
+double PairSDPD::single(int i, int j, int itype, int jtype,
     double rsq, double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
 
