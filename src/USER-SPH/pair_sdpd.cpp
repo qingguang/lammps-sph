@@ -78,7 +78,7 @@ void PairSDPD::compute(int eflag, int vflag) {
   Wiener wiener(domain->dimension);
   const double sqrtdt = sqrt(update->dt);
   wiener.get_wiener(sqrtdt);
-  std::cout << "wiener: " << wiener.Random_p << '\n';
+  //std::cout << "wiener: " << wiener.Random_p << '\n';
 
   // check consistency of pair coefficients
 
@@ -172,6 +172,68 @@ void PairSDPD::compute(int eflag, int vflag) {
         fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
 
         fvisc *= imass * jmass * wfd;
+//Update RandomForce
+/*------------------------------------
+Update Random force                   
+pair particle state values            
+    double Vi, Vj;                    
+    double Ti, Tj; //temperature      
+    Vec2d v_eij; //90 degree rotation of pair direction
+
+//    extern double k_bltz;
+
+    //define particle state values
+    Vi = imass/rho[i]; Vj = jmass/rho[j];
+    Ti =T[i]; Tj = T[j];           
+ 
+    wiener.get_wiener(sqrtdt);
+ 
+    //pair focres or change rate
+    Vec2d _dUi; //mometum change rate
+    double Vi2 = Vi*Vi, Vj2 = Vj*Vj; 
+
+    _dUi = v_eij*wiener.Random_p*sqrt(16.0*k_bltz*shear_rij*Ti*Tj/(Ti + Tj)*(Vi2 + Vj2)*Fij) +
+        eij*wiener.Random_v*sqrt(16.0*k_bltz*bulk_rij*Ti*Tj/(Ti + Tj)*(Vi2 + Vj2)*Fij);       
+*/                                                                                            
+/*----------------------------------------                                                    
+Update random force with Espanol method                                                       
+//pair particle state values                                                                  
+    double smimj, smjmi, rrhoi, rrhoj;
+    double Ti, Tj; //temperature      
+    Vec2d v_eij; //90 degree rotation of pair direction
+  
+    extern double k_bltz;
+  
+    //pair focres or change rate         
+    Vec2d _dUi, random_force; //mometum change rate
+
+    //define particle state values
+    smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
+    rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
+    Ti =T[i]; Tj = T[j];                   
+
+    wiener.get_wiener_Espanol(sqrtdt);
+
+    random_force[0] = wiener.sym_trclss[0][0]*eij[0] + wiener.sym_trclss[0][1]*eij[1]+wiener.sym_trclss[0][2]*eij[2];
+    random_force[1] = wiener.sym_trclss[1][0]*eij[0] + wiener.sym_trclss[1][1]*eij[1]+wiener.sym_trclss[1][2]*eij[2];
+     random_force[2] = wiener.sym_trclss[2][0]*eij[0] + wiener.sym_trclss[2][1]*eij[1]+wiener.sym_trclss[2][2]*eij[2];
+
+    _dUi = random_force*sqrt(16.0*k_bltz*etai*etaj/(etai + etaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij) +
+        eij*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetaj/(zetai + zetaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij);
+
+    //summation
+    //modify for perodic boundary condition
+    if(Dest->bd_type == 1) {               
+        Org->_dU        = Org->_dU + _dUi*smjmi*0.5;
+        Dest->rl_prtl->_dU      = Dest->rl_prtl->_dU - _dUi*smimj*0.5;
+    }                                                                 
+    else {                                                            
+        Org->_dU        = Org->_dU + _dUi*smjmi;                      
+        Dest->_dU       = Dest->_dU - _dUi*smimj;
+    }                                                                 
+
+
+*/
 
         // total pair force & thermal energy increment
         fpair = -imass * jmass * (fi + fj) * wfd;
