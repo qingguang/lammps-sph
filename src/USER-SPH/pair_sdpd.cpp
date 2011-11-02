@@ -85,7 +85,7 @@ Wiener wiener(domain->dimension);
     //double Ti, Tj; //temperature
     //Vec2d v_eij; //90 degree rotation of pair direction
 
-  double k_bltz=2.3e-23;
+  double k_bltz=2.3e-2;
     //add variables--------------
 /* Vec2d  eij;
   // eij= new double*[domain->dimension];
@@ -95,7 +95,7 @@ Wiener wiener(domain->dimension);
   //std::cout<<"eij "<< eij <<'\n';  
 */
   double Fij;
-  int Ti=1;
+  double Ti=1;
   int di;
   int dj;
 double eij[domain->dimension];
@@ -239,9 +239,11 @@ else
      eij[0]= delx;
      eij[1]= dely;
      eij[2]=delz; 
-  }
-   Fij=wfd;
-       
+  
+}
+ 
+  Fij=wfd;
+//std::cerr<<"eij"<<eij[0];       
   //pair focres or change rate       
     //define particle state values
     smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
@@ -249,17 +251,34 @@ else
   //  Ti =T[i]; Tj = T[j];                   
 
     wiener.get_wiener_Espanol(sqrtdt);
+//std::cerr"domain->dimension"<<domain->dimension<<'\n';
+//std::cerr<<"wiener.sym_trclss"<<wiener.sym_trclss[0][0]<<'\n';
+std::cerr<<""<<wiener.trace_d<<'\n';
+
 //define random force
-for (di=1;di<=domain->dimension;di++)
-{for (dj=1;dj<=domain->dimension;dj++)
+for (di=0;di<domain->dimension;di++)
+{for (dj=0;dj<domain->dimension;dj++)
 random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
 }
-
-    _dUi = random_force*sqrt(16.0*k_bltz*etai*etai/(etai + etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij) +
-        eij*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai + zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij);
-
-
-        // total pair force & thermal energy increment
+/*
+std::cerr<<" randomforce "<<random_force[0]<<" 2part "<<random_force[1]<<'\n';
+std::cerr<<" eij "<<eij[0]<<" 2part "<<eij[1]<<'\n';
+std::cerr<<" Fij "<<Fij<<'\n';
+std::cerr<<" etai "<<etai<<'\n';
+std::cerr<<" Ti "<<Ti<<'\n';
+std::cerr<<" zetai "<<zetai<<'\n';
+std::cerr<<" rrhoi "<<rrhoi<<'\n';
+std::cerr<<" rrhoj "<<rrhoj<<'\n';
+std::cerr<<" k_bltz "<<k_bltz<<'\n';
+std::cerr<<" Fij "<<Fij<<'\n';
+*/
+for (di=0;di<domain->dimension;di++)
+{
+    _dUi[di] = random_force[di]*sqrt(16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
+        eij[di]*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai+zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
+}
+//std::cerr<<" randomforce "<<_dUi[0]<<" 2part "<<_dUi[1]<<'\n';
+       // total pair force & thermal energy increment
         fpair = -imass * jmass * (fi + fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 
