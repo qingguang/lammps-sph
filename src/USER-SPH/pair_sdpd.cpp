@@ -79,7 +79,7 @@ void PairSDPD::compute(int eflag, int vflag) {
   const double sqrtdt = sqrt(update->dt);
   wiener.get_wiener(sqrtdt);
   //std::cout << "wiener: " << wiener.Random_p << '\n';
-  const double k_bltz=1.380662e-23//[J/K]
+ // const double k_bltz=1.380662e-23//[J/K]
   // check consistency of pair coefficients
 
   if (first) {
