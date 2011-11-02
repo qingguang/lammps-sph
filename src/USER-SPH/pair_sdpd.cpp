@@ -23,6 +23,7 @@
 #include "domain.h"
 #include "update.h"
 #include "wiener.h"
+#include "vec2d.h"
 #include <iostream>
 
 using namespace LAMMPS_NS;
@@ -75,13 +76,39 @@ void PairSDPD::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-  Wiener wiener(domain->dimension);
+  
+Wiener wiener(domain->dimension);
   const double sqrtdt = sqrt(update->dt);
   wiener.get_wiener(sqrtdt);
-  //std::cout << "wiener: " << wiener.Random_p << '\n';
-  const double k_bltz=1.380662e-23//[J/K]
-  // check consistency of pair coefficients
+  
+  double smimj, smjmi, rrhoi, rrhoj;
+    //double Ti, Tj; //temperature
+    //Vec2d v_eij; //90 degree rotation of pair direction
 
+  double k_bltz=2.3e-23;
+    //add variables--------------
+/* Vec2d  eij;
+  // eij= new double*[domain->dimension];
+    //for(int k = 0; k < dimension; k++) eij[k] = new double[dimension];
+ // Vec2d  _dUi;
+ // Vec2d random_force;
+  //std::cout<<"eij "<< eij <<'\n';  
+*/
+  double Fij;
+  int Ti=1;
+  int Tj=1;
+  int di;
+  int dj;
+double eij[domain->dimension];
+double _dUi[domain->dimension];
+double random_force[domain->dimension];
+
+
+ // std::cout << "wiener: " << wiener.Random_p << '\n';
+//std::cout << "wiener-sym: " << wiener.sym_trclss[2][1] << '\n';
+ 
+// const double k_bltz=1.380662e-23//[J/K]
+  // check consistency of pair coefficients
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -172,8 +199,10 @@ void PairSDPD::compute(int eflag, int vflag) {
         fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
 
         fvisc *= imass * jmass * wfd;
+//std:cerr<<"viscosity"<<fvisc<<'\n';
 //Update RandomForce
 /*------------------------------------
+
 Update Random force                   
 pair particle state values            
     double Vi, Vj;                    
@@ -196,43 +225,30 @@ pair particle state values
         eij*wiener.Random_v*sqrt(16.0*k_bltz*bulk_rij*Ti*Tj/(Ti + Tj)*(Vi2 + Vj2)*Fij);       
 */                                                                                            
 /*----------------------------------------                                                    
-Update random force with Espanol method                                                       
-//pair particle state values                                                                  
-    double smimj, smjmi, rrhoi, rrhoj;
-    double Ti, Tj; //temperature      
-    Vec2d v_eij; //90 degree rotation of pair direction
-  
-    extern double k_bltz;
-  
-    //pair focres or change rate         
-    Vec2d _dUi, random_force; //mometum change rate
-
+Update random force with Espanol method   */                                                    
+//pair particle state values                                                                    
+   // Vec2d v_eij; //90 degree rotatio
+    //add variables-------------
+     eij[0]= delx; 
+     eij[1]= dely;
+     eij[3]=delz; 
+     Fij=wfd;
+       
+  //pair focres or change rate       
     //define particle state values
     smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
     rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
-    Ti =T[i]; Tj = T[j];                   
+  //  Ti =T[i]; Tj = T[j];                   
 
     wiener.get_wiener_Espanol(sqrtdt);
-
-    random_force[0] = wiener.sym_trclss[0][0]*eij[0] + wiener.sym_trclss[0][1]*eij[1]+wiener.sym_trclss[0][2]*eij[2];
-    random_force[1] = wiener.sym_trclss[1][0]*eij[0] + wiener.sym_trclss[1][1]*eij[1]+wiener.sym_trclss[1][2]*eij[2];
-     random_force[2] = wiener.sym_trclss[2][0]*eij[0] + wiener.sym_trclss[2][1]*eij[1]+wiener.sym_trclss[2][2]*eij[2];
-
+//define random force
+for (di=1;di<=domain->dimension;di++)
+{for (dj=1;dj<=domain->dimension;dj++)
+random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
+}
+/*
     _dUi = random_force*sqrt(16.0*k_bltz*etai*etaj/(etai + etaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij) +
         eij*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetaj/(zetai + zetaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij);
-
-    //summation
-    //modify for perodic boundary condition
-    if(Dest->bd_type == 1) {               
-        Org->_dU        = Org->_dU + _dUi*smjmi*0.5;
-        Dest->rl_prtl->_dU      = Dest->rl_prtl->_dU - _dUi*smimj*0.5;
-    }                                                                 
-    else {                                                            
-        Org->_dU        = Org->_dU + _dUi*smjmi;                      
-        Dest->_dU       = Dest->_dU - _dUi*smimj;
-    }                                                                 
-
-
 */
 
         // total pair force & thermal energy increment
