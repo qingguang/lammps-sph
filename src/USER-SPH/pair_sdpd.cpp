@@ -96,14 +96,14 @@ Wiener wiener(domain->dimension);
 */
   double Fij;
   int Ti=1;
-  int Tj=1;
   int di;
   int dj;
 double eij[domain->dimension];
 double _dUi[domain->dimension];
 double random_force[domain->dimension];
-
-
+double etai=5e-2;
+double zetai=1e-2;
+//std::cerr<<eij<<'\n';
  // std::cout << "wiener: " << wiener.Random_p << '\n';
 //std::cout << "wiener-sym: " << wiener.sym_trclss[2][1] << '\n';
  
@@ -254,10 +254,10 @@ for (di=1;di<=domain->dimension;di++)
 {for (dj=1;dj<=domain->dimension;dj++)
 random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
 }
-/*
-    _dUi = random_force*sqrt(16.0*k_bltz*etai*etaj/(etai + etaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij) +
-        eij*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetaj/(zetai + zetaj)*Ti*Tj/(Ti + Tj)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij);
-*/
+
+    _dUi = random_force*sqrt(16.0*k_bltz*etai*etai/(etai + etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij) +
+        eij*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai + zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi + rrhoj*rrhoj)*Fij);
+
 
         // total pair force & thermal energy increment
         fpair = -imass * jmass * (fi + fj) * wfd;
