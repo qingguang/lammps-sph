@@ -229,10 +229,18 @@ Update random force with Espanol method   */
 //pair particle state values                                                                    
    // Vec2d v_eij; //90 degree rotatio
     //add variables-------------
+    if (domain->dimension==2)
+{
      eij[0]= delx; 
+     eij[1]= dely;    
+}
+else
+{
+     eij[0]= delx;
      eij[1]= dely;
-     eij[3]=delz; 
-     Fij=wfd;
+     eij[2]=delz; 
+  }
+   Fij=wfd;
        
   //pair focres or change rate       
     //define particle state values
