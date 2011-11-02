@@ -3,7 +3,7 @@
 if (test $1 = 1) then
 
   cp -p pair_sdpd.cpp ..
-  cp -p wiener.cpp ..
+  cp -p wiener.cpp .. 
   cp -p atom_vec_meso.cpp ..
   cp -p pair_sph_heatconduction.cpp ..
   cp -p pair_sph_idealgas.cpp ..
@@ -18,7 +18,7 @@ if (test $1 = 1) then
   cp -p fix_meso_stationary.cpp ..
 
   cp -p pair_sdpd.h ..
-  cp -p wiener.h ..
+  cp -p wiener.h .. 
   cp -p atom_vec_meso.h ..
   cp -p pair_sph_heatconduction.h ..
   cp -p pair_sph_idealgas.h ..
@@ -34,7 +34,7 @@ if (test $1 = 1) then
 
 elif (test $1 = 0) then
   rm -f ../pair_sdpd.cpp
-  rm -f ../wiener.cpp
+  rm -f ../wiener.cpp 
   rm -f ../atom_vec_meso.cpp
   rm -f ../pair_sph_heatconduction.cpp
   rm -f ../pair_sph_idealgas.cpp
