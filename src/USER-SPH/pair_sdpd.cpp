@@ -23,7 +23,6 @@
 #include "domain.h"
 #include "update.h"
 #include "wiener.h"
-#include "vec2d.h"
 #include <iostream>
 
 using namespace LAMMPS_NS;
