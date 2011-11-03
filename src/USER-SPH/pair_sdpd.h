@@ -37,6 +37,8 @@ class PairSDPD : public Pair {
  protected:
   double *rho0, *soundspeed, *B;
   double **cut,**viscosity;
+  // SDPD temperature
+  double **sdpd_temp;
   int first;
 
   void allocate();
