@@ -1,15 +1,15 @@
 /* ----------------------------------------------------------------------
- LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
- http://lammps.sandia.gov, Sandia National Laboratories
- Steve Plimpton, sjplimp@sandia.gov
+   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
+   http://lammps.sandia.gov, Sandia National Laboratories
+   Steve Plimpton, sjplimp@sandia.gov
 
- Copyright (2003) Sandia Corporation.  Under the terms of Contract
- DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
- certain rights in this software.  This software is distributed under
- the GNU General Public License.
+   Copyright (2003) Sandia Corporation.  Under the terms of Contract
+   DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
+   certain rights in this software.  This software is distributed under
+   the GNU General Public License.
 
- See the README file in the top-level LAMMPS directory.
- ------------------------------------------------------------------------- */
+   See the README file in the top-level LAMMPS directory.
+   ------------------------------------------------------------------------- */
 
 #include "math.h"
 #include "stdlib.h"
@@ -23,7 +23,6 @@
 #include "domain.h"
 #include "update.h"
 #include "wiener.h"
-#include "vec2d.h"
 #include <iostream>
 
 using namespace LAMMPS_NS;
@@ -31,8 +30,7 @@ using namespace LAMMPS_NS;
 /* ---------------------------------------------------------------------- */
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
-  Pair(lmp) {
-
+    Pair(lmp) {
   first = 1;
 }
 
@@ -42,7 +40,6 @@ PairSDPD::~PairSDPD() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
-
     memory->destroy(cut);
     memory->destroy(rho0);
     memory->destroy(soundspeed);
@@ -77,38 +74,20 @@ void PairSDPD::compute(int eflag, int vflag) {
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
   
-Wiener wiener(domain->dimension);
+  Wiener wiener(domain->dimension);
   const double sqrtdt = sqrt(update->dt);
   wiener.get_wiener(sqrtdt);
   
   double smimj, smjmi, rrhoi, rrhoj;
-    //double Ti, Tj; //temperature
-    //Vec2d v_eij; //90 degree rotation of pair direction
-
   double k_bltz=2.3e-23;
-    //add variables--------------
-/* Vec2d  eij;
-  // eij= new double*[domain->dimension];
-    //for(int k = 0; k < dimension; k++) eij[k] = new double[dimension];
- // Vec2d  _dUi;
- // Vec2d random_force;
-  //std::cout<<"eij "<< eij <<'\n';  
-*/
   double Fij;
-  double Ti=1e14;
   int di;
   int dj;
-double eij[domain->dimension];
-double _dUi[domain->dimension];
-double random_force[domain->dimension];
-double etai=5e-2;
-double zetai=1e-2;
-//std::cerr<<eij<<'\n';
- // std::cout << "wiener: " << wiener.Random_p << '\n';
-//std::cout << "wiener-sym: " << wiener.sym_trclss[2][1] << '\n';
- 
-// const double k_bltz=1.380662e-23//[J/K]
-  // check consistency of pair coefficients
+  double eij[domain->dimension];
+  double _dUi[domain->dimension];
+  double random_force[domain->dimension];
+  double etai=5e-2;
+  double zetai=1e-2;
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -132,7 +111,6 @@ double zetai=1e-2;
   firstneigh = list->firstneigh;
 
   // loop over neighbors of my atoms
-
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
     xtmp = x[i][0];
@@ -199,130 +177,39 @@ double zetai=1e-2;
         fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
 
         fvisc *= imass * jmass * wfd;
-//std:cerr<<"viscosity"<<fvisc<<'\n';
-//Update RandomForce
-/*------------------------------------
-
-Update Random force                   
-pair particle state values            
-    double Vi, Vj;                    
-    double Ti, Tj; //temperature      
-    Vec2d v_eij; //90 degree rotation of pair direction
-
-//    extern double k_bltz;
-
-    //define particle state values
-    Vi = imass/rho[i]; Vj = jmass/rho[j];
-    Ti =T[i]; Tj = T[j];           
+        if (domain->dimension==2)
+        {
+          eij[0]= delx; 
+          eij[1]= dely;    
+        }
+        else
+        {
+          eij[0]= delx;
+          eij[1]= dely;
+          eij[2]=delz; 
+          }
  
-    wiener.get_wiener(sqrtdt);
- 
-    //pair focres or change rate
-    Vec2d _dUi; //mometum change rate
-    double Vi2 = Vi*Vi, Vj2 = Vj*Vj; 
+        Fij=-wfd;
+        smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
+        rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
+        wiener.get_wiener_Espanol(sqrtdt);
 
-    _dUi = v_eij*wiener.Random_p*sqrt(16.0*k_bltz*shear_rij*Ti*Tj/(Ti + Tj)*(Vi2 + Vj2)*Fij) +
-        eij*wiener.Random_v*sqrt(16.0*k_bltz*bulk_rij*Ti*Tj/(Ti + Tj)*(Vi2 + Vj2)*Fij);       
-*/                                                                                            
-/*----------------------------------------                                                    
-Update random force with Espanol method   */                                                    
-//pair particle state values                                                                    
-   // Vec2d v_eij; //90 degree rotatio
-    //add variables-------------
-    if (domain->dimension==2)
-{
-     eij[0]= delx; 
-     eij[1]= dely;    
-}
-else
-{
-     eij[0]= delx;
-     eij[1]= dely;
-     eij[2]=delz; 
-  
-}
-/*
-if (domain->dimension==2)
-{
-     _dUi[0]= 0;
-     _dUi[1]= 0;
-}
-else
-{
-     _dUi[0]= 0;
-     _dUi[1]= 0;
-     _dUi[2]=0;
+        //define random force
+        for (di=0;di<domain->dimension;di++) {
+          for (dj=0;dj<domain->dimension;dj++)
+            random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
+        }
+        double Ti= sdpd_temp[itype][jtype];
 
-}
-*/
- 
-  Fij=-wfd;
-//std::cerr<<"eij"<<eij[0];       
-  //pair focres or change rate       
-    //define particle state values
-    smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
-    rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
-  //  Ti =T[i]; Tj = T[j];                   
-
-    wiener.get_wiener_Espanol(sqrtdt);
-//std::cerr"domain->dimension"<<domain->dimension<<'\n';
-//std::cerr<<"wiener.sym_trclss"<<wiener.sym_trclss[0][0]<<'\n';
-//std::cerr<<""<<wiener.trace_d<<'\n';
-
-//define random force
-for (di=0;di<domain->dimension;di++)
-{for (dj=0;dj<domain->dimension;dj++)
-random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
-}
-/*
-std::cerr<<" randomforce "<<random_force[0]<<" 2part "<<random_force[1]<<'\n';
-std::cerr<<" eij "<<eij[0]<<" 2part "<<eij[1]<<'\n';
-std::cerr<<" Fij "<<Fij<<'\n';
-std::cerr<<" etai "<<etai<<'\n';
-std::cerr<<" Ti "<<Ti<<'\n';
-std::cerr<<" zetai "<<zetai<<'\n';
-std::cerr<<" rrhoi "<<rrhoi<<'\n';
-std::cerr<<" rrhoj "<<rrhoj<<'\n';
-std::cerr<<" k_bltz "<<k_bltz<<'\n';
-std::cerr<<" Fij "<<Fij<<'\n';
-*/
-for (di=0;di<domain->dimension;di++)
-{
-//std::cerr<<" _dUi "<<_dUi[0]<<" 2part "<<_dUi[1]<<'\n';
-
-    _dUi[di] = random_force[di]*sqrt(16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
-        eij[di]*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai+zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
-//std::cerr<<" _dUipart "<<16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij<<'\n';
-//std::cerr<<" sqrt(4) "<<sqrt(4);
-}
-
-//std::cerr<<" _dUi "<<_dUi[0]<<" 2part "<<_dUi[2]<<'\n';
-       // total pair force & thermal energy increment
-        fpair = -imass * jmass * (fi + fj) * wfd;
-        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-
-       // printf("testvar= %f, %f \n", delx, dely);
-/*
-        f[i][0] += delx * fpair + velx * fvisc;
-        f[i][1] += dely * fpair + vely * fvisc;
-        f[i][2] += delz * fpair + velz * fvisc;
-
-        // and change in density
-        drho[i] += jmass * delVdotDelR * wfd;
-
-        // change in thermal energy
-        de[i] += deltaE;
-
-        if (newton_pair || j < nlocal) {
-          f[j][0] -= delx * fpair + velx * fvisc;
-          f[j][1] -= dely * fpair + vely * fvisc;
-          f[j][2] -= delz * fpair + velz * fvisc;
-          de[j] += deltaE;
-          drho[j] += imass * delVdotDelR * wfd;
+        for (di=0;di<domain->dimension;di++)
+        {
+          _dUi[di] = random_force[di]*sqrt(16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
+                     eij[di]*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai+zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
         }
 
-  */
-//modify force pair
+        fpair = -imass * jmass * (fi + fj) * wfd;
+        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
+        //modify force pair
         f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
         f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
         f[i][2] += delz * fpair + velz * fvisc;
@@ -340,20 +227,18 @@ for (di=0;di<domain->dimension;di++)
           de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
-//modify until this line
-      if (evflag)
+        //modify until this line
+        if (evflag)
           ev_tally(i, j, nlocal, newton_pair, 0.0, 0.0, fpair, delx, dely, delz);
       }
     }
   }
-
   if (vflag_fdotr) virial_fdotr_compute();
 }
 
 /* ----------------------------------------------------------------------
- allocate all arrays
- ------------------------------------------------------------------------- */
-
+   allocate all arrays
+   ------------------------------------------------------------------------- */
 void PairSDPD::allocate() {
   allocated = 1;
   int n = atom->ntypes;
@@ -364,45 +249,42 @@ void PairSDPD::allocate() {
       setflag[i][j] = 0;
 
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
-
   memory->create(rho0, n + 1, "pair:rho0");
   memory->create(soundspeed, n + 1, "pair:soundspeed");
   memory->create(B, n + 1, "pair:B");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
+  memory->create(sdpd_temp, n + 1, n + 1, "pair:sdpd_temp");
 }
 
 /* ----------------------------------------------------------------------
- global settings
- ------------------------------------------------------------------------- */
-
+   global settings
+   ------------------------------------------------------------------------- */
 void PairSDPD::settings(int narg, char **arg) {
   if (narg != 0)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sdpd");
+               "Illegal number of setting arguments for pair_style sdpd");
 }
 
 /* ----------------------------------------------------------------------
- set coeffs for one or more type pairs
- ------------------------------------------------------------------------- */
-
+   set coeffs for one or more type pairs
+   ------------------------------------------------------------------------- */
 void PairSDPD::coeff(int narg, char **arg) {
-  if (narg != 6)
+  if (narg != 7)
     error->all(FLERR,
-        "Incorrect args for pair_style sdpd coefficients");
+               "Incorrect args for pair_style sdpd coefficients: six parameters are required");
   if (!allocated)
     allocate();
 
   int ilo, ihi, jlo, jhi;
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
-
   double rho0_one = force->numeric(arg[2]);
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
+  double sdpd_temp_one = force->numeric(arg[6]);
   double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
-
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
@@ -410,39 +292,36 @@ void PairSDPD::coeff(int narg, char **arg) {
     B[i] = B_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
+      sdpd_temp[i][j] = sdpd_temp_one;
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
-
       setflag[i][j] = 1;
       count++;
     }
   }
-
   if (count == 0)
     error->all(FLERR,"Incorrect args for pair coefficients");
 }
 
 /* ----------------------------------------------------------------------
- init for one type pair i,j and corresponding j,i
- ------------------------------------------------------------------------- */
+   init for one type pair i,j and corresponding j,i
+   ------------------------------------------------------------------------- */
 
 double PairSDPD::init_one(int i, int j) {
 
   if (setflag[i][j] == 0) {
     error->all(FLERR,"Not all pair sdpd coeffs are not set");
   }
-
   cut[j][i] = cut[i][j];
   viscosity[j][i] = viscosity[i][j];
-
+  sdpd_temp[j][i] = sdpd_temp[i][j];
   return cut[i][j];
 }
 
 /* ---------------------------------------------------------------------- */
 
 double PairSDPD::single(int i, int j, int itype, int jtype,
-    double rsq, double factor_coul, double factor_lj, double &fforce) {
+                        double rsq, double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
-
   return 0.0;
 }
