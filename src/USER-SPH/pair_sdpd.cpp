@@ -85,7 +85,7 @@ Wiener wiener(domain->dimension);
     //double Ti, Tj; //temperature
     //Vec2d v_eij; //90 degree rotation of pair direction
 
-  double k_bltz=2.3e-2;
+  double k_bltz=2.3e-23;
     //add variables--------------
 /* Vec2d  eij;
   // eij= new double*[domain->dimension];
@@ -95,7 +95,7 @@ Wiener wiener(domain->dimension);
   //std::cout<<"eij "<< eij <<'\n';  
 */
   double Fij;
-  double Ti=1;
+  double Ti=1e14;
   int di;
   int dj;
 double eij[domain->dimension];
@@ -241,8 +241,22 @@ else
      eij[2]=delz; 
   
 }
+/*
+if (domain->dimension==2)
+{
+     _dUi[0]= 0;
+     _dUi[1]= 0;
+}
+else
+{
+     _dUi[0]= 0;
+     _dUi[1]= 0;
+     _dUi[2]=0;
+
+}
+*/
  
-  Fij=wfd;
+  Fij=-wfd;
 //std::cerr<<"eij"<<eij[0];       
   //pair focres or change rate       
     //define particle state values
@@ -253,7 +267,7 @@ else
     wiener.get_wiener_Espanol(sqrtdt);
 //std::cerr"domain->dimension"<<domain->dimension<<'\n';
 //std::cerr<<"wiener.sym_trclss"<<wiener.sym_trclss[0][0]<<'\n';
-std::cerr<<""<<wiener.trace_d<<'\n';
+//std::cerr<<""<<wiener.trace_d<<'\n';
 
 //define random force
 for (di=0;di<domain->dimension;di++)
@@ -274,16 +288,21 @@ std::cerr<<" Fij "<<Fij<<'\n';
 */
 for (di=0;di<domain->dimension;di++)
 {
+//std::cerr<<" _dUi "<<_dUi[0]<<" 2part "<<_dUi[1]<<'\n';
+
     _dUi[di] = random_force[di]*sqrt(16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
         eij[di]*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai+zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
+//std::cerr<<" _dUipart "<<16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij<<'\n';
+//std::cerr<<" sqrt(4) "<<sqrt(4);
 }
-//std::cerr<<" randomforce "<<_dUi[0]<<" 2part "<<_dUi[1]<<'\n';
+
+//std::cerr<<" _dUi "<<_dUi[0]<<" 2part "<<_dUi[2]<<'\n';
        // total pair force & thermal energy increment
         fpair = -imass * jmass * (fi + fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 
        // printf("testvar= %f, %f \n", delx, dely);
-
+/*
         f[i][0] += delx * fpair + velx * fvisc;
         f[i][1] += dely * fpair + vely * fvisc;
         f[i][2] += delz * fpair + velz * fvisc;
@@ -302,7 +321,27 @@ for (di=0;di<domain->dimension;di++)
           drho[j] += imass * delVdotDelR * wfd;
         }
 
-        if (evflag)
+  */
+//modify force pair
+        f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+        f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+        f[i][2] += delz * fpair + velz * fvisc;
+
+        // and change in density
+        drho[i] += jmass * delVdotDelR * wfd;
+
+        // change in thermal energy
+        de[i] += deltaE;
+
+        if (newton_pair || j < nlocal) {
+          f[j][0] -= delx * fpair + velx * fvisc+_dUi[0];
+          f[j][1] -= dely * fpair + vely * fvisc+_dUi[1];
+          f[j][2] -= delz * fpair + velz * fvisc;
+          de[j] += deltaE;
+          drho[j] += imass * delVdotDelR * wfd;
+        }
+//modify until this line
+      if (evflag)
           ev_tally(i, j, nlocal, newton_pair, 0.0, 0.0, fpair, delx, dely, delz);
       }
     }
