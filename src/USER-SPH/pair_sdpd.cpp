@@ -94,7 +94,6 @@ Wiener wiener(domain->dimension);
   //std::cout<<"eij "<< eij <<'\n';  
 */
   double Fij;
-  double Ti=1e14;
   int di;
   int dj;
 double eij[domain->dimension];
@@ -285,10 +284,12 @@ std::cerr<<" rrhoj "<<rrhoj<<'\n';
 std::cerr<<" k_bltz "<<k_bltz<<'\n';
 std::cerr<<" Fij "<<Fij<<'\n';
 */
+double Ti= sdpd_temp[itype][jtype];
+
 for (di=0;di<domain->dimension;di++)
 {
 //std::cerr<<" _dUi "<<_dUi[0]<<" 2part "<<_dUi[1]<<'\n';
-
+  
     _dUi[di] = random_force[di]*sqrt(16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
         eij[di]*wiener.trace_d*sqrt(16.0*k_bltz*zetai*zetai/(zetai+zetai)*Ti*Ti/(Ti + Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
 //std::cerr<<" _dUipart "<<16.0*k_bltz*etai*etai/(etai+etai)*Ti*Ti/(Ti+Ti)*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij<<'\n';
@@ -369,6 +370,7 @@ void PairSDPD::allocate() {
   memory->create(B, n + 1, "pair:B");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
+  memory->create(sdpd_temp, n + 1, n + 1, "pair:sdpd_temp");
 }
 
 /* ----------------------------------------------------------------------
@@ -386,9 +388,9 @@ void PairSDPD::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSDPD::coeff(int narg, char **arg) {
-  if (narg != 6)
+  if (narg != 7)
     error->all(FLERR,
-        "Incorrect args for pair_style sdpd coefficients");
+        "Incorrect args for pair_style sdpd coefficients: six parameters are required");
   if (!allocated)
     allocate();
 
@@ -400,6 +402,7 @@ void PairSDPD::coeff(int narg, char **arg) {
   double soundspeed_one = force->numeric(arg[3]);
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
+  double sdpd_temp_one = force->numeric(arg[6]);
   double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
 
   int count = 0;
@@ -409,6 +412,7 @@ void PairSDPD::coeff(int narg, char **arg) {
     B[i] = B_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
+      sdpd_temp[i][j] = sdpd_temp_one;
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
 
@@ -433,6 +437,7 @@ double PairSDPD::init_one(int i, int j) {
 
   cut[j][i] = cut[i][j];
   viscosity[j][i] = viscosity[i][j];
+  sdpd_temp[j][i] = sdpd_temp[i][j];
 
   return cut[i][j];
 }
