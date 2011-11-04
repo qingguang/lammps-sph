@@ -86,8 +86,7 @@ void PairSDPD::compute(int eflag, int vflag) {
   double eij[domain->dimension];
   double _dUi[domain->dimension];
   double random_force[domain->dimension];
-  double etai=5e-2;
-  double zetai=1e-2;
+
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -199,7 +198,9 @@ void PairSDPD::compute(int eflag, int vflag) {
           for (dj=0;dj<domain->dimension;dj++)
             random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
         }
-        double Ti= sdpd_temp[itype][jtype];
+        const double Ti= sdpd_temp[itype][jtype];
+        const double etai= viscosity[itype][jtype];
+        const double zetai= viscosity[itype][jtype];
 
         for (di=0;di<domain->dimension;di++)
         {
