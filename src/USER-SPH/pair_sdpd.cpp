@@ -79,7 +79,8 @@ void PairSDPD::compute(int eflag, int vflag) {
   wiener.get_wiener(sqrtdt);
   
   double smimj, smjmi, rrhoi, rrhoj;
-  double k_bltz=2.3e-23;
+  /// Boltzmann constant
+  const double k_bltz= 1.3806503e-23;
   double Fij;
   int di;
   int dj;
