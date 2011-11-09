@@ -79,10 +79,8 @@ void PairSDPD::compute(int eflag, int vflag) {
   wiener.get_wiener(sqrtdt);
   
   double smimj, smjmi, rrhoi, rrhoj;
-  double k_bltz=1.3806488e-023;
-  double Fij;
-  int di;
-  int dj;
+  /// Boltzmann constant
+  const double k_bltz= 1.3806503e-23;
   double eij[domain->dimension];
   double _dUi[domain->dimension];
   double random_force[domain->dimension];
@@ -188,21 +186,21 @@ void PairSDPD::compute(int eflag, int vflag) {
           eij[2]=delz/sqrt(rsq); 
           }
  
-        Fij=wfd;
+        const double Fij=wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
         wiener.get_wiener_Espanol(sqrtdt);
 
         //define random force
-        for (di=0;di<domain->dimension;di++) {
-          for (dj=0;dj<domain->dimension;dj++)
+        for (int di=0;di<domain->dimension;di++) {
+          for (int dj=0;dj<domain->dimension;dj++)
             random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
         }
         const double Ti= sdpd_temp[itype][jtype];
         const double etai= viscosity[itype][jtype];
         const double zetai= viscosity[itype][jtype];
 
-        for (di=0;di<domain->dimension;di++)
+        for (int di=0;di<domain->dimension;di++)
         {
           _dUi[di] = random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
                      eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
