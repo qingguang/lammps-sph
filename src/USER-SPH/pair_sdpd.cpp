@@ -138,7 +138,6 @@ void PairSDPD::compute(int eflag, int vflag) {
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
       jmass = mass[jtype];
-//std::cerr<<"delx"<<delx<<"rsq"<<sqrt(rsq)<<'\n';
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
@@ -204,12 +203,15 @@ void PairSDPD::compute(int eflag, int vflag) {
         const double Ti= sdpd_temp[itype][jtype];
         const double etai= viscosity[itype][jtype];
         const double zetai= viscosity[itype][jtype];
-//std::cerr<<"sqrt"
         for (int di=0;di<domain->dimension;di++)
         {
-          _dUi[di] = (random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
-                     eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij))/update->dt*imass;
-}
+          if (Ti>0) {
+            _dUi[di] = (random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
+                        eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij))/update->dt*imass;
+          } else {
+            _dUi[di] = 0.0;
+          }
+        }
 
         fpair = -imass * jmass * (fi + fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
