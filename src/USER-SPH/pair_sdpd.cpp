@@ -183,9 +183,9 @@ void PairSDPD::compute(int eflag, int vflag) {
         }
         else
         {
-          eij[0]= delx;
-          eij[1]= dely;
-          eij[2]=delz; 
+          eij[0]= delx/sqrt(rsq);
+          eij[1]= dely/sqrt(rsq);
+          eij[2]=delz/sqrt(rsq); 
           }
  
         Fij=wfd;
