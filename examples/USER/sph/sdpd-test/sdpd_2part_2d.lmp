@@ -14,11 +14,12 @@ variable          h equal 6.5e-5
 region             box block 0.0000e-3 ${Lx} 0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
 create_box         1 box
 
-# create fluid particles
-lattice            sq 0.025e-3
+# create atom with id=1
+create_atoms 1 single ${xcenter} ${xcenter} 0.0 units box
 
-# create particles
-create_atoms       1 region box
+# create atom with id=2
+variable          x2pos equal ${xcenter}+0.5*${h}
+create_atoms 1 single ${x2pos} ${xcenter} 0.0 units box
 
 mass               1 1.7e-7
 set                group all meso_rho 1000.0
@@ -51,4 +52,4 @@ thermo_modify      norm no
 neighbor           3.0e-6 bin
 timestep           5.0e-5
 
-run                40000
+run                1
