@@ -5,13 +5,20 @@ atom_style         meso
 boundary          p p p
 # create simulation box
 #2D box
-region             box block 0.0000e-3 1.000e-3  0.0000e-3 1.000e-3 -1.0e-6 1.0e-6 units box
+# domain size
+variable          Lx equal 1.000e-3
+# the center of the domain
+variable          xcenter equal 0.5*${Lx}
+# smothing length
+variable          h equal 6.5e-5
+region             box block 0.0000e-3 ${Lx} 0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
 create_box         1 box
 
 # create fluid particles
-region             fluid block 0.0000e-3 1.000e-3 0.0000e-3 1.000e-3 EDGE EDGE side in units box 
 lattice            sq 0.025e-3
-create_atoms       1 region fluid
+
+# create particles
+create_atoms       1 region box
 
 mass               1 1.7e-7
 set                group all meso_rho 1000.0
@@ -21,7 +28,7 @@ set                group all meso_rho 1000.0
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to 1e5C.
 pair_style         hybrid sdpd
-pair_coeff         * *    sdpd 1000 0.1 2.0e-3 6.5e-5 1
+pair_coeff         * *    sdpd 1000 0.1 2.0e-3 ${h} 1.0
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
