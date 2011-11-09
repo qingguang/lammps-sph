@@ -204,12 +204,12 @@ void PairSDPD::compute(int eflag, int vflag) {
         const double Ti= sdpd_temp[itype][jtype];
         const double etai= viscosity[itype][jtype];
         const double zetai= viscosity[itype][jtype];
-
+//std::cerr<<"sqrt"
         for (int di=0;di<domain->dimension;di++)
         {
-          _dUi[di] = random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
-                     eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij);
-        }
+          _dUi[di] = (random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
+                     eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij))/update->dt*imass;
+}
 
         fpair = -imass * jmass * (fi + fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
