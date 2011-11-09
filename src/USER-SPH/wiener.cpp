@@ -56,8 +56,10 @@ void Wiener::get_wiener_Espanol(const double sqrtdt)
 
     //Wiener processe matrix
     for (i = 0; i < dimension; i++) {
+	for (j=0;j<dimension;j++){
         Gaussian(rd1, rd2);
-        randoms[i][0] = sqrtdt * rd1; randoms[i][1] = sqrtdt * rd2;
+        randoms[i][j] = sqrtdt * rd1; 
+    	}
     }
 
     //trace/dimension
