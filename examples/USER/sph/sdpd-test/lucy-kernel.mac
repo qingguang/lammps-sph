@@ -15,4 +15,5 @@ dwdx(x):= norm[ndim]/h*dwall(vabs(x)/h)$
 infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x);
 infun_dw(x):= 2^(ndim-1)*%pi*x^(ndim-1)*dwdx(x);
 
+/* check normalization of the kernel*/
 quad_qags(infun(x), x, 0, cutoff);
