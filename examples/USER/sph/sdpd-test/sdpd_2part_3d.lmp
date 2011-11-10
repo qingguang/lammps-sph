@@ -33,7 +33,7 @@ velocity     scd set 1.0 0.0 0.0 units box
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to 1e5C.
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-pair_coeff         * * sdpd     50.0 0.1 0.0 ${h} 0.0
+pair_coeff         * * sdpd     50.0 0.0 1.0 ${h} 0.0
 pair_coeff         * * sph/rhosum   ${h}
 
 # do full time integration
