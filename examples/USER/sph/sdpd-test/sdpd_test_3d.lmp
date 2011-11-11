@@ -27,7 +27,7 @@ variable          h equal 6.5e-5
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
 variable           sdpd_temp index 1.0
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd 1000 1e-4 1e-8 ${h}  ${sdpd_temp}
+pair_coeff         * *    sdpd 1000 0.0 1e-4 ${h}  ${sdpd_temp}
 
 compute            sdpd_kin all temp
 compute            rho_peratom all meso_rho/atom
@@ -44,5 +44,5 @@ thermo             1
 
 
 neighbor           3.0e-6 bin
-timestep           0.1
+timestep           5e-4
 run                40000
