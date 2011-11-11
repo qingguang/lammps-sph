@@ -27,7 +27,7 @@ m: makelist(1.7e-7, i, 1, npart);
 nu: makelist(1.0, i, 1, npart);
 
 /* sound speed */
-c: 0.1$
+c: 0.0$
 
 r[1]: [Lx/2.0, Lx/2.0, Lx/2.0]$
 v[1]: [0.0, 0.0, 0.0]$
@@ -52,11 +52,13 @@ Fc(i, j):= block([pi, pj, rabs],
   - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdx(rabs)) * unitvector(r[i] - r[j])$
 
 /* dissipative force */
-Fd(i, j):= block([rabs, vij, eij],
+Fd(i, j):= block([rabs, vij, eij, a, b],
   rabs: vabs(r[i] - r[j]),
   vij: v[i] - v[j],
   eij: unitvector(r[i] - r[j]),
-  (m[j]*m[i] * (nu[i]+nu[j]) / (rho[i]*rho[j]) * dwdx(rabs)/rabs)  * ((eij.vij)*eij + vij))$
+  a: 2.0-1.0/ndim,
+  b: (ndim+2.0)/ndim,
+  (m[j]*m[i] * (nu[i]+nu[j]) / (2*rho[i]*rho[j]) * dwdx(rabs)/rabs)  * (a*vij + b*(eij.vij)*eij))$
 
 Fpair(i, j):= Fc(i, j) + Fd(i, j);
 
