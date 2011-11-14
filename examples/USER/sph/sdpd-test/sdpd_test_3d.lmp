@@ -5,25 +5,25 @@ atom_style         meso
 boundary          p p p
 # create simulation box
 #3D box
-variable           L  equal 2.0e-4
+variable           L  equal 1.0e-4
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
 # create fluid particles
-lattice            fcc 0.025e-3
-#lattice            sc 0.025e-3
+#lattice            fcc 0.025e-3
+lattice            sc 0.025e-3
 create_atoms       1 region box
 
 
 #mass               1 3.90625e-12
-mass               1 3.90625e-17
+mass               1 1e-15
 set                group all meso_rho 1000.0
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid sdpd
-variable           sdpd_temp index 1.0e1
+variable           sdpd_temp index 1e2
 pair_coeff         * *    sdpd 1000 1.0 1.0e-3 6.5e-5  ${sdpd_temp}
 
 compute            rho_peratom all meso_rho/atom
@@ -47,5 +47,5 @@ thermo_style       custom step c_esph v_etot c_sdpd_kin
 thermo_modify      norm no
 
 neighbor           3.0e-6 bin
-timestep           5.0e-5
+timestep           5.0e-6
 run                40000

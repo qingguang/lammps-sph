@@ -209,22 +209,32 @@ void PairSDPD::compute(int eflag, int vflag) {
         }
 //	std::cerr <<"dui "<<_dUi[0]<<' '<<_dUi[1]<<' '<<_dUi[2]<<'\n';
 
+      //  const double VdotE = eij[0]*velx + eij[1]*vely + eij[2]*velz;
         fpair = -imass * jmass * (fi + fj) * wfd;
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
  
        //modify force pair
-std::cerr <<"Fi0 "<<f[i][0]<<'\n';
-std::cerr <<"Fi1 "<<f[i][1]<<'\n';
+
+//std::cerr <<"Fi0 "<<f[i][0]<<'\n';
+//std::cerr <<"Fi1 "<<f[i][1]<<'\n';
         f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
         f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-std::cerr <<"Fi2 "<<f[i][2]<<'\n';
+//std::cerr <<"Fi2 "<<f[i][2]<<'\n';
 	if (domain->dimension ==3 ) {
 	f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-      //     f[i][2] += delz * fpair + velz * fvisc;	
+//           f[i][2] += delz * fpair + velz * fvisc;	
 }
-std::cerr <<"Fi0new "<<f[i][0]<<'\n';
-std::cerr <<"Fi1new "<<f[i][1]<<'\n';
-std::cerr <<"Fi2new "<<f[i][2]<<'\n';
+//std::cerr <<"Fi0new "<<f[i][0]<<'\n';
+//std::cerr <<"Fi1new "<<f[i][1]<<'\n';
+//std::cerr <<"Fi2new "<<f[i][2]<<'\n';
+
+      /*  //modify force pair
+        f[i][0] += delx*fpair + velx*fvisc + eij[0]*VdotE*fvisc + _dUi[0];
+        f[i][1] += dely*fpair + vely*fvisc + eij[1]*VdotE*fvisc + _dUi[1];
+	if (domain->dimension ==3 ) {
+	  f[i][2] += delz*fpair + velz*fvisc + eij[2]*VdotE*fvisc + _dUi[2];
+	}
+*/
         // and change in density
         drho[i] += jmass * delVdotDelR * wfd;
 
@@ -232,11 +242,13 @@ std::cerr <<"Fi2new "<<f[i][2]<<'\n';
         de[i] += deltaE;
 
         if (newton_pair || j < nlocal) {
-          f[j][0] -= delx * fpair + velx * fvisc+_dUi[0];
-          f[j][1] -= dely * fpair + vely * fvisc+_dUi[1];
+          f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
+          f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (domain->dimension ==3 ) {
-	    f[j][2] -= delz * fpair + velz * fvisc+_dUi[2];
-	  }
+	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+         // f[j][2] -= delz*fpair + velz*fvisc;
+	
+  }
           de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
