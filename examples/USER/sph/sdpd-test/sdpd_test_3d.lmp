@@ -3,46 +3,59 @@ dimension          3
 units              si
 atom_style         meso
 boundary          p p p
+
 # create simulation box
 #3D box
-variable           L  equal 2.0e-4
-region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
+variable           L  equal 1.0e-3
+variable           L2 equal 2.0*${L}
+# smothing length
+variable          h equal 6.5e-4
+variable          Ly equal ${L}
+variable          Lz equal ${L}
+
+region             box block 0.0 ${L2}  0.0 ${Ly} 0.0 ${Lz} units box
 create_box         1 box
 
 # create fluid particles
-lattice            fcc 0.025e-3
+lattice            fcc 0.025e-4
 create_atoms       1 region box
-
 
 mass               1 3.90625e-12
 set                group all meso_rho 1000.0
-
-# smothing length
-variable          h equal 6.5e-5
 
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1.0
+variable           sdpd_temp index 0.0
+variable           sdpd_eta index 1e-3
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd 1000 1e-4 1e-4 ${h}  ${sdpd_temp}
+pair_coeff         * *    sdpd 1000 2e-4 ${sdpd_eta} ${h}  ${sdpd_temp}
 
 compute            sdpd_kin all temp
 compute            rho_peratom all meso_rho/atom
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
-dump               dump_id all custom 10 dump*.dat id type x y z vx vy vy c_rho_peratom
-dump_modify        dump_id first yes
+dump               dump_id all custom 100 dump*.dat id type x y z vx vy vy c_rho_peratom
 dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
-thermo_modify      norm no
-thermo             1
+thermo             10
 
+variable           ntime equal 100
+variable           gy equal 1e-4
+variable fy atom mass*${gy}*((x>${L})-(x<${L}))
+fix reverce_periodic all addforce 0.0 v_fy 0.0 
+variable        Nfreq   equal  ${ntime}
+variable        Nrepeat equal  round(0.9*${ntime})
+fix av_vy all ave/spatial 1 ${Nrepeat} ${Nfreq} x center 1.0 vy file "vy.av"
 
 neighbor           3.0e-6 bin
-timestep           5e-4
-run                40000
+
+variable           dt equal 0.125*${h}^2/${sdpd_eta}
+timestep           ${dt}
+
+run		${ntime} every 10 "velocity all zero linear " &
+"velocity all zero angular"
+
