@@ -180,11 +180,7 @@ void PairSDPD::compute(int eflag, int vflag) {
           eij[2]= delz/sqrt(rsq);
         }
  
-<<<<<<< HEAD
         const double Fij=-wfd;
-=======
-        Fij=wfd;
->>>>>>> set Boltzman constant to 1.3806448e-23
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         wiener.get_wiener_Espanol(sqrtdt);
         const double fvisc = viscosity[itype][jtype] / (rho[i] * rho[j]) * imass * jmass * wfd;
@@ -208,6 +204,7 @@ void PairSDPD::compute(int eflag, int vflag) {
             _dUi[di] = 0.0;
           }
         }
+//	std::cerr <<"dui "<<_dUi[0]<<' '<<_dUi[1]<<' '<<_dUi[2]<<'\n';
 
         const double a = 2.0 - 1.0/ndim;
         const double b = (ndim+2.0)/ndim;
@@ -216,13 +213,19 @@ void PairSDPD::compute(int eflag, int vflag) {
         fpair = -imass * jmass * (fi + fj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-        //modify force pair
-        f[i][0] += delx*fpair + fvisc*a*velx + fvisc*b*EijDotVij*eij[0] + _dUi[0];
-        f[i][1] += dely*fpair + fvisc*a*vely + fvisc*b*EijDotVij*eij[1] + _dUi[1];
-	if (ndim ==3 ) {
-	  f[i][2] += delz*fpair + fvisc*a*velz + fvisc*b*EijDotVij*eij[2] + _dUi[2];
-	}
-
+       //modify force pair
+std::cerr <<"Fi0 "<<f[i][0]<<'\n';
+std::cerr <<"Fi1 "<<f[i][1]<<'\n';
+        f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+        f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+std::cerr <<"Fi2 "<<f[i][2]<<'\n';
+	if (domain->dimension ==3 ) {
+	f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+      //     f[i][2] += delz * fpair + velz * fvisc;	
+}
+std::cerr <<"Fi0new "<<f[i][0]<<'\n';
+std::cerr <<"Fi1new "<<f[i][1]<<'\n';
+std::cerr <<"Fi2new "<<f[i][2]<<'\n';
         // and change in density
         drho[i] += jmass * delVdotDelR * wfd;
 
