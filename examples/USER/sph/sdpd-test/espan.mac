@@ -1,0 +1,5 @@
+xi: 2/d*eta;
+
+
+A1: 5*eta/3 - xi;
+A2: 5*(xi+eta/3);
