@@ -194,11 +194,13 @@ void PairSDPD::compute(int eflag, int vflag) {
         const double Ti= sdpd_temp[itype][jtype];
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
-            const double Zij = -4.0*k_bltz*Ti*fvisc*2.0;
-            const double a  = 5.0/3.0;
-            const double b  = (ndim+2.0)/3.0;
-            const double Aij = sqrt(Zij * a);
-            const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
+            const double Zij = -4.0*k_bltz*Ti*fvisc;
+            const double b  = ndim;
+            //const double b  = (ndim+2.0)/3.0;
+            //const double Aij = sqrt(Zij * a);
+            // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
+            const  double Aij = sqrt(b*Zij);
+            const double Bij = 0.0;
 
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
@@ -206,9 +208,9 @@ void PairSDPD::compute(int eflag, int vflag) {
           }
         }
 
-        const double a = 2.0 - 1.0/ndim;
-        const double b = (ndim+2.0)/ndim;
-        const double EijDotVij = velx*eij[0] + vely*eij[1] + velz*eij[2];
+        const double a = 1.0; //2.0 - 1.0/ndim;
+        const double b = 0.0; //(ndim+2.0)/ndim;
+        const double EijDotVij = 0.0; //velx*eij[0] + vely*eij[1] + velz*eij[2];
 
         fpair = -imass * jmass * (fi + fj) * wfd;
         /// TODO: energy is wrong
