@@ -55,7 +55,7 @@ void PairSDPD::compute(int eflag, int vflag) {
   double xtmp, ytmp, ztmp, delx, dely, delz, fpair;
 
   int *ilist, *jlist, *numneigh, **firstneigh;
-  double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, fvisc, h, ih, ihsq, velx, vely, velz;
+  double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, ihsq, velx, vely, velz;
   double rsq, tmp, wfd, delVdotDelR, deltaE;
 
   if (eflag || vflag)
@@ -73,17 +73,16 @@ void PairSDPD::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-  
-  Wiener wiener(domain->dimension);
+  const int ndim = domain->dimension;
+  Wiener wiener(ndim);
   const double sqrtdt = sqrt(update->dt);
-  wiener.get_wiener(sqrtdt);
   
-  double smimj, smjmi, rrhoi, rrhoj;
+  double smimj, smjmi;
   /// Boltzmann constant
   const double k_bltz= 1.3806503e-23;
-  double eij[domain->dimension];
-  double _dUi[domain->dimension];
-  double random_force[domain->dimension];
+  double eij[ndim];
+  double _dUi[ndim];
+  double random_force[ndim];
 
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
@@ -143,7 +142,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         ihsq = ih * ih;
 
         wfd = h - sqrt(rsq);
-        if (domain->dimension == 3) {
+        if (ndim == 3) {
           // Lucy Kernel, 3d
           // Note that wfd, the derivative of the weight function with respect to r,
           // is lacking a factor of r.
@@ -170,10 +169,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
         // Morris Viscosity (Morris, 1996)
 
-        fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
-
-        fvisc *= imass * jmass * wfd;
-        if (domain->dimension==2)
+        if (ndim==2)
         {
           eij[0]= delx/sqrt(rsq); 
           eij[1]= dely/sqrt(rsq);    
@@ -182,35 +178,39 @@ void PairSDPD::compute(int eflag, int vflag) {
         {
           eij[0]= delx/sqrt(rsq);
           eij[1]= dely/sqrt(rsq);
-          eij[2]=delz/sqrt(rsq); 
-          }
+          eij[2]= delz/sqrt(rsq);
+        }
  
         const double Fij=wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
-        rrhoi = 1.0/rho[i]; rrhoj = 1.0/rho[j];
         wiener.get_wiener_Espanol(sqrtdt);
+        const double fvisc = viscosity[itype][jtype] / (rho[i] * rho[j]) * imass * jmass * wfd;
 
         //define random force
-        for (int di=0;di<domain->dimension;di++) {
-          for (int dj=0;dj<domain->dimension;dj++)
+        for (int di=0;di<ndim;di++) {
+          for (int dj=0;dj<ndim;dj++)
             random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
         }
         const double Ti= sdpd_temp[itype][jtype];
-        const double etai= viscosity[itype][jtype];
-        const double zetai= viscosity[itype][jtype];
-        for (int di=0;di<domain->dimension;di++)
-        {
+        for (int di=0;di<ndim;di++) {
           if (Ti>0) {
-            _dUi[di] = (random_force[di]*sqrt(-4.0*k_bltz*etai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij) +
-                        eij[di]*wiener.trace_d*sqrt(-4.0*k_bltz*zetai*Ti*(rrhoi*rrhoi+rrhoj*rrhoj)*Fij))/update->dt*imass;
+            const double Zij = -4.0*k_bltz*Ti*fvisc;
+            const double b  = ndim;
+            //const double b  = (ndim+2.0)/3.0;
+            //const double Aij = sqrt(Zij * a);
+            // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
+            const  double Aij = sqrt(b*Zij);
+            const double Bij = 0.0;
+
+            _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
             _dUi[di] = 0.0;
           }
         }
 //	std::cerr <<"dui "<<_dUi[0]<<' '<<_dUi[1]<<' '<<_dUi[2]<<'\n';
 
-      //  const double VdotE = eij[0]*velx + eij[1]*vely + eij[2]*velz;
         fpair = -imass * jmass * (fi + fj) * wfd;
+        /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
  
        //modify force pair
@@ -228,13 +228,6 @@ void PairSDPD::compute(int eflag, int vflag) {
 //std::cerr <<"Fi1new "<<f[i][1]<<'\n';
 //std::cerr <<"Fi2new "<<f[i][2]<<'\n';
 
-      /*  //modify force pair
-        f[i][0] += delx*fpair + velx*fvisc + eij[0]*VdotE*fvisc + _dUi[0];
-        f[i][1] += dely*fpair + vely*fvisc + eij[1]*VdotE*fvisc + _dUi[1];
-	if (domain->dimension ==3 ) {
-	  f[i][2] += delz*fpair + velz*fvisc + eij[2]*VdotE*fvisc + _dUi[2];
-	}
-*/
         // and change in density
         drho[i] += jmass * delVdotDelR * wfd;
 
@@ -242,6 +235,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         de[i] += deltaE;
 
         if (newton_pair || j < nlocal) {
+
           f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
           f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (domain->dimension ==3 ) {
