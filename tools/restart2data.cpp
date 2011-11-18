@@ -3565,8 +3565,8 @@ void Data::write_atom_charge(FILE *fp, int i, int ix, int iy, int iz)
 
 void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
 {
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],q[i],x[i],y[i],z[i],ix,iy,iz);
+  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
+	  tag[i],type[i],rho[i],e[i],cv[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
 
