@@ -425,6 +425,7 @@ int main (int narg, char **arg)
       }
     }
     n = read_int(fp);
+    printf("DEBUG :n: %d\n", n);
 
     if (n > maxbuf) {
       maxbuf = n;
@@ -1270,7 +1271,12 @@ void allocate_charge(Data &data)
 
 void allocate_meso(Data &data)
 {
-  data.q = new double[data.natoms];
+  data.rho = new double[data.natoms];
+  data.e = new double[data.natoms];
+  data.cv = new double[data.natoms];
+  data.vestx = new double[data.natoms];
+  data.vesty = new double[data.natoms];
+  data.vestz = new double[data.natoms];
 }
 
 

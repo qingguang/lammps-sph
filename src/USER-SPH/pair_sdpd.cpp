@@ -76,7 +76,8 @@ void PairSDPD::compute(int eflag, int vflag) {
   const int ndim = domain->dimension;
   Wiener wiener(ndim);
   const double sqrtdt = sqrt(update->dt);
-  double smimj, smjmi, rrhoi, rrhoj;
+  
+  double smimj, smjmi;
   /// Boltzmann constant
   const double k_bltz= 1.3806503e-23;
   double eij[ndim];
@@ -170,12 +171,10 @@ if (first) {
 constant int beadnum=sdpd_bead[itype][jtype];
 constant int freenum=sdpd_free[itype][jtype];
 
-int N=Lx/Latticelength;
-double fene[ndim];
-if(list->inum%N<(beadnum+freenum))
-polyID=((list->inum)/N)*(N%(beadnum+freenum));
+if(list->inum%(beadnum+freenum)<(beadnum+1)&&list->inum%(beadnum+freenum)>0)
+polyID->i=atom->ID;
 else
-{polyID=0;}
+{polyID->i=0;}
 
 //FENE force between polymer beads
 double fene[ndim];
@@ -190,9 +189,9 @@ fene[1]=polymet_H/(1-rsq)*(dely);
 }
 else
 {
-fene[0]=polymet_H/(1-rsq)*(delx);
-fene[1]=polymet_H/(1-rsq)*(dely);
-fene[2]=polymet_H/(1-rsq)*(delz);
+fene[0]=polymet_H/(1-(rsq/R)*(rsq/R))*delx;
+fene[1]=polymet_H/(1-(rsq/R)*(rsq/R))*dely;
+fene[2]=polymet_H/(1-(rsq/R)*(rsq/R))*delz;
 }
 }
 }
@@ -240,13 +239,10 @@ fene[2]=polymet_H/(1-rsq)*(delz);
           }
         }
 
-        const double a = 1.0; //2.0 - 1.0/ndim;
-        const double b = 0.0; //(ndim+2.0)/ndim;
-        const double EijDotVij = 0.0; //velx*eij[0] + vely*eij[1] + velz*eij[2];
-
         fpair = -imass * jmass * (fi + fj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
+ 
        //modify force pair
 
         f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
