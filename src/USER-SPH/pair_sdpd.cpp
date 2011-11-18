@@ -82,8 +82,8 @@ void PairSDPD::compute(int eflag, int vflag) {
   double eij[ndim];
   double _dUi[ndim];
   double random_force[ndim];
-
-  if (first) {
+  
+if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
         if (cutsq[i][j] > 1.e-32) {
@@ -165,6 +165,39 @@ void PairSDPD::compute(int eflag, int vflag) {
 
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
+/*---------------
+//create polymer ID in Lammps
+constant int beadnum=sdpd_bead[itype][jtype];
+constant int freenum=sdpd_free[itype][jtype];
+
+int N=Lx/Latticelength;
+double fene[ndim];
+if(list->inum%N<(beadnum+freenum))
+polyID=((list->inum)/N)*(N%(beadnum+freenum));
+else
+{polyID=0;}
+
+//FENE force between polymer beads
+double fene[ndim];
+if (PolyID->i>0&& PolyID->j>0)
+{
+if (PolyID->i-polyID->j==1)
+{
+if (ndim==2)
+{
+fene[0]=polymet_H/(1-rsq)*(delx);
+fene[1]=polymet_H/(1-rsq)*(dely);
+}
+else
+{
+fene[0]=polymet_H/(1-rsq)*(delx);
+fene[1]=polymet_H/(1-rsq)*(dely);
+fene[2]=polymet_H/(1-rsq)*(delz);
+}
+}
+}
+*/
+
 
         // Morris Viscosity (Morris, 1996)
 
@@ -206,7 +239,6 @@ void PairSDPD::compute(int eflag, int vflag) {
             _dUi[di] = 0.0;
           }
         }
-//	std::cerr <<"dui "<<_dUi[0]<<' '<<_dUi[1]<<' '<<_dUi[2]<<'\n';
 
         const double a = 1.0; //2.0 - 1.0/ndim;
         const double b = 0.0; //(ndim+2.0)/ndim;
@@ -216,18 +248,13 @@ void PairSDPD::compute(int eflag, int vflag) {
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
        //modify force pair
-std::cerr <<"Fi0 "<<f[i][0]<<'\n';
-std::cerr <<"Fi1 "<<f[i][1]<<'\n';
+
         f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
         f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-std::cerr <<"Fi2 "<<f[i][2]<<'\n';
 	if (domain->dimension ==3 ) {
 	f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-      //     f[i][2] += delz * fpair + velz * fvisc;	
 }
-std::cerr <<"Fi0new "<<f[i][0]<<'\n';
-std::cerr <<"Fi1new "<<f[i][1]<<'\n';
-std::cerr <<"Fi2new "<<f[i][2]<<'\n';
+
         // and change in density
         drho[i] += jmass * delVdotDelR * wfd;
 
@@ -235,11 +262,13 @@ std::cerr <<"Fi2new "<<f[i][2]<<'\n';
         de[i] += deltaE;
 
         if (newton_pair || j < nlocal) {
-          f[j][0] -= delx*fpair + fvisc*a*velx + fvisc*b*EijDotVij*eij[0] + _dUi[0];
-          f[j][1] -= dely*fpair + fvisc*a*vely + fvisc*b*EijDotVij*eij[1] + _dUi[1];
-	  if (ndim ==3 ) {
-	    f[j][2] -= delz*fpair + fvisc*a*velz + fvisc*b*EijDotVij*eij[2] + _dUi[2];
-	  }
+
+          f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
+          f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+	  if (domain->dimension ==3 ) {
+	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+	
+  }
           de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
