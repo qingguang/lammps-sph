@@ -2,7 +2,7 @@ echo               both
 #atom_modify	sort 3.0e-6 3.0e-6
 dimension          2
 units              si
-atom_style hybrid  bond meso 
+atom_style        hybrid meso bond
 boundary          p p p
 
 # create simulation box
@@ -41,7 +41,7 @@ variable           sdpd_temp index 0.0
 # compute            ke all ke
 # compute            sdpd_kin all temp
 # variable           etot equal c_ke+c_esph
-
+#compute              1  all property/molecule mol
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 #fix                integrate_fix_full all meso

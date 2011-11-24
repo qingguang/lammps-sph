@@ -70,7 +70,7 @@ inatoms && (NF==0) {
 inatoms{
  # here I get one atom
   iatom++
-  R[x]=$4; R[y]=$5; R[z]=$6
+  R[x]=$3; R[y]=$4; R[z]=$5
   if (iatom>1) {
     for (idim=1; idim<=3; idim++) {
       if (fabs(R[idim]- prevR[idim])>cutoff) {
@@ -82,7 +82,9 @@ inatoms{
   }
   prevR[x]=R[x]; prevR[y]=R[y]; prevR[z]=R[z]
   # change image field
-  $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
+  $(NF-2)=image[x]; $(NF-1)=image[y]; $(NF)=image[z];
+  # Add a moleculaur ID = 0
+  $1=$1 " 0"
   print $0
   next
 }
