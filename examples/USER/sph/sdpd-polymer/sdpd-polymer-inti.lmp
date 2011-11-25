@@ -2,7 +2,7 @@ echo               both
 #atom_modify	sort 3.0e-6 3.0e-6
 dimension          2
 units              si
-atom_style hybrid  bond meso 
+atom_style   hybrid  bond meso
 boundary          p p p
 
 # create simulation box
