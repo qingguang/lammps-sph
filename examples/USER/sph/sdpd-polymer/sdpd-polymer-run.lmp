@@ -2,7 +2,7 @@ echo               both
 #atom_modify	sort 3.0e-6 3.0e-6
 dimension          2
 units              si
-atom_style hybrid  bond meso 
+atom_style       hybrid bond meso
 boundary          p p p
 
 # create simulation box
@@ -15,7 +15,8 @@ read_data           poly.txt
 
 # create fluid particles
 lattice            sq 0.025e-3
-
+bond_style fene
+bond_coeff * 3 1e-2 0 0 
 
 #set bead number of polymers and free particles
 #attention the relation between sum(Sum) of beadnum with free and Lx/latticelength(N) satisfy N%Sum=0
@@ -32,7 +33,7 @@ set                group all meso_rho 1000.0
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to 1e5C.
-variable           sdpd_temp index 0.0
+variable           sdpd_temp index 1e12
 pair_style         hybrid sdpd
 pair_coeff         * *    sdpd 1000 0.1 5.0e-3 6.5e-5 ${sdpd_temp}
 
@@ -63,4 +64,4 @@ thermo_modify      norm no
 neighbor           1.0e-6 bin
 timestep            1.0e-5
 
-run                1000
+run                10000

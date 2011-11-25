@@ -3787,7 +3787,8 @@ void Data::write_atom_charge_extra(FILE *fp, int i)
 
 void Data::write_atom_meso_extra(FILE *fp, int i)
 {
-  fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",rho[i],e[i],vestx[i],vesty[i],vestz[i]);
+  //fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",rho[i],e[i],vestx[i],vesty[i],vestz[i]);
+  fprintf(fp," %-1.16e %-1.16e",rho[i],e[i]);
 }
 
 

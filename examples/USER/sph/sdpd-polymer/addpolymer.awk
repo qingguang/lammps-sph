@@ -83,6 +83,8 @@ inatoms{
   prevR[x]=R[x]; prevR[y]=R[y]; prevR[z]=R[z]
   # change image field
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
+  # add molecule ID
+  $6=$6 " 0"
   print $0
   next
 }
