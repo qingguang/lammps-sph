@@ -15,21 +15,22 @@ lattice            fcc 0.025e-3
 create_atoms       1 region box
 
 
-#mass               1 3.90625e-12
 mass               1 3.90625e-17
 set                group all meso_rho 1000.0
 
 # smothing length
 variable          h equal 6.5e-5
 
-
-# use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
-# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+# use Tait's EOS in combination with Morris' laminar viscosity.  We
+# set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.  The dynamic
+# viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic
+# viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
 variable           sdpd_temp index 1.0
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd 1000 1e-4 1e-4 ${h}  ${sdpd_temp}
+variable          soundspead equal 1e-2
+variable           eta equal 1e-4
+pair_coeff         * *    sdpd 1000 ${soundspead} ${eta} ${h} ${sdpd_temp}
 
 compute            sdpd_kin all temp
 compute            rho_peratom all meso_rho/atom
