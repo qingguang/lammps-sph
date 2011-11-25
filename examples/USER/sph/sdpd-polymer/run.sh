@@ -12,5 +12,5 @@
  nbound=$(tail -n 1 poly2.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly2.txt > poly.txt
 
-
-../../../../src/lmp_linux -in sdpd-polymer-run.lmp
+mpirun  -np 2 ../../../../src/lmp_linux -in sdpd-polymer-run.lmp
+#../../../../src/lmp_linux -in sdpd-polymer-run.lmp
