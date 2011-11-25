@@ -16,7 +16,7 @@ read_data           poly.txt
 # create fluid particles
 lattice            sq 0.025e-3
 bond_style fene
-bond_coeff * 3 1e-2 0 0 
+bond_coeff * 3e-2 1e-1 0 0
 
 #set bead number of polymers and free particles
 #attention the relation between sum(Sum) of beadnum with free and Lx/latticelength(N) satisfy N%Sum=0
