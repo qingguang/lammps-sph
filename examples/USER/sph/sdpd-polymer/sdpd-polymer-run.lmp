@@ -53,7 +53,7 @@ fix                integrate_fix_full all meso
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 
-dump               dump_id all custom 100 dump*.dat id type x y vx vy c_rho_peratom c_e_peratom
+dump               dump_id all custom 100 dump*.dat id type xu yu vx vy c_rho_peratom c_e_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
