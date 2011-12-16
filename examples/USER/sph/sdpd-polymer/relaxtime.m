@@ -16,6 +16,8 @@ function relaxtime()
   dtime = 0:size(cr, 1)-1;
   plot (dtime, cr/nfile);
 
+  dlmwrite( "corr.dat", [dtime', cr/nfile], ' ');
+
 endfunction
 
 function [corrfun] = getonecorr(fname)
