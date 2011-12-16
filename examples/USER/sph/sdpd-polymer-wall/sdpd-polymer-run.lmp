@@ -8,12 +8,9 @@ boundary          p p p
 # create simulation box
 #2D box
 variable          Lx equal 2.00e-3
-
-region             box block 0.0000e-3 ${Lx}  0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
 read_data           poly.txt
 
 # create fluid particles
-lattice         sq 0.025e-3
 bond_style      fene
 special_bonds   lj 1 1 1i
 #H*ro^2/(kT)=100
