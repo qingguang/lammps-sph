@@ -123,6 +123,8 @@ if (first) {
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
+//std::cerr<<"rho[i]"<<rho[i]<<'\n';
+
     fi = tmp * tmp * tmp;
     fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
 
@@ -166,39 +168,8 @@ if (first) {
 
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
-/*---------------
-//create polymer ID in Lammps
-constant int beadnum=sdpd_bead[itype][jtype];
-constant int freenum=sdpd_free[itype][jtype];
-
-if(list->inum%(beadnum+freenum)<(beadnum+1)&&list->inum%(beadnum+freenum)>0)
-polyID->i=atom->ID;
-else
-{polyID->i=0;}
-
-//FENE force between polymer beads
-double fene[ndim];
-if (PolyID->i>0&& PolyID->j>0)
-{
-if (PolyID->i-polyID->j==1)
-{
-if (ndim==2)
-{
-fene[0]=polymet_H/(1-rsq)*(delx);
-fene[1]=polymet_H/(1-rsq)*(dely);
-}
-else
-{
-fene[0]=polymet_H/(1-(rsq/R)*(rsq/R))*delx;
-fene[1]=polymet_H/(1-(rsq/R)*(rsq/R))*dely;
-fene[2]=polymet_H/(1-(rsq/R)*(rsq/R))*delz;
-}
-}
-}
-*/
-
-
-        // Morris Viscosity (Morris, 1996)
+       
+ // Morris Viscosity (Morris, 1996)
 
         if (ndim==2)
         {
@@ -262,8 +233,9 @@ fene[2]=polymet_H/(1-(rsq/R)*(rsq/R))*delz;
           f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
           f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (domain->dimension ==3 ) {
-	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
-	
+	   
+ f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+
   }
           de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
