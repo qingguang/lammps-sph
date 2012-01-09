@@ -15,9 +15,9 @@ read_data           poly3d.txt
 lattice            sc 0.025e-3
 create_atoms       1 region box
 
-#special_bonds   lj 1 1 1
-#bond_style fene
-#bond_coeff * 3e-2 5e-5 0 0
+special_bonds   lj 1 1 1
+bond_style fene
+bond_coeff * 1 5e-5 0 0
 
 
 mass               1 3.90625e-12
@@ -31,9 +31,10 @@ variable          h equal 6.5e-5
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 
-variable           sdpd_temp index 1e1
-pair_style         hybrid sdpd
-pair_coeff         * *    sdpd 1000 0.1 5.0e-3 6.5e-5 ${sdpd_temp}
+variable           sdpd_temp index 1e-9
+pair_style         hybrid  sdpd
+#pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * *    sdpd 1000 1e-4 1.0e-4 6.5e-5 ${sdpd_temp}
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
@@ -59,5 +60,5 @@ thermo             1
 
 
 neighbor           3.0e-6 bin
-timestep           1e-5
+timestep           1e-7
 run                40000

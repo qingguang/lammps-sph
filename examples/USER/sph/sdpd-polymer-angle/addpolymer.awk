@@ -42,6 +42,7 @@ BEGIN {
 /atom types/{
   print
   print "1 bond types"
+  print "1 angle types"
   next
 }
 
@@ -49,6 +50,8 @@ BEGIN {
   natoms=$1
   print
   printf("%s bonds\n", "_NUMBER_OF_BOUNDS_")
+  printf("%s angles\n", "_NUMBER_OF_ANGLES_")
+
   next
 }
 
@@ -97,8 +100,6 @@ inatoms{
 END {
   printf("\nBonds\n\n")
   ibond = 0
-ipoly=0
-printf("") > "poly.id"
   for (q=1; q<iatom; q++) {
     if (isbound(q)) {
       ibond++
@@ -106,14 +107,22 @@ printf("") > "poly.id"
       jp = q+1
       bondtype=1
       print ibond, bondtype, ip, jp
-if (ip != prev) {
-if (prev>0) {
-print prev, ipoly >> "poly.id"
-}
-     ipoly++
-      }
-      print ip, ipoly >> "poly.id"
-      prev=jp    
-}
+    } 
+ }
+
+ printf("\nAngles\n\n")
+
+ iangle = 0
+
+  for (a=1; a<iatom; a++) {
+    if (isbound(a+1)&&isbound(a)) {
+     iangle++
+      ia = a
+      ja = a+1
+      ka = a+2
+      angletype=1
+      print iangle, angletype, ia, ja, ka
+    }
   }
+
 }
