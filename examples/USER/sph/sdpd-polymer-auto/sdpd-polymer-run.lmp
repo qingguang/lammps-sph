@@ -17,7 +17,7 @@ lattice         sq 0.025e-3
 bond_style      fene
 special_bonds   lj 1 1 1
 #H*ro^2/(kT)=100
-variable    H_fene equal 1   
+variable    H_fene equal 0.1   
 #variable        H_fene equal 0.5e-1
 variable        r0_fene equal 5e-5
 bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0

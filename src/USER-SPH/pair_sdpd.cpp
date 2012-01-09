@@ -213,13 +213,53 @@ if (first) {
         fpair = -imass * jmass * (fi + fj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
- 
-       //modify force pair
+ //modify force pair
 
+f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+     if (domain->dimension ==3 ) {
+
+f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+// and change in density
+} 
+   
+    drho[i] += jmass * delVdotDelR * wfd;
+
+        // change in thermal energy
+        de[i] += deltaE;
+
+
+if (newton_pair || j < nlocal) {
+
+f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
+f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+if (domain->dimension ==3 ) {
+
+f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+}
+ 
+/*       //modify force pair
+if(f[i][0]==NULL)
+{f[i][0]=0;
+}
+else
+{
         f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
-        f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+ } 
+if(f[i][1]==NULL)
+{f[i][1]=0;
+}else
+{
+      f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+}
 	if (domain->dimension ==3 ) {
+if(f[i][2]==NULL)
+{f[i][2]=0;
+}
+else
+{
 	f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+}
 }
 
         // and change in density
@@ -227,17 +267,31 @@ if (first) {
 
         // change in thermal energy
         de[i] += deltaE;
+ if (newton_pair || j < nlocal) {
 
         if (newton_pair || j < nlocal) {
-
+if(f[j][0]==NULL)
+{f[j][0]=0;
+}else
+{
           f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
-          f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+}
+if(f[j][1]==NULL)
+{f[j][1]=0;
+}else
+{ 
+         f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+}
 	  if (domain->dimension ==3 ) {
-	   
+if(f[j][2]==NULL)
+{f[j][2]=0;
+}else
+{	   
  f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
-
+}
   }
-          de[j] += deltaE;
+  */
+        de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
         //modify until this line
