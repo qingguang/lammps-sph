@@ -121,6 +121,7 @@ END {
       ja = a+1
       ka = a+2
       angletype=1
+      # number of angle, type of angle, three atoms to form an angle
       print iangle, angletype, ia, ja, ka
     }
   }
