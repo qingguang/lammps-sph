@@ -29,4 +29,4 @@ dump            1 all custom 500 dump.nemd id type x y z
 thermo          1000
 
 run             50000
-~                      
+
