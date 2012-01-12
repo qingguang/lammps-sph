@@ -9,8 +9,12 @@
 
  awk -v cutoff=3.0 -v Nbeads=9 -v Nsolvent=18 -v Npoly=full \
      -f addpolymer.awk poly.txt > poly2.txt
- nbound=$(tail -n 1 poly2.txt | awk '{print $1}')
- sed "s/_NUMBER_OF_ANGLES_/$nbound/1" poly2.txt > poly.txt
+
+ nangles=$(tail -n 1 poly2.txt | awk '{print $1}')
+ nbounds=$(awk '/Angles/{exit} NF' poly2.txt | tail -n 1  | awk '{print $1}')
+
+ sed -e "s/_NUMBER_OF_ANGLES_/$nangles/1" -e "s/_NUMBER_OF_BOUNDS_/$nbounds/1" poly2.txt > poly.txt
+
 
 #how to replace _NUMBER_OF_BONDS_ with the number?
 
