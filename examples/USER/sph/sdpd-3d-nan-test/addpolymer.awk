@@ -42,7 +42,6 @@ BEGIN {
 /atom types/{
   print
   print "1 bond types"
-  print "1 angle types"
   next
 }
 
@@ -50,8 +49,6 @@ BEGIN {
   natoms=$1
   print
   printf("%s bonds\n", "_NUMBER_OF_BOUNDS_")
-  printf("%s angles\n", "_NUMBER_OF_ANGLES_")
-
   next
 }
 
@@ -107,23 +104,6 @@ END {
       jp = q+1
       bondtype=1
       print ibond, bondtype, ip, jp
-    } 
- }
-
- printf("\nAngles\n\n")
-
- iangle = 0
-
-  for (a=1; a<iatom; a++) {
-    if (isbound(a+1)&&isbound(a)) {
-     iangle++
-      ia = a
-      ja = a+1
-      ka = a+2
-      angletype=1
-      # number of angle, type of angle, three atoms to form an angle
-      print iangle, angletype, ia, ja, ka
     }
   }
-
 }
