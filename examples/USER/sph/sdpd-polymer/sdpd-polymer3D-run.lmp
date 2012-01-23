@@ -34,7 +34,7 @@ variable          h equal 6.5e-5
 #pair_coeff         * * sph/rhosum   ${h}
 #pair_coeff         * *    sdpd 1000 1e-4 1e-4 ${h}  ${sdpd_temp}
 
-variable           sdpd_temp index 1
+variable           sdpd_temp index 1e-9
 pair_style         hybrid sdpd
 pair_coeff         * *    sdpd 1000 0.1 5.0e-3 6.5e-5 ${sdpd_temp}
 
@@ -62,5 +62,5 @@ thermo             1
 
 
 neighbor           3.0e-6 bin
-timestep           1e-5
+timestep           1e-6
 run                40000
