@@ -8,12 +8,6 @@ boundary          p p p
 variable           L  equal 4e-4
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 read_data           poly3d.txt
-#read_data data.chain
-# create fluid particles
-
-#lattice            fcc 0.025e-3
-lattice            sc 2.5e-5
-create_atoms       1 region box
 
 special_bonds   lj 1 1 1
 bond_style fene
