@@ -10,7 +10,7 @@
 
    See the README file in the top-level LAMMPS directory.
    ------------------------------------------------------------------------- */
-
+#include <fenv.h>
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sdpd.h"
@@ -30,7 +30,7 @@ using namespace LAMMPS_NS;
 /* ---------------------------------------------------------------------- */
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
-    Pair(lmp) {
+  Pair(lmp) {
   first = 1;
 }
 
@@ -84,15 +84,15 @@ void PairSDPD::compute(int eflag, int vflag) {
   double _dUi[ndim];
   double random_force[ndim];
   
-if (first) {
+  if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
         if (cutsq[i][j] > 1.e-32) {
           if (!setflag[i][i] || !setflag[j][j]) {
             if (comm->me == 0) {
               printf(
-                  "SPH particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
-                  i, j, sqrt(cutsq[i][j]));
+		     "SPH particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
+		     i, j, sqrt(cutsq[i][j]));
             }
           }
         }
@@ -123,7 +123,6 @@ if (first) {
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
-//std::cerr<<"rho[i]"<<rho[i]<<'\n';
 
     fi = tmp * tmp * tmp;
     fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
@@ -169,19 +168,19 @@ if (first) {
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
        
- // Morris Viscosity (Morris, 1996)
+	// Morris Viscosity (Morris, 1996)
 
         if (ndim==2)
-        {
-          eij[0]= delx/sqrt(rsq); 
-          eij[1]= dely/sqrt(rsq);    
-        }
+	  {
+	    eij[0]= delx/sqrt(rsq); 
+	    eij[1]= dely/sqrt(rsq);    
+	  }
         else
-        {
-          eij[0]= delx/sqrt(rsq);
-          eij[1]= dely/sqrt(rsq);
-          eij[2]= delz/sqrt(rsq);
-        }
+	  {
+	    eij[0]= delx/sqrt(rsq);
+	    eij[1]= dely/sqrt(rsq);
+	    eij[2]= delz/sqrt(rsq);
+	  }
  
         const double Fij=-wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
@@ -203,7 +202,6 @@ if (first) {
             // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
             const  double Aij = sqrt(b*Zij);
             const double Bij = 0.0;
-
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
             _dUi[di] = 0.0;
@@ -214,33 +212,33 @@ if (first) {
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 
- //modify force pair
+	//modify force pair
 
-f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
-f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-     if (domain->dimension ==3 ) {
+	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+	if (domain->dimension ==3 ) {
 
-f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-// and change in density
-} 
+	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+	  // and change in density
+	} 
    
-    drho[i] += jmass * delVdotDelR * wfd;
+	drho[i] += jmass * delVdotDelR * wfd;
 
         // change in thermal energy
         de[i] += deltaE;
 
 
-if (newton_pair || j < nlocal) {
+	if (newton_pair || j < nlocal) {
 
-f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
-f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
-if (domain->dimension ==3 ) {
+	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
+	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+	  if (domain->dimension ==3 ) {
 
-f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
-}
+	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+	  }
  
   
-        de[j] += deltaE;
+	  de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
         //modify until this line
