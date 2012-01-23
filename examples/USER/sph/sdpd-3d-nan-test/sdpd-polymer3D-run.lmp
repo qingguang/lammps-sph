@@ -10,17 +10,6 @@ variable           L  equal 0.1e-4
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
-# create fluid particles
-
-#lattice            fcc 0.025e-3
-lattice            sc 0.025e-3
-create_atoms       1 region box
-
-#special_bonds   lj 1 1 1
-#bond_style fene
-#bond_coeff * 1 5e-5 0 0
-
-
 mass               1 3.90625e-12
 set                group all meso_rho 1000.0
 
