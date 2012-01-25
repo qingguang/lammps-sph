@@ -6,9 +6,9 @@ boundary          p p p
 
 # create simulation box
 #3D box
-variable           Lx  equal 1.0
-variable           Ly  equal 1.0
-variable           Lz  equal 1.0
+variable           Lx  equal 1.00
+variable           Ly  equal 1.00
+variable           Lz  equal 1.00
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 variable           h equal 0.1
 variable           sdpd_cutoff equal 3.0*${h}
@@ -19,13 +19,10 @@ create_atoms       1 box
 variable          npart equal count(all)
 print             "number of atoms:  ${npart}"
 
-# use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
-# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-variable           temp equal 1000.0
+variable           temp equal 1e19
 variable           rho  equal 1.0
 variable           vsoudn equal 0.0
-variable           eta equal 0.1
+variable           eta equal 0.01
 
 mass               1 ${Lx}*${Ly}*${Lz}*${rho}/${npart}
 set                group all meso_rho ${rho}
