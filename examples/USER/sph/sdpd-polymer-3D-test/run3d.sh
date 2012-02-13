@@ -2,7 +2,7 @@
 
 
 
-rm -rf dum* im*
+rm -rf dum* im* poly* log.lammps
 ../../../../src/lmp_linux -in sdpd-polymer3D-inti.lmp
 ../../../../tools/restart2data poly3d.restart poly3d.txt
 

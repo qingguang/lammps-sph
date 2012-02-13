@@ -9,7 +9,7 @@ boundary          p p p
 
 # create simulation box
 #3D box
-variable           L  equal 4.0e-4
+variable           L  equal 5.0e-4
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
