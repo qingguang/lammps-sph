@@ -1,13 +1,13 @@
 function ext()
 % get polymer configurations
 
-  flist=dir("pdata/poly.*");
+  flist=dir("pdata/poly.1");
 
 %nfile is the number of polymers
   nfile = size(flist,1);
 
  %Loop for all polymers
- for kk=1:nfile-1
+ for kk=1:nfile
  % for kk=1:1
     fname=fullfile("pdata", flist(kk).name);
 %only one polymer
@@ -34,33 +34,36 @@ function [extfun] = getpolymerext(fname)
   nb=getnbead(fname);
   dim=3;
   % read data without space between rows
+  
   data = dlmread(fname);
   
   % keep only x and y and z
   data = data(:, 1:dim);
 %put different snapshot in cells the order is column order 1xyz2xyz3xyz.........
 %the endend value is endbead-z
-  data = reshape(data'(:), nb, 3, []);
+  nsnap = size(data, 1)/nb;
+  data = permute(reshape(data(:,:)', 3, nb, nsnap), [3, 2, 1]);
+
+  % rdata structure is 
+  % rdata ( isnaphot, ibead, dim )
+
 
   % the number of snapshots
-  nsnap = size(data, 3);
-  extfun = zeros(nsnap, 1);
-%the end-to-end distance  
-extfun=sqrt(getend(data,nb,dim,nsnap)); 
-% extfun(:) = max(data(:, 1, :)) - min(data(:, 1, :));
+  %the end-to-end distance  
 
+  Rhead = squeeze(data(:, 1, :));
+  Rtail = squeeze(data(:, end, :));
+  Re2e = Rtail - Rhead;
+  extfun=   sqrt(sumsq (Re2e, 2));
 endfunction
-%Get the end-to-end distance over all snapshots
-function [endtoend]=getend(data,nb,dim,nsnap)
-endtoend=0;
-%(x1-x2)^2
-for j=1:nsnap
-for i=1:dim
-endtoend+=(data(i,1,j)-data(nb-3+i,dim,j)).^2; 
-end
-end
-endtoend=endtoend/nsnap;
+
+function Rg2 = getrg2(data)
+  nb = size(data, 2);
+  Rcom = mean(data, 2);
+  Rincm = data - repmat(Rcom, [1, nb, 1]);
+  Rg2 = mean(sumsq(Rincm, 3), 2);
 endfunction
+
 
 % get the number of beads
 function [nbead] = getnbead(fname)
