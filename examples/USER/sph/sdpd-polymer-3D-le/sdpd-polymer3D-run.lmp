@@ -6,7 +6,6 @@ boundary          p p p
 # create simulation box
 #3D box
 variable           L  equal 3e-4
-region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 read_data           poly3d.txt
 
 special_bonds   lj 1 1 1
@@ -37,12 +36,14 @@ compute            ke all ke
 compute            sdpd_kin all temp
 variable           etot equal c_ke+c_esph
 
+# Lees Edwards type boundary conditions
+fix		2 all deform 1 xy erate 1000000 remap v
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
-variable            A_kol equal 5
-variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${L})
-fix                 kol_force all addforce v_var_kol 0.0 0.0
+# variable            A_kol equal 5
+# variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${L})
+# fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 dump               dump_id all custom 100000 dump*.dat id type x y z vx vy vz c_rho_peratom
 
@@ -52,7 +53,7 @@ dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
 thermo             1
-dump imgDump all image 100000 image.*.jpg type type atom no bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump imgDump all image 100 image.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9
 
 

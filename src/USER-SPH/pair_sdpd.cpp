@@ -189,18 +189,19 @@ void PairSDPD::compute(int eflag, int vflag) {
 
         //define random force
         for (int di=0;di<ndim;di++) {
-          for (int dj=0;dj<ndim;dj++)
-            random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
+           random_force[di]=0;          
+         for (int dj=0;dj<ndim;dj++)
+            random_force[di]+=wiener.sym_trclss[di][dj]*eij[dj];
         }
         const double Ti= sdpd_temp[itype][jtype];
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
             const double Zij = -4.0*k_bltz*Ti*fvisc;
-            const double b  = ndim;
+          //  const double b  = ndim;
             //const double b  = (ndim+2.0)/3.0;
             //const double Aij = sqrt(Zij * a);
             // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
-            const  double Aij = sqrt(b*Zij);
+            const  double Aij = sqrt(Zij);
             const double Bij = 0.0;
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {

@@ -10,7 +10,7 @@ boundary          p p p
 # create simulation box
 #3D box
 variable           L  equal 3.0e-4
-region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
+region		   box prism 0.0 ${L}  0.0 ${L} 0.0 ${L} 0 0 0 units box
 create_box         1 box
 
 # create fluid particles
