@@ -36,10 +36,8 @@ compute            ke all ke
 compute            sdpd_kin all temp
 variable           etot equal c_ke+c_esph
 
-#compute            sdpd_kin all temp
-#compute            rho_peratom all meso_rho/atom
 
-# do full time integration for shear driver and fluid, but keep walls stationary
+# do full time integration 
 fix                integrate_fix_full all meso
 
 dump               dump_id all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom
@@ -55,11 +53,14 @@ dump_modify        dumpreal_id pad 8
 
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
-thermo             1
+thermo             1000
 dump imgDump all image 100 image.*.jpg type type atom no bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9
+variable           dt index 1e-9
+variable           vkin equal c_sdpd_kin
+fix extra all print 1000 "${vkin}" file "kin.dat.dt"
 
 
 neighbor           3.0e-6 bin
-timestep           1e-6
-run                40000
+timestep           ${dt}
+run                4000000

@@ -43,10 +43,10 @@ dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
 thermo             1000
-variable           dt index 5e-7
+variable           dt index 1e-8
 variable           vkin equal c_sdpd_kin
 fix extra all print 1000 "${vkin}" file "kin.dat.dt"
 
 neighbor           3.0e-6 bin
 timestep           ${dt}
-run                40000
+run                4000000
