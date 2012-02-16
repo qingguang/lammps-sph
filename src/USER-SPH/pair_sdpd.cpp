@@ -186,6 +186,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         wiener.get_wiener_Espanol(sqrtdt);
        // const double fvisc = 2*viscosity[itype][jtype] / (rho[i] *rho[j]) * imass * jmass * wfd;
+ const double numi
 const double fvisc = viscosity[itype][jtype] *(1/ (rho[i] *rho[i])+1/(rho[j]*rho[j])) * imass * jmass * wfd;
 
         //define random force
