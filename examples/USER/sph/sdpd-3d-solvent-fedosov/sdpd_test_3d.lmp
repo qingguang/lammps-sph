@@ -59,7 +59,8 @@ y center 0.01 v_vx_cm file vx.av ave running units reduced
 
 # order of components xx, yy, zz, xy, xz, yz.
 compute stress all stress/atom virial
-variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
+#variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
+variable stress_pressure atom c_stress[4]
 fix av_xy_stress all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y lower 0.01 v_stress_pressure file sxy.av units reduced ave running
 
