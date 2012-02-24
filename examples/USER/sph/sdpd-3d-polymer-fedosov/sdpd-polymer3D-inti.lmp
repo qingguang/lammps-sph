@@ -1,0 +1,33 @@
+clear
+
+echo               both
+variable           ndim string  3d
+dimension          ${ndim}
+units              si
+atom_style   hybrid  bond meso
+boundary          p p p
+
+
+# create simulation box
+#3D box
+variable           Ly  equal 1.803e-3
+variable           Lx  equal ${Ly}/50*10
+variable           dx   equal 2.5e-5
+variable           sdpd_rho equal 1000 
+include            ${ndim}-vars.lmp
+region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
+create_box         1 box
+
+# create fluid particles
+lattice            sc ${dx}
+create_atoms       1 region box
+
+mass               1  ${sdpd_mass}
+
+#variable  sdpd_temp index 1.0e-5
+
+
+timestep           0.0e-5
+
+write_restart      poly3d.restart
+
