@@ -1,8 +1,9 @@
 echo               both
-variable           ndim string  2d
+variable           ndim string  3d
 dimension          ${ndim}
 units              si
 atom_style         meso
+boundary          p p p
 
 # create simulation box
 #3D box
@@ -72,8 +73,8 @@ thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
 thermo             10
 
-variable           vkin equal c_sdpd_kin
-fix extra all print 10 "${vkin}" file "kin.dat.dt"
+#variable           vkin equal c_sdpd_kin
+#fix extra all print 10 "${vkin}" file "kin.dat.dt"
 
 neighbor           3.0e-6 bin
 neigh_modify       delay 0 every 1
