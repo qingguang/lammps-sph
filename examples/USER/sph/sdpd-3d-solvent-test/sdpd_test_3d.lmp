@@ -1,26 +1,27 @@
 echo               both
-dimension          3
+variable           ndim equal 3
+dimension          ${ndim}
 units              si
 atom_style         meso
 boundary          p p p
 # create simulation box
 #3D box
-variable           L  equal 2.0e-4
+variable           L  equal 5.0e-4
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
 # create fluid particles
-#lattice            fcc 0.025e-3
-lattice            sc 0.025e-3
+variable           dx equal 2.5e-5
+lattice            sc ${dx}
 create_atoms       1 region box
 
-
-mass               1 3.90625e-12
-#mass               1 3.90625e-17
-set                group all meso_rho 1000.0
+variable           sdpd_rho  equal 1e3
+variable           m equal  ${sdpd_rho}*${dx}^${ndim}
+mass               1 ${m}
+set                group all meso_rho ${sdpd_rho}
 
 # smothing length
-variable          h equal 6.5e-5
+variable          h equal 2.6*${dx}
 
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
@@ -49,4 +50,4 @@ fix extra all print 10 "${vkin}" file "kin.dat.dt"
 
 neighbor           3.0e-6 bin
 timestep           ${dt}
-run                40000
+run                400
