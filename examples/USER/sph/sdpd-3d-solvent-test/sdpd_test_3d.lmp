@@ -11,6 +11,7 @@ region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
 # create fluid particles
+<<<<<<< HEAD
 variable           dx equal 2.5e-5
 lattice            sc ${dx}
 create_atoms       1 region box
@@ -18,6 +19,15 @@ create_atoms       1 region box
 variable           sdpd_rho  equal 1e3
 variable           m equal  ${sdpd_rho}*${dx}^${ndim}
 mass               1 ${m}
+=======
+variable           dx   equal 2.5e-5
+variable           sdpd_rho equal 1000
+lattice            sc ${dx}
+create_atoms       1 region box
+
+variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
+mass               1 ${sdpd_mass}
+>>>>>>> 04704a85bf324e5c4d998edc3130c2d7234f8b93
 set                group all meso_rho ${sdpd_rho}
 
 # smothing length
@@ -30,13 +40,14 @@ variable          h equal 2.6*${dx}
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
 variable           sdpd_temp index 1e9
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd 1000 1e-4 1e-4 ${h}  ${sdpd_temp}
+pair_coeff         * *    sdpd ${sdpd_rho} 1e-4 1e-4 ${h}  ${sdpd_temp}
 
 compute            sdpd_kin all temp
 compute            rho_peratom all meso_rho/atom
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
+
 dump               dump_id all custom 100 dump*.dat id type x y z vx vy vy c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
