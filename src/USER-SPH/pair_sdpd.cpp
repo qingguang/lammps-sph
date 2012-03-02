@@ -17,6 +17,7 @@
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
+#include "neighbor.h"
 #include "neigh_list.h"
 #include "memory.h"
 #include "error.h"
@@ -26,6 +27,21 @@
 #include <iostream>
 
 using namespace LAMMPS_NS;
+
+void PairSDPD::init_style()
+{
+  if (comm->ghost_velocity == 0)
+    error->all(FLERR,"Pair sdpd requires ghost atoms store velocity");
+
+  // if newton off, forces between atoms ij will be double computed
+  // using different random numbers
+
+  if (force->newton_pair == 0 && comm->me == 0) error->warning(FLERR,
+      "Pair sdpd needs newton pair on for momentum conservation");
+
+  neighbor->request(this);
+}
+
 
 /* ---------------------------------------------------------------------- */
 
@@ -446,4 +462,3 @@ void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
     }
   }
 }
-
