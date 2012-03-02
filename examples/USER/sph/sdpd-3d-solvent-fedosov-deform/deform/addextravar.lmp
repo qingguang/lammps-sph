@@ -1,7 +1,7 @@
 # deformation rate
 #      {erate} value = R
 #        R = engineering strain rate (1/time units)
-variable      deform_rate  equal 500
+variable      deform_rate  equal 100
 
 variable          Lx equal ${Lxbase}
 variable          Ly equal ${Lybase}

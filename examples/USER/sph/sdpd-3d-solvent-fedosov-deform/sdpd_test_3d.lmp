@@ -82,7 +82,7 @@ include            settimestep.lmp
 timestep           ${dt}
 communicate        single vel yes
 
-run                4000
+run                400
 
 # average velocity
 compute vxav all reduce ave vx
