@@ -1,0 +1,107 @@
+LAMMPS (9 Nov 2011)
+echo               both
+dimension          3
+units              si
+atom_style       hybrid bond meso
+boundary          p f p
+
+# create simulation box
+#2D box
+include           3d-vars.lmp
+variable           dx   equal 2.5e-5
+variable           Lx    equal  5.0e-4
+variable           sdpd_rho equal 1000
+variable           sdpd_c equal 3e-1
+variable           sdpd_eta equal 1.5e-2
+variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho}
+variable           sdpd_mu  equal 0.015/${sdpd_rho}
+variable           sdpd_mu  equal 0.015/1000
+variable          h equal 2.7*${dx}
+variable          h equal 2.7*2.5e-05
+variable          gx equal 6.12
+variable          Nfreq equal 1000
+variable          r0       equal 1.4*${dx}
+variable          r0       equal 1.4*2.5e-05
+variable          H        equal 5.3e-4
+variable          sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
+variable          sdpd_mass equal 2.5e-05*${dx}*${dx}*${sdpd_rho}
+variable          sdpd_mass equal 2.5e-05*2.5e-05*${dx}*${sdpd_rho}
+variable          sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*${sdpd_rho}
+variable          sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*1000
+
+read_data         poly.txt
+  1 = max bonds/atom
+  orthogonal box = (0 -5e-05 0) to (0.0005 0.0005625 0.0005)
+  2 by 2 by 1 processor grid
+  7600 atoms
+  7600 velocities
+  3420 bonds
+  2 = max # of 1-2 neighbors
+  2 = max # of 1-3 neighbors
+  4 = max # of 1-4 neighbors
+  6 = max # of special neighbors
+
+# create wall particles
+variable          ub equal ${Lx}+2.5*${dx}
+variable          ub equal 0.0005+2.5*${dx}
+variable          ub equal 0.0005+2.5*2.5e-05
+variable          lb equal -2.0*${dx}
+variable          lb equal -2.0*2.5e-05
+variable          hdx equal 0.5*${dx}
+variable          hdx equal 0.5*2.5e-05
+variable          hLx equal ${Lx}+0.5*${dx}
+variable          hLx equal 0.0005+0.5*${dx}
+variable          hLx equal 0.0005+0.5*2.5e-05
+variable          lLx equal ${Lx}-0.5*${dx}
+variable          lLx equal 0.0005-0.5*${dx}
+variable          lLx equal 0.0005-0.5*2.5e-05
+region            fluid block 0.0 ${Lx} ${dx} ${lLx} 0.0 ${Lx} units box
+region            fluid block 0.0 0.0005 ${dx} ${lLx} 0.0 ${Lx} units box
+region            fluid block 0.0 0.0005 2.5e-05 ${lLx} 0.0 ${Lx} units box
+region            fluid block 0.0 0.0005 2.5e-05 0.0004875 0.0 ${Lx} units box
+region            fluid block 0.0 0.0005 2.5e-05 0.0004875 0.0 0.0005 units box
+region            uwall block 0.0 ${Lx} ${Lx} ${ub} 0.0 ${Lx} units box
+region            uwall block 0.0 0.0005 ${Lx} ${ub} 0.0 ${Lx} units box
+region            uwall block 0.0 0.0005 0.0005 ${ub} 0.0 ${Lx} units box
+region            uwall block 0.0 0.0005 0.0005 0.0005625 0.0 ${Lx} units box
+region            uwall block 0.0 0.0005 0.0005 0.0005625 0.0 0.0005 units box
+region            lwall block 0.0 ${Lx} ${lb} 0.0 0.0 ${Lx} units box
+region            lwall block 0.0 0.0005 ${lb} 0.0 0.0 ${Lx} units box
+region            lwall block 0.0 0.0005 -5e-05 0.0 0.0 ${Lx} units box
+region            lwall block 0.0 0.0005 -5e-05 0.0 0.0 0.0005 units box
+lattice            sc ${dx}
+lattice            sc 2.5e-05
+Lattice spacing in x,y,z = 2.5e-05 2.5e-05 2.5e-05
+create_atoms       3 region uwall
+Created 1200 atoms
+create_atoms       3 region lwall
+Created 1200 atoms
+
+# create fluid particles
+bond_style      fene
+special_bonds   lj 1 1 1
+  2 = max # of 1-2 neighbors
+  2 = max # of 1-3 neighbors
+  4 = max # of 1-4 neighbors
+  6 = max # of special neighbors
+bond_coeff  1 ${H} ${r0} 0.0 0.0
+bond_coeff  1 0.00053 ${r0} 0.0 0.0
+bond_coeff  1 0.00053 3.5e-05 0.0 0.0
+
+
+group              uwall region uwall 
+1200 atoms in group uwall
+group              lwall region lwall
+1200 atoms in group lwall
+group              fluid region fluid 
+7600 atoms in group fluid
+
+mass               1 ${sdpd_mass}
+mass               1 1.5625e-11
+mass               2 ${sdpd_mass}
+mass               2 1.5625e-11
+set                group all meso_rho ${sdpd_rho}
+set                group all meso_rho 1000
+  10000 settings made for meso_rho
+
+# use Tait's EOS in combination wit
