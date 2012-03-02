@@ -2,8 +2,8 @@ echo               both
 variable           ndim string  2
 # type of the simulation
 #variable           simtype string "reverse-poiseuille"
-#variable           simtype string "deform"
-variable           simtype string "solvent"
+variable           simtype string "deform"
+#variable           simtype string "solvent"
 dimension          ${ndim}
 units              si
 atom_style         meso
@@ -57,12 +57,6 @@ include            ${simtype}/addforce.lmp
 # "profile" corrected temperature                                                                                            
 compute         pTemp all temp/profile 1 1 0 y 5
 
-# average velocity
-compute vxav all reduce ave vx
-variable  vx_cm atom vx
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
-
 # order of components xx, yy, zz, xy, xz, yz.
 compute stress all stress/atom virial
 #variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
@@ -87,5 +81,14 @@ neigh_modify       delay 0 every 1
 include            settimestep.lmp
 timestep           ${dt}
 communicate        single vel yes
+
+run                4000
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
 
 run                400000
