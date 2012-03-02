@@ -1,0 +1,4 @@
+print "======================== add force from solvent"
+
+# add initial velocity to all particles
+velocity all set 500 0 0

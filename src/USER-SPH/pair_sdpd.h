@@ -31,6 +31,7 @@ class PairSDPD : public Pair {
   virtual void compute(int, int);
   void settings(int, char **);
   void coeff(int, char **);
+  void init_style();
   virtual double init_one(int, int);
   virtual double single(int, int, int, int, double, double, double, double &);
 

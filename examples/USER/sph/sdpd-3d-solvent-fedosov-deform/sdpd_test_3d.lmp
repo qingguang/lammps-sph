@@ -1,0 +1,91 @@
+echo               both
+variable           ndim string  2
+# type of the simulation
+#variable           simtype string "reverse-poiseuille"
+#variable           simtype string "deform"
+variable           simtype string "solvent"
+dimension          ${ndim}
+units              si
+atom_style         meso
+boundary          p p p
+
+# create simulation box
+#3D box
+variable           Lybase  equal 1.803e-3/2.0
+variable           Lxbase  equal ${Lybase}/50*10*2.0
+variable           Lzbase  equal ${Lybase}/50*2.0*5.0
+
+
+# create fluid particles
+variable           dx   equal 2.5e-5
+variable           sdpd_rho equal 1000
+variable           sdpd_c equal 3e-1
+variable           sdpd_eta equal 1.5e-2  # Pa.s
+variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho}
+# smothing length
+variable          h equal 2.7*${dx}
+
+variable          Nfreq equal 100
+
+
+# dimenshen        dependent part
+include            ${simtype}/addextravar.lmp
+include            ${ndim}d-vars.lmp
+include            ${simtype}/addlattice.lmp
+
+create_atoms       1 region box
+
+mass               1 ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+# use Tait's EOS in combination with Morris' laminar viscosity.
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+pair_style         hybrid/overlay sph/rhosum 1 sdpd
+variable           sdpd_temp index 1e9
+pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h}  ${sdpd_temp}
+
+compute            sdpd_kin all temp
+compute            rho_peratom all meso_rho/atom
+
+# do full time integration for shear driver and fluid, but keep walls stationary
+fix                integrate_fix_full all meso
+
+include            ${simtype}/addforce.lmp
+
+# "profile" corrected temperature                                                                                            
+compute         pTemp all temp/profile 1 1 0 y 5
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
+# order of components xx, yy, zz, xy, xz, yz.
+compute stress all stress/atom virial
+#variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
+variable stress_pressure atom c_stress[4]
+fix av_xy_stress all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y lower 0.01 v_stress_pressure file sxy.av units reduced ave running
+
+dump               dump_id all custom 100 dump*.dat x y z vx vy vy c_rho_peratom id type
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+thermo_style       custom step c_sdpd_kin
+thermo_modify      norm no
+thermo             10
+
+#variable           vkin equal c_sdpd_kin
+#fix extra all print 10 "${vkin}" file "kin.dat.dt"
+
+neighbor           3.0e-6 bin
+neigh_modify       delay 0 every 1
+
+include            settimestep.lmp
+timestep           ${dt}
+communicate        single vel yes
+
+run                400000

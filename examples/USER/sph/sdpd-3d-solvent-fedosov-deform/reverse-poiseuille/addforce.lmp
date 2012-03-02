@@ -1,0 +1,4 @@
+variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+fix reverce_periodic all addforce v_bodyfx 0.0 0.0
+
+print "======================== add force from reverse-poiseuille"

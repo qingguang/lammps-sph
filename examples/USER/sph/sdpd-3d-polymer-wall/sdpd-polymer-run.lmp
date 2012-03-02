@@ -19,8 +19,8 @@ region            fluid block 0.0 ${Lx} ${dx} ${lLx} 0.0 ${Lx} units box
 region            uwall block 0.0 ${Lx} ${Lx} ${ub} 0.0 ${Lx} units box
 region            lwall block 0.0 ${Lx} ${lb} 0.0 0.0 ${Lx} units box
 lattice            sc ${dx}
-create_atoms       2 region uwall
-create_atoms       2 region lwall
+create_atoms       3 region uwall
+create_atoms       3 region lwall
 
 # create fluid particles
 bond_style      fene
@@ -31,7 +31,6 @@ bond_coeff  1 ${H} ${r0} 0.0 0.0
 group              uwall region uwall 
 group              lwall region lwall
 group              fluid region fluid 
-#group              integrate_fulll union fluid lwall
 
 mass               1 ${sdpd_mass}
 mass               2 ${sdpd_mass}
@@ -56,7 +55,7 @@ variable           etot equal c_ke+c_esph
 
 
 # do full time integration for shear driver and fluid, but keep walls stationary
-variable           velwall    equal 1e-5
+variable           velwall    equal 1e-1
 variable           negvelwall    equal -1*${velwall}
 fix                integrate_fix_full all meso
 velocity           uwall set ${velwall} 0.0 0.0 units box
@@ -65,11 +64,11 @@ fix                freeze_fixu uwall setforce 0.0 0.0 0.0
 fix                freeze_fixl lwall setforce 0.0 0.0 0.0
 
 
-dump               dump_all all custom 10000 dump*.dat x y vx vy id type c_rho_peratom
+dump               dump_all all custom 10 dump*.dat x y vx vy id type c_rho_peratom
 dump_modify        dump_all first yes
 dump_modify        dump_all sort id
 dump_modify        dump_all pad 8
-dump               dump_fluid fluid custom 10000 dumpfluid*.dat x y vx vy id type c_rho_peratom
+dump               dump_fluid fluid custom 10 dumpfluid*.dat x y vx vy id type c_rho_peratom
 dump_modify        dump_fluid first yes
 dump_modify        dump_fluid sort id
 dump_modify        dump_fluid pad 8
@@ -78,9 +77,9 @@ thermo             10
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 
-dump imgDump all image 1000 image.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump imgDump all image 10 image.*.jpg type type atom yes bond type 5e-6 adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9
-dump imgDump2 all image 1000 image2.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 60 30 zoom 1.3  box yes 0.01
+dump imgDump2 all image 10 image2.*.jpg type type atom yes bond type 5e-6 adiam 1e-5 view 60 30 zoom 1.3  box yes 0.01
 dump_modify        imgDump2 pad 9
 
 
