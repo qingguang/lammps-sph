@@ -1,3 +1,0 @@
-region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
-create_box         1 box
-lattice            sc ${dx}
