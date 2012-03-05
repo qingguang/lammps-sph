@@ -11,7 +11,8 @@ variable          ub equal ${Lx}+2.5*${dx}
 variable          lb equal -2.0*${dx}
 variable          lLx equal ${Lx}-0.5*${dx}
 region            box block 0.0 ${Lx} ${lb} ${ub} 0.0  ${Lx} units box
-region            fluid block 0.0 ${Lx} ${dx} ${lLx} 0.0 ${Lx} units box
+region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx}  units box
+
 create_box        3 box
 
 #create fluid particles

@@ -61,6 +61,9 @@ thermo             100
 thermo_style       custom step c_esph v_etot
 thermo_modify      norm no
 
+dump            imgDump all image 1000 img.*.jpg type type adiam 2.5e-5 view 0 0
+dump_modify        imgDump pad 9
+
 neighbor           3.0e-6 bin
 timestep           5.0e-5
 run                400000

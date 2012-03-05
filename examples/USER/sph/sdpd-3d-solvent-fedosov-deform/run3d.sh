@@ -1,4 +1,5 @@
 #! /bin/bash
+rm *.jpg
 
 configfile=$HOME/lammps-sph.sh
 if [ -f "${configfile}" ]; then
@@ -9,4 +10,4 @@ else
 fi
 
 rm du* log*
-time  ${mpirun} -np 1 ${lmp} -in sdpd_test_3d.lmp
+time  ${mpirun} -np 2 ${lmp} -in sdpd_test_3d.lmp
