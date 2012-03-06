@@ -1,33 +1,39 @@
-
 function ext()
 % get polymer configurations
+  filemask = argv (){1};
+  warning("ID1", "filemask is %s", filemask);
+  flist=glob(filemask);
 
-  flist=dir("poly.1");
-
-%nfile is the number of polymers
+  % nfile is the number of polymers
   nfile = size(flist,1);
+  if (nfile<1) 
+    error("file list is empty");
+  endif
 
  %Loop for all polymers
  for kk=1:nfile
-    fname=fullfile(".", flist(kk).name);
+    fname=flist{kk};
+    warning("ID1", "======== processing file: %s", fname);
     data = file2data(fname);
     if (~exist("extfun", "var"))
       extfun = getpolymerext(data);
       rg2 = getrg2(data);
+      corfun = vautocor(gete2e(data));
     else
       extfun = extfun + getpolymerext(data);
       rg2 = rg2 + getpolymerext(data);
+      corfun = corfun + vautocor(gete2e(data));
     endif
   endfor
 
  nb=getnbead(fname);
-printf("Polymer with beads %d",nb);
-printf(" the end-to-end distance is:");
-extfun=extfun/nfile;
-rg2 = rg2/nfile;
-dtime = 0:size(extfun, 1)-1;
+ warning("Polymer with beads %d",nb);
+ extfun=extfun/nfile;
+ rg2 = rg2/nfile;
+ dtime = 0:size(extfun, 1)-1;
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
+ dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
 endfunction
 
 function data = file2data(fname)
@@ -52,13 +58,18 @@ function data = file2data(fname)
 endfunction
 
 function [extfun] = getpolymerext(data)
+  Re2e = gete2e(data);
+  extfun=   sqrt(sumsq (Re2e, 2));
+endfunction
+
+function [Re2e] = gete2e(data)
   % the number of snapshots
   %the end-to-end distance  
   Rhead = squeeze(data(:, 1, :));
   Rtail = squeeze(data(:, end, :));
   Re2e = Rtail - Rhead;
-  extfun=   sqrt(sumsq (Re2e, 2));
 endfunction
+
 
 function Rg2 = getrg2(data)
   nb = size(data, 2);
@@ -78,9 +89,17 @@ endfunction
 % get the number of beads
 function [nbead] = getnbead(fname)
   fid = fopen (fname);
+  if (fid == -1) 
+    error("cannot open file: %s", fname);
+  endif
   nbead=-1;
   do
-    line = strtrim(fgetl(fid));
+    aux_line = fgetl(fid);
+    if (isnumeric(aux_line))
+      nbead = nbead + 1
+      break;
+    endif
+    line = strtrim(aux_line);
     nbead=nbead+1;
   until strcmp(line, "")
   fclose (fid);

@@ -6,11 +6,17 @@ atom_style         meso
 boundary          p p p
 # create simulation box
 #3D box
+<<<<<<< HEAD
 variable           L  equal 5.0e-4
+=======
+variable           dx   equal 2.5e-5
+variable           L  equal 20*${dx}
+>>>>>>> e6eb88fabef03d4688324629c9312ca84adc68b3
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
 # create fluid particles
+<<<<<<< HEAD
 <<<<<<< HEAD
 variable           dx equal 2.5e-5
 lattice            sc ${dx}
@@ -21,6 +27,8 @@ variable           m equal  ${sdpd_rho}*${dx}^${ndim}
 mass               1 ${m}
 =======
 variable           dx   equal 2.5e-5
+=======
+>>>>>>> e6eb88fabef03d4688324629c9312ca84adc68b3
 variable           sdpd_rho equal 1000
 lattice            sc ${dx}
 create_atoms       1 region box
@@ -40,7 +48,7 @@ variable          h equal 2.6*${dx}
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
 variable           sdpd_temp index 1e9
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd ${sdpd_rho} 1e-4 1e-4 ${h}  ${sdpd_temp}
+pair_coeff         * *    sdpd ${sdpd_rho} 1e-1 1.56e-2 ${h}  ${sdpd_temp}
 
 compute            sdpd_kin all temp
 compute            rho_peratom all meso_rho/atom
@@ -48,7 +56,7 @@ compute            rho_peratom all meso_rho/atom
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
 
-dump               dump_id all custom 100 dump*.dat id type x y z vx vy vy c_rho_peratom
+dump               dump_id all custom 10 dump*.dat x y z vx vy vy
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
