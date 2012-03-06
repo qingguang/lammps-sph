@@ -9,8 +9,16 @@ boundary          p f p
 #2D box
 include           3d-vars.lmp
 variable           dx   equal 2.5e-5
-variable           Lx    equal  10*${dx}
-variable           Lx    equal  10*2.5e-05
+variable           Lx    equal 10*${dx}
+variable           Lx    equal 10*2.5e-05
+variable          ub equal ${Lx}+2.5*${dx}
+variable          ub equal 0.00025+2.5*${dx}
+variable          ub equal 0.00025+2.5*2.5e-05
+variable          lb equal -2.0*${dx}
+variable          lb equal -2.0*2.5e-05
+variable          lLx equal ${Lx}-0.5*${dx}
+variable          lLx equal 0.00025-0.5*${dx}
+variable          lLx equal 0.00025-0.5*2.5e-05
 variable           sdpd_rho equal 1000
 variable           sdpd_c equal 3e-1
 variable           sdpd_eta equal 1.5e-2
@@ -33,7 +41,7 @@ variable          sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*1000
 read_data         poly.txt
   1 = max bonds/atom
   orthogonal box = (0 -5e-05 0) to (0.00025 0.0003125 0.00025)
-  1 by 2 by 1 processor grid
+  1 by 3 by 1 processor grid
   1000 atoms
   1000 velocities
   450 bonds
@@ -43,40 +51,24 @@ read_data         poly.txt
   6 = max # of special neighbors
 
 # create wall particles
-variable          uub equal ${Lx}+2.5*${dx}
-variable          uub equal 0.00025+2.5*${dx}
-variable          uub equal 0.00025+2.5*2.5e-05
-variable          llb equal -2.0*${dx}
-variable          llb equal -2.0*2.5e-05
-variable          ulb equal ${Lx}+1e-6
-variable          ulb equal 0.00025+1e-6
-variable          hLx equal ${Lx}+0.5*${dx}
-variable          hLx equal 0.00025+0.5*${dx}
-variable          hLx equal 0.00025+0.5*2.5e-05
-variable          lLx equal ${Lx}-0.5*${dx}
-variable          lLx equal 0.00025-0.5*${dx}
-variable          lLx equal 0.00025-0.5*2.5e-05
-variable          lLx equal ${Lx}-0.5*${dx}
-variable          lLx equal 0.00025-0.5*${dx}
-variable          lLx equal 0.00025-0.5*2.5e-05
-region            fluid block 0.0 ${Lx} 0 ${lLx} 0.0 ${Lx}  side in units box
-region            fluid block 0.0 0.00025 0 ${lLx} 0.0 ${Lx}  side in units box
-region            fluid block 0.0 0.00025 0 0.0002375 0.0 ${Lx}  side in units box
-region            fluid block 0.0 0.00025 0 0.0002375 0.0 0.00025  side in units box
-region            uwall block 0.0 ${Lx} ${lLx} ${uub} 0.0 ${Lx}  side in units box
-region            uwall block 0.0 0.00025 ${lLx} ${uub} 0.0 ${Lx}  side in units box
-region            uwall block 0.0 0.00025 0.0002375 ${uub} 0.0 ${Lx}  side in units box
-region            uwall block 0.0 0.00025 0.0002375 0.0003125 0.0 ${Lx}  side in units box
-region            uwall block 0.0 0.00025 0.0002375 0.0003125 0.0 0.00025  side in units box
-region            lwall block 0.0 ${Lx} ${llb} -1e-6 0.0 ${Lx} side in units box
-region            lwall block 0.0 0.00025 ${llb} -1e-6 0.0 ${Lx} side in units box
-region            lwall block 0.0 0.00025 -5e-05 -1e-6 0.0 ${Lx} side in units box
-region            lwall block 0.0 0.00025 -5e-05 -1e-6 0.0 0.00025 side in units box
+region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx}  side in units box
+region            fluid block 0.0 0.00025 0.0 ${lLx} 0.0 ${Lx}  side in units box
+region            fluid block 0.0 0.00025 0.0 0.0002375 0.0 ${Lx}  side in units box
+region            fluid block 0.0 0.00025 0.0 0.0002375 0.0 0.00025  side in units box
+region            uwall block 0.0 ${Lx} ${lb} ${lLx} 0.0 ${Lx}  side out units box
+region            uwall block 0.0 0.00025 ${lb} ${lLx} 0.0 ${Lx}  side out units box
+region            uwall block 0.0 0.00025 -5e-05 ${lLx} 0.0 ${Lx}  side out units box
+region            uwall block 0.0 0.00025 -5e-05 0.0002375 0.0 ${Lx}  side out units box
+region            uwall block 0.0 0.00025 -5e-05 0.0002375 0.0 0.00025  side out units box
+region            lwall block 0.0 ${Lx} 0.0 ${ub} 0.0 ${Lx} side out units box
+region            lwall block 0.0 0.00025 0.0 ${ub} 0.0 ${Lx} side out units box
+region            lwall block 0.0 0.00025 0.0 0.0003125 0.0 ${Lx} side out units box
+region            lwall block 0.0 0.00025 0.0 0.0003125 0.0 0.00025 side out units box
 lattice            bcc ${dx}
 lattice            bcc 2.5e-05
 Lattice spacing in x,y,z = 2.5e-05 2.5e-05 2.5e-05
 create_atoms       3 region uwall
-Created 600 atoms
+Created 500 atoms
 create_atoms       3 region lwall
 Created 400 atoms
 
@@ -93,101 +85,19 @@ bond_coeff  1 0.00053 3.5e-05 0.0 0.0
 
 
 group              uwall region uwall 
-600 atoms in group uwall
+500 atoms in group uwall
 group              lwall region lwall
 400 atoms in group lwall
 group              fluid region fluid 
-1100 atoms in group fluid
+1000 atoms in group fluid
 
 mass              * ${sdpd_mass}
 mass              * 1.5625e-11
+variable          wall_rho equal ${sdpd_mass}*0.5
+variable          wall_rho equal 1.5625e-11*0.5
 set                group all meso_rho ${sdpd_rho}
 set                group all meso_rho 1000
-  2000 settings made for meso_rho
+  1900 settings made for meso_rho
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
-# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-#The temperature is set to .
-pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1e9
-pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * * sph/rhosum   6.75e-05
-pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
-pair_coeff         * *    sdpd 1000 ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
-pair_coeff         * *    sdpd 1000 0.3 ${sdpd_eta} ${h} ${sdpd_temp}
-pair_coeff         * *    sdpd 1000 0.3 0.015 ${h} ${sdpd_temp}
-pair_coeff         * *    sdpd 1000 0.3 0.015 6.75e-05 ${sdpd_temp}
-pair_coeff         * *    sdpd 1000 0.3 0.015 6.75e-05 1e9
-
-compute            rho_peratom fluid meso_rho/atom
-compute            e_peratom fluid meso_e/atom
-compute            ke_peratom fluid ke/atom
-compute            esph fluid reduce sum c_e_peratom
-compute            ke fluid ke
-compute            sdpd_kin fluid temp
-variable           etot equal c_ke+c_esph
-
-
-# do full time integration for shear driver and fluid, but keep walls stationary
-variable           velwall    equal 1e-1
-variable           negvelwall    equal -1*${velwall}
-variable           negvelwall    equal -1*0.1
-fix                integrate_fix_full all meso
-velocity           uwall set ${velwall} 0.0 0.0 units box
-velocity           uwall set 0.1 0.0 0.0 units box
-velocity           lwall set ${negvelwall} 0.0 0.0 units box
-velocity           lwall set -0.1 0.0 0.0 units box
-fix                freeze_fixu uwall setforce 0.0 0.0 0.0
-fix                freeze_fixl lwall setforce 0.0 0.0 0.0
-
-compute vxav all reduce ave vx
-variable  vx_cm atom vx
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} y center 0.01 v_vx_cm file vx.av ave running units reduced
-fix av_vx all ave/spatial 1 1000 ${Nfreq} y center 0.01 v_vx_cm file vx.av ave running units reduced
-fix av_vx all ave/spatial 1 1000 1000 y center 0.01 v_vx_cm file vx.av ave running units reduced
-
-dump               dump_all all custom 10 dump*.dat x y z vx vy vz id type c_rho_peratom
-dump_modify        dump_all first yes
-dump_modify        dump_all sort id
-dump_modify        dump_all pad 8
-dump               dump_fluid fluid custom 10 dumpfluid*.dat x y z vx vy vz id type c_rho_peratom
-dump_modify        dump_fluid first yes
-dump_modify        dump_fluid sort id
-dump_modify        dump_fluid pad 8
-
-thermo             10
-thermo_style       custom step  c_sdpd_kin
-thermo_modify      norm no
-
-dump imgDump all image 10 image.*.jpg type type atom yes bond type 5e-6 adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
-dump_modify        imgDump pad 9
-dump imgDump2 all image 10 image2.*.jpg type type atom yes bond type 5e-6 adiam 1e-5 view 60 30 zoom 1.3  box yes 0.01
-dump_modify        imgDump2 pad 9
-
-
-neighbor           1.0e-6 bin
-include            settimestep.lmp
-variable dt_eta equal 1/8.0*${dx}*${dx}/(${sdpd_mu})
-variable dt_eta equal 1/8.0*2.5e-05*${dx}/(${sdpd_mu})
-variable dt_eta equal 1/8.0*2.5e-05*2.5e-05/(${sdpd_mu})
-variable dt_eta equal 1/8.0*2.5e-05*2.5e-05/(1.5e-05)
-variable dt_c equal 1/4.0*${dx}/${sdpd_c}
-variable dt_c equal 1/4.0*2.5e-05/${sdpd_c}
-variable dt_c equal 1/4.0*2.5e-05/0.3
-
-if "${dt_c}>${dt_eta}" then "variable dt equal ${dt_eta}" else "variable dt equal ${dt_c}"
-variable dt equal ${dt_eta}
-variable dt equal 5.208333333e-06
-print "(settimestep) dt_c dt_eta dt ${dt_c} ${dt_eta} ${dt}"
-(settimestep) dt_c dt_eta dt 2.083333333e-05 5.208333333e-06 5.208333333e-06
-timestep           ${dt}
-timestep           5.208333333e-06
-communicate        single vel yes
-run                10000000
-WARNING: Use special bonds = 0,1,1 with bond style fene (bond_fene.cpp:189)
-Memory usage per processor = 4.7012 Mbytes
-Step sdpd_kin 
-       0 3.4325538e+08 
-      10 6.6030983e+09 
-      20 5.83416
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 
