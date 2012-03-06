@@ -1,5 +1,5 @@
 function Spetra()
-filelist=dir(fullfile('dump*.dat.prj'));
+filelist=dir(fullfile('projection.dat.prj'));
 nfile=length(filelist);
 Ek=zeros();
 for filenumber=1:nfile
