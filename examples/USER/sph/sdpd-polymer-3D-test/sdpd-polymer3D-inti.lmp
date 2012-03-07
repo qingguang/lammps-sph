@@ -9,19 +9,16 @@ boundary          p p p
 
 # create simulation box
 #3D box
-variable           L  equal 5.0e-4
-region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
+include           3d-vars.lmp
+region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 create_box         1 box
 
 # create fluid particles
-#lattice            fcc 0.025e-3
-lattice            sc 2.5e-5
+lattice            sc ${dx}
 create_atoms       1 region box
 
-variable           sdpd_mass equal 3.90625e-12
 mass               1  ${sdpd_mass}
 
-#variable  sdpd_temp index 1.0e-5
 
 
 timestep           0.0e-5

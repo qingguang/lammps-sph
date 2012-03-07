@@ -30,6 +30,7 @@ function ext()
  warning("Polymer with beads %d",nb);
  extfun=extfun/nfile;
  rg2 = rg2/nfile;
+ corfun = corfun/nfile;
  dtime = 0:size(extfun, 1)-1;
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");

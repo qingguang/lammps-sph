@@ -13,7 +13,7 @@ read_data         poly.txt
 region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx}  side in units box
 region            uwall block 0.0 ${Lx} ${lb} ${lLx} 0.0 ${Lx}  side out units box
 region            lwall block 0.0 ${Lx} 0.0 ${ub} 0.0 ${Lx} side out units box
-lattice            bcc ${dx}
+lattice            fcc ${dx}
 create_atoms       3 region uwall
 create_atoms       3 region lwall
 
@@ -26,9 +26,8 @@ bond_coeff  1 ${H} ${r0} 0.0 0.0
 group              uwall region uwall 
 group              lwall region lwall
 group              fluid region fluid 
-
+group              walls union uwall lwall
 mass              * ${sdpd_mass}
-variable          wall_rho equal ${sdpd_mass}*0.5
 set                group all meso_rho ${sdpd_rho}
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
@@ -36,9 +35,11 @@ set                group all meso_rho ${sdpd_rho}
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to .
 #pair_style         hybrid/overlay sph/rhosum 1 sdpd
+#pair_style         hybrid/overlay  sph/lj sdpd
 pair_style         hybrid  sdpd
 variable           sdpd_temp index 1e9
 #pair_coeff         * * sph/rhosum   ${h}
+#pair_coeff         1 3  sph/lj  ${sdpd_eta} ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
 compute            rho_peratom fluid meso_rho/atom
@@ -54,6 +55,7 @@ variable           etot equal c_ke+c_esph
 variable           velwall    equal 1.0e-1
 variable           negvelwall    equal -1*${velwall}
 fix                integrate_fix_full all meso
+fix                solidwall     walls   meso/stationary
 velocity           uwall set ${velwall} 0.0 0.0 units box
 velocity           lwall set ${negvelwall} 0.0 0.0 units box
 fix                freeze_fixu uwall setforce 0.0 0.0 0.0

@@ -53,7 +53,7 @@ compute            rho_peratom all meso_rho/atom
 fix                integrate_fix_full all meso
 variable        nvt_temp equal  1.0
 #fix             1 all nvt/sllod temp v_nvt_temp v_nvt_temp v_nvt_temp tchain 1
-fix             1 all nvt/sllod  temp 1 1 1 tchain 1
+fix             1 all nvt/sllod  temp 1e9 1e9 1e9 tchain 1
 
 include            ${simtype}/addforce.lmp
 

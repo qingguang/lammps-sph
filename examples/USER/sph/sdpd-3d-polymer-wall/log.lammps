@@ -41,7 +41,7 @@ variable          sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*1000
 read_data         poly.txt
   1 = max bonds/atom
   orthogonal box = (0 -5e-05 0) to (0.00025 0.0003125 0.00025)
-  1 by 3 by 1 processor grid
+  1 by 2 by 1 processor grid
   1000 atoms
   1000 velocities
   450 bonds
@@ -90,14 +90,14 @@ group              lwall region lwall
 400 atoms in group lwall
 group              fluid region fluid 
 1000 atoms in group fluid
-
+group              walls union uwall lwall
+900 atoms in group walls
 mass              * ${sdpd_mass}
 mass              * 1.5625e-11
-variable          wall_rho equal ${sdpd_mass}*0.5
-variable          wall_rho equal 1.5625e-11*0.5
 set                group all meso_rho ${sdpd_rho}
 set                group all meso_rho 1000
   1900 settings made for meso_rho
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is s

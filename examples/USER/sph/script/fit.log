@@ -87,3 +87,636 @@ correlation matrix of the fit parameters:
 
                c      
 c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 08:55:55 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 384 iterations the fit converged.
+final sum of squares of residuals : 6.05749e+16
+rel. change during last iteration : -7.55305e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.42097e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.01916e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 76.7414          +/- 260.9        (340%)
+tau             = 1.51254          +/- 0.3097       (20.48%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 08:55:55 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 8.95386e+16
+rel. change during last iteration : -4.82473e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.49615e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.23847e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.375348         +/- 0.03028      (8.067%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 10:55:51 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 384 iterations the fit converged.
+final sum of squares of residuals : 6.05749e+16
+rel. change during last iteration : -7.55305e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.42097e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.01916e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 76.7414          +/- 260.9        (340%)
+tau             = 1.51254          +/- 0.3097       (20.48%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 10:55:51 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 8.95386e+16
+rel. change during last iteration : -4.82473e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.49615e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.23847e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.375348         +/- 0.03028      (8.067%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 10:55:58 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 384 iterations the fit converged.
+final sum of squares of residuals : 6.05749e+16
+rel. change during last iteration : -7.55305e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.42097e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.01916e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 76.7414          +/- 260.9        (340%)
+tau             = 1.51254          +/- 0.3097       (20.48%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 10:55:58 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 8.95386e+16
+rel. change during last iteration : -4.82473e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.49615e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.23847e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.375348         +/- 0.03028      (8.067%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 11:01:04 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 384 iterations the fit converged.
+final sum of squares of residuals : 6.05749e+16
+rel. change during last iteration : -7.55305e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.42097e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.01916e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 76.7414          +/- 260.9        (340%)
+tau             = 1.51254          +/- 0.3097       (20.48%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 11:01:04 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 8.95386e+16
+rel. change during last iteration : -4.82473e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.49615e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.23847e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.375348         +/- 0.03028      (8.067%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 11:07:36 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 384 iterations the fit converged.
+final sum of squares of residuals : 6.05749e+16
+rel. change during last iteration : -7.55305e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.42097e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.01916e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 76.7414          +/- 260.9        (340%)
+tau             = 1.51254          +/- 0.3097       (20.48%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 11:07:36 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 9.61526e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 8.95386e+16
+rel. change during last iteration : -4.82473e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1.49615e+08
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.23847e+16
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.375348         +/- 0.03028      (8.067%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 12:03:07 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+BREAK:          No data to fit 
+
+
+
+*******************************************************************************
+Wed Mar  7 12:10:33 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 2.22357e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 279 iterations the fit converged.
+final sum of squares of residuals : 2.20654e+14
+rel. change during last iteration : -1.71696e-08
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 8.57622e+06
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.35515e+13
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 0.0723572        +/- 0.01097      (15.16%)
+tau             = 2.20747          +/- 0.01368      (0.6199%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 12:10:33 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 2.22357e+18       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 1.77503e+16
+rel. change during last iteration : -3.0422e-15
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 6.66151e+07
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4.43757e+15
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.699411         +/- 0.01348      (1.928%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
+
+
+*******************************************************************************
+Wed Mar  7 13:41:04 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 1.29163e+19       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 1.73407e+10
+
+initial set of free parameter values
+
+c1              = 1
+tau             = 2
+
+After 513 iterations the fit converged.
+final sum of squares of residuals : 2.05077e+15
+rel. change during last iteration : -4.50041e-06
+
+degrees of freedom    (FIT_NDF)                        : 3
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.61456e+07
+variance of residuals (reduced chisquare) = WSSR/ndf   : 6.83591e+14
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c1              = 0.101234         +/- 0.1146       (113.2%)
+tau             = 2.09054          +/- 0.1023       (4.893%)
+
+
+correlation matrix of the fit parameters:
+
+               c1     tau    
+c1              1.000 
+tau            -1.000  1.000 
+
+
+*******************************************************************************
+Wed Mar  7 13:41:04 2012
+
+
+FIT:    data read from "< head -5 spectra.dat"
+        format = z
+        #datapoints = 5
+        residuals are weighted equally (unit weight)
+
+function used for fitting: t(x)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 1.29163e+19       delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 2.20966e+09
+
+initial set of free parameter values
+
+c               = 1
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 2.59625e+15
+rel. change during last iteration : -2.17814e-13
+
+degrees of freedom    (FIT_NDF)                        : 4
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.54767e+07
+variance of residuals (reduced chisquare) = WSSR/ndf   : 6.49062e+14
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.272698         +/- 0.005156     (1.891%)
+
+
+correlation matrix of the fit parameters:
+
+               c      
+c               1.000 
