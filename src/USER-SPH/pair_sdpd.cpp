@@ -201,8 +201,8 @@ void PairSDPD::compute(int eflag, int vflag) {
         const double Fij=-wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         wiener.get_wiener_Espanol(sqrtdt);
-const double numi=rho[i]/imass;
-const double numj=rho[j]/jmass;
+	const double numi=rho[i]/imass;
+	const double numj=rho[j]/jmass;
         const double fvisc = viscosity[itype][jtype] *(1/(numi*numi)+1/(numj*numj)) * wfd;
 
         //define random force
@@ -353,7 +353,7 @@ void PairSDPD::coeff(int narg, char **arg) {
 double PairSDPD::init_one(int i, int j) {
 
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"Not all pair sdpd coeffs are not set");
+    error->all(FLERR,"Not all pair sdpd coeffs are set");
   }
   cut[j][i] = cut[i][j];
   viscosity[j][i] = viscosity[i][j];
@@ -365,6 +365,7 @@ double PairSDPD::init_one(int i, int j) {
 
 double PairSDPD::single(int i, int j, int itype, int jtype,
                         double rsq, double factor_coul, double factor_lj, double &fforce) {
+  std::cerr << "PairSDPD:single is called" << std::endl;
   fforce = 0.0;
   return 0.0;
 }

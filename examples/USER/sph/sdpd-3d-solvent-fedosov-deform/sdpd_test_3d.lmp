@@ -66,6 +66,12 @@ variable  vx_cm atom vx
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file vx.av ave running units reduced
 
+# order of components xx, yy, zz, xy, xz, yz.
+compute stress all stress/atom virial
+#variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
+variable stress_pressure atom c_stress[4]
+fix av_xy_stress all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y lower 0.01 v_stress_pressure file sxy.av units reduced ave running
 
 dump               dump_id all custom 100 dump*.dat x y z vx vy vy c_rho_peratom id type
 dump_modify        dump_id first yes
@@ -89,5 +95,14 @@ neigh_modify       delay 0 every 1
 include            settimestep.lmp
 timestep           ${dt}
 communicate        single vel yes
+
+run                400
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
 
 run                400000
