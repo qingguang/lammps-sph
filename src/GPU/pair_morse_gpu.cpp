@@ -62,9 +62,10 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairMorseGPU::PairMorseGPU(LAMMPS *lmp) : PairMorse(lmp), gpu_mode(GPU_PAIR)
+PairMorseGPU::PairMorseGPU(LAMMPS *lmp) : PairMorse(lmp), gpu_mode(GPU_FORCE)
 {
   cpu_time = 0.0;
+  GPU_EXTRA::gpu_ready(lmp->modify, lmp->error); 
 }
 
 /* ----------------------------------------------------------------------
@@ -88,7 +89,7 @@ void PairMorseGPU::compute(int eflag, int vflag)
   
   bool success = true;
   int *ilist, *numneigh, **firstneigh;    
-  if (gpu_mode == GPU_NEIGH) {
+  if (gpu_mode != GPU_FORCE) {
     inum = atom->nlocal;
     firstneigh = mor_gpu_compute_n(neighbor->ago, inum, nall,
 				   atom->x, atom->type, domain->sublo,
@@ -150,7 +151,7 @@ void PairMorseGPU::init_style()
 			     cell_size, gpu_mode, screen);
   GPU_EXTRA::check_flag(success,error,world);
 
-  if (gpu_mode != GPU_NEIGH) {
+  if (gpu_mode == GPU_FORCE) {
     int irequest = neighbor->request(this);
     neighbor->requests[irequest]->half = 0;
     neighbor->requests[irequest]->full = 1;
