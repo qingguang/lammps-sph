@@ -1,4 +1,5 @@
 #! /bin/bash
+rm *.jpg *.dat vx.av
 
 configfile=$HOME/lammps-sph.sh
 if [ -f "${configfile}" ]; then

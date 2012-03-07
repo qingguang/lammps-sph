@@ -1,5 +1,5 @@
 echo               both
-variable           ndim string  2
+variable           ndim string  3
 # type of the simulation
 #variable           simtype string "reverse-poiseuille"
 variable           simtype string "deform"
@@ -51,11 +51,20 @@ compute            rho_peratom all meso_rho/atom
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
+variable        nvt_temp equal  1.0
+#fix             1 all nvt/sllod temp v_nvt_temp v_nvt_temp v_nvt_temp tchain 1
+fix             1 all nvt/sllod  temp 1e9 1e9 1e9 tchain 1
 
 include            ${simtype}/addforce.lmp
 
 # "profile" corrected temperature                                                                                            
 compute         pTemp all temp/profile 1 1 0 y 5
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
 
 # order of components xx, yy, zz, xy, xz, yz.
 compute stress all stress/atom virial
@@ -71,6 +80,11 @@ dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
 thermo             10
+dump imgDump all image 10 image.*.jpg type type  adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
+dump_modify        imgDump pad 9
+dump imgDump2 all image 10 image2.*.jpg type type adiam 1e-5 view 60 30 zoom 1.3  box yes 0.01
+dump_modify        imgDump2 pad 9
+
 
 #variable           vkin equal c_sdpd_kin
 #fix extra all print 10 "${vkin}" file "kin.dat.dt"

@@ -2,4 +2,3 @@ print "======================== add force from deform"
 
 # add deformation of the box
 fix		deform_id all deform 1 xy erate ${deform_rate} remap v units box
-

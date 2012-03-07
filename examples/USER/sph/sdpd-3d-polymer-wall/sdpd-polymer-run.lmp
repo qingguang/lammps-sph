@@ -10,15 +10,10 @@ include           3d-vars.lmp
 read_data         poly.txt
 
 # create wall particles
-variable          ub equal ${Lx}+2.5*${dx}
-variable          lb equal -2.0*${dx}
-variable          hdx equal 0.5*${dx}
-variable          hLx equal ${Lx}+0.5*${dx}
-variable          lLx equal ${Lx}-0.5*${dx}
-region            fluid block 0.0 ${Lx} ${dx} ${lLx} 0.0 ${Lx} units box
-region            uwall block 0.0 ${Lx} ${Lx} ${ub} 0.0 ${Lx} units box
-region            lwall block 0.0 ${Lx} ${lb} 0.0 0.0 ${Lx} units box
-lattice            sc ${dx}
+region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx}  side in units box
+region            uwall block 0.0 ${Lx} ${lb} ${lLx} 0.0 ${Lx}  side out units box
+region            lwall block 0.0 ${Lx} 0.0 ${ub} 0.0 ${Lx} side out units box
+lattice            fcc ${dx}
 create_atoms       3 region uwall
 create_atoms       3 region lwall
 
@@ -31,18 +26,20 @@ bond_coeff  1 ${H} ${r0} 0.0 0.0
 group              uwall region uwall 
 group              lwall region lwall
 group              fluid region fluid 
-
-mass               1 ${sdpd_mass}
-mass               2 ${sdpd_mass}
+group              walls union uwall lwall
+mass              * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to .
-pair_style         hybrid/overlay sph/rhosum 1 sdpd
+#pair_style         hybrid/overlay sph/rhosum 1 sdpd
+#pair_style         hybrid/overlay  sph/lj sdpd
+pair_style         hybrid  sdpd
 variable           sdpd_temp index 1e9
-pair_coeff         * * sph/rhosum   ${h}
+#pair_coeff         * * sph/rhosum   ${h}
+#pair_coeff         1 3  sph/lj  ${sdpd_eta} ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
 compute            rho_peratom fluid meso_rho/atom
@@ -55,25 +52,30 @@ variable           etot equal c_ke+c_esph
 
 
 # do full time integration for shear driver and fluid, but keep walls stationary
-variable           velwall    equal 1e-1
+variable           velwall    equal 1.0e-1
 variable           negvelwall    equal -1*${velwall}
 fix                integrate_fix_full all meso
+fix                solidwall     walls   meso/stationary
 velocity           uwall set ${velwall} 0.0 0.0 units box
 velocity           lwall set ${negvelwall} 0.0 0.0 units box
 fix                freeze_fixu uwall setforce 0.0 0.0 0.0
 fix                freeze_fixl lwall setforce 0.0 0.0 0.0
 
+compute vxav fluid reduce ave vx
+variable  vx_cm atom vx
+fix av_vx fluid ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
 
-dump               dump_all all custom 10 dump*.dat x y vx vy id type c_rho_peratom
+dump               dump_all all custom 10 dump*.dat x y z vx vy vz id type c_rho_peratom
 dump_modify        dump_all first yes
 dump_modify        dump_all sort id
 dump_modify        dump_all pad 8
-dump               dump_fluid fluid custom 10 dumpfluid*.dat x y vx vy id type c_rho_peratom
+dump               dump_fluid fluid custom 10 dumpfluid*.dat x y z vx vy vz id type c_rho_peratom
 dump_modify        dump_fluid first yes
 dump_modify        dump_fluid sort id
 dump_modify        dump_fluid pad 8
 
-thermo             10
+thermo             100
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 
@@ -84,6 +86,9 @@ dump_modify        imgDump2 pad 9
 
 
 neighbor           1.0e-6 bin
+neigh_modify       delay 0 every 1
+
 include            settimestep.lmp
 timestep           ${dt}
+communicate        single vel yes
 run                10000000

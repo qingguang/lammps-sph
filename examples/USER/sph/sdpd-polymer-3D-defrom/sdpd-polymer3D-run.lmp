@@ -1,24 +1,21 @@
 echo               both
-dimension          2
+dimension          3
 units              si
 atom_style   hybrid  bond meso
 boundary          p p p
 # create simulation box
 #3D box
-read_data           poly3d.txt
 include             3d-vars.lmp
+region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
+read_data           poly3d.txt
 
 special_bonds   lj 1 1 1
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
 
-
-
-mass               1 ${sdpd_mass}
+#mass               1 ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
-# smothing length
-variable          h equal 6.5e-5
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
@@ -38,10 +35,13 @@ compute            sdpd_kin all temp
 variable           etot equal c_ke+c_esph
 
 # Lees Edwards type boundary conditions
-# fix		2 all deform 1 xy erate 5e-2 remap v
+
+fix		2 all deform 1 xy erate ${def_rate} remap v units box
 
 # do full time integration 
-fix                integrate_fix_full all meso
+fix            integrate_fix_full all meso
+
+fix             1 all nvt/sllod temp 1.0 1.0 1.0 tchain 1
 
 
 dump               dump_id all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom
@@ -52,23 +52,25 @@ dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
 thermo             100
-
-dump imgDump all image 1000 image.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump imgDump all image 100 image.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9
+dump imgDump2 all image 100 image2.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump_modify        imgDump2 pad 9
 
 
 neighbor           3.0e-6 bin
+neigh_modify       delay 0 every 1
+
 include            settimestep.lmp
 timestep           ${dt}
 
-# initial part
-run                10
+communicate        single vel yes
 
 # average velocity
-variable          Nfreq equal 100
+variable          Nfreq equal 1000
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file vx.av ave running units reduced
 
-run                40000
+run                400000

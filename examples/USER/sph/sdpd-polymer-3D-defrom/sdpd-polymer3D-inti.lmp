@@ -1,7 +1,7 @@
 clear
 
 echo               both
-dimension          2
+dimension          3
 units              si
 atom_style   hybrid  bond meso
 boundary          p p p
@@ -10,11 +10,11 @@ boundary          p p p
 # create simulation box
 #3D box
 include            3d-vars.lmp
-region		   box prism 0.0 ${Lx}  0.0 ${Ly} -${Lz} ${Lz} 0 0 0 units box
+region		   box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
 create_box         1 box
 
 # create fluid particles
-lattice            sq2 ${dx}
+lattice            sc ${dx}
 create_atoms       1 region box
 
 mass               1  ${sdpd_mass}
