@@ -1,4 +1,4 @@
-F=500
+F=5000
 dx=2.5e-5
 sdpd_c=8e-1
 sdpd_rho=1e3
