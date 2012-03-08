@@ -8,7 +8,7 @@ else
     exit -1
 fi
 
-rm -rf dum* im* vx.av
+rm -rf dum* im* vx.av log* poly*
 ${lmp} -in sdpd-polymer3D-inti.lmp
 ${restart2data} poly3d.restart poly3d.txt
 

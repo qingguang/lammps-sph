@@ -81,4 +81,6 @@ neigh_modify       delay 0 every 1
 
 include            settimestep.lmp
 timestep           ${dt}
+communicate        single vel yes
+
 run                400000
