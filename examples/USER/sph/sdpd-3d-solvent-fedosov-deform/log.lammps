@@ -2,8 +2,8 @@ LAMMPS (9 Nov 2011)
 echo               both
 variable           ndim string  3
 # type of the simulation
-variable           simtype string "reverse-poiseuille"
-#variable           simtype string "deform"
+#variable           simtype string "reverse-poiseuille"
+variable           simtype string "deform"
 #variable           simtype string "solvent"
 dimension          ${ndim}
 dimension          3
@@ -37,16 +37,19 @@ variable          Nfreq equal 100
 
 # dimenshen        dependent part
 include            ${simtype}/addextravar.lmp
-include            reverse-poiseuille/addextravar.lmp
-# body force for reverse poiseuille 
-variable          gx equal 6.12
+include            deform/addextravar.lmp
+# deformation rate
+#      {erate} value = R
+#        R = engineering strain rate (1/time units)
+variable      deform_rate  equal 50
 
 variable          Lx equal ${Lxbase}
 variable          Lx equal 0.0003606
-variable          Ly equal 2.0*${Lybase}
-variable          Ly equal 2.0*0.0009015
+variable          Ly equal ${Lybase}
+variable          Ly equal 0.0009015
 
-if "${ndim}==3" then "variable          Lz equal ${Lzbase}"variable          Lz equal ${Lzbase}
+if "${ndim}==3" then "variable          Lz equal ${Lzbase}"
+variable          Lz equal ${Lzbase}
 variable          Lz equal 0.0001803include            ${ndim}d-vars.lmp
 include            3d-vars.lmp
 variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
@@ -55,19 +58,19 @@ variable           sdpd_mass equal 2.5e-05*2.5e-05*${dx}*${sdpd_rho}
 variable           sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*${sdpd_rho}
 variable           sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*1000
 variable           Lz  equal ${Ly}/50*5
-variable           Lz  equal 0.001803/50*5
+variable           Lz  equal 0.0009015/50*5
 include            ${simtype}/addlattice.lmp
-include            reverse-poiseuille/addlattice.lmp
+include            deform/addlattice.lmp
 variable           eps equal 1e-3*${Lx}
 variable           eps equal 1e-3*0.0003606
 variable           negeps equal -${eps}
 variable           negeps equal -3.606e-07
 
-if "${ndim}==2" then "region             box block 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} units box" else "region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box"
-region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
-region             box block 0.0 0.0003606  0.0 ${Ly} 0.0 ${Lz} units boxregion             box block 0.0 0.0003606  0.0 0.001803 0.0 ${Lz} units boxregion             box block 0.0 0.0003606  0.0 0.001803 0.0 0.0001803 units box
+if "${ndim}==2" then "region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box " else "region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box "
+region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box 
+region             box prism 0.0 0.0003606  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 0.0 ${Lz} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 0.0 9.015e-05 0 0 0 units box 
 create_box         1 box
-Created orthogonal box = (0 0 0) to (0.0003606 0.001803 0.0001803)
+Created triclinic box = (0 0 0) to (0.0003606 0.0009015 9.015e-05) with tilt (0 0 0)
   1 by 2 by 1 processor grid
 
 if "${ndim}==2" then "lattice            sq2 ${dx}" else "lattice           sc ${dx}"
@@ -76,14 +79,15 @@ lattice           sc 2.5e-05Lattice spacing in x,y,z = 2.5e-05 2.5e-05 2.5e-05
 
 variable           eps delete
 variable           negeps delete
+
 create_atoms       1 region box
-Created 8760 atoms
+Created 2220 atoms
 
 mass               1 ${sdpd_mass}
 mass               1 1.5625e-11
 set                group all meso_rho ${sdpd_rho}
 set                group all meso_rho 1000
-  8760 settings made for meso_rho
+  2220 settings made for meso_rho
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
@@ -106,14 +110,13 @@ compute            rho_peratom all meso_rho/atom
 fix                integrate_fix_full all meso
 
 include            ${simtype}/addforce.lmp
-include            reverse-poiseuille/addforce.lmp
-variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
-variable bodyfx atom mass*6.12*((y>${Ly}/2.0)-(y<${Ly}/2.0))
-variable bodyfx atom mass*6.12*((y>0.001803/2.0)-(y<${Ly}/2.0))
-variable bodyfx atom mass*6.12*((y>0.001803/2.0)-(y<0.001803/2.0))
-fix reverce_periodic all addforce v_bodyfx 0.0 0.0
+include            deform/addforce.lmp
+print "======================== add force from deform"
+======================== add force from deform
 
-print "======================== add force from reverse-poiseuille"======================== add force from reverse-poiseuille
+# add deformation of the box
+fix		deform_id all deform 1 xy erate ${deform_rate} remap v units box
+fix		deform_id all deform 1 xy erate 50 remap v units box
 
 # "profile" corrected temperature                                                                                            
 compute         pTemp all temp/profile 1 1 0 y 5
@@ -154,31 +157,31 @@ timestep           5.208333333e-06
 communicate        single vel yes
 
 run                400
-Memory usage per processor = 8.45601 Mbytes
+Memory usage per processor = 3.96413 Mbytes
 Step sdpd_kin 
        0            0 
-     100 1.0696485e+09 
-     200 1.0172515e+09 
-     300 1.0041436e+09 
-     400 1.0423243e+09 
-Loop time of 208.628 on 2 procs for 400 steps with 8760 atoms
+     100  1.12226e+09 
+     200 1.0680341e+09 
+     300 1.0033488e+09 
+     400 1.077466e+09 
+Loop time of 56.145 on 2 procs for 400 steps with 2220 atoms
 
-Pair  time (%) = 188.126 (90.1731)
-Neigh time (%) = 4.64219 (2.22511)
-Comm  time (%) = 15.5294 (7.4436)
-Outpt time (%) = 0.000435948 (0.00020896)
-Other time (%) = 0.32957 (0.15797)
+Pair  time (%) = 51.7492 (92.1706)
+Neigh time (%) = 1.82353 (3.24789)
+Comm  time (%) = 2.53273 (4.51105)
+Outpt time (%) = 0.000145078 (0.000258398)
+Other time (%) = 0.0394419 (0.0702501)
 
-Nlocal:    4380 ave 4390 max 4370 min
+Nlocal:    1110 ave 1112 max 1108 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Nghost:    8084.5 ave 8085 max 8084 min
+Nghost:    4079 ave 4091 max 4067 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Neighs:    238900 ave 239442 max 238359 min
+Neighs:    61276 ave 61321 max 61231 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-FullNghs: 477801 ave 478874 max 476728 min
+FullNghs: 122552 ave 122639 max 122465 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
 
-Total # of neighbors = 955602
-Ave neighs/atom = 109.087
-Neighbor list builds = 160
-Dangerous builds = 7
+Total # of neighbors = 245104
+Ave neighs/atom = 110.407
+Neighbor list builds = 204
+Dangerous builds = 8

@@ -1,8 +1,8 @@
 echo               both
 variable           ndim string  3
 # type of the simulation
-variable           simtype string "reverse-poiseuille"
-#variable           simtype string "deform"
+#variable           simtype string "reverse-poiseuille"
+variable           simtype string "deform"
 #variable           simtype string "solvent"
 dimension          ${ndim}
 units              si
@@ -68,7 +68,7 @@ compute         pTemp all temp/profile 1 1 0 y 5
 
 #variable           vkin equal c_sdpd_kin
 #fix extra all print 10 "${vkin}" file "kin.dat.dt"
-thermo_style       custom step c_sdpd_kin
+thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 

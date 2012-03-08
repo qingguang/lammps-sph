@@ -6,7 +6,7 @@ boundary          p p p
 # create simulation box
 #3D box
 include             3d-vars.lmp
-region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
+region             box prism 0.0 ${Lxbase}  0.0 ${Lybase} 0.0 ${Lzbase} 0 0 0 units box
 read_data           poly3d.txt
 
 special_bonds   lj 1 1 1
@@ -27,12 +27,12 @@ variable           sdpd_temp index 1e9
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
 compute            rho_peratom all meso_rho/atom
-compute            e_peratom all meso_e/atom
-compute            ke_peratom all ke/atom
-compute            esph all reduce sum c_e_peratom
-compute            ke all ke
+#compute            e_peratom all meso_e/atom
+#compute            ke_peratom all ke/atom
+#compute            esph all reduce sum c_e_peratom
+#compute            ke all ke
 compute            sdpd_kin all temp
-variable           etot equal c_ke+c_esph
+#variable           etot equal c_ke+c_esph
 
 # Lees Edwards type boundary conditions
 
@@ -68,7 +68,7 @@ communicate        single vel yes
 
 # average velocity
 
-variable          Nfreq equal 1000
+variable          Nfreq equal 100
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
