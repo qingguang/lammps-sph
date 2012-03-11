@@ -21,7 +21,7 @@ function ext()
       corfun = vautocor(gete2e(data));
     else
       extfun = extfun + getpolymerext(data);
-      rg2 = rg2 + getpolymerext(data);
+      rg2 = rg2 + getrg2(data);
       corfun = corfun + vautocor(gete2e(data));
     endif
   endfor
