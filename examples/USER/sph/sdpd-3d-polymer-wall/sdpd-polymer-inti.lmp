@@ -18,10 +18,7 @@ lattice            sc ${dx}
 create_atoms       1 region fluid
 group              fluid region fluid
 
-variable          wall_mass equal ${sdpd_mass}*0.5
-mass               1 ${sdpd_mass}
-mass               2 ${sdpd_mass}
-mass               3 ${wall_mass}
+mass               * ${sdpd_mass}
 
 #set                group all meso_rho ${sdpd_rho}
 

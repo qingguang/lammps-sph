@@ -1,5 +1,4 @@
 clear
-
 echo               both
 dimension          3
 units              si
@@ -10,7 +9,7 @@ boundary          p p p
 # create simulation box
 #3D box
 include            3d-vars.lmp
-region		   box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
+region		   box prism 0.0 ${Lxbase}  0.0 ${Lybase} 0.0 ${Lzbase} 0 0 0 units box
 create_box         1 box
 
 # create fluid particles
@@ -19,7 +18,6 @@ create_atoms       1 region box
 
 mass               1  ${sdpd_mass}
 
-#variable  sdpd_temp index 1.0e-5
 
 
 timestep           0.0e-5
