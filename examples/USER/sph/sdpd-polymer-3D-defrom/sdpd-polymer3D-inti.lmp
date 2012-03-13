@@ -3,6 +3,7 @@ echo               both
 dimension          3
 units              si
 atom_style   hybrid  bond meso
+#atom_style       meso
 boundary          p p p
 
 

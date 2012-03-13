@@ -131,7 +131,7 @@ compute         pTemp all temp/profile 1 1 0 y 5
 
 #variable           vkin equal c_sdpd_kin
 #fix extra all print 10 "${vkin}" file "kin.dat.dt"
-thermo_style       custom step c_sdpd_kin
+thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 
@@ -156,32 +156,29 @@ timestep           5.208333333e-06
 
 communicate        single vel yes
 
-run                400
+run                100
 Memory usage per processor = 3.96413 Mbytes
-Step sdpd_kin 
-       0            0 
-     100  1.12226e+09 
-     200 1.0680341e+09 
-     300 1.0033488e+09 
-     400 1.077466e+09 
-Loop time of 56.145 on 2 procs for 400 steps with 2220 atoms
+Step sdpd_kin pTemp 
+       0            0            0 
+     100  1.12226e+09 1.0151006e+09 
+Loop time of 13.7279 on 2 procs for 100 steps with 2220 atoms
 
-Pair  time (%) = 51.7492 (92.1706)
-Neigh time (%) = 1.82353 (3.24789)
-Comm  time (%) = 2.53273 (4.51105)
-Outpt time (%) = 0.000145078 (0.000258398)
-Other time (%) = 0.0394419 (0.0702501)
+Pair  time (%) = 13.1439 (95.7455)
+Neigh time (%) = 0.488846 (3.56096)
+Comm  time (%) = 0.0852355 (0.620891)
+Outpt time (%) = 0.000113964 (0.000830162)
+Other time (%) = 0.00986588 (0.0718672)
 
-Nlocal:    1110 ave 1112 max 1108 min
+Nlocal:    1110 ave 1114 max 1106 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Nghost:    4079 ave 4091 max 4067 min
+Nghost:    4069 ave 4081 max 4057 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Neighs:    61276 ave 61321 max 61231 min
+Neighs:    60668 ave 60871 max 60465 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-FullNghs: 122552 ave 122639 max 122465 min
+FullNghs: 121336 ave 121785 max 120887 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
 
-Total # of neighbors = 245104
-Ave neighs/atom = 110.407
-Neighbor list builds = 204
+Total # of neighbors = 242672
+Ave neighs/atom = 109.312
+Neighbor list builds = 54
 Dangerous builds = 8

@@ -21,7 +21,7 @@ function ext()
       corfun = vautocor(gete2e(data));
     else
       extfun = extfun + getpolymerext(data);
-      rg2 = rg2 + getpolymerext(data);
+      rg2 = rg2 + getrg2(data);
       corfun = corfun + vautocor(gete2e(data));
     endif
   endfor
@@ -76,7 +76,8 @@ function Rg2 = getrg2(data)
   nb = size(data, 2);
   Rcom = mean(data, 2);
   Rincm = data - repmat(Rcom, [1, nb, 1]);
-  Rg2 = mean(sumsq(Rincm, 3), 2);
+  Rg2 = sqrt(mean(sumsq(Rincm, 3), 2));
+  
 endfunction
 
 function Rext = Rext(data, dim)

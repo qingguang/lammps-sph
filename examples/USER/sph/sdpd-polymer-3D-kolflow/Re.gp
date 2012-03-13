@@ -1,4 +1,4 @@
-F=5000
+F=1000
 dx=2.5e-5
 sdpd_c=8e-1
 sdpd_rho=1e3
@@ -7,7 +7,7 @@ sdpd_mass=dx**3*sdpd_rho
 kb=1.3806503e-23
 T=1e9
 vt=(3*kb*T/sdpd_mass)**0.5
-L=5e-4
+L=1e-3
 
 ky=2*3.141592653/L
 v0=F/(sdpd_mu*ky**2)

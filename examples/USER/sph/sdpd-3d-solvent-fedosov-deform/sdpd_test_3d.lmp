@@ -80,7 +80,7 @@ timestep           ${dt}
 
 communicate        single vel yes
 
-run                400
+run                100
 
 dump               dump_id all custom 100 dump*.dat x y z vx vy vy c_rho_peratom id type
 dump_modify        dump_id first yes

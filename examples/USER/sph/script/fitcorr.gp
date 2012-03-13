@@ -1,6 +1,7 @@
 # gnuplot script to fit autocorrelation data
-f(x) = exp(-x/tau)
+f(x) = 584*exp(-x/tau)
 
-tlim=30
-fit [0:tlim] f(x) "corr.dat" via tau
-plot "corr.dat", f(x)
+tlim=100
+fit [0:tlim] f(x) "corfun.dat" via tau
+plot "corfun.dat", f(x)
+print 'tau is:',tau
