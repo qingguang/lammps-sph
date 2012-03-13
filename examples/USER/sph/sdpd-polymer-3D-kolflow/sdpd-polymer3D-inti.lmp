@@ -10,11 +10,6 @@ boundary          p p p
 
 # create simulation box
 #3D box
-variable           dx   equal 2.5e-5
-variable           L   equal 20*${dx}
-variable           Ly  equal ${L}
-variable           Lx  equal ${L}
-variable           sdpd_rho equal 1000 
 include            ${ndim}-vars.lmp
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 create_box         1 box

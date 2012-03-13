@@ -7,20 +7,6 @@ boundary          p p p
 # create simulation box
 
 #3D box
-variable           dx   equal 2.5e-5
-variable           L   equal 20*${dx}
-variable           Ly  equal ${L}
-variable           Lx  equal ${L}
-variable           sdpd_rho equal 1000
-variable           sdpd_c equal 8e-1
-variable           sdpd_eta equal 1.5e-1
-variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
-#h is overlap
-variable          h equal 2.7*${dx}
-variable          gx equal 6.12
-variable          Nfreq equal 1000
-variable          r0       equal 1.4*${dx}
-variable          H        equal 5.3e-3
 include            ${ndim}-vars.lmp
 
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
@@ -39,7 +25,7 @@ set                group all meso_rho ${sdpd_rho}
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1e9
+variable           sdpd_temp index 1e10
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
@@ -52,7 +38,7 @@ compute            sdpd_kin all temp
 fix                integrate_fix_full all meso
 
 variable            A_kol equal 2000
-variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${L})
+variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 # "profile" corrected temperature
