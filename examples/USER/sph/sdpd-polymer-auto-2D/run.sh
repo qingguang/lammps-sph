@@ -8,10 +8,10 @@ rm -rf image*
 ../../../../tools/restart2data poly.restart poly.txt
 
 
- awk -v cutoff=3.0 -v Nbeads=18 -v Nsolvent=18 -v Npoly=full \
+ awk -v cutoff=3.0 -v Nbeads=20 -v Nsolvent=20 -v Npoly=full \
      -f addpolymer.awk poly.txt > poly2.txt
  nbound=$(tail -n 1 poly2.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly2.txt > poly.txt
 
-time /scratch/qingguang/prefix-nana/bin/mpirun -np 4  ../../../../src/lmp_linux -in sdpd-polymer-run.lmp
+time /scratch/qingguang/prefix-nana/bin/mpirun -np 1  ../../../../src/lmp_linux -in sdpd-polymer-run.lmp
 #../../../../src/lmp_linux -in sdpd-polymer-run.lmp

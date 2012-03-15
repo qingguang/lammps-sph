@@ -4,7 +4,7 @@ atom_style         meso
 
 # create simulation box
 #2D box
-region             box block -0.050e-3 1.044e-3 -0.05e-3 1.044e-3 -1.0e-6 1.0e-6 units box
+region             box block -0.050e-3 1.044e-3 -0.05e-4 1.044e-3  -0.01e-6 0.01e-6 units box
 #region             box block -0.050e-3 1.044e-3 -0.05e-3 1.044e-3 -0.05e-3 1.044e-3  units box
 create_box         3 box
 
@@ -19,7 +19,7 @@ lattice            sq2 0.025e-3
 create_atoms       2 region walls
 
 # create a driver strip of particles, which exerts shear forces on the fluid
-region             driver block EDGE EDGE 0.999e-3 EDGE EDGE EDGE side in units box 
+region             driver block EDGE EDGE 0.999e-4 EDGE EDGE EDGE side in units box 
 create_atoms       3 region driver
 
 group              fluid type 1 
@@ -47,7 +47,7 @@ compute            ke all ke
 variable           etot equal c_ke+c_esph
 
 # assign a constant velocity to shear driver
-velocity           driver set 0.001 0.0 0.0 units box
+velocity           driver set 0.0001 0.0 0.0 units box
 fix                freeze_fix driver setforce 0.0 0.0 0.0
 
 # do full time integration for shear driver and fluid, but keep walls stationary
@@ -61,7 +61,7 @@ thermo             100
 thermo_style       custom step c_esph v_etot
 thermo_modify      norm no
 
-dump            imgDump all image 1000 img.*.jpg type type adiam 2.5e-5 view 0 0
+dump            imgDump all image 10 img.*.jpg type type adiam 2.5e-5 view 30 60
 dump_modify        imgDump pad 9
 
 neighbor           3.0e-6 bin
