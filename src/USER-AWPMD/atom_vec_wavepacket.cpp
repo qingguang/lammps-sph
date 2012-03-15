@@ -268,7 +268,8 @@ int AtomVecWavepacket::pack_comm_vel(int n, int *list, double *buf,
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecWavepacket::pack_comm_hybrid(int n, int *list, double *buf)
+int AtomVecWavepacket::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc)
 {
   int i,j,m;
 
@@ -581,7 +582,8 @@ int AtomVecWavepacket::pack_border_vel(int n, int *list, double *buf,
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecWavepacket::pack_border_hybrid(int n, int *list, double *buf)
+int AtomVecWavepacket::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc)
 {
   int i,j,m;
 

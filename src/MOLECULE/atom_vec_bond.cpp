@@ -421,7 +421,8 @@ int AtomVecBond::pack_border_vel(int n, int *list, double *buf,
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecBond::pack_border_hybrid(int n, int *list, double *buf)
+int AtomVecBond::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc)
 {
   int i,j,m;
 

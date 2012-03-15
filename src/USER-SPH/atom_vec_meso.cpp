@@ -134,18 +134,38 @@ void AtomVecMeso::copy(int i, int j, int delflag) {
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecMeso::pack_comm_hybrid(int n, int *list, double *buf) {
-	//printf("in AtomVecMeso::pack_comm_hybrid\n");
+int AtomVecMeso::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc) {
 	int i, j, m;
 
 	m = 0;
-	for (i = 0; i < n; i++) {
-		j = list[i];
-		buf[m++] = rho[j];
-		buf[m++] = e[j];
-		buf[m++] = vest[j][0];
-		buf[m++] = vest[j][1];
-		buf[m++] = vest[j][2];
+	if (!deform_vremap) {
+	  for (i = 0; i < n; i++) {
+	    j = list[i];
+	    buf[m++] = rho[j];
+	    buf[m++] = e[j];
+	    buf[m++] = vest[j][0];
+	    buf[m++] = vest[j][1];
+	    buf[m++] = vest[j][2];
+	  }
+	} else {
+	  double dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
+	  double dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
+	  double dvz = pbc[2]*h_rate[2];
+	  for (i = 0; i < n; i++) {
+	    j = list[i];
+	    buf[m++] = rho[j];
+	    buf[m++] = e[j];
+	    if (mask[i] & deform_groupbit) {
+	      buf[m++] = vest[j][0] + dvx;
+	      buf[m++] = vest[j][1] + dvy;
+	      buf[m++] = vest[j][2] + dvz;
+	    } else {
+	      buf[m++] = vest[j][0];
+	      buf[m++] = vest[j][1];
+	      buf[m++] = vest[j][2];
+	    }
+	  }
 	}
 	return m;
 }
@@ -170,18 +190,38 @@ int AtomVecMeso::unpack_comm_hybrid(int n, int first, double *buf) {
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecMeso::pack_border_hybrid(int n, int *list, double *buf) {
+int AtomVecMeso::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc) {
 	//printf("in AtomVecMeso::pack_border_hybrid\n");
 	int i, j, m;
-
 	m = 0;
-	for (i = 0; i < n; i++) {
-		j = list[i];
-		buf[m++] = rho[j];
-		buf[m++] = e[j];
-		buf[m++] = vest[j][0];
-		buf[m++] = vest[j][1];
-		buf[m++] = vest[j][2];
+	if (!deform_vremap) {
+	  for (i = 0; i < n; i++) {
+	    j = list[i];
+	    buf[m++] = rho[j];
+	    buf[m++] = e[j];
+	    buf[m++] = vest[j][0];
+	    buf[m++] = vest[j][1];
+	    buf[m++] = vest[j][2];
+	  }
+	} else {
+	  double dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
+	  double dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
+	  double dvz = pbc[2]*h_rate[2];
+	  for (i = 0; i < n; i++) {
+	    j = list[i];
+	    buf[m++] = rho[j];
+	    buf[m++] = e[j];
+	    if (mask[i] & deform_groupbit) {
+	      buf[m++] = vest[j][0] + dvx;
+	      buf[m++] = vest[j][1] + dvy;
+	      buf[m++] = vest[j][2] + dvz;
+	    } else {
+	      buf[m++] = vest[j][0];
+	      buf[m++] = vest[j][1];
+	      buf[m++] = vest[j][2];
+	    }
+	  }
 	}
 	return m;
 }
@@ -238,7 +278,7 @@ int AtomVecMeso::unpack_reverse_hybrid(int n, int *list, double *buf) {
 
 int AtomVecMeso::pack_comm(int n, int *list, double *buf, int pbc_flag,
 		int *pbc) {
-	//printf("in AtomVecMeso::pack_comm\n");
+	printf("in AtomVecMeso::pack_comm\n");
 	int i, j, m;
 	double dx, dy, dz;
 

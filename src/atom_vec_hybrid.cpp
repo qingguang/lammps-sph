@@ -213,7 +213,7 @@ int AtomVecHybrid::pack_comm(int n, int *list, double *buf,
   // pack sub-style contributions as contiguous chunks
 
   for (k = 0; k < nstyles; k++)
-    m += styles[k]->pack_comm_hybrid(n,list,&buf[m]);
+    m += styles[k]->pack_comm_hybrid(n,list,&buf[m], pbc_flag, pbc);
 
   return m;
 }
@@ -314,7 +314,7 @@ int AtomVecHybrid::pack_comm_vel(int n, int *list, double *buf,
   // pack sub-style contributions as contiguous chunks
 
   for (k = 0; k < nstyles; k++)
-    m += styles[k]->pack_comm_hybrid(n,list,&buf[m]);
+    m += styles[k]->pack_comm_hybrid(n,list,&buf[m], pbc_flag, pbc);
 
   return m;
 }
@@ -459,7 +459,7 @@ int AtomVecHybrid::pack_border(int n, int *list, double *buf,
   // pack sub-style contributions as contiguous chunks
 
   for (k = 0; k < nstyles; k++)
-    m += styles[k]->pack_border_hybrid(n,list,&buf[m]);
+    m += styles[k]->pack_border_hybrid(n,list,&buf[m], pbc_flag, pbc);
 
   return m;
 }
@@ -569,7 +569,7 @@ int AtomVecHybrid::pack_border_vel(int n, int *list, double *buf,
   // pack sub-style contributions as contiguous chunks
 
   for (k = 0; k < nstyles; k++)
-    m += styles[k]->pack_border_hybrid(n,list,&buf[m]);
+    m += styles[k]->pack_border_hybrid(n,list,&buf[m], pbc_flag, pbc);
 
   return m;
 }
