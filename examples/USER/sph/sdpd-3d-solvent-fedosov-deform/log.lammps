@@ -1,14 +1,15 @@
 LAMMPS (9 Nov 2011)
 echo               both
-variable           ndim string  3
+variable           ndim string  2
 # type of the simulation
 #variable           simtype string "reverse-poiseuille"
 variable           simtype string "deform"
 #variable           simtype string "solvent"
 dimension          ${ndim}
-dimension          3
+dimension          2
 units              si
-atom_style         meso
+#atom_style        hybrid  bond meso
+atom_style        meso
 boundary          p p p
 
 # create simulation box
@@ -49,16 +50,12 @@ variable          Ly equal ${Lybase}
 variable          Ly equal 0.0009015
 
 if "${ndim}==3" then "variable          Lz equal ${Lzbase}"
-variable          Lz equal ${Lzbase}
-variable          Lz equal 0.0001803include            ${ndim}d-vars.lmp
-include            3d-vars.lmp
-variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
-variable           sdpd_mass equal 2.5e-05*${dx}*${dx}*${sdpd_rho}
-variable           sdpd_mass equal 2.5e-05*2.5e-05*${dx}*${sdpd_rho}
-variable           sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*${sdpd_rho}
-variable           sdpd_mass equal 2.5e-05*2.5e-05*2.5e-05*1000
-variable           Lz  equal ${Ly}/50*5
-variable           Lz  equal 0.0009015/50*5
+include            ${ndim}d-vars.lmp
+include            2d-vars.lmp
+variable           sdpd_mass equal ${dx}*${dx}*${sdpd_rho}
+variable           sdpd_mass equal 2.5e-05*${dx}*${sdpd_rho}
+variable           sdpd_mass equal 2.5e-05*2.5e-05*${sdpd_rho}
+variable           sdpd_mass equal 2.5e-05*2.5e-05*1000
 include            ${simtype}/addlattice.lmp
 include            deform/addlattice.lmp
 variable           eps equal 1e-3*${Lx}
@@ -67,27 +64,27 @@ variable           negeps equal -${eps}
 variable           negeps equal -3.606e-07
 
 if "${ndim}==2" then "region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box " else "region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box "
-region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box 
-region             box prism 0.0 0.0003606  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 0.0 ${Lz} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 0.0 9.015e-05 0 0 0 units box 
+region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box 
+region             box prism 0.0 0.0003606  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 ${negeps} ${eps} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 -3.606e-07 ${eps} 0 0 0 units box region             box prism 0.0 0.0003606  0.0 0.0009015 -3.606e-07 3.606e-07 0 0 0 units box 
 create_box         1 box
-Created triclinic box = (0 0 0) to (0.0003606 0.0009015 9.015e-05) with tilt (0 0 0)
+Created triclinic box = (0 0 -3.606e-07) to (0.0003606 0.0009015 3.606e-07) with tilt (0 0 0)
   1 by 2 by 1 processor grid
 
 if "${ndim}==2" then "lattice            sq2 ${dx}" else "lattice           sc ${dx}"
-lattice           sc ${dx}
-lattice           sc 2.5e-05Lattice spacing in x,y,z = 2.5e-05 2.5e-05 2.5e-05
+lattice            sq2 ${dx}
+lattice            sq2 2.5e-05Lattice spacing in x,y,z = 2.5e-05 2.5e-05 2.5e-05
 
 variable           eps delete
 variable           negeps delete
 
 create_atoms       1 region box
-Created 2220 atoms
+Created 1059 atoms
 
 mass               1 ${sdpd_mass}
-mass               1 1.5625e-11
+mass               1 6.25e-07
 set                group all meso_rho ${sdpd_rho}
 set                group all meso_rho 1000
-  2220 settings made for meso_rho
+  1059 settings made for meso_rho
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
@@ -157,28 +154,28 @@ timestep           5.208333333e-06
 communicate        single vel yes
 
 run                100
-Memory usage per processor = 3.96413 Mbytes
+Memory usage per processor = 2.80689 Mbytes
 Step sdpd_kin pTemp 
        0            0            0 
-     100  1.12226e+09 1.0151006e+09 
-Loop time of 13.7279 on 2 procs for 100 steps with 2220 atoms
+     100 7.5876718e+12 3.6296667e+12 
+Loop time of 10.587 on 2 procs for 100 steps with 1059 atoms
 
-Pair  time (%) = 13.1439 (95.7455)
-Neigh time (%) = 0.488846 (3.56096)
-Comm  time (%) = 0.0852355 (0.620891)
-Outpt time (%) = 0.000113964 (0.000830162)
-Other time (%) = 0.00986588 (0.0718672)
+Pair  time (%) = 9.7261 (91.868)
+Neigh time (%) = 0.217562 (2.05499)
+Comm  time (%) = 0.583267 (5.50926)
+Outpt time (%) = 0.00687647 (0.0649518)
+Other time (%) = 0.0532286 (0.502772)
 
-Nlocal:    1110 ave 1114 max 1106 min
+Nlocal:    529.5 ave 537 max 522 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Nghost:    4069 ave 4081 max 4057 min
+Nghost:    446.5 ave 449 max 444 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-Neighs:    60668 ave 60871 max 60465 min
+Neighs:    12795.5 ave 13060 max 12531 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
-FullNghs: 121336 ave 121785 max 120887 min
+FullNghs: 25591 ave 25980 max 25202 min
 Histogram: 1 0 0 0 0 0 0 0 0 1
 
-Total # of neighbors = 242672
-Ave neighs/atom = 109.312
-Neighbor list builds = 54
-Dangerous builds = 8
+Total # of neighbors = 51182
+Ave neighs/atom = 48.3305
+Neighbor list builds = 46
+Dangerous builds = 4
