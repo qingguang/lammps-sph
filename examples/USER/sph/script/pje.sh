@@ -4,4 +4,4 @@
 #File Type 2: x y z vx vy vz
 rm projection.*
 awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' dump0*.dat > projection.dat
-./zs_mls_projection 3 10 2.5e-4 1.6 projection.dat 2 2 2
+./zs_mls_projection 3 20 5e-4 1.7 projection.dat 2 2 2
