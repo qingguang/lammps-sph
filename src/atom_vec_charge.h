@@ -39,7 +39,7 @@ class AtomVecCharge : public AtomVec {
   void unpack_reverse(int, int *, double *);
   virtual int pack_border(int, int *, double *, int, int *);
   virtual int pack_border_vel(int, int *, double *, int, int *);
-  int pack_border_hybrid(int, int *, double *);
+  int pack_border_hybrid(int, int *, double *, int, int *);
   virtual void unpack_border(int, int, double *);
   virtual void unpack_border_vel(int, int, double *);
   int unpack_border_hybrid(int, int, double *);

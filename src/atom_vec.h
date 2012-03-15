@@ -52,7 +52,7 @@ class AtomVec : protected Pointers {
 
   virtual int pack_comm(int, int *, double *, int, int *) = 0;
   virtual int pack_comm_vel(int, int *, double *, int, int *) = 0;
-  virtual int pack_comm_hybrid(int, int *, double *) {return 0;}
+  virtual int pack_comm_hybrid(int, int *, double *, int, int *) {return 0;}
   virtual void unpack_comm(int, int, double *) = 0;
   virtual void unpack_comm_vel(int, int, double *) = 0;
   virtual int unpack_comm_hybrid(int, int, double *) {return 0;}
@@ -64,7 +64,7 @@ class AtomVec : protected Pointers {
 
   virtual int pack_border(int, int *, double *, int, int *) = 0;
   virtual int pack_border_vel(int, int *, double *, int, int *) = 0;
-  virtual int pack_border_hybrid(int, int *, double *) {return 0;}
+  virtual int pack_border_hybrid(int, int *, double *, int, int *) {return 0;}
   virtual void unpack_border(int, int, double *) = 0;
   virtual void unpack_border_vel(int, int, double *) = 0;
   virtual int unpack_border_hybrid(int, int, double *) {return 0;}

@@ -403,7 +403,8 @@ int AtomVecTri::pack_comm_vel(int n, int *list, double *buf,
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecTri::pack_comm_hybrid(int n, int *list, double *buf)
+int AtomVecTri::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc)
 {
   int i,j,m;
   double *quat;
@@ -820,7 +821,8 @@ int AtomVecTri::pack_border_vel(int n, int *list, double *buf,
 
 /* ---------------------------------------------------------------------- */
 
-int AtomVecTri::pack_border_hybrid(int n, int *list, double *buf)
+int AtomVecTri::pack_border_hybrid(int n, int *list, double *buf, int pbc_flag,
+		int *pbc)
 {
   int i,j,m;
   double *quat,*c1,*c2,*c3,*inertia;
