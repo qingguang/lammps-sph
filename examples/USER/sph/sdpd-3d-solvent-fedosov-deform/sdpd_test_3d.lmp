@@ -6,8 +6,8 @@ variable           simtype string "deform"
 #variable           simtype string "solvent"
 dimension          ${ndim}
 units              si
-#atom_style        hybrid  bond meso
-atom_style        meso
+atom_style        hybrid  bond meso
+#atom_style        meso
 boundary          p p p
 
 # create simulation box
