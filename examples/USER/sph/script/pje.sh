@@ -3,5 +3,12 @@
 #File Type 1: x y z vx vy vz ax ay az rho
 #File Type 2: x y z vx vy vz
 rm projection.*
-awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' dump0*.dat > projection.dat
-./zs_mls_projection 3 20 5e-4 1.7 projection.dat 2 2 2
+rm spectra.dat
+for filename in dump*.dat; do echo $filename;  
+awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' $filename > ${filename/.dat/.del};
+./zs_mls_projection 3 20 1 2.0 ${filename/.dat/.del} 2 2 2 ;
+done
+#awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' dump0*.dat > projection*.dat
+#./zs_mls_projection 3 20 1 1.8 dump*.del 2 2 2
+octave --eval Spectra.m
+

@@ -19,10 +19,12 @@ function ext()
       extfun = getpolymerext(data);
       rg2 = getrg2(data);
       corfun = vautocor(gete2e(data));
-    else
+      ets=Rext(data, 3)   
+ else
       extfun = extfun + getpolymerext(data);
       rg2 = rg2 + getrg2(data);
       corfun = corfun + vautocor(gete2e(data));
+      ets=ets+Rext(data,3)
     endif
   endfor
 
@@ -35,6 +37,8 @@ function ext()
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
  dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
+ dlmwrite( "ets.dat",   [dtime', ets], ' ', "precision", "%e");
+
 endfunction
 
 function data = file2data(fname)

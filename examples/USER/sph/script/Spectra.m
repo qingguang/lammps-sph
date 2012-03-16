@@ -1,5 +1,5 @@
 function Spetra()
-filelist=dir(fullfile('projection.dat.prj'));
+filelist=dir(fullfile('dump*.del.prj'));
 nfile=length(filelist);
 Ek=zeros();
 for filenumber=1:nfile
@@ -7,11 +7,12 @@ for filenumber=1:nfile
     disp(name);
     A =load(fullfile(name));
 warning("sizeof A is:%d",size(A))
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,20,5e-4);
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,20,1);
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
 endfor
+Ek=Ek/nfile;
 dlmwrite( "spectra.dat",  [f1',Ek'],  ' ', "precision", "%e");
 
 endfunction
