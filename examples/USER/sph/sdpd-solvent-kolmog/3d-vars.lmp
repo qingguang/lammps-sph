@@ -1,7 +1,7 @@
 variable           dx   equal 2.5e-5
-variable           Lx    equal  10*${dx}
-variable           Ly    equal  10*${dx}
-variable           Lz    equal  10*${dx}
+variable           Lx    equal  32*${dx}
+variable           Ly    equal  32*${dx}
+variable           Lz    equal  32*${dx}
 variable           sdpd_rho equal 1000
 variable           sdpd_c equal 3e-1
 variable           sdpd_eta equal 1.5e-2
@@ -12,4 +12,6 @@ variable          Nfreq equal 1000
 variable          r0       equal 1.4*${dx}
 variable          H        equal 5.3e-4
 variable          sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
+variable            A_kol equal 870
 variable          def_rate      equal 2e2
+

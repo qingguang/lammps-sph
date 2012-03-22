@@ -19,12 +19,12 @@ function ext()
       extfun = getpolymerext(data);
       rg2 = getrg2(data);
       corfun = vautocor(gete2e(data));
-      ets=Rext(data, 3)   
+      ets=Rext(data, 3);   
  else
       extfun = extfun + getpolymerext(data);
       rg2 = rg2 + getrg2(data);
       corfun = corfun + vautocor(gete2e(data));
-      ets=ets+Rext(data,3)
+      ets=ets+Rext(data,3);
     endif
   endfor
 
@@ -33,11 +33,12 @@ function ext()
  extfun=extfun/nfile;
  rg2 = rg2/nfile;
  corfun = corfun/nfile;
+ets=ets/nfile;
  dtime = 0:size(extfun, 1)-1;
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
  dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
- dlmwrite( "ets.dat",   [dtime', ets], ' ', "precision", "%e");
+ dlmwrite( "ets.dat",   [dtime', ets'], ' ', "precision", "%e");
 
 endfunction
 
@@ -85,8 +86,8 @@ function Rg2 = getrg2(data)
 endfunction
 
 function Rext = Rext(data, dim)
-  nb = size(data, dim);
-  R = squeeze(data(:, :, dim));
+  nb = size(data, 2);
+  R = squeeze(data(:, :, 1));
   
   Rext = max(R') - min(R');
 endfunction

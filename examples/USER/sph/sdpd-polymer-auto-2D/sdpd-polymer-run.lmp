@@ -27,7 +27,7 @@ set                group all meso_rho ${sdpd_rho}
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to 1e14.
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-#variable           sdpd_temp index 5e12
+#variable           sdpd_temp index 1e9
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
@@ -42,9 +42,9 @@ compute            sdpd_kin all temp
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
-variable            A_kol equal 5000
-variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
-fix                 kol_force all addforce v_var_kol 0.0 0.0
+#variable            A_kol equal 5000
+#variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
+#fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 5

@@ -1,7 +1,7 @@
 variable           dx   equal 2.5e-5
-variable           Lx    equal  20*${dx}
-variable           Ly    equal  20*${dx}
-variable           Lz    equal  20*${dx}
+variable           Lx    equal  10*${dx}
+variable           Ly    equal  10*${dx}
+variable           Lz    equal  10*${dx}
 #variable           Lybase    equal 1.803e-3/2.0
 #variable           Lxbase    equal  ${Lybase}/50*10*2.0
 #variable           Lzbase    equal  ${Lybase}/50*5.0
@@ -15,4 +15,4 @@ variable          Nfreq equal 1000
 variable          r0       equal 2.0*${dx}
 variable          H        equal 5.3e-4
 variable          sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
-variable          def_rate      equal 60
+variable          def_rate      equal 2e2

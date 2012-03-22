@@ -25,7 +25,7 @@ set                group all meso_rho ${sdpd_rho}
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1e9
+#variable           sdpd_temp index 1e9
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
@@ -75,12 +75,15 @@ neigh_modify       delay 0 every 1
 
 include            settimestep.lmp
 timestep           ${dt}
+fix 5 all dt/reset 100 NULL ${dt} ${dx} units box
+
 communicate        single vel yes
 
-run 100000
+run 1000
 
-variable            A_kol equal 1000
+#variable            A_kol equal 7100
 variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_kol 0.0 0.0
+#fix 5 all dt/reset 100 1.0e-9 ${dt} ${dx} units box 
 
 run                10000000
