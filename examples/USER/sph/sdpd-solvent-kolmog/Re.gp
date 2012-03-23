@@ -1,9 +1,9 @@
-F=174*5
+F=9
 dx=2.5e-5
 
 sdpd_c=3e-1
 sdpd_rho=1e3
-sdpd_mu=1.5e-5
+sdpd_mu=1.5e-6
 sdpd_mass=dx**3*sdpd_rho
 
 kb=1.3806503e-23
@@ -28,9 +28,12 @@ Rer=vrm*L/sdpd_mu
 Wir=tau*vrm/L
 print "Maxiaml Velocity: ", v0
 print "thermal velocity: ",vt
+
 print "Mach number is: ",Ma
 print "thermal Mach number is: ",Mathermal
+
 print "Renold number theory: ", Re
 print "Weissenberg number theory: ",Wi
+
 print "Renold number real : ", Rer
 print "Weissenberg number real :",Wir

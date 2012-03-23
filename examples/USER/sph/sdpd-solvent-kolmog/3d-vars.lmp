@@ -12,6 +12,6 @@ variable          Nfreq equal 1000
 variable          r0       equal 1.4*${dx}
 variable          H        equal 5.3e-4
 variable          sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
-variable            A_kol equal 870
+variable            A_kol equal 1740
 variable          def_rate      equal 2e2
 
