@@ -6,7 +6,7 @@ set output sprintf("%s.eps", "$0")
 replot
 
 set terminal png
-set output sprintf("%s.png", "polymer_kolmo_spectra_Re0.874_Wi2.62")
+set output sprintf("%s.png", "solvent_kolmo_spectra_Re1_L2PI")
 replot
 set output
 

@@ -10,7 +10,7 @@ boundary          p p p
 
 # create simulation box
 #3D box
-include          ${ndim}-var.lmp
+include          ${ndim}-vars.lmp
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 create_box         1 box
 

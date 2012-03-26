@@ -1,37 +1,54 @@
 function ext()
 % get polymer configurations
+  filemask = argv (){1};
+  warning("ID1", "filemask is %s", filemask);
+  flist=glob(filemask);
 
-  flist=dir("pdata/poly.1");
-
-%nfile is the number of polymers
+  % nfile is the number of polymers
   nfile = size(flist,1);
+  if (nfile<1) 
+    error("file list is empty");
+  endif
 
  %Loop for all polymers
  for kk=1:nfile
- % for kk=1:1
-    fname=fullfile("pdata", flist(kk).name);
-%only one polymer
-    if (kk==1)
-      extfun = getpolymerext(fname);
-
-%multi polymers,then do sum   
+    fname=flist{kk};
+    warning("ID1", "======== processing file: %s", fname);
+    data = file2data(fname);
+    if (~exist("extfun", "var"))
+      extfun = getpolymerext(data);
+      rg2 = getrg2(data);
+      corfun = vautocor(gete2e(data));
+     %ets=Rext(data, 3);   
  else
-      printf("kk=%d\n", kk);
-      extfun = extfun + getpolymerext(fname);
+      extfun = extfun + getpolymerext(data);
+      rg2 = rg2 + getrg2(data);
+      corfun = corfun + vautocor(gete2e(data));
+     % ets=ets+Rext(data,3);
     endif
-  end
+  endfor
+
  nb=getnbead(fname);
-printf("Polymer with beads %d",nb);
-printf(" the end-to-end distance is:");
-extfun=extfun/nfile
- % dtime = 0:size(extfun, 1)-1;
-  %dlmwrite( "extx.dat", [dtime', extfun/nfile], ' ', "precision", "%e");
+ warning("Polymer with beads %d",nb);
+ extfun=extfun/nfile;
+ rg2 = rg2/nfile;
+ corfun = corfun/nfile;
+ %ets=ets/nfile;
+ dtime = 0:size(extfun, 1)-1;
+ dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
+ dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
+ dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
+% dlmwrite( "ets.dat",   [dtime', ets'], ' ', "precision", "%e");
 
 endfunction
 
-function [extfun] = getpolymerext(fname)
+function data = file2data(fname)
+  if (~exist(fname, "file"))
+    error("cannot one file: %s\n", fname);
+  endif
 % get number of beads
   nb=getnbead(fname);
+  warning("ID1", "number of beads is %d", nb);
   dim=3;
   % read data without space between rows
   
@@ -39,40 +56,58 @@ function [extfun] = getpolymerext(fname)
   
   % keep only x and y and z
   data = data(:, 1:dim);
-%put different snapshot in cells the order is column order 1xyz2xyz3xyz.........
-%the endend value is endbead-z
   nsnap = size(data, 1)/nb;
   data = permute(reshape(data(:,:)', 3, nb, nsnap), [3, 2, 1]);
+  warning("data structure: [%d %d %d]", size(data));
+  % data structure is 
+  % data ( isnaphot, ibead, dim )
+endfunction
 
-  % rdata structure is 
-  % rdata ( isnaphot, ibead, dim )
+function [extfun] = getpolymerext(data)
+  Re2e = gete2e(data);
+  extfun=   sqrt(sumsq (Re2e, 2));
+endfunction
 
-
+function [Re2e] = gete2e(data)
   % the number of snapshots
   %the end-to-end distance  
-
   Rhead = squeeze(data(:, 1, :));
   Rtail = squeeze(data(:, end, :));
   Re2e = Rtail - Rhead;
-  extfun=   sqrt(sumsq (Re2e, 2));
 endfunction
+
 
 function Rg2 = getrg2(data)
   nb = size(data, 2);
   Rcom = mean(data, 2);
   Rincm = data - repmat(Rcom, [1, nb, 1]);
   Rg2 = mean(sumsq(Rincm, 3), 2);
+  
+endfunction
+
+function Rext = Rext(data, dim)
+  nb = size(data, 2);
+  R = squeeze(data(:, :, 1));
+  
+  Rext = max(R') - min(R');
 endfunction
 
 
 % get the number of beads
 function [nbead] = getnbead(fname)
-fid = fopen (fname);
+  fid = fopen (fname);
+  if (fid == -1) 
+    error("cannot open file: %s", fname);
+  endif
   nbead=-1;
   do
-    line = strtrim(fgetl(fid));
+    aux_line = fgetl(fid);
+    if (isnumeric(aux_line))
+      nbead = nbead + 1
+      break;
+    endif
+    line = strtrim(aux_line);
     nbead=nbead+1;
   until strcmp(line, "")
   fclose (fid);
-%printf("Polymer with ",nbead,"beads");
 endfunction
