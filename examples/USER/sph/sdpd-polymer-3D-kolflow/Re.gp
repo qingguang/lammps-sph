@@ -1,4 +1,4 @@
-F=1700
+F=7000
 
 dx=2.5e-5
 sdpd_c=3e-1
@@ -7,10 +7,10 @@ sdpd_mu=1.5e-4
 sdpd_mass=dx**3*sdpd_rho
 
 kb=1.3806503e-23
-T=5e10
+T=1e10
 vt=(3*kb*T/sdpd_mass)**0.5
 
-L=32*dx
+L=20*dx
 tau=0.1144
 
 ky=2*3.141592653/L

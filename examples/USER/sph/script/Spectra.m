@@ -1,5 +1,5 @@
 function Spectra()
-filelist=dir(fullfile('dump0*.del.prj'));
+filelist=dir(fullfile('dumps0*.del.prj'));
 nfile=length(filelist);
 Ek=zeros();
 for filenumber=1:nfile
@@ -18,6 +18,10 @@ dlmwrite( "spectra.dat",  [f1',Ek'],  ' ', "precision", "%e");
 endfunction
 
 function [f1,f2,f3,f4,f5,f6,f7]=ES_Part(Data,NumParticle,L)
+%warning("deform transfor to original length ")
+for p=1:3
+Data(:,p)=Data(:,p)*L;
+endfor
 
 u = reshape(Data(:,4),NumParticle,NumParticle,NumParticle);
 v = reshape(Data(:,5),NumParticle,NumParticle,NumParticle);

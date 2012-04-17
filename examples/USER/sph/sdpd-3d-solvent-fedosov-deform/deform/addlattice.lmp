@@ -1,11 +1,10 @@
-#variable           eps equal 1e-3*${Lxbase}
-#variable           negeps equal -${eps}
+variable           eps equal 1e-3*${Lxbase}
+variable           negeps equal -${eps}
 
-#if "${ndim}==2" then &
-#"region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box " &
-#else &
-
-region             box prism 0.0 ${Lxbase}  0.0 ${Lybase} 0.0 ${Lzbase} 0 0 0 units box 
+if "${ndim}==2" then &
+"region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box " &
+else &
+"region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box " 
 
 create_box         1 box
 

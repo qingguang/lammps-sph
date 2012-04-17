@@ -63,10 +63,10 @@ thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 variable           halfdx equal ${dx}*0.3
-dump imgDump all image 1000 image.*.jpg type type atom no bond atom ${halfdx} adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
+dump imgDump all image 100 image.*.jpg type type atom yes bond atom ${halfdx} adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9
 
-dump imgDump1 all image 1000 image1.*.jpg type type atom no bond atom ${halfdx} adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump imgDump1 all image 100 image1.*.jpg type type atom no bond atom ${halfdx} adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
 dump_modify        imgDump1 pad 9
 
 
@@ -74,12 +74,13 @@ neighbor           3.0e-6 bin
 neigh_modify       delay 0 every 1
 
 include            settimestep.lmp
-timestep           ${dt}
-fix 5 all dt/reset 100 NULL ${dt} ${dx} units box
+variable           newdt   equal  ${dt}*0.1
+timestep           ${newdt}
+fix 5 all dt/reset 10 NULL ${dt} ${dx} units box
 
 communicate        single vel yes
 
-#run 1000
+run 100
 
 #variable            A_kol equal 7100
 variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})

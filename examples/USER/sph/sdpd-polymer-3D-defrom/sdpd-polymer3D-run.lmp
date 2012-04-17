@@ -10,11 +10,11 @@ include             3d-vars.lmp
 region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
 read_data           poly3d.txt
 
-#special_bonds   lj 1 1 1
+special_bonds   lj 1 1 1
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
 
-#mass               1 ${sdpd_mass}
+mass               1 ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
 
@@ -42,7 +42,7 @@ fix            integrate_fix_full all meso
 
 # Lees Edwards type boundary conditions
 
-#fix		deform_id  all deform 1 xy erate ${def_rate} remap v units box
+fix		deform_id  all deform 1 xy erate ${def_rate} remap v units box
 
 
 #variable     xo     atom xs/${Lx}
@@ -94,7 +94,7 @@ dump_modify        dumpu_idsu first yes
 dump_modify        dumpu_idsu sort id
 dump_modify        dumpu_idsu pad 8
 
-run 1000
-fix            deform_id  all deform 1 xy erate ${def_rate} remap v units box
+#run 1000
+#fix            deform_id  all deform 1 xy erate ${def_rate} remap v units box
 
 run                400000
