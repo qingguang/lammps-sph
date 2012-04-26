@@ -7,14 +7,18 @@ boundary          p f p
 
 # create simulation box
 #2D box
-variable          Lx equal 2.00e-3
+variable          Lx equal 1.00e-3
 read_data           poly.txt
 
 # create wall particles
-variable          ub equal ${Lx}-3.5*${dx}
-variable          lb equal 2.5*${dx}
-region            uwall block 0.0000e-3 ${Lx} ${ub} ${Lx} -1.0e-6 1.0e-6 units box
-region            lwall block 0.0000e-3 ${Lx} 0.0000e-3 ${lb} -1.0e-6 1.0e-6 units box
+variable          ub equal ${Lx}+2.5*${dx}
+variable          lb equal 2.0*${dx}
+variable          hdx equal 0.5*${dx}
+variable          hLx equal ${Lx}+0.5*${dx}
+variable          lLx equal ${Lx}-0.5*${dx}
+region            fluid block 0.0000e-3 ${Lx} ${dx} ${lLx} -1.0e-6 1.0e-6 units box
+region            uwall block 0.0000e-3 ${Lx} ${Lx} ${ub} -1.0e-6 1.0e-6 units box
+region            lwall block 0.0000e-3 ${Lx} -${lb} 0.0000e-3 -1.0e-6 1.0e-6 units box
 lattice            sq ${dx}
 create_atoms       2 region uwall
 create_atoms       2 region lwall
@@ -30,7 +34,7 @@ bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0
 
 group              uwall region uwall 
 group              lwall region lwall
-#group              fluid region fluid 
+group              fluid region fluid 
 #group              integrate_fulll union fluid lwall
 
 variable           sdpd_mass equal 2.778E-6
@@ -46,12 +50,12 @@ variable           sdpd_temp index 1e13
 pair_style         hybrid sdpd
 pair_coeff         * *    sdpd 1000 0.1 1.0e-3 6.5e-5 ${sdpd_temp}
 
-compute            rho_peratom all meso_rho/atom
-compute            e_peratom all meso_e/atom
-compute            ke_peratom all ke/atom
-compute            esph all reduce sum c_e_peratom
-compute            ke all ke
-compute            sdpd_kin all temp
+compute            rho_peratom fluid meso_rho/atom
+compute            e_peratom fluid meso_e/atom
+compute            ke_peratom fluid ke/atom
+compute            esph fluid reduce sum c_e_peratom
+compute            ke fluid ke
+compute            sdpd_kin fluid temp
 variable           etot equal c_ke+c_esph
 
 
@@ -66,21 +70,25 @@ fix                freeze_fixu uwall setforce 0.0 0.0 0.0
 fix                freeze_fixl lwall setforce 0.0 0.0 0.0
 
 
-#dump               dump_id all custom 10000 dump*.dat id type x y vx vy c_rho_peratom c_e_peratom
-dump               dump_id all custom 100 dump*.dat x y vx vy id type c_rho_peratom
-dump_modify        dump_id first yes
-dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
+dump               dump_all all custom 10000 dump*.dat x y vx vy id type c_rho_peratom
+dump_modify        dump_all first yes
+dump_modify        dump_all sort id
+dump_modify        dump_all pad 8
+dump               dump_fluid fluid custom 10000 dumpfluid*.dat x y vx vy id type c_rho_peratom
+dump_modify        dump_fluid first yes
+dump_modify        dump_fluid sort id
+dump_modify        dump_fluid pad 8
+
 thermo             10
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 
-dump imgDump all image 100 image.*.jpg type type bond atom 1e-5 adiam 1e-5 view 0 0 zoom 1.75  box no 0.01
+dump imgDump all image 10000 image.*.jpg type type bond atom 1e-5 adiam 1e-5 view 0 0 zoom 1.75  box no 0.01
 dump_modify        imgDump pad 9
 
 neighbor           1.0e-6 bin
 #timestep <0.5*delta/Cs
 #include detime
-timestep            1.0e-5
+timestep            1.0e-6
 
 run                10000000

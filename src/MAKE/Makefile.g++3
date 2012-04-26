@@ -33,8 +33,8 @@ LMP_INC =	-DLAMMPS_GZIP
 # PATH = path for MPI library
 # LIB = name of MPI library
 
-MPI_INC =       -DMPICH_SKIP_MPICXX 
-MPI_PATH = 
+MPI_INC =       -DMPICH_SKIP_MPICXX -I/usr/include/mpich2
+MPI_PATH =      -L/usr/lib/mpich2  
 MPI_LIB =	-lmpich -lpthread
 
 # FFT library, OPTIONAL
