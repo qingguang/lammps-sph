@@ -10,13 +10,14 @@
 
    See the README file in the top-level LAMMPS directory.
    ------------------------------------------------------------------------- */
-
+#include <fenv.h>
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sdpd.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
+#include "neighbor.h"
 #include "neigh_list.h"
 #include "memory.h"
 #include "error.h"
@@ -27,10 +28,25 @@
 
 using namespace LAMMPS_NS;
 
+void PairSDPD::init_style()
+{
+  if (comm->ghost_velocity == 0)
+    error->all(FLERR,"Pair sdpd requires ghost atoms store velocity");
+
+  // if newton off, forces between atoms ij will be double computed
+  // using different random numbers
+
+  if (force->newton_pair == 0 && comm->me == 0) error->warning(FLERR,
+      "Pair sdpd needs newton pair on for momentum conservation");
+
+  neighbor->request(this);
+}
+
+
 /* ---------------------------------------------------------------------- */
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
-    Pair(lmp) {
+  Pair(lmp) {
   first = 1;
 }
 
@@ -84,15 +100,15 @@ void PairSDPD::compute(int eflag, int vflag) {
   double _dUi[ndim];
   double random_force[ndim];
   
-if (first) {
+  if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
         if (cutsq[i][j] > 1.e-32) {
           if (!setflag[i][i] || !setflag[j][j]) {
             if (comm->me == 0) {
               printf(
-                  "SPH particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
-                  i, j, sqrt(cutsq[i][j]));
+		     "SPH particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
+		     i, j, sqrt(cutsq[i][j]));
             }
           }
         }
@@ -123,7 +139,6 @@ if (first) {
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
-//std::cerr<<"rho[i]"<<rho[i]<<'\n';
 
     fi = tmp * tmp * tmp;
     fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
@@ -169,41 +184,43 @@ if (first) {
         // dot product of velocity delta and distance vector
         delVdotDelR = delx * velx + dely * vely + delz * velz;
        
- // Morris Viscosity (Morris, 1996)
+	// Morris Viscosity (Morris, 1996)
 
         if (ndim==2)
-        {
-          eij[0]= delx/sqrt(rsq); 
-          eij[1]= dely/sqrt(rsq);    
-        }
+	  {
+	    eij[0]= delx/sqrt(rsq); 
+	    eij[1]= dely/sqrt(rsq);    
+	  }
         else
-        {
-          eij[0]= delx/sqrt(rsq);
-          eij[1]= dely/sqrt(rsq);
-          eij[2]= delz/sqrt(rsq);
-        }
+	  {
+	    eij[0]= delx/sqrt(rsq);
+	    eij[1]= dely/sqrt(rsq);
+	    eij[2]= delz/sqrt(rsq);
+	  }
  
         const double Fij=-wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         wiener.get_wiener_Espanol(sqrtdt);
-        const double fvisc = viscosity[itype][jtype] / (rho[i] * rho[j]) * imass * jmass * wfd;
+const double numi=rho[i]/imass;
+const double numj=rho[j]/jmass;
+        const double fvisc = viscosity[itype][jtype] *(1/(numi*numi)+1/(numj*numj)) * wfd;
 
         //define random force
         for (int di=0;di<ndim;di++) {
-          for (int dj=0;dj<ndim;dj++)
-            random_force[di]=wiener.sym_trclss[di][dj]*eij[dj];
+           random_force[di]=0;          
+         for (int dj=0;dj<ndim;dj++)
+            random_force[di]+=wiener.sym_trclss[di][dj]*eij[dj];
         }
         const double Ti= sdpd_temp[itype][jtype];
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
             const double Zij = -4.0*k_bltz*Ti*fvisc;
-            const double b  = ndim;
+          //  const double b  = ndim;
             //const double b  = (ndim+2.0)/3.0;
             //const double Aij = sqrt(Zij * a);
             // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
-            const  double Aij = sqrt(b*Zij);
+            const  double Aij = sqrt(Zij);
             const double Bij = 0.0;
-
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
             _dUi[di] = 0.0;
@@ -213,6 +230,7 @@ if (first) {
         fpair = -imass * jmass * (fi + fj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
+<<<<<<< .merge_file_sODSLb
  //modify force pair
 
 f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
@@ -261,14 +279,26 @@ else
 	f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 }
 }
+=======
 
-        // and change in density
-        drho[i] += jmass * delVdotDelR * wfd;
+	//modify force pair
+
+	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+	if (domain->dimension ==3 ) {
+>>>>>>> .merge_file_94y2Sb
+
+	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+	  // and change in density
+	} 
+   
+	drho[i] += jmass * delVdotDelR * wfd;
 
         // change in thermal energy
         de[i] += deltaE;
  if (newton_pair || j < nlocal) {
 
+<<<<<<< .merge_file_sODSLb
         if (newton_pair || j < nlocal) {
 if(f[j][0]==NULL)
 {f[j][0]=0;
@@ -292,11 +322,35 @@ if(f[j][2]==NULL)
   }
   */
         de[j] += deltaE;
+=======
+
+	if (newton_pair || j < nlocal) {
+
+	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
+	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
+	  if (domain->dimension ==3 ) {
+
+	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
+	  }
+ 
+  
+	  de[j] += deltaE;
+>>>>>>> .merge_file_94y2Sb
           drho[j] += imass * delVdotDelR * wfd;
         }
         //modify until this line
         if (evflag)
-          ev_tally(i, j, nlocal, newton_pair, 0.0, 0.0, fpair, delx, dely, delz);
+          // ev_tally_sdpd(i, j, nlocal, newton_pair, 0.0, 0.0, 
+	  // 		delx * fpair + velx * fvisc+_dUi[0],
+	  // 		dely * fpair + vely * fvisc+_dUi[1],
+	  // 		delz * fpair + velz * fvisc +_dUi[2],
+	  // 		delx, dely, delz);
+          ev_tally_sdpd(i, j, nlocal, newton_pair, 0.0, 0.0, 
+	  		velx * fvisc, 
+	  		vely * fvisc,
+	  		velz * fvisc,
+	  		delx, dely, delz);
+
       }
     }
   }
@@ -391,4 +445,98 @@ double PairSDPD::single(int i, int j, int itype, int jtype,
                         double rsq, double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
   return 0.0;
+}
+
+/* ----------------------------------------------------------------------
+   tally eng_vdwl and virial into global and per-atom accumulators
+   need i < nlocal test since called by bond_quartic and dihedral_charmm
+------------------------------------------------------------------------- */
+
+void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
+			     double evdwl, double ecoul, 
+			     double fcompx, double fcompy, double fcompz,
+			     double delx, double dely, double delz)
+{
+  double evdwlhalf,ecoulhalf,epairhalf,v[6];
+
+  if (eflag_either) {
+    if (eflag_global) {
+      if (newton_pair) {
+	eng_vdwl += evdwl;
+	eng_coul += ecoul;
+      } else {
+	evdwlhalf = 0.5*evdwl;
+	ecoulhalf = 0.5*ecoul;
+	if (i < nlocal) {
+	  eng_vdwl += evdwlhalf;
+	  eng_coul += ecoulhalf;
+	}
+	if (j < nlocal) {
+	  eng_vdwl += evdwlhalf;
+	  eng_coul += ecoulhalf;
+	}
+      }
+    }
+    if (eflag_atom) {
+      epairhalf = 0.5 * (evdwl + ecoul);
+      if (newton_pair || i < nlocal) eatom[i] += epairhalf;
+      if (newton_pair || j < nlocal) eatom[j] += epairhalf;
+    }
+  }
+
+  if (vflag_either) {
+    v[0] = delx*fcompx;
+    v[1] = dely*fcompy;
+    v[2] = delz*fcompz;
+    v[3] = delx*fcompy;
+    v[4] = delx*fcompz;
+    v[5] = dely*fcompz;
+
+    if (vflag_global) {
+      if (newton_pair) {
+	virial[0] += v[0];
+	virial[1] += v[1];
+	virial[2] += v[2];
+	virial[3] += v[3];
+	virial[4] += v[4];
+	virial[5] += v[5];
+      } else {
+	if (i < nlocal) {
+	  virial[0] += 0.5*v[0];
+	  virial[1] += 0.5*v[1];
+	  virial[2] += 0.5*v[2];
+	  virial[3] += 0.5*v[3];
+	  virial[4] += 0.5*v[4];
+	  virial[5] += 0.5*v[5];
+	}
+	if (j < nlocal) {
+	  virial[0] += 0.5*v[0];
+	  virial[1] += 0.5*v[1];
+	  virial[2] += 0.5*v[2];
+	  virial[3] += 0.5*v[3];
+	  virial[4] += 0.5*v[4];
+	  virial[5] += 0.5*v[5];
+	}
+      }
+    }
+
+    if (vflag_atom) {
+      if (newton_pair || i < nlocal) {
+	vatom[i][0] += 0.5*v[0];
+	vatom[i][1] += 0.5*v[1];
+	vatom[i][2] += 0.5*v[2];
+	vatom[i][3] += 0.5*v[3];
+	vatom[i][4] += 0.5*v[4];
+	vatom[i][5] += 0.5*v[5];
+      }
+      if (newton_pair || j < nlocal) {
+	vatom[j][0] += 0.5*v[0];
+	vatom[j][1] += 0.5*v[1];
+	vatom[j][2] += 0.5*v[2];
+	vatom[j][3] += 0.5*v[3];
+	vatom[j][4] += 0.5*v[4];
+	vatom[j][5] += 0.5*v[5];
+      }
+    }
+  }
 }

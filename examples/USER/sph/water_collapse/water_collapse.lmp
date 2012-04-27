@@ -44,6 +44,9 @@ thermo             10
 thermo_style       custom step ke c_esph v_etot f_gfix press f_dtfix[1] f_dtfix
 thermo_modify      norm no
 
+dump imgDump all image 10 image.*.jpg type type adiam 0.2 view 0 0 zoom 1.6  box yes 0.01
+dump_modify        imgDump pad 9
+
 neigh_modify       every 5 delay 0 check no
 variable           skin equal 0.3*${h}
 neighbor           ${skin} bin # set Verlet list skin distance

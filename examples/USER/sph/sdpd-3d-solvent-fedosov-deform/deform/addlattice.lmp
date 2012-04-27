@@ -1,0 +1,17 @@
+variable           eps equal 1e-3*${Lx}
+variable           negeps equal -${eps}
+
+if "${ndim}==2" then &
+"region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} 0 0 0 units box " &
+else &
+"region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box "
+
+create_box         1 box
+
+if "${ndim}==2" then &
+"lattice            sq2 ${dx}" &
+else &
+"lattice           sc ${dx}"
+
+variable           eps delete
+variable           negeps delete

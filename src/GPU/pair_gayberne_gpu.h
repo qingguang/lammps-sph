@@ -33,7 +33,7 @@ class PairGayBerneGPU : public PairGayBerne {
   void init_style();
   double memory_usage();
 
-  enum { GPU_PAIR, GPU_NEIGH };
+  enum { GPU_FORCE, GPU_NEIGH, GPU_HYB_NEIGH };
 
  private:
   int gpu_mode;
@@ -46,3 +46,27 @@ class PairGayBerneGPU : public PairGayBerne {
 }
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Pair gayberne requires atom style ellipsoid
+
+UNDOCUMENTED
+
+E: Out of memory on GPGPU
+
+UNDOCUMENTED
+
+E: Cannot use newton pair with gayberne/gpu pair style
+
+UNDOCUMENTED
+
+E: Pair gayberne/gpu requires atom style ellipsoid
+
+UNDOCUMENTED
+
+E: Pair gayberne/gpu requires atoms with same type have same shape
+
+UNDOCUMENTED
+
+*/

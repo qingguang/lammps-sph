@@ -77,9 +77,10 @@ using namespace LAMMPS_NS;
 /* ---------------------------------------------------------------------- */
 
 PairLJClass2CoulLongGPU::PairLJClass2CoulLongGPU(LAMMPS *lmp) : 
-  PairLJClass2CoulLong(lmp), gpu_mode(GPU_PAIR)
+  PairLJClass2CoulLong(lmp), gpu_mode(GPU_FORCE)
 {
   cpu_time = 0.0;
+  GPU_EXTRA::gpu_ready(lmp->modify, lmp->error); 
 }
 
 /* ----------------------------------------------------------------------
@@ -103,7 +104,7 @@ void PairLJClass2CoulLongGPU::compute(int eflag, int vflag)
   
   bool success = true;
   int *ilist, *numneigh, **firstneigh;    
-  if (gpu_mode == GPU_NEIGH) {
+  if (gpu_mode != GPU_FORCE) {
     inum = atom->nlocal;
     firstneigh = c2cl_gpu_compute_n(neighbor->ago, inum, nall, atom->x,
 				    atom->type, domain->sublo, domain->subhi,
@@ -178,7 +179,7 @@ void PairLJClass2CoulLongGPU::init_style()
                               force->special_coul, force->qqrd2e, g_ewald);
   GPU_EXTRA::check_flag(success,error,world);
 
-  if (gpu_mode != GPU_NEIGH) {
+  if (gpu_mode == GPU_FORCE) {
     int irequest = neighbor->request(this);
     neighbor->requests[irequest]->half = 0;
     neighbor->requests[irequest]->full = 1;

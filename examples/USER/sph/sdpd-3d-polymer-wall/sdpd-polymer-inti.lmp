@@ -1,0 +1,31 @@
+echo               both
+dimension          3
+units              si
+atom_style   hybrid  bond meso
+boundary          p f p
+
+# create simulation box
+#2D box
+include            3d-vars.lmp
+region            box block 0.0 ${Lx} ${lb} ${ub} 0.0  ${Lx} units box
+region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx} side in units box
+
+create_box        3 box
+
+#create fluid particles
+
+lattice            sc ${dx}
+create_atoms       1 region fluid
+group              fluid region fluid
+
+variable          wall_mass equal ${sdpd_mass}*0.5
+mass               1 ${sdpd_mass}
+mass               2 ${sdpd_mass}
+mass               3 ${wall_mass}
+
+#set                group all meso_rho ${sdpd_rho}
+
+
+timestep           0.0e-5
+write_restart      poly.restart
+

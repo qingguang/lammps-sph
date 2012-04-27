@@ -1,0 +1,7 @@
+# body force for reverse poiseuille 
+variable          gx equal 6.12
+
+variable          Lx equal ${Lxbase}
+variable          Ly equal 2.0*${Lybase}
+
+if "${ndim}==3" then "variable          Lz equal ${Lzbase}"

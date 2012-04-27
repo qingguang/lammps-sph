@@ -29,10 +29,9 @@
 #include "output.h"
 #include "thermo.h"
 #include "random_mars.h"
+#include "math_const.h"
 #include "memory.h"
 #include "error.h"
-
-#include "math_const.h"
 
 using namespace LAMMPS_NS;
 using namespace MathConst;
@@ -1081,7 +1080,6 @@ double Variable::evaluate(char *str, Tree **tree)
 	  newtree->nstride = fix->size_peratom_cols;
 	  newtree->left = newtree->middle = newtree->right = NULL;
 	  treestack[ntreestack++] = newtree;
-
 
 	} else error->all(FLERR,"Mismatched fix in variable formula");
 

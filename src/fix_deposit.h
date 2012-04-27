@@ -1,4 +1,4 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
@@ -37,11 +37,12 @@ class FixDeposit : public Fix {
 
  private:
   int ninsert,ntype,nfreq,seed;
-  int iregion,globalflag,localflag,maxattempt,rateflag,scaleflag;
+  int iregion,globalflag,localflag,maxattempt,rateflag,scaleflag,targetflag;
   char *idregion;
   double lo,hi,deltasq,nearsq,rate;
   double vxlo,vxhi,vylo,vyhi,vzlo,vzhi;
   double xlo,xhi,ylo,yhi,zlo,zhi;
+  double tx,ty,tz;
   int nfirst,ninserted;
   class RanPark *random;
 
@@ -52,3 +53,45 @@ class FixDeposit : public Fix {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Illegal ... command
+
+Self-explanatory.  Check the input script syntax and compare to the
+documentation for the command.  You can use -echo screen as a
+command-line option when running LAMMPS to see the offending line.
+
+E: Must specify a region in fix deposit
+
+The region keyword must be specified with this fix.
+
+E: Fix deposit region does not support a bounding box
+
+Not all regions represent bounded volumes.  You cannot use
+such a region with the fix deposit command.
+
+E: Fix deposit region cannot be dynamic
+
+Only static regions can be used with fix deposit.
+
+E: Deposition region extends outside simulation box
+
+Self-explanatory.
+
+E: Use of fix deposit with undefined lattice
+
+Must use lattice command with compute fix deposit command if units
+option is set to lattice.
+
+E: Region ID for fix deposit does not exist
+
+Self-explanatory.
+
+W: Particle deposition was unsuccessful
+
+The fix deposit command was not able to insert as many atoms as
+needed.  The requested volume fraction may be too high, or other atoms
+may be in the insertion region.
+
+*/
