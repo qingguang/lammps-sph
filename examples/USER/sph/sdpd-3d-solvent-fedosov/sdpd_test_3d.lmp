@@ -83,4 +83,4 @@ include            settimestep.lmp
 timestep           ${dt}
 communicate        single vel yes
 
-run                400000
+run                100

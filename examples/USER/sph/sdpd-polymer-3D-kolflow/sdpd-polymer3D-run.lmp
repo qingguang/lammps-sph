@@ -74,9 +74,9 @@ neighbor           3.0e-6 bin
 neigh_modify       delay 0 every 1
 
 include            settimestep.lmp
-variable           newdt   equal  ${dt}*0.1
-timestep           ${newdt}
-fix 5 all dt/reset 10 NULL ${dt} ${dx} units box
+#variable           newdt   equal  ${dt}*0.1
+timestep           ${dt}
+#fix 5 all dt/reset 10 NULL ${dt} ${dx} units box
 
 communicate        single vel yes
 

@@ -8,7 +8,7 @@ boundary          p p p
 #2D box
 include            2d-vars.lmp
 region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
-read_data           poly.txt
+read_data           poly2d.txt
 
 # create fluid particles
 lattice         sq ${dx}
