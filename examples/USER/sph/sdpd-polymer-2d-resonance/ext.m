@@ -20,14 +20,16 @@ function ext()
       extfun = getpolymerext(data);% end to end distance
       rg2 = getrg2(data); %squared radius of gyration
       corfun = vautocor(gete2e(data)); %autocorrelation of end to end vetor
-      rcom=vautocor(getcom(data));
-     %ets=Rext(data, 3);%maximal extension in x direction   
+       rcom=vautocor(getcom(data));    
+       Msd=getmsd(data);
+ %ets=Rext(data, 3);%maximal extension in x direction   
  else
       extfun = extfun + getpolymerext(data);
       rg2 = rg2 + getrg2(data);
       corfun = corfun + vautocor(gete2e(data));
       rcom = rcom + vautocor(getcom(data));
-     % ets=ets+Rext(data,3);
+      Msd=Msd+getmsd(data);    
+ % ets=ets+Rext(data,3);
     endif
   endfor
 
@@ -37,12 +39,14 @@ function ext()
  rg2 = rg2/nfile;
  corfun = corfun/nfile;
 rcom=rcom/nfile;
+Msd=Msd/nfile;
  %ets=ets/nfile;
  dtime = 0:size(extfun, 1)-1;
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
  dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
  dlmwrite( "rcom.dat",   [dtime', rcom], ' ', "precision", "%e");
+ dlmwrite( "Msd.dat",   [dtime', Msd], ' ', "precision", "%e");
 % dlmwrite( "ets.dat",   [dtime', ets'], ' ', "precision", "%e");
 
 endfunction
@@ -81,8 +85,20 @@ function [Re2e] = gete2e(data)
   Re2e = Rtail - Rhead;
 endfunction
 
-function Rcom=getcom(data);
+function Rcom=getcom(data)
 Rcom=mean(data,2);
+warning("size of Rcom:[%d %d %d]",size(Rcom));
+endfunction
+function Msd=getmsd(data)
+Rcom=mean(data,2);
+nle=size(Rcom,1);
+Msd=zeros(nle,1);
+%warning("size of Msd:[%d %d]",size(Msd));
+for i=2:nle
+
+%warning("size of Rcom:[%f %f]",Rcom(1,:,:));
+Msd(i,1)=Msd(i-1,1)+sqrt(sumsq((Rcom(i,:,:)-Rcom(i-1,:,:))));
+endfor
 endfunction
 function Rg2 = getrg2(data)
   nb = size(data, 2);

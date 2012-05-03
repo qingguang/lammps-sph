@@ -44,7 +44,7 @@ fix                integrate_fix_full all meso
 variable kfx_pre atom mass*${Apre}*(${x0}-x)
 variable kfy_pre atom mass*${Apre}*(${y0}-y)
 variable kfz_pre equal 0
-fix pre_springf polymer addforce v_kfx_pre v_kfy_pre v_kfz_pre
+#fix pre_springf polymer addforce v_kfx_pre v_kfy_pre v_kfz_pre
 
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 5
@@ -61,7 +61,7 @@ thermo             1000
 thermo_style       custom step  c_sdpd_kin c_pTemp
 thermo_modify      norm no
 
-dump imgDump all image 100000 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
+dump imgDump all image 100 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
 dump_modify        imgDump pad 9
 dump_modify         imgDump acolor '*' red/green
 
@@ -72,16 +72,16 @@ timestep           ${dt}
 communicate        single vel yes
 
 # move polymer to the center
-run 30000
-unfix pre_springf
+run 3000
+#unfix pre_springf
 
 variable kfx atom mass*${kst}*(${x0}-x)
 variable kfy atom mass*${kst}*(${y0}-y)
 variable kfz equal 0
 # spring force
-fix springf polymer addforce v_kfx v_kfy v_kfz
+#fix springf polymer addforce v_kfx v_kfy v_kfz
 
-dump               dump_u all custom 1000 dumpu*.dat id type xu yu vx vy c_rho_peratom
+dump               dump_u all custom 100 dumpu*.dat id type xu yu vx vy c_rho_peratom
 dump_modify        dump_u first yes
 dump_modify        dump_u sort id
 dump_modify        dump_u pad 8

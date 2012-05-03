@@ -6,7 +6,7 @@
 #replot
 
 set terminal png
-set output sprintf("%s.png", "single-10-bead-polymer-PAF(t)-loglog")
+set output sprintf("%s.png", "single-1-bead-polymer-PAF(t)")
 replot
 set output
 
