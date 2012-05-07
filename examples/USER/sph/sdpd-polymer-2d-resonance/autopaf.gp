@@ -8,6 +8,6 @@ f(x) = c1*x
 fit  f(x) "Msd.dat" via c1
 #plot './Msd.dat' u ($1)*5.02e-4:2,'./rcom.dat' \
 #u ($1)*5.02e-4:($1)*5.02e-4*0.0099,f(x) w lp
-plot './Msd.dat' u ($1)*5.02e-4:2,f(x)/5.02e-4 w lp
-print c1/5.028333e-3/4;
+plot './Msd.dat' u ($1)*5.208333e-4:2,f(x)/5.20833e-4 w lp
+print c1/5.208333e-3/4;
 
