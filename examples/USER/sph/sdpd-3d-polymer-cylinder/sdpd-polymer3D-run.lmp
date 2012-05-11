@@ -10,19 +10,21 @@ communicate        single vel yes
 include            ${ndim}-vars.lmp
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 read_data           poly3d.txt
-group        flow type 1
+group               flow type 1
+
 special_bonds   lj 1 1 1
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
 
-mass               1 ${sdpd_mass}
+mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 # center of the cylinder
 variable xcyl equal 0.5*${Lx}
 variable ycyl equal 0.5*${Ly}
 
 # driving force
-variable fmod equal 10
+variable fmod equal ${sdpd_mass}*100000
+
 
 # coordinates of the rectangle
 variable X0 equal ${xcyl}-${rcyl}
@@ -43,9 +45,10 @@ fix drforce all addforce v_dfx v_dfy 0
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1e9
+variable           sdpd_temp index 1e11
 pair_coeff         * * sph/rhosum   ${h}
-pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
+#pair_style          hybrid sdpd
+pair_coeff         * * sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
@@ -55,9 +58,13 @@ compute            ke all ke
 compute            sdpd_kin all temp
 
 # do full time integration for shear driver and fluid, but keep walls stationary
-#fix                integrate_fix_full all meso
-#dump imgDump3 all image 10 image3.*.jpg type type atom 5e-6 adiam 1e-5 view 30 60 zoom 1.3  box yes 0.01
-#dump_modify        imgDump3 pad 9
+fix                integrate_fix_full all meso
+dump imgDump3 all image 100 image3.*.jpg type type atom yes bond atom 5e-6 adiam 1e-5 view 0 0 zoom 1.3  box yes 0.01
+dump_modify        imgDump3 pad 9
+thermo_style       custom step c_sdpd_kin
+thermo_modify      norm no
+thermo             100
+neighbor           3.0e-6 bin
 # drive particles away from the rectangle
 run 3000
 

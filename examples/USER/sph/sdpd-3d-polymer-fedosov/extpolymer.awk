@@ -28,7 +28,7 @@ fl{
     id=$1
     if (id in phash) {
 	pid = phash[id]
-	print $3, $4, $5, $6,$7,$8 >> "pdata/poly." pid
+	print $3, $4, $5, $6, $7, $8 >> "pdata/poly." pid
     }
 }
 
