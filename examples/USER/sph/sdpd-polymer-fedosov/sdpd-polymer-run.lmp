@@ -1,5 +1,4 @@
 echo               both
-variable           ndim string  2d
 dimension          ${ndim}
 units              si
 atom_style         hybrid  bond meso

@@ -1,7 +1,6 @@
 clear
 
 echo               both
-variable           ndim string  2d
 dimension          ${ndim}
 units              si
 atom_style   hybrid  bond meso
@@ -14,13 +13,7 @@ include            ${ndim}-vars.lmp
 # create fluid particles
 include            ${ndim}-lattice.lmp
 create_atoms       1 region box
-
 mass               1  ${sdpd_mass}
-
-#variable  sdpd_temp index 1.0e-5
-
-
-timestep           0.0e-5
 
 write_restart      poly3d.restart
 
