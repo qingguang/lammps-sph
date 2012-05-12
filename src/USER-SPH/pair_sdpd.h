@@ -40,6 +40,7 @@ class PairSDPD : public Pair {
   double **cut,**viscosity;
   // SDPD temperature
   double **sdpd_temp;
+  double *sdpd_background;
   int first;
 
   void allocate();
