@@ -1,0 +1,16 @@
+/* Poiseuille flow */
+ndim: 2;
+dx: 2.5e-5;
+V: dx^2;
+g: 6.12;
+L: 1.803e-3;
+rho: 1e3;
+eta: 1.5e-1;
+
+H: L/2;
+vmax: g/(2*eta/rho) * H/2 * H/2;
+
+sxy_max: rho*g*H/2;
+sxy_max*V;
+
+Re: vmax*H/(eta/rho);

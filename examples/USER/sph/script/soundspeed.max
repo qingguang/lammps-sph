@@ -1,0 +1,11 @@
+b: c^2 * rho0 / 7;
+pi: b * ( (rho/rho0)^7 - 1) / (rho*rho);
+
+ratsimp(pi);
+
+p: p0 * ( (rho/rho0)^7 - 1);
+
+kill(c);
+eq: c^2 = subst(rho=rho0, diff(p, rho));
+rhs(solve(eq, p0)[1]);
+
