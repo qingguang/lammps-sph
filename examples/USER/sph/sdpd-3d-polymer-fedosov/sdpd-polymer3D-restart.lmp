@@ -23,7 +23,7 @@ variable          H        equal 5.3e-4
 include            ${ndim}-vars.lmp
 
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
-read_data           poly3d.txt
+read_restart       kana.restart.20000
 
 special_bonds   lj 1 1 1
 bond_style fene
@@ -49,8 +49,6 @@ compute            esph all reduce sum c_e_peratom
 compute            ke all ke
 compute            sdpd_kin all temp
 variable           etot equal c_ke+c_esph
-
-
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
