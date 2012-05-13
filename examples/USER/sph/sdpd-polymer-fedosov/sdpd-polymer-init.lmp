@@ -4,11 +4,9 @@ echo               both
 dimension          ${ndim}
 units              si
 atom_style   hybrid  bond meso
-boundary          p p p
-
 
 # create simulation box
-include            ${ndim}-vars.lmp
+include            ${ndim}-model.lmp
 
 # create fluid particles
 include            ${ndim}-lattice.lmp

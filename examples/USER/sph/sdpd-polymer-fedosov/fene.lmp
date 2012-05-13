@@ -1,0 +1,16 @@
+# a loop to gradualy decrease R0 in FENE chain
+variable maxi equal 10
+variable maxim equal ${maxi}-1
+label		loopa
+variable i loop ${maxi}
+	 variable rlocal equal (2.5-1.5*(${i}/${maxi}))*${r0}
+         print "r0 = ${rlocal}"
+	 bond_coeff	1 ${H} ${rlocal} 0.0 0.0
+	 run		1000
+	 if $i==${maxim} then "jump SELF break"
+next i
+jump SELF loopa
+label break
+variable maxi delete
+variable maxim delete
+variable rlocal delete

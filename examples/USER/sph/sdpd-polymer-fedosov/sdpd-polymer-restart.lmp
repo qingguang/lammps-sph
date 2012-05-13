@@ -3,12 +3,11 @@ variable           ndim string  2d
 dimension          ${ndim}
 units              si
 atom_style         hybrid  bond meso
-boundary           p p p
 communicate        single vel yes
 # create simulation box
 
 
-include            ${ndim}-vars.lmp
+include            ${ndim}-model.lmp
 
 read_restart      kana.restart.10000
 
@@ -65,7 +64,7 @@ dump imgDump all image ${Nfreq} image.*.jpg type type atom no bond atom 5e-6 adi
 dump_modify        imgDump pad 9
 
 
-neighbor           3.0e-6 bin
+neighbor           ${dx} bin
 include            settimestep.lmp
 timestep           ${dt}
 

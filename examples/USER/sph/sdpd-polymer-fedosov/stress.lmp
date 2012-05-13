@@ -1,4 +1,4 @@
-variable dhist equal 0.05
+variable dhist equal 0.01
 compute stress all stress/atom virial bond
 variable stress_xx atom c_stress[1]
 fix av_xx_stress all ave/spatial 1 ${Nfreq} ${Nfreq} y lower ${dhist} v_stress_xx file sxx.av units reduced ave one

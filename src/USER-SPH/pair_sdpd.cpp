@@ -411,8 +411,8 @@ void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
     v[0] = delx*fcompx;
     v[1] = dely*fcompy;
     v[2] = delz*fcompz;
-    v[3] = delx*fcompy;
-    v[4] = delx*fcompz;
+    v[3] = dely*fcompx;
+    v[4] = delz*fcompz;
     v[5] = dely*fcompz;
 
     if (vflag_global) {

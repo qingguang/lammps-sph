@@ -1,5 +1,11 @@
+# "viscouse" dt
 variable dt_eta equal 1/8.0*${dx}*${dx}/(${sdpd_mu})
-variable dt_c equal 1/4.0*${dx}/${sdpd_c}
+
+# sound speed dt
+if "${sdpd_c}>0" then &
+"variable dt_c equal 1/4.0*${dx}/${sdpd_c}" &
+else &
+"variable dt_c equal 1e30"
 
 if "${dt_c}>${dt_eta}" then &
 "variable dt equal ${dt_eta}" &
