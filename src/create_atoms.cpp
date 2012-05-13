@@ -63,7 +63,8 @@ void CreateAtoms::command(int narg, char **arg)
     style = REGION;
     if (narg < 3) error->all(FLERR,"Illegal create_atoms command");
     nregion = domain->find_region(arg[2]);
-    if (nregion == -1) error->all(FLERR,"Create_atoms region ID does not exist");
+    if (nregion == -1) error->all(FLERR,
+				  "Create_atoms region ID does not exist");
     iarg = 3;;
   } else if (strcmp(arg[1],"single") == 0) {
     style = SINGLE;
@@ -80,7 +81,8 @@ void CreateAtoms::command(int narg, char **arg)
     if (strcmp(arg[4],"NULL") == 0) nregion = -1;
     else {
       nregion = domain->find_region(arg[4]);
-      if (nregion == -1) error->all(FLERR,"Create_atoms region ID does not exist");
+      if (nregion == -1) error->all(FLERR,
+				    "Create_atoms region ID does not exist");
     }
     iarg = 5;
   } else error->all(FLERR,"Illegal create_atoms command");
@@ -447,38 +449,49 @@ void CreateAtoms::add_lattice()
   double x[3],lamda[3];
   double *coord;
 
-  int i,j,k,m;
-  for (k = klo; k <= khi; k++)
-    for (j = jlo; j <= jhi; j++)
-      for (i = ilo; i <= ihi; i++)
-	for (m = 0; m < nbasis; m++) {
-
-	  x[0] = i + basis[m][0];
-	  x[1] = j + basis[m][1];
-	  x[2] = k + basis[m][2];
-
+  bool revDirI = true;
+  bool revDirJ = true;
+  for (int kd = klo; kd <= khi; kd++) {
+    // reverse direction for i
+    revDirJ = !revDirJ;
+    for (int j = jlo; j <= jhi; j++) {
+      // reverse direction for i
+      int jd;
+      if (revDirJ) jd=jhi+jlo-j; else jd=j;
+      revDirI = !revDirI;
+      for (int i = ilo; i <= ihi; i++) {
+	int id;
+	if (revDirI) id=ihi+ilo-i; else id=i;
+	for (int m = 0; m < nbasis; m++) {
+	  x[0] = id + basis[m][0];
+	  x[1] = jd + basis[m][1];
+	  x[2] = kd + basis[m][2];
+	  
 	  // convert from lattice coords to box coords
-
+	  
 	  domain->lattice->lattice2box(x[0],x[1],x[2]);
-
+	  
 	  // if a region was specified, test if atom is in it
-
+	  
 	  if (style == REGION)
 	    if (!domain->regions[nregion]->match(x[0],x[1],x[2])) continue;
-
+	  
 	  // test if atom is in my subbox
-
+	  
 	  if (triclinic) {
 	    domain->x2lamda(x,lamda);
 	    coord = lamda;
 	  } else coord = x;
-
+	  
 	  if (coord[0] < sublo[0] || coord[0] >= subhi[0] || 
 	      coord[1] < sublo[1] || coord[1] >= subhi[1] || 
 	      coord[2] < sublo[2] || coord[2] >= subhi[2]) continue;
-
+	  
 	  // add the atom to my list of atoms
-
+	  
 	  atom->avec->create_atom(basistype[m],x);
 	}
+      }
+    }
+  }
 }
