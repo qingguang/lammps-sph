@@ -10,8 +10,8 @@ else
     exit -1
 fi
 
-nproc=8
-ndim=2d
+nproc=3
+ndim=3d
 
 cp ${ndim}-vars.lmp ${ndim}-model.lmp
 
