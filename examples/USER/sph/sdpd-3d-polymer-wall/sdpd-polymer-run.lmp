@@ -7,7 +7,7 @@ boundary          p f p
 # create simulation box
 #2D box
 include           3d-vars.lmp
-read_data         poly.txt
+read_data         poly3d.txt
 
 # create wall particles
 region            fluid block 0.0 ${Lx} 0.0 ${lLx} 0.0 ${Lx}  side in units box

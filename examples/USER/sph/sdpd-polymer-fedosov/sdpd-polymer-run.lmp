@@ -8,7 +8,7 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-model.lmp
 #read_data           poly3d.txt
-read_restart         kana.restart.70000
+read_restart         sdpd.restart.300000
 special_bonds   lj 1 1 1
 bond_style fene
 

@@ -2,7 +2,7 @@ function fabs(var) {
   return var>0?var:-var
 }
 
-function isbound(atom_number,        period, rem, current_npoly) {
+function isbond(atom_number,        period, rem, current_npoly) {
   period = Nbeads + Nsolvent
   rem = (atom_number-1)%(period) # from 0 to period-1
   current_npoly = int(atom_number/period) + 1
@@ -17,6 +17,8 @@ BEGIN {
   if (Npoly=="full") {
     Npoly = 1e22
   }
+  # polymer type
+  polymertype=2
 }
 
 /LAMMPS/{
@@ -85,6 +87,10 @@ inatoms{
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
   # add molecule ID
  # $6=$6 " 0"
+  id=$1
+  if (isbond(id) || isbond(id-1) ) {
+     $2=polymertype
+  }
   print $0
   next
 }
@@ -100,7 +106,7 @@ END {
 ipoly=0
 printf("") > "poly.id"
   for (q=1; q<iatom; q++) {
-    if (isbound(q)) {
+    if (isbond(q)) {
       ibond++
       ip = q
       jp = q+1

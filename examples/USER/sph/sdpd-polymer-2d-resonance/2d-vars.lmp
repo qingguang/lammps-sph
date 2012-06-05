@@ -7,19 +7,19 @@ variable           pLz    equal  1.0e-6
 
 variable           x0 equal 0.5*${Lx}
 variable           y0 equal 0.5*${Ly}
-variable           Apre equal 1e6
-variable           kst  equal 1e5
+variable           Apre equal 1e4
+variable           kst  equal 8e4
 
 variable           sdpd_rho equal 1000
-variable           sdpd_c equal 3e-1
-variable           sdpd_eta equal 1.5e-2
+variable           sdpd_c equal 1
+variable           sdpd_eta equal 1e-4
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho}
-variable          h equal 2.7*${dx}
+variable           h equal 2.7*${dx}
 
 variable          gx equal 6.12
 variable          Nfreq equal 1000
 variable          r0       equal 2.0*${dx}
-variable          H        equal 20
+variable          H        equal 55
 
 variable          sdpd_mass equal ${dx}*${dx}*${sdpd_rho}
 variable           sdpd_temp index 1e14

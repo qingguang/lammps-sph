@@ -1,6 +1,6 @@
 variable           eps equal 0.3*${dx}
 region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box
-create_box         1 box
+create_box         2 box
 lattice            sc ${dx} origin ${eps} ${eps} ${eps}
 
 variable           eps delete
