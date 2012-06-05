@@ -60,7 +60,7 @@ thermo             1000
 thermo_style       custom step  c_sdpd_kin c_pTemp
 thermo_modify      norm no
 
-dump imgDump all image 10000 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
+dump imgDump all image 1000 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
 dump_modify        imgDump pad 9
 dump_modify         imgDump acolor '*' red/green
 
@@ -73,7 +73,7 @@ communicate        single vel yes
 restart 100000 sdpd.restart
 
 # move polymer to the center
-run 1000000
+run 100000
 unfix pre_springf
 
 variable kfx atom mass*${kst}*(${x0}-x)

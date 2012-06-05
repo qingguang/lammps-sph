@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=3
+nproc=2
 ndim=3d
 
 #cp ${ndim}-vars.lmp ${ndim}-model.lmp

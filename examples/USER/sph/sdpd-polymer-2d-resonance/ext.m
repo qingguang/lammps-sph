@@ -93,11 +93,13 @@ function Msd=getmsd(data)
 Rcom=mean(data,2);
 nle=size(Rcom,1);
 Msd=zeros(nle,1);
+Msds=zeros(nle,1);
 %warning("size of Msd:[%d %d]",size(Msd));
 for i=2:nle
 
 %warning("size of Rcom:[%f %f]",Rcom(1,:,:));
-Msd(i,1)=Msd(i-1,1)+sqrt(sumsq((Rcom(i,:,:)-Rcom(i-1,:,:))));
+Msds(i,1)=Msds(i-1,1)+sum(sumsq((Rcom(i,:,:)-Rcom(i-1,:,:))));
+Msd(i,1)=Msds(i,1)/i;
 endfor
 endfunction
 function Rg2 = getrg2(data)

@@ -22,5 +22,5 @@ variable          r0       equal 2.0*${dx}
 variable          H        equal 55
 
 variable          sdpd_mass equal ${dx}*${dx}*${sdpd_rho}
-variable           sdpd_temp index 1e14
+variable           sdpd_temp index 1e13
 variable          ntime equal      10000000
