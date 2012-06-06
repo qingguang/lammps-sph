@@ -271,31 +271,31 @@ int AtomVecMeso::unpack_border_hybrid(int n, int first, double *buf) {
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_reverse_hybrid(int n, int first, double *buf) {
-	//printf("in AtomVecMeso::pack_reverse_hybrid\n");
-	int i, m, last;
+        //printf("in AtomVecMeso::pack_reverse_hybrid\n");
+        int i, m, last;
 
-	m = 0;
-	last = first + n;
-	for (i = first; i < last; i++) {
-		buf[m++] = drho[i];
-		buf[m++] = de[i];
-	}
-	return m;
+        m = 0;
+        last = first + n;
+        for (i = first; i < last; i++) {
+                buf[m++] = drho[i];
+                buf[m++] = de[i];
+        }
+        return m;
 }
 
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::unpack_reverse_hybrid(int n, int *list, double *buf) {
-	//printf("in AtomVecMeso::unpack_reverse_hybrid\n");
-	int i, j, m;
+        //printf("in AtomVecMeso::unpack_reverse_hybrid\n");
+        int i, j, m;
 
-	m = 0;
-	for (i = 0; i < n; i++) {
-		j = list[i];
-		drho[j] += buf[m++];
-		de[j] += buf[m++];
-	}
-	return m;
+        m = 0;
+        for (i = 0; i < n; i++) {
+                j = list[i];
+                drho[j] += buf[m++];
+                de[j] += buf[m++];
+        }
+        return m;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -446,6 +446,7 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 /* ---------------------------------------------------------------------- */
 
 void AtomVecMeso::unpack_comm(int n, int first, double *buf) {
+<<<<<<< HEAD
 	//printf("in AtomVecMeso::unpack_comm\n");
 	int i, m, last;
 
@@ -464,6 +465,23 @@ void AtomVecMeso::unpack_comm(int n, int first, double *buf) {
 		vest[i][1] = buf[m++];
 		vest[i][2] = buf[m++];
 	}
+=======
+        //printf("in AtomVecMeso::unpack_comm\n");
+        int i, m, last;
+
+        m = 0;
+        last = first + n;
+        for (i = first; i < last; i++) {
+                x[i][0] = buf[m++];
+                x[i][1] = buf[m++];
+                x[i][2] = buf[m++];
+                rho[i] = buf[m++];
+                e[i] = buf[m++];
+                vest[i][0] = buf[m++];
+                vest[i][1] = buf[m++];
+                vest[i][2] = buf[m++];
+        }
+>>>>>>> 
 }
 
 /* ---------------------------------------------------------------------- */
@@ -495,36 +513,36 @@ void AtomVecMeso::unpack_comm_vel(int n, int first, double *buf) {
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_reverse(int n, int first, double *buf) {
-	//printf("in AtomVecMeso::pack_reverse\n");
-	int i, m, last;
+        //printf("in AtomVecMeso::pack_reverse\n");
+        int i, m, last;
 
-	m = 0;
-	last = first + n;
-	for (i = first; i < last; i++) {
-		buf[m++] = f[i][0];
-		buf[m++] = f[i][1];
-		buf[m++] = f[i][2];
-		buf[m++] = drho[i];
-		buf[m++] = de[i];
-	}
-	return m;
+        m = 0;
+        last = first + n;
+        for (i = first; i < last; i++) {
+                buf[m++] = f[i][0];
+                buf[m++] = f[i][1];
+                buf[m++] = f[i][2];
+                buf[m++] = drho[i];
+                buf[m++] = de[i];
+        }
+        return m;
 }
 
 /* ---------------------------------------------------------------------- */
 
 void AtomVecMeso::unpack_reverse(int n, int *list, double *buf) {
-	//printf("in AtomVecMeso::unpack_reverse\n");
-	int i, j, m;
+        //printf("in AtomVecMeso::unpack_reverse\n");
+        int i, j, m;
 
-	m = 0;
-	for (i = 0; i < n; i++) {
-		j = list[i];
-		f[j][0] += buf[m++];
-		f[j][1] += buf[m++];
-		f[j][2] += buf[m++];
-		drho[j] += buf[m++];
-		de[j] += buf[m++];
-	}
+        m = 0;
+        for (i = 0; i < n; i++) {
+                j = list[i];
+                f[j][0] += buf[m++];
+                f[j][1] += buf[m++];
+                f[j][2] += buf[m++];
+                drho[j] += buf[m++];
+                de[j] += buf[m++];
+        }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -833,17 +851,17 @@ int AtomVecMeso::unpack_exchange(double *buf) {
  ------------------------------------------------------------------------- */
 
 int AtomVecMeso::size_restart() {
-	int i;
+        int i;
 
 	int nlocal = atom->nlocal;
 	int n = 20 * nlocal; // 11 + rho + colorgradient[3] + e + cv + vest[3]
 
-	if (atom->nextra_restart)
-		for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
-			for (i = 0; i < nlocal; i++)
-				n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        if (atom->nextra_restart)
+                for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
+                        for (i = 0; i < nlocal; i++)
+                                n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
-	return n;
+        return n;
 }
 
 /* ----------------------------------------------------------------------
@@ -967,34 +985,34 @@ void AtomVecMeso::create_atom(int itype, double *coord) {
  ------------------------------------------------------------------------- */
 
 void AtomVecMeso::data_atom(double *coord, int imagetmp, char **values) {
-	int nlocal = atom->nlocal;
-	if (nlocal == nmax)
-		grow(0);
+        int nlocal = atom->nlocal;
+        if (nlocal == nmax)
+                grow(0);
 
-	tag[nlocal] = atoi(values[0]);
-	if (tag[nlocal] <= 0)
-		error->one(FLERR,"Invalid atom ID in Atoms section of data file");
+        tag[nlocal] = atoi(values[0]);
+        if (tag[nlocal] <= 0)
+                error->one(FLERR,"Invalid atom ID in Atoms section of data file");
 
-	type[nlocal] = atoi(values[1]);
-	if (type[nlocal] <= 0 || type[nlocal] > atom->ntypes)
-		error->one(FLERR,"Invalid atom type in Atoms section of data file");
+        type[nlocal] = atoi(values[1]);
+        if (type[nlocal] <= 0 || type[nlocal] > atom->ntypes)
+                error->one(FLERR,"Invalid atom type in Atoms section of data file");
 
-	rho[nlocal] = atof(values[2]);
-	e[nlocal] = atof(values[3]);
-	cv[nlocal] = atof(values[4]);
+        rho[nlocal] = atof(values[2]);
+        e[nlocal] = atof(values[3]);
+        cv[nlocal] = atof(values[4]);
 
-	x[nlocal][0] = coord[0];
-	x[nlocal][1] = coord[1];
-	x[nlocal][2] = coord[2];
+        x[nlocal][0] = coord[0];
+        x[nlocal][1] = coord[1];
+        x[nlocal][2] = coord[2];
 
-	//printf("rho=%f, e=%f, cv=%f, x=%f\n", rho[nlocal], e[nlocal], cv[nlocal], x[nlocal][0]);
+        //printf("rho=%f, e=%f, cv=%f, x=%f\n", rho[nlocal], e[nlocal], cv[nlocal], x[nlocal][0]);
 
-	image[nlocal] = imagetmp;
+        image[nlocal] = imagetmp;
 
-	mask[nlocal] = 1;
-	v[nlocal][0] = 0.0;
-	v[nlocal][1] = 0.0;
-	v[nlocal][2] = 0.0;
+        mask[nlocal] = 1;
+        v[nlocal][0] = 0.0;
+        v[nlocal][1] = 0.0;
+        v[nlocal][2] = 0.0;
 
 	colorgradient[nlocal][0] = 0.0;
 	colorgradient[nlocal][1] = 0.0;
@@ -1004,10 +1022,10 @@ void AtomVecMeso::data_atom(double *coord, int imagetmp, char **values) {
 	vest[nlocal][1] = 0.0;
 	vest[nlocal][2] = 0.0;
 
-	de[nlocal] = 0.0;
-	drho[nlocal] = 0.0;
+        de[nlocal] = 0.0;
+        drho[nlocal] = 0.0;
 
-	atom->nlocal++;
+        atom->nlocal++;
 }
 
 /* ----------------------------------------------------------------------
@@ -1017,11 +1035,11 @@ void AtomVecMeso::data_atom(double *coord, int imagetmp, char **values) {
 
 int AtomVecMeso::data_atom_hybrid(int nlocal, char **values) {
 
-	rho[nlocal] = atof(values[0]);
-	e[nlocal] = atof(values[1]);
-	cv[nlocal] = atof(values[2]);
+        rho[nlocal] = atof(values[0]);
+        e[nlocal] = atof(values[1]);
+        cv[nlocal] = atof(values[2]);
 
-	return 3;
+        return 3;
 }
 
 /* ----------------------------------------------------------------------
