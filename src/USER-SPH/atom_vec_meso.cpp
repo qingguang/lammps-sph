@@ -446,7 +446,6 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 /* ---------------------------------------------------------------------- */
 
 void AtomVecMeso::unpack_comm(int n, int first, double *buf) {
-<<<<<<< HEAD
 	//printf("in AtomVecMeso::unpack_comm\n");
 	int i, m, last;
 
@@ -465,23 +464,6 @@ void AtomVecMeso::unpack_comm(int n, int first, double *buf) {
 		vest[i][1] = buf[m++];
 		vest[i][2] = buf[m++];
 	}
-=======
-        //printf("in AtomVecMeso::unpack_comm\n");
-        int i, m, last;
-
-        m = 0;
-        last = first + n;
-        for (i = first; i < last; i++) {
-                x[i][0] = buf[m++];
-                x[i][1] = buf[m++];
-                x[i][2] = buf[m++];
-                rho[i] = buf[m++];
-                e[i] = buf[m++];
-                vest[i][0] = buf[m++];
-                vest[i][1] = buf[m++];
-                vest[i][2] = buf[m++];
-        }
->>>>>>> 
 }
 
 /* ---------------------------------------------------------------------- */
@@ -984,7 +966,7 @@ void AtomVecMeso::create_atom(int itype, double *coord) {
  initialize other atom quantities
  ------------------------------------------------------------------------- */
 
-void AtomVecMeso::data_atom(double *coord, int imagetmp, char **values) {
+void AtomVecMeso::data_atom(double *coord, tagint imagetmp, char **values) {
         int nlocal = atom->nlocal;
         if (nlocal == nmax)
                 grow(0);
