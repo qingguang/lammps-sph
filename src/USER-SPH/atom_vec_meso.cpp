@@ -50,10 +50,10 @@ AtomVecMeso::AtomVecMeso(LAMMPS *lmp, int narg, char **arg) :
 }
 
 /* ----------------------------------------------------------------------
- grow atom arrays
- n = 0 grows arrays by DELTA
- n > 0 allocates arrays to size n
- ------------------------------------------------------------------------- */
+   grow atom arrays
+   n = 0 grows arrays by DELTA
+   n > 0 allocates arrays to size n
+   ------------------------------------------------------------------------- */
 
 void AtomVecMeso::grow(int n) {
 	if (n == 0)
@@ -86,8 +86,8 @@ void AtomVecMeso::grow(int n) {
 }
 
 /* ----------------------------------------------------------------------
- reset local array ptrs
- ------------------------------------------------------------------------- */
+   reset local array ptrs
+   ------------------------------------------------------------------------- */
 
 void AtomVecMeso::grow_reset() {
 	tag = atom->tag;
@@ -271,31 +271,31 @@ int AtomVecMeso::unpack_border_hybrid(int n, int first, double *buf) {
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_reverse_hybrid(int n, int first, double *buf) {
-        //printf("in AtomVecMeso::pack_reverse_hybrid\n");
-        int i, m, last;
-
-        m = 0;
-        last = first + n;
-        for (i = first; i < last; i++) {
-                buf[m++] = drho[i];
-                buf[m++] = de[i];
-        }
-        return m;
+  //printf("in AtomVecMeso::pack_reverse_hybrid\n");
+  int i, m, last;
+  
+  m = 0;
+  last = first + n;
+  for (i = first; i < last; i++) {
+    buf[m++] = drho[i];
+    buf[m++] = de[i];
+  }
+  return m;
 }
 
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::unpack_reverse_hybrid(int n, int *list, double *buf) {
-        //printf("in AtomVecMeso::unpack_reverse_hybrid\n");
-        int i, j, m;
-
-        m = 0;
-        for (i = 0; i < n; i++) {
-                j = list[i];
-                drho[j] += buf[m++];
-                de[j] += buf[m++];
-        }
-        return m;
+  //printf("in AtomVecMeso::unpack_reverse_hybrid\n");
+  int i, j, m;
+  
+  m = 0;
+  for (i = 0; i < n; i++) {
+    j = list[i];
+    drho[j] += buf[m++];
+    de[j] += buf[m++];
+  }
+  return m;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -495,36 +495,36 @@ void AtomVecMeso::unpack_comm_vel(int n, int first, double *buf) {
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_reverse(int n, int first, double *buf) {
-        //printf("in AtomVecMeso::pack_reverse\n");
-        int i, m, last;
-
-        m = 0;
-        last = first + n;
-        for (i = first; i < last; i++) {
-                buf[m++] = f[i][0];
-                buf[m++] = f[i][1];
-                buf[m++] = f[i][2];
-                buf[m++] = drho[i];
-                buf[m++] = de[i];
-        }
-        return m;
+  //printf("in AtomVecMeso::pack_reverse\n");
+  int i, m, last;
+  
+  m = 0;
+  last = first + n;
+  for (i = first; i < last; i++) {
+    buf[m++] = f[i][0];
+    buf[m++] = f[i][1];
+    buf[m++] = f[i][2];
+    buf[m++] = drho[i];
+    buf[m++] = de[i];
+  }
+  return m;
 }
 
 /* ---------------------------------------------------------------------- */
 
 void AtomVecMeso::unpack_reverse(int n, int *list, double *buf) {
-        //printf("in AtomVecMeso::unpack_reverse\n");
-        int i, j, m;
-
-        m = 0;
-        for (i = 0; i < n; i++) {
-                j = list[i];
-                f[j][0] += buf[m++];
-                f[j][1] += buf[m++];
-                f[j][2] += buf[m++];
-                drho[j] += buf[m++];
-                de[j] += buf[m++];
-        }
+  //printf("in AtomVecMeso::unpack_reverse\n");
+  int i, j, m;
+  
+  m = 0;
+  for (i = 0; i < n; i++) {
+    j = list[i];
+    f[j][0] += buf[m++];
+    f[j][1] += buf[m++];
+    f[j][2] += buf[m++];
+    drho[j] += buf[m++];
+    de[j] += buf[m++];
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -754,9 +754,9 @@ void AtomVecMeso::unpack_border_vel(int n, int first, double *buf) {
 }
 
 /* ----------------------------------------------------------------------
- pack data for atom I for sending to another proc
- xyz must be 1st 3 values, so comm::exchange() can test on them
- ------------------------------------------------------------------------- */
+   pack data for atom I for sending to another proc
+   xyz must be 1st 3 values, so comm::exchange() can test on them
+   ------------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_exchange(int i, double *buf) {
 	//printf("in AtomVecMeso::pack_exchange\n");
@@ -828,9 +828,9 @@ int AtomVecMeso::unpack_exchange(double *buf) {
 }
 
 /* ----------------------------------------------------------------------
- size of restart data for all atoms owned by this proc
- include extra data stored by fixes
- ------------------------------------------------------------------------- */
+   size of restart data for all atoms owned by this proc
+   include extra data stored by fixes
+   ------------------------------------------------------------------------- */
 
 int AtomVecMeso::size_restart() {
         int i;
@@ -847,10 +847,10 @@ int AtomVecMeso::size_restart() {
 }
 
 /* ----------------------------------------------------------------------
- pack atom I's data for restart file including extra quantities
- xyz must be 1st 3 values, so that read_restart can test on them
- molecular types may be negative, but write as positive
- ------------------------------------------------------------------------- */
+   pack atom I's data for restart file including extra quantities
+   xyz must be 1st 3 values, so that read_restart can test on them
+   molecular types may be negative, but write as positive
+   ------------------------------------------------------------------------- */
 
 int AtomVecMeso::pack_restart(int i, double *buf) {
 	int m = 1;
@@ -883,8 +883,8 @@ int AtomVecMeso::pack_restart(int i, double *buf) {
 }
 
 /* ----------------------------------------------------------------------
- unpack data for one atom from restart file including extra quantities
- ------------------------------------------------------------------------- */
+   unpack data for one atom from restart file including extra quantities
+   ------------------------------------------------------------------------- */
 
 int AtomVecMeso::unpack_restart(double *buf) {
 	int nlocal = atom->nlocal;
@@ -927,9 +927,9 @@ int AtomVecMeso::unpack_restart(double *buf) {
 }
 
 /* ----------------------------------------------------------------------
- create one atom of itype at coord
- set other values to defaults
- ------------------------------------------------------------------------- */
+   create one atom of itype at coord
+   set other values to defaults
+   ------------------------------------------------------------------------- */
 
 void AtomVecMeso::create_atom(int itype, double *coord) {
 	int nlocal = atom->nlocal;
@@ -962,9 +962,9 @@ void AtomVecMeso::create_atom(int itype, double *coord) {
 }
 
 /* ----------------------------------------------------------------------
- unpack one line from Atoms section of data file
- initialize other atom quantities
- ------------------------------------------------------------------------- */
+   unpack one line from Atoms section of data file
+   initialize other atom quantities
+   ------------------------------------------------------------------------- */
 
 void AtomVecMeso::data_atom(double *coord, tagint imagetmp, char **values) {
         int nlocal = atom->nlocal;
@@ -1011,22 +1011,22 @@ void AtomVecMeso::data_atom(double *coord, tagint imagetmp, char **values) {
 }
 
 /* ----------------------------------------------------------------------
- unpack hybrid quantities from one line in Atoms section of data file
- initialize other atom quantities for this sub-style
- ------------------------------------------------------------------------- */
+   unpack hybrid quantities from one line in Atoms section of data file
+   initialize other atom quantities for this sub-style
+   ------------------------------------------------------------------------- */
 
 int AtomVecMeso::data_atom_hybrid(int nlocal, char **values) {
-
-        rho[nlocal] = atof(values[0]);
-        e[nlocal] = atof(values[1]);
-        cv[nlocal] = atof(values[2]);
-
-        return 3;
+  
+  rho[nlocal] = atof(values[0]);
+  e[nlocal] = atof(values[1]);
+  cv[nlocal] = atof(values[2]);
+  
+  return 3;
 }
 
 /* ----------------------------------------------------------------------
- return # of bytes of allocated memory
- ------------------------------------------------------------------------- */
+   return # of bytes of allocated memory
+   ------------------------------------------------------------------------- */
 
 bigint AtomVecMeso::memory_usage() {
 	bigint bytes = 0;
