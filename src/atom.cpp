@@ -234,6 +234,7 @@ Atom::~Atom()
 
   // delete mapping data structures
 
+  memory->destroy(sametag);
   map_delete();
 }
 
