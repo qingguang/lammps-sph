@@ -2,7 +2,7 @@
 # See sexample.gp
 #set term push
 set term postscript eps enhanced color
-set output sprintf("%s.eps", "velocity for melts")
+set output sprintf("%s.eps", "spesols")
 replot
 
 #set terminal png

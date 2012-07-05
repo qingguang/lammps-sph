@@ -1,5 +1,5 @@
 echo               both
-dimension          2
+dimension          ${ndim}
 units              si
 atom_style       hybrid bond meso
 boundary          p p p
@@ -59,12 +59,19 @@ compute         pTemp all temp/profile 1 1 0 y 5
 thermo             1000
 thermo_style       custom step  c_sdpd_kin c_pTemp
 thermo_modify      norm no
+dump               dump_u all custom 1000 dumpu*.dat id type xu yu vx vy c_rho_peratom
+dump_modify        dump_u first yes
+dump_modify        dump_u sort id
+dump_modify        dump_u pad 8
 
-dump imgDump all image 1000 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
-dump_modify        imgDump pad 9
-dump_modify         imgDump acolor '*' red/green
+include            ${ndim}-image.lmp
+#dump imgDump all image 1000 image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.75
+#dump_modify        imgDump pad 9
+#dump_modify         imgDump acolor '*' red/green
 
-neighbor           1.0e-6 bin
+variable           eps equal 0.25*${dx}
+neighbor           ${eps} bin
+
 neigh_modify       delay 0 every 1
 include            settimestep.lmp
 timestep           ${dt}
@@ -73,7 +80,7 @@ communicate        single vel yes
 restart 100000 sdpd.restart
 
 # move polymer to the center
-run 100000
+run 50000
 unfix pre_springf
 
 variable kfx atom mass*${kst}*(${x0}-x)
@@ -82,10 +89,7 @@ variable kfz equal 0
 # spring force
 fix springf polymer addforce v_kfx v_kfy v_kfz
 
-dump               dump_u all custom 1000 dumpu*.dat id type xu yu vx vy c_rho_peratom
-dump_modify        dump_u first yes
-dump_modify        dump_u sort id
-dump_modify        dump_u pad 8
+
 #dump               dump_id all custom 1000 dump*.dat id type x y vx vy c_rho_peratom
 #dump_modify        dump_id first yes
 #dump_modify        dump_id sort id

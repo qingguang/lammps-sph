@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=2
+nproc=6
 ndim=3d
 
 #cp ${ndim}-vars.lmp ${ndim}-model.lmp
@@ -20,7 +20,7 @@ ndim=3d
 #${restart2data} poly3d.restart poly3d.txt
 
 # awk -v cutoff=3.0 -v Nbeads=25 -v Nsolvent=25 -v Npoly=full \
- #    -f addpolymer.awk poly3d.txt > poly3.txt
+#     -f addpolymer.awk poly3d.txt > poly3.txt
 # nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
 # sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
 

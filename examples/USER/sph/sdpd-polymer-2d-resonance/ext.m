@@ -42,11 +42,12 @@ rcom=rcom/nfile;
 Msd=Msd/nfile;
  %ets=ets/nfile;
  dtime = 0:size(extfun, 1)-1;
+ dtmsd=0:size(Msd)-1;
  dlmwrite( "extx.dat", [dtime', extfun], ' ', "precision", "%e");
  dlmwrite( "rg2.dat",   [dtime', rg2], ' ', "precision", "%e");
  dlmwrite( "corfun.dat",   [dtime', corfun], ' ', "precision", "%e");
  dlmwrite( "rcom.dat",   [dtime', rcom], ' ', "precision", "%e");
- dlmwrite( "Msd.dat",   [dtime', Msd], ' ', "precision", "%e");
+ dlmwrite( "Msd.dat",   [dtmsd', Msd], ' ', "precision", "%e");
 % dlmwrite( "ets.dat",   [dtime', ets'], ' ', "precision", "%e");
 
 endfunction
@@ -91,15 +92,15 @@ warning("size of Rcom:[%d %d %d]",size(Rcom));
 endfunction
 function Msd=getmsd(data)
 Rcom=mean(data,2);
-nle=size(Rcom,1);
-Msd=zeros(nle,1);
-Msds=zeros(nle,1);
+ndata=size(Rcom,1);
+ndt=floor(ndata/4);
+Msd=zeros(ndt,1);
 %warning("size of Msd:[%d %d]",size(Msd));
-for i=2:nle
-
+for dt=1:ndt
 %warning("size of Rcom:[%f %f]",Rcom(1,:,:));
-Msds(i,1)=Msds(i-1,1)+sum(sumsq((Rcom(i,:,:)-Rcom(i-1,:,:))));
-Msd(i,1)=Msds(i,1)/i;
+totaldis=sumsq(Rcom(1+dt:end,:,:)-Rcom(1:end-dt,:,:),3);
+warning("size of total:[%d %d]",size(totaldis));
+Msd(dt)=mean(totaldis);
 endfor
 endfunction
 function Rg2 = getrg2(data)

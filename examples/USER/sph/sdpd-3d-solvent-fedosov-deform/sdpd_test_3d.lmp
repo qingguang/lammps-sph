@@ -1,5 +1,5 @@
 echo               both
-variable           ndim string  3
+variable           ndim string  2
 # type of the simulation
 #variable           simtype string "reverse-poiseuille"
 variable           simtype string "deform"
