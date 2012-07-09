@@ -1,0 +1,75 @@
+echo               both
+dimension          ${ndim}
+units              si
+atom_style         hybrid  bond meso
+communicate        single vel yes
+# create simulation box
+
+#3D box
+include            ${ndim}-model.lmp
+#read_data           poly3d.txt
+read_restart         sdpd.restart.80000
+special_bonds   lj 1 1 1
+bond_style fene
+
+mass               * ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+# use Tait's EOS in combination with Morris' laminar viscosity.
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+pair_style         hybrid/overlay sph/rhosum 1 sdpd
+pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * *    sdpd ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp} ${sdpd_background}
+
+compute            rho_peratom all meso_rho/atom
+compute            e_peratom all meso_e/atom
+compute            ke_peratom all ke/atom
+compute            esph all reduce sum c_e_peratom
+compute            ke all ke
+compute            sdpd_kin all temp
+variable           etot equal c_ke+c_esph
+
+# do full time integration for shear driver and fluid, but keep walls stationary
+fix                integrate_fix_full all meso
+
+# "profile" corrected temperature
+compute         pTemp all temp/profile 1 1 0 y 10
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
+include            stress.lmp
+dump               dump_id all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+
+thermo_style       custom step c_sdpd_kin c_pTemp
+thermo_modify      norm no
+thermo             100
+
+include            ${ndim}-image.lmp
+
+variable           eps equal 0.25*${dx}
+neighbor           ${eps} bin
+variable           eps delete
+neigh_modify       every 1
+include            settimestep.lmp
+timestep           ${dt}
+
+restart 10000 sdpd.restart
+
+#include           fene.lmp
+
+bond_coeff 1 ${H} ${r0}  0 0
+variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+
+run   1000000 every 1000 "velocity all zero linear"
+# run   1000000 every 1000 "velocity all zero linear" & 
+# "velocity all zero angular"
+

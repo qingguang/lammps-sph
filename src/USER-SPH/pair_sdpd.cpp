@@ -59,6 +59,7 @@ PairSDPD::~PairSDPD() {
     memory->destroy(cut);
     memory->destroy(rho0);
     memory->destroy(soundspeed);
+    memory->destroy(sdpd_background);
     memory->destroy(B);
     memory->destroy(viscosity);
   }
@@ -141,7 +142,7 @@ void PairSDPD::compute(int eflag, int vflag) {
     tmp = rho[i] / rho0[itype];
 
     fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - 1.0) / (rho[i] * rho[i]);
+    fi = B[itype] * (fi * fi * tmp - sdpd_background[itype] ) / (rho[i] * rho[i]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -175,7 +176,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         // compute pressure  of atom j with Tait EOS
         tmp = rho[j] / rho0[jtype];
         fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - 1.0) / (rho[j] * rho[j]);
+        fj = B[jtype] * (fj * fj * tmp - sdpd_background[jtype] ) / (rho[j] * rho[j]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -248,31 +249,21 @@ void PairSDPD::compute(int eflag, int vflag) {
 
 
 	if (newton_pair || j < nlocal) {
-
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (domain->dimension ==3 ) {
-
 	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
 	  }
- 
-  
 	  de[j] += deltaE;
           drho[j] += imass * delVdotDelR * wfd;
         }
         //modify until this line
         if (evflag)
-          // ev_tally_sdpd(i, j, nlocal, newton_pair, 0.0, 0.0, 
-	  // 		delx * fpair + velx * fvisc+_dUi[0],
-	  // 		dely * fpair + vely * fvisc+_dUi[1],
-	  // 		delz * fpair + velz * fvisc +_dUi[2],
-	  // 		delx, dely, delz);
           ev_tally_sdpd(i, j, nlocal, newton_pair, 0.0, 0.0, 
-	  		velx * fvisc, 
-	  		vely * fvisc,
-	  		velz * fvisc,
-	  		delx, dely, delz);
-
+	   		delx * fpair + velx * fvisc+_dUi[0],
+	   		dely * fpair + vely * fvisc+_dUi[1],
+	   		delz * fpair + velz * fvisc +_dUi[2],
+	   		delx, dely, delz);
       }
     }
   }
@@ -294,6 +285,7 @@ void PairSDPD::allocate() {
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
   memory->create(rho0, n + 1, "pair:rho0");
   memory->create(soundspeed, n + 1, "pair:soundspeed");
+  memory->create(sdpd_background, n + 1, "pair:sdpd_background");
   memory->create(B, n + 1, "pair:B");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
@@ -313,9 +305,9 @@ void PairSDPD::settings(int narg, char **arg) {
    set coeffs for one or more type pairs
    ------------------------------------------------------------------------- */
 void PairSDPD::coeff(int narg, char **arg) {
-  if (narg != 7)
+  if ( (narg != 7) && (narg != 8) )
     error->all(FLERR,
-               "Incorrect args for pair_style sdpd coefficients: six parameters are required");
+               "Incorrect args for pair_style sdpd coefficients: 6 or 7 parameters are required");
   if (!allocated)
     allocate();
 
@@ -327,11 +319,19 @@ void PairSDPD::coeff(int narg, char **arg) {
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
   double sdpd_temp_one = force->numeric(arg[6]);
+  double sdpd_background_one;
+  if (narg>7) {
+    sdpd_background_one = force->numeric(arg[7]);
+  } else {
+    sdpd_background_one = 1.0;
+  }
+
   double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
     soundspeed[i] = soundspeed_one;
+    sdpd_background[i] = sdpd_background_one;
     B[i] = B_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
@@ -411,8 +411,8 @@ void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
     v[0] = delx*fcompx;
     v[1] = dely*fcompy;
     v[2] = delz*fcompz;
-    v[3] = delx*fcompy;
-    v[4] = delx*fcompz;
+    v[3] = dely*fcompx;
+    v[4] = delz*fcompz;
     v[5] = dely*fcompz;
 
     if (vflag_global) {

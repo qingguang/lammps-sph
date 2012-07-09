@@ -1,2 +1,6 @@
+variable           Ly  equal 1.803e-3
+variable           Lx  equal ${Ly}/50*10
+variable           dx   equal 2.5e-5
+variable           sdpd_rho equal 1000
 variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
 variable           Lz  equal ${Ly}/50*5
