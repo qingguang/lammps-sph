@@ -33,8 +33,8 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_JPEG
 # PATH = path for MPI library
 # LIB = name of MPI library
 
-MPI_INC =       -DMPICH_SKIP_MPICXX 
-MPI_PATH = 
+MPI_INC =       -DMPICH_SKIP_MPICXX -I/opt/mpich/include  
+MPI_PATH =       -L/opt/mpich/lib 
 MPI_LIB =	-lmpich -lmpl -lpthread
 
 # FFT library, OPTIONAL
@@ -44,9 +44,9 @@ MPI_LIB =	-lmpich -lmpl -lpthread
 # PATH = path for FFT library
 # LIB = name of FFT library
 
-FFT_INC =       -DFFT_FFTW
-FFT_PATH = 
-FFT_LIB =	-lfftw
+FFT_INC =       -DFFT_FFTW -DFFTW_SIZE -I/opt/mpich/include
+FFT_PATH =  -L/opt/mpich/lib
+FFT_LIB =	-lfftw3
 
 # JPEG library, OPTIONAL
 # see discussion in doc/Section_start.html#2_2 (step 7)

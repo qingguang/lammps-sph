@@ -80,7 +80,7 @@ fix 5 all dt/reset 10 NULL ${dt} ${dx} units box
 
 communicate        single vel yes
 
-run 100
+#run 100
 
 #variable            A_kol equal 7100
 variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
