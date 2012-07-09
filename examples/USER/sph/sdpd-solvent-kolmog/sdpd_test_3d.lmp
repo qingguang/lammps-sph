@@ -49,7 +49,7 @@ dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
-thermo             100
+thermo             1
 
 dump imgDump all image 1000 image.*.jpg type type  adiam 2.5e-1 view 0 0 zoom 1.3  box yes 0.01
 dump_modify        imgDump pad 9

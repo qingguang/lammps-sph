@@ -1,0 +1,12 @@
+variable  adiam equal 0.5*${dx}
+variable  abond equal 0.25*${dx}
+variable  ximgsize equal 300
+variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
+variable  vlx     atom vx*100
+dump imgDump all image 100 image.*.jpg type type atom no bond atom ${abond} adiam ${adiam} view 0 0 zoom 3.5  box yes 0.01
+dump_modify        imgDump pad 9
+
+variable  adiam delete
+variable  abond delete
+variable ximgsize delete
+variable yimgsize delete
