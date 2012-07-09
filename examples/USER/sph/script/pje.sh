@@ -6,7 +6,7 @@ rm projection.*
 rm spectra.dat
 for filename in dump*.dat; do echo $filename;  
 awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' $filename > ${filename/.dat/.del};
-./zs_mls_projection 3 32 1 1.8 ${filename/.dat/.del} 2 2 2 ;
+./zs_mls_projection 3 32 8e-4 2.1  ${filename/.dat/.del} 2 2 2 ;
 done
 #awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' dump0*.dat > projection*.dat
 #./zs_mls_projection 3 20 1 1.8 dump*.del 2 2 2
