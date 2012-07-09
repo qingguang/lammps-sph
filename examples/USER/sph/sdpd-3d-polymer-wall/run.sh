@@ -13,6 +13,6 @@ ${lmp} -in sdpd-polymer-inti.lmp
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly.txt
 
-time /scratch/qingguang/prefix-nana/bin/mpirun -np 6  \
+time /opt/mpich/bin/mpirun -np 2  \
      ${lmp} -in sdpd-polymer-run.lmp
 
