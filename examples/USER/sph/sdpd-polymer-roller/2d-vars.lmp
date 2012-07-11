@@ -2,8 +2,8 @@ variable          dim equal 2
 variable          kb       equal 1.3806503e-23
 
 variable           dx   equal 8.333333e-4
-variable           Ly  equal 36*${dx}
-variable           Lx  equal 36*${dx}
+variable           Ly  equal 16*${dx}
+variable           Lx  equal 16*${dx}
 
 variable           sdpd_rho equal 1
 variable           sdpd_rho0 equal 1
@@ -15,7 +15,7 @@ variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho}
 
 variable           h equal 2.7*${dx}
 variable           A_kol equal 180
-variable          Nfreq equal 10000
+variable          Nfreq equal 1000
 variable          r0       equal 3^(1.0/${dim})*${dx}
 variable          H        equal 100*${sdpd_temp}*${kb}/${r0}^2
 

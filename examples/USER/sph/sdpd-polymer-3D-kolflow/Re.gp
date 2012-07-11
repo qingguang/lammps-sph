@@ -1,10 +1,10 @@
-F=180
+F=1000
 dim=2
 
 dx=2.5e-3/3
-sdpd_c=10
+sdpd_c=20
 sdpd_rho=1
-sdpd_eta=1e-2
+sdpd_eta=3e-2
 sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
