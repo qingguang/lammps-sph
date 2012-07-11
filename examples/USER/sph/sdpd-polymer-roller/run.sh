@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=6
+nproc=1
 ndim=2d
 
 cp ${ndim}-vars.lmp ${ndim}-model.lmp

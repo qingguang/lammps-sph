@@ -50,7 +50,10 @@ dump_modify        dump_id pad 8
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             1000
-
+variable    velx  atom vx
+variable    vely  atom vy
+ 
+variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
 include            ${ndim}-image.lmp
 
 variable           eps equal 0.25*${dx}
