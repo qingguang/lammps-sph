@@ -65,8 +65,9 @@ restart 100000 sdpd.restart
 #include           fene.lmp
 
 bond_coeff 1 ${H} ${r0}  0 0
-variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Ly})
-fix                 kol_force all addforce v_var_kol 0.0 0.0
+variable            var_x atom ${A_kol}*${sdpd_mass}*sin(-2*PI*x/{Lx})*cos(2*PI*y/${Ly})
+variable            var_y atom ${A_kol}*${sdpd_mass}*cos(2*PI*x/{Lx})*sin(2*PI*y/${Ly})
+fix                 kol_force all addforce v_var_x v_var_y 0.0
 
 run   1000000  every 10000 "velocity all zero linear"
 # run   1000000 every 1000 "velocity all zero linear" & 
