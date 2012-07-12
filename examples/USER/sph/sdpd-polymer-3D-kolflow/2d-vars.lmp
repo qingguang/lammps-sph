@@ -14,7 +14,7 @@ variable           sdpd_temp equal 1e15
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 
 variable           h equal 2.7*${dx}
-variable           A_kol equal 1000
+variable           A_kol equal 3000
 variable          Nfreq equal 10000
 variable          r0       equal 3^(1.0/${dim})*${dx}
 variable          H        equal 500*${sdpd_temp}*${kb}/${r0}^2

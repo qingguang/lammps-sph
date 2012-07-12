@@ -104,9 +104,9 @@ k=dk:dk:dk*NumParticle/2;
 E = E(1:length(k)) ./ N_num(1:length(k));
 E_comp = E_comp(1:length(k)) ./ N_comp_num(1:length(k));
 E_incomp = E_incomp(1:length(k)) ./ N_incomp_num(1:length(k));
-Ek = 4 * pi * k .* k .* E  ;
-Ek_comp = 4 * pi * k .* k .* E_comp  ;
-Ek_incomp = 4 * pi * k .* k .* E_incomp;
+Ek = 4 * pi * k .* E  ;
+Ek_comp = 4 * pi * k.* E_comp  ;
+Ek_incomp = 4 * pi * k .* E_incomp;
 KK = 0.5*sum(UST(:));
 
 f1 = k;
