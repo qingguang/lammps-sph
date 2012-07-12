@@ -9,7 +9,7 @@ for filenumber=1:nfile
 %   if(load(fullfile(name)))
  A =load(fullfile(name));
 warning("sizeof A is: %d",size(A))
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,36,3e-2);
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,48,4e-2);
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
@@ -104,9 +104,9 @@ k=dk:dk:dk*NumParticle/2;
 E = E(1:length(k)) ./ N_num(1:length(k));
 E_comp = E_comp(1:length(k)) ./ N_comp_num(1:length(k));
 E_incomp = E_incomp(1:length(k)) ./ N_incomp_num(1:length(k));
-Ek = 4 * pi * k .* k .* E  ;
-Ek_comp = 4 * pi * k .* k .* E_comp  ;
-Ek_incomp = 4 * pi * k .* k .* E_incomp;
+Ek = 4 * pi * k .* E  ;
+Ek_comp = 4 * pi * k .* E_comp  ;
+Ek_incomp = 4 * pi * k .* E_incomp;
 KK = 0.5*sum(UST(:));
 
 f1 = k;
