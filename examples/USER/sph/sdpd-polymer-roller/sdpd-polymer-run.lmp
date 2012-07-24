@@ -51,8 +51,7 @@ thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             1000
 variable    velx  atom vx
-variable    vely  atom vy
- 
+variable    vely  atom vy 
 variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
 include            ${ndim}-image.lmp
 
@@ -63,7 +62,7 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 100000 sdpd.restart
+restart 1000000 sdpd.restart
 
 #include           fene.lmp
 

@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph.sh
+configfile=$HOME/lammps-sph-nana.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
