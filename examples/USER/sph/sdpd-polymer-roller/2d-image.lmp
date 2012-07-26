@@ -11,7 +11,7 @@ box no 0.01 size ${ximgsize} ${yimgsize}
 
 dump_modify        imgDump pad 9
 dump_modify        imgDump backcolor white
-dump_modify        imgDump acolor 1 black
+#dump_modify        imgDump acolor 1 black
 variable  adiam delete
 variable  abond delete
 variable ximgsize delete
