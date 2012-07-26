@@ -13,12 +13,12 @@
 
 #ifdef PAIR_CLASS
 
-PairStyle(sph/rhosum,PairSDPDRhoSum)
+PairStyle(sdpd/rhosum,PairSDPDRhoSum)
 
 #else
 
-#ifndef LMP_PAIR_SPH_RHOSUM_H
-#define LMP_PAIR_SPH_RHOSUM_H
+#ifndef LMP_PAIR_SDPD_RHOSUM_H
+#define LMP_PAIR_SDPD_RHOSUM_H
 
 #include "pair.h"
 

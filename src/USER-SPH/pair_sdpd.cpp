@@ -140,9 +140,8 @@ void PairSDPD::compute(int eflag, int vflag) {
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
-
     fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - sdpd_background[itype] ) / (rho[i] * rho[i]);
+    fi = B[itype] * (fi * fi * tmp - sdpd_background[itype] );
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -176,7 +175,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         // compute pressure  of atom j with Tait EOS
         tmp = rho[j] / rho0[jtype];
         fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - sdpd_background[jtype] ) / (rho[j] * rho[j]);
+        fj = B[jtype] * (fj * fj * tmp - sdpd_background[jtype] );
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -216,10 +215,6 @@ void PairSDPD::compute(int eflag, int vflag) {
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
             const double Zij = -4.0*k_bltz*Ti*fvisc;
-          //  const double b  = ndim;
-            //const double b  = (ndim+2.0)/3.0;
-            //const double Aij = sqrt(Zij * a);
-            // const double Bij = sqrt(Zij*ndim/2.0*(b+a*(2.0/ndim -1.0)));
             const  double Aij = sqrt(Zij);
             const double Bij = 0.0;
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
@@ -228,7 +223,9 @@ void PairSDPD::compute(int eflag, int vflag) {
           }
         }
 
-        fpair = -imass * jmass * (fi + fj) * wfd;
+	const double Vi = imass / rho[i];
+	const double Vj = jmass / rho[j];
+        fpair = - (fi*Vi*Vi + fj*Vj*Vj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 
@@ -237,9 +234,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
 	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
 	if (domain->dimension ==3 ) {
-
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-	  // and change in density
 	} 
    
 	drho[i] += jmass * delVdotDelR * wfd;
@@ -326,7 +321,8 @@ void PairSDPD::coeff(int narg, char **arg) {
     sdpd_background_one = 1.0;
   }
 
-  double B_one = soundspeed_one * soundspeed_one * rho0_one / 7.0;
+  /// TODO: I removed rho0_one for B_one
+  double B_one = soundspeed_one * soundspeed_one / 7.0;
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
