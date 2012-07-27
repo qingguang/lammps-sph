@@ -72,7 +72,7 @@ variable            var_x atom ${A_kol}*${sdpd_mass}*sin(-2*PI*x/${Lx})*cos(2*PI
 variable            var_y atom ${A_kol}*${sdpd_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
 
-run   10000000  every 10000 "velocity all zero linear"
+run   100000000  every 10000 "velocity all zero linear"
 # run   1000000 every 1000 "velocity all zero linear" & 
 # "velocity all zero angular"
 
