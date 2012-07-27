@@ -13,7 +13,7 @@
 
 #include "math.h"
 #include "stdlib.h"
-#include "pair_sph_rhosum.h"
+#include "pair_sdpd_rhosum.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -30,7 +30,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::PairSPHRhoSum(LAMMPS *lmp) : Pair(lmp)
+PairSDPDRhoSum::PairSDPDRhoSum(LAMMPS *lmp) : Pair(lmp)
 {
   restartinfo = 0;
 
@@ -42,7 +42,7 @@ PairSPHRhoSum::PairSPHRhoSum(LAMMPS *lmp) : Pair(lmp)
 
 /* ---------------------------------------------------------------------- */
 
-PairSPHRhoSum::~PairSPHRhoSum() {
+PairSDPDRhoSum::~PairSDPDRhoSum() {
   if (allocated) {
     memory->destroy(setflag);
     memory->destroy(cutsq);
@@ -55,7 +55,7 @@ PairSPHRhoSum::~PairSPHRhoSum() {
  init specific to this pair style
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::init_style() {
+void PairSDPDRhoSum::init_style() {
   // need a full neighbor list
   int irequest = neighbor->request(this);
   neighbor->requests[irequest]->half = 0;
@@ -64,10 +64,10 @@ void PairSPHRhoSum::init_style() {
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::compute(int eflag, int vflag) {
+void PairSDPDRhoSum::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double r, rsq, imass, h, ih, ihsq;
+  double r, rsq, h, ih, ihsq;
   int *jlist;
   double wf;
   // neighbor list variables
@@ -92,7 +92,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
           if (!setflag[i][i] || !setflag[j][j]) {
             if (comm->me == 0) {
               printf(
-                  "SPH particle types %d and %d interact, but not all of their single particle properties are set.\n",
+                  "SDPD particle types %d and %d interact, but not all of their single particle properties are set.\n",
                   i, j);
             }
           }
@@ -117,8 +117,6 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
         itype = type[i];
-        imass = mass[itype];
-
         h = cut[itype][itype];
         if (domain->dimension == 3) {
           // Lucy kernel, 3d
@@ -134,7 +132,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
           //wf = 1.5915494309189533576e0 / (h * h);
         }
         
-        rho[i] = imass * wf;
+        rho[i] = wf;
       } // ii loop
 
       // add density at each atom via kernel function overlap
@@ -144,6 +142,8 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
+	const double imass = mass[itype];
+
         jlist = firstneigh[i];
         jnum = numneigh[i];
 
@@ -187,10 +187,12 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
               //wf = 1.5915494309189533576e0 * wf * ihsq;
             }
 
-            rho[i] += mass[jtype] * wf;
+            rho[i] += wf;
           }
 
         } // jj loop
+	rho[i] *= imass;
+	
       } // ii loop
     }
   }
@@ -203,7 +205,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
  allocate all arrays
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::allocate() {
+void PairSDPDRhoSum::allocate() {
   allocated = 1;
   int n = atom->ntypes;
 
@@ -221,10 +223,10 @@ void PairSPHRhoSum::allocate() {
  global settings
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::settings(int narg, char **arg) {
+void PairSDPDRhoSum::settings(int narg, char **arg) {
   if (narg != 1)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sph/rhosum");
+        "Illegal number of setting arguments for pair_style sdpd/rhosum");
   nstep = force->inumeric(arg[0]);
 }
 
@@ -232,9 +234,9 @@ void PairSPHRhoSum::settings(int narg, char **arg) {
  set coeffs for one or more type pairs
  ------------------------------------------------------------------------- */
 
-void PairSPHRhoSum::coeff(int narg, char **arg) {
+void PairSDPDRhoSum::coeff(int narg, char **arg) {
   if (narg != 3)
-    error->all(FLERR,"Incorrect number of args for sph/rhosum coefficients");
+    error->all(FLERR,"Incorrect number of args for sdpd/rhosum coefficients");
   if (!allocated)
     allocate();
 
@@ -262,9 +264,9 @@ void PairSPHRhoSum::coeff(int narg, char **arg) {
  init for one type pair i,j and corresponding j,i
  ------------------------------------------------------------------------- */
 
-double PairSPHRhoSum::init_one(int i, int j) {
+double PairSDPDRhoSum::init_one(int i, int j) {
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"All pair sph/rhosum coeffs are not set");
+    error->all(FLERR,"All pair sdpd/rhosum coeffs are not set");
   }
 
   cut[j][i] = cut[i][j];
@@ -274,7 +276,7 @@ double PairSPHRhoSum::init_one(int i, int j) {
 
 /* ---------------------------------------------------------------------- */
 
-double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
+double PairSDPDRhoSum::single(int i, int j, int itype, int jtype, double rsq,
     double factor_coul, double factor_lj, double &fforce) {
   fforce = 0.0;
 
@@ -283,7 +285,7 @@ double PairSPHRhoSum::single(int i, int j, int itype, int jtype, double rsq,
 
 /* ---------------------------------------------------------------------- */
 
-int PairSPHRhoSum::pack_comm(int n, int *list, double *buf, int pbc_flag,
+int PairSDPDRhoSum::pack_comm(int n, int *list, double *buf, int pbc_flag,
     int *pbc) {
   int i, j, m;
   double *rho = atom->rho;
@@ -298,7 +300,7 @@ int PairSPHRhoSum::pack_comm(int n, int *list, double *buf, int pbc_flag,
 
 /* ---------------------------------------------------------------------- */
 
-void PairSPHRhoSum::unpack_comm(int n, int first, double *buf) {
+void PairSDPDRhoSum::unpack_comm(int n, int first, double *buf) {
   int i, m, last;
   double *rho = atom->rho;
 
