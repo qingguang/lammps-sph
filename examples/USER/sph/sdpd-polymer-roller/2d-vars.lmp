@@ -17,7 +17,7 @@ variable           sdpd_temp equal 1
 variable           sdpd_fene_temp equal 1e15
 
 variable           h equal 2.7*${dx}
-variable           A_kol equal 54
+variable           A_kol equal 540
 variable          Nfreq equal 10000
 variable          Nfreqimage equal 1000
 variable          r0       equal 3^(1.0/${dim})*${dx}

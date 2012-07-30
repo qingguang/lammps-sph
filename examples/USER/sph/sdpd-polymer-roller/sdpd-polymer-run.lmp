@@ -8,7 +8,8 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-model.lmp
 read_data           poly3d.txt
-#read_restart         sdpd.restart.80000
+#read_restart         sdpd.restart.10000000
+
 special_bonds   lj 1 1 1
 bond_style fene
 
@@ -61,7 +62,7 @@ include            settimestep.lmp
 timestep           ${dt}
 
 
-restart 1000000 sdpd.restart
+#restart 1000000 sdpd.restart
 
 #include           fene.lmp
 
@@ -70,6 +71,5 @@ variable            var_x atom ${A_kol}*${solvent_mass}*sin(-2*PI*x/${Lx})*cos(2
 variable            var_y atom ${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
 
-run   10000000
-
+run   10000000 every 1000 "velocity all zero linear"
 
