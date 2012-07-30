@@ -91,7 +91,10 @@ inatoms{
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
 
   # if atom has a bound we change atom type to natoms_type
-  if ( isbound($1-1) || isbound($1) ) {
+  if ( isbound($1) ) {
+      $2 = natom_type
+  }
+  if ( ($1>1) && isbound($1-1) ) {
       $2 = natom_type
   }
   print $0
