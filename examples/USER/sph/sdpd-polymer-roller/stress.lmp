@@ -1,2 +1,2 @@
-compute bstress all stress/atom virial bond
-compute astress all stress/atom virial
+compute bstress all stress/atom bond
+compute astress all stress/atom

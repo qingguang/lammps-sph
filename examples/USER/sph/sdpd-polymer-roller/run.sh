@@ -10,20 +10,21 @@ else
     exit -1
 fi
 
+rm -rf dum* im* poly* log.lammps
+
 nproc=4
 ndim=2d
+Nbeads=2
+Nsolvent=4
+nx=128
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0
 
-cp ${ndim}-vars.lmp ${ndim}-model.lmp
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
-rm -rf dum* im* poly* log.lammps
-${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
+${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
-# -v Nbeads=10 -v Nsolvent=10 -v Npoly=full gives one half of the
-# -domain filled with polymers
-Nbeads=2
-Nsolvent=2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-H100
+
  awk -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
@@ -32,4 +33,4 @@ dname=harmonic-nb${Nbeads}-ns${Nsolvent}-H100
 # output directory name
 
 mkdir -p ${dname}
-${mpirun} -np ${nproc} ${lmp} -var ndim ${ndim} -var dname ${dname} -in sdpd-polymer-run.lmp
+${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
