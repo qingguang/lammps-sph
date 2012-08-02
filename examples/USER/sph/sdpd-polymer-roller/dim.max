@@ -1,0 +1,25 @@
+/* set basis of units */
+eq[1]: Lx = 2*%pi*L;
+eq[2]: fx = M*L/T^2;
+eq[3]: rho = M/L^2;
+
+sol: solve([eq[1], eq[2], eq[3]], [L, M, T])[1];
+
+/* set numerical values */
+nx: 64;
+dx: 8.333333e-4;
+m: rho*dx^2;
+num_env: [Lx=nx*dx, fx= 5*54*(nx/20)^(-2) * m / 2, rho=1];
+
+thomases_to_sdpd(units, val):= block([var, aux],
+  eqlocal: aux=var/units,
+  float(ev(rhs(solve(eqlocal, var)[1]), sol, num_env, aux=val, eval, eval))
+  );
+
+sdpd_to_thomases(units, val):= block([var, aux],
+  eqlocal: aux=var*units,
+  float(ev(rhs(solve(eqlocal, var)[1]), sol, num_env, aux=val, eval, eval))
+  );
+
+sdpd_to_thomases(M*L/T^2, 5*54*(nx/20)^(-2) * m / 2);
+
