@@ -27,7 +27,6 @@ pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} 
 pair_coeff         2 3    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         3 3    sdpd ${sdpd_rho_wall}    ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
 
-
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
 compute            ke_peratom all ke/atom
@@ -83,13 +82,11 @@ restart 1000000    ${dname}/sdpd.restart
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
 
-#bond_style harmonic
-#bond_coeff 1 ${H} ${r0}
+group              wall type 3
+fix                fwall wall setforce 0.0 0.0 0.0
 
-variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
-variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
-fix                 kol_force all addforce v_var_x v_var_y 0.0
+group              flow subtract all wall
+variable           var_x atom ${A_body}*${solvent_mass}
+fix                kol_force flow addforce v_var_x 0.0  0.0
 
 run   10000000 every 10000 "velocity all zero linear"
-
-

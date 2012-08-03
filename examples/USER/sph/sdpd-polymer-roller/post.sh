@@ -4,9 +4,7 @@ function getLx() {
     awk 'f{print $2; exit} /ITEM: BOX BOUNDS/{f=1} ' ${dname}/stress00000000.dat 
 }
 
-dname=fene-nb2-ns4-nx20
-
-for dname in fene-nb2-ns4-nx64-H0.2-bg1.0 fene-nb2-ns4-nx128-H0.2-bg1.0 ; do
+for dname in fene-nb4*; do
     bash ../script/lammps2punto.sh ${dname}/stress* > ${dname}/stress.dat
     bash ../script/lammps2punto.sh ${dname}/dump* > ${dname}/punto.dat
     awk -v Lx=$(getLx) -v Ly=$(getLx) -f ../script/sphap.awk ${dname}/stress.dat  > ${dname}/stress.hist
@@ -14,5 +12,5 @@ for dname in fene-nb2-ns4-nx64-H0.2-bg1.0 fene-nb2-ns4-nx128-H0.2-bg1.0 ; do
 done
 
 gnuplot stress.gp
-cp stress.png ~/Dropbox/
+cp stress*.png ~/Dropbox/
 
