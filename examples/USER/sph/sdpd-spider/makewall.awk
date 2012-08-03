@@ -6,17 +6,32 @@ function iswall(Rx, Ry) {
     Lx = box[x,hi]-box[x,lo]
     Ly = box[y,hi]-box[y,lo]
     xd_real = xd * Lx
+    xb_real = xb * Lx
     a_real = a * xd_real
     c_real = Ly/2 - a_real
     b_real = b/xd_real
     d_real = d/xd_real
+
+    # three layers of particles on both sides of the channel 
+    # belong to wall 
+    if (Ry<=2*dx) {
+	return 1
+    } 
+    if (Ry>=(ny-3)*dx) {
+	return 1
+    }
+
+    # this is buffer region
+    if (Rx<xb_real) {
+	return 0
+    }
     
     # move to the center
     Ry = fabs(Ry - Ly/2)
 
-    if (Rx<xd_real)  {
+    if (Rx<xd_real+xb_real)  {
 	# initial
-	return Ry>shape(Rx)
+	return Ry>shape(Rx-xb_real)
     } else if (Rx< Lx - xd_real) {
 	# transition
 	return Ry>shape(xd_real)

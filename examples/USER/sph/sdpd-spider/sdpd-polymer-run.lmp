@@ -89,4 +89,4 @@ group              flow subtract all wall
 variable           var_x atom ${A_body}*${solvent_mass}
 fix                kol_force flow addforce v_var_x 0.0  0.0
 
-run   10000000 every 10000 "velocity all zero linear"
+run   10000000
