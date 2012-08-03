@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph-nana.sh
+configfile=$HOME/lammps-sph.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
@@ -10,20 +10,31 @@ else
     exit -1
 fi
 
+<<<<<<< HEAD
 nproc=4
-ndim=2d
-
-cp ${ndim}-vars.lmp ${ndim}-model.lmp
-
+=======
 rm -rf dum* im* poly* log.lammps
-${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
+
+nproc=6
+>>>>>>> with_harmonic_spring
+ndim=2d
+Nbeads=0
+Nsolvent=1
+nx=32
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-f81
+
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
+
+${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
-# -v Nbeads=10 -v Nsolvent=10 -v Npoly=full gives one half of the
-# -domain filled with polymers
- awk -v cutoff=3.0 -v Nbeads=6 -v Nsolvent=6 -v Npoly=full \
+
+ awk -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
 
-${mpirun} -np ${nproc} ${lmp} -var ndim ${ndim} -in sdpd-polymer-run.lmp
+# output directory name
+
+mkdir -p ${dname}
+${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
