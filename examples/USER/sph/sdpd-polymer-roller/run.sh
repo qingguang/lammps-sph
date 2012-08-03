@@ -10,13 +10,9 @@ else
     exit -1
 fi
 
-<<<<<<< HEAD
-nproc=4
-=======
 rm -rf dum* im* poly* log.lammps
 
 nproc=6
->>>>>>> with_harmonic_spring
 ndim=2d
 Nbeads=0
 Nsolvent=1
