@@ -1,6 +1,6 @@
 variable  adiam equal 0.5*${dx}
 variable  abond equal 0.25*${dx}
-variable  ximgsize equal 2000
+variable  ximgsize equal 800
 variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
 
 dump imgDump all image ${Nfreqimage} ${dname}/image.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &

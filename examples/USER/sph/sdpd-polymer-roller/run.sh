@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph-nana.sh
+configfile=$HOME/lammps-sph.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
@@ -12,12 +12,12 @@ fi
 
 rm -rf dum* im* poly* log.lammps
 
-nproc=4
+nproc=6
 ndim=2d
-Nbeads=2
-Nsolvent=4
-nx=128
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0
+Nbeads=0
+Nsolvent=1
+nx=32
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-f81
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 

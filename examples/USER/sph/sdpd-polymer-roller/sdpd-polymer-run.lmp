@@ -9,7 +9,7 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-vars.lmp
 read_data           poly3d.txt
-#read_restart         sdpd.restart.80000
+#read_restart         sdpd.restart.2000000
 special_bonds   lj 1 1 1
 
 
@@ -76,11 +76,11 @@ timestep           ${dt}
 
 restart 1000000    ${dname}/sdpd.restart
 
-bond_style fene
-bond_coeff 1 ${H} ${r0}  0 0
+#bond_style fene
+#bond_coeff 1 ${H} ${r0}  0 0
 
-#bond_style harmonic
-#bond_coeff 1 ${H} ${r0}
+bond_style harmonic
+bond_coeff 1 ${H} ${r0}
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})

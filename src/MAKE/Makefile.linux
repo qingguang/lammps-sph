@@ -46,7 +46,7 @@ MPI_LIB =	-lmpich -lmpl -lpthread
 
 FFT_INC =       -DFFT_FFTW -DFFTW_SIZE -I/opt/mpich/include
 FFT_PATH =  -L/opt/mpich/lib
-FFT_LIB =	-lfftw3
+FFT_LIB =	-lfftw
 
 # JPEG library, OPTIONAL
 # see discussion in doc/Section_start.html#2_2 (step 7)

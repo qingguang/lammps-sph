@@ -14,10 +14,10 @@ restart2data:	restart2data.o
 	g++ -g -O0 restart2data.o -o restart2data
 
 chain:	chain.o
-	ifort chain.o -o chain
-
-micelle2d:	micelle2d.o
-	ifort micelle2d.o -o micelle2d
+	gfortran chain.o -o chaing	
+	#gfortran chain.o -o chain
+micelle2d:	micelle2d.o	
+	gfortran micelle2d.o -o micelle2d
 
 data2xmovie:	data2xmovie.o
 	g++ -g data2xmovie.o -o data2xmovie
@@ -41,4 +41,4 @@ clean:
 	gcc -g -c $<
 
 .f.o:	
-	ifort -O -w -c $<
+	gfortran -O -w -c $<
