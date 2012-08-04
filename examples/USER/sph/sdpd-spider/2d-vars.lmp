@@ -16,7 +16,7 @@ variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 1e15
 
 variable          h equal 2.7*${dx}
-variable          A_body equal 5*54*(${nx}/20)^(-2)
+variable          A_body equal 5*54*(${ny}/20)^(-2)
 variable          Nfreq equal 10000
 variable          Nfreqimage equal 10000
 

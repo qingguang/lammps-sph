@@ -118,8 +118,8 @@ END {
       ip = q
       jp = q+1
       bondtype=1
-      print ibond, bondtype, ip, jp
       ibond++
+      print ibond, bondtype, ip, jp
     }
   }
 }

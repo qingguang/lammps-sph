@@ -37,9 +37,9 @@ FNR==1 {
     # new line in all polymer files
     for (pid in allpid) {
 	if (file[pid]) {
-	    printf "\n" >> "pdata/poly." pid
+	    printf "\n" >> "pdata/poly." pid ".dat"
 	} else {
-	    printf "" > "pdata/poly." pid
+	    printf "" > "pdata/poly." pid ".dat"
 	    file[pid]=1
 	}
     }
@@ -50,7 +50,7 @@ fl{
     id=$1
     if (id in phash) {
 	pid = phash[id]
-	print $3, $4, $5, $6 >> "pdata/poly." pid
+	print $3, $4, $5, $6 >> "pdata/poly." pid ".dat"
     }
 }
 
