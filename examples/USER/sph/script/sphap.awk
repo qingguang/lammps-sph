@@ -120,7 +120,7 @@ BEGIN {
 
 }
 
-ns>15 {
+NF {
     if (nfield<NF) nfield=NF
     x=$(xidx)
     y=$(yidx)
@@ -142,15 +142,15 @@ END {
 	for (iy=0; iy<=int(Ly/gstep)+1; iy++) {
 	    gx = ix*gstep
 	    gy = iy*gstep
-	    printf("%e %e ", gx, gy)
+	    printf("%e %e", gx, gy)
 	    for (ip=3; ip<=nfield; ip++) {
 		if (np[ix, iy]>0) {
-		    printf("%e ", val[ip, ix, iy]/np[ix, iy])
+		    printf(" %e", val[ip, ix, iy]/np[ix, iy])
 		} else {
-		    printf("%e ", 0.0)
+		    printf(" %e", 0.0)
 		}
 	    }
-	    print
+	    printf("\n")
 	} 
     }
 }

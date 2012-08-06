@@ -2,6 +2,16 @@
 # shift polymer center of mass to the simulation domain
 # <x, y, extension> 
 
+function abs(x) {
+    if (x>0) {
+	return x
+    }
+    else {
+	return -x
+    }    
+}
+
+
 function reset() {
     xcm=ycm=0
     nb=0
@@ -48,8 +58,28 @@ NF{
     y_shift = int_shift(ycm/Ly)*Ly
 
     for (i=1; i<=nb; i++) {
-	print x_array[i]-x_shift, y_array[i]-y_shift
+	x_center[i] = x_array[i]-x_shift
+	y_center[i] = y_array[i]-y_shift
     }
+
+    xprev=x_center[1]; xplus = 0
+    yprev=y_center[1]; yplus = 0
+    print xprev, yprev
+    for (i=2; i<=nb; i++) {
+	xc = x_center[i] + xplus
+	yc = y_center[i] + yplus
+	
+	if ( abs(xc + Lx - xprev) < abs(xc - xprev) ) xplus+=Lx
+	if ( abs(xc - Lx - xprev) < abs(xc - xprev) ) xplus-=Lx
+
+	if ( abs(yc + Ly - yprev) < abs(yc - yprev) ) yplus+=Ly
+	if ( abs(yc - Ly - yprev) < abs(yc - yprev) ) yplus-=Ly
+	
+	xprev = x_center[i] + xplus
+	yprev =y_center[i] + yplus
+	print xprev, yprev
+    }
+
     printf("\n")
 	     
     reset()

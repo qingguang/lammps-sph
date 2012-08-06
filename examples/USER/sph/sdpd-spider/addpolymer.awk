@@ -48,6 +48,7 @@ BEGIN {
   print
 
   print "1 bond types"
+  print "1 angle types"
   next
 }
 
@@ -55,6 +56,7 @@ BEGIN {
   natoms=$1
   print
   printf("%s bonds\n", "_NUMBER_OF_BOUNDS_")
+  printf("%s angles\n", "_NUMBER_OF_ANGLES_")
   next
 }
 
@@ -121,5 +123,19 @@ END {
       ibond++
       print ibond, bondtype, ip, jp
     }
+  }
+
+  printf("\nAngles\n\n")
+  iangle = 0
+  for (q=1; q<iatom; q++) {
+      if ( isbound(q) && isbound(q+1) &&
+	   (type_array[q]==polymer_type) &&
+	   (type_array[q+1]==polymer_type) && 
+	   (type_array[q+2]==polymer_type) ) {
+	  iangle++
+	  angletype=1
+	  # number of angle, type of angle, three atoms to form an angle
+	  print iangle, angletype, q, q+1, q+2
+      }
   }
 }

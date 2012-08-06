@@ -14,12 +14,12 @@ rm -rf dum* im* poly* log.lammps
 
 nproc=8
 ndim=2d
-Nbeads=5
-Nsolvent=5
+Nbeads=25
+Nsolvent=25
 dx=8.333333e-4
 nx=256
 ny=64
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-angle
 
 vars="-var dx ${dx} -var ny ${ny} -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
@@ -40,8 +40,9 @@ mv poly3.txt poly3d.txt
 
 awk -v wall_type=3 -v polymer_type=2 -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
- nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
- sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
+nangles=$(tail -n 1 poly3.txt | awk '{print $1}')
+nbounds=$(awk '/Angles/{exit} NF' poly3.txt | tail -n 1  | awk '{print $1}')
+sed -e "s/_NUMBER_OF_ANGLES_/$nangles/1" -e "s/_NUMBER_OF_BOUNDS_/$nbounds/1" poly3.txt > poly3d.txt
 
 # output directory name
 

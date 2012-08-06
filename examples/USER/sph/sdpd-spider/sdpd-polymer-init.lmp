@@ -3,7 +3,7 @@ clear
 echo               both
 dimension          ${ndim}
 units              si
-atom_style   hybrid  bond meso
+atom_style         hybrid  angle meso
 
 # create simulation box
 include            ${ndim}-vars.lmp

@@ -2,7 +2,7 @@ echo               both
 log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
-atom_style         hybrid  bond meso
+atom_style         hybrid  angle meso
 communicate        single vel yes
 # create simulation box
 
@@ -81,6 +81,9 @@ restart 1000000    ${dname}/sdpd.restart
 
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
+
+angle_style harmonic
+angle_coeff 1 ${K} 180
 
 group              wall type 3
 fix                fwall wall setforce 0.0 0.0 0.0

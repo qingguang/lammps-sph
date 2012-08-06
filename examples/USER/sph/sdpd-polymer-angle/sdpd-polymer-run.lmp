@@ -22,8 +22,8 @@ variable        r0_fene equal 5e-5
 bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0
 
 # angle force parameters
-angle_style harmonic
-angle_coeff 1 1e-10 180.0 
+#angle_style harmonic
+#angle_coeff 1 1e-10 180.0 
 #bond_coeff * 3e-3 1e-1 0 0
 
 

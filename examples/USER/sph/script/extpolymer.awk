@@ -6,6 +6,7 @@
 # <punto> is output file in punto format
 BEGIN {
     pid=0
+    bond_type=1
     system("mkdir -p pdata")
 }
 
@@ -13,7 +14,7 @@ NR == FNR && /^Bonds/ {
     read_bonds_flag = 1
 }
 
-read_bonds_flag && (NR == FNR) && (NF>2) {
+read_bonds_flag && (NR == FNR) && ($2==bond_type) {
     id1 = $3
     id2 = $4
     
