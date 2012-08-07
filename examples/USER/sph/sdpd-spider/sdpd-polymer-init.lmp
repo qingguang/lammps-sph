@@ -14,7 +14,8 @@ create_atoms       1 region box
 
 mass               1  ${solvent_mass}
 mass               2  ${polymer_mass}
-mass               3  ${wall_mass}
+mass               3  ${polymer_mass}
+mass               4  ${wall_mass}
 
 write_restart      poly3d.restart
 

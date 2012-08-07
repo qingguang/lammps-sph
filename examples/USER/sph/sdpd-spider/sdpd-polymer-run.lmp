@@ -14,18 +14,25 @@ special_bonds   lj 1 1 1
 
 
 group solvent      type 1
-group polymer      type 2
+group polymer      type 2 3
 set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
 
-pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd/rhosum   ${h}
+pair_style         hybrid/overlay interchain ${h} sdpd/rhosum 1 sdpd
+pair_coeff         * *    sdpd/rhosum   ${h}
+
 pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         1 3    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
+pair_coeff         1 4    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         2 3    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
-pair_coeff         3 3    sdpd ${sdpd_rho_wall}    ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
+pair_coeff         2 4    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
+pair_coeff         3 4    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
+pair_coeff         4 4    sdpd ${sdpd_rho_wall}    ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
+
+pair_coeff         3 3    interchain ${K} ${r_gauss}
+pair_coeff         * *    interchain 0.0 ${r_gauss} 0.0
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
@@ -85,7 +92,7 @@ bond_coeff 1 ${H} ${r0}  0 0
 angle_style harmonic
 angle_coeff 1 ${K} 180
 
-group              wall type 3
+group              wall type 4
 fix                fwall wall setforce 0.0 0.0 0.0
 
 group              flow subtract all wall

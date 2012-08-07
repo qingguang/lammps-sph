@@ -1,3 +1,20 @@
+function trigerpolymer() {
+    _triger_counter++
+    if (_triger_counter%nextbound == 0) {
+	return polymer_extbond
+    } else {
+	return polymer_normal
+    }
+}
+
+function isbead(type) {
+    if ( (type==polymer_normal) || (type==polymer_extbond) ) {
+	return 1
+    } else {
+	return 0
+    }
+}
+
 function fabs(var) {
   return var>0?var:-var
 }
@@ -95,10 +112,10 @@ inatoms{
   if (!($2 == wall_type)) {
       # if atom has a bound we change atom type to natoms_type
       if ( isbound($1) ) {
-	  $2 = polymer_type
+	  $2 = trigerpolymer()
       }
       if ( ($1>1) && isbound($1-1) ) {
-	  $2 = polymer_type
+	  $2 = trigerpolymer()
       }
   }
   # store a type of the atom
@@ -116,7 +133,7 @@ END {
   printf("\nBonds\n\n")
   ibond = 0
   for (q=1; q<iatom; q++) {
-      if (isbound(q) && ( type_array[q]==polymer_type) && (type_array[q+1]==polymer_type) ) {
+      if (isbound(q) && ( isbead(type_array[q]) ) && ( isbead(type_array[q+1]) ) ) {
       ip = q
       jp = q+1
       bondtype=1
@@ -129,9 +146,9 @@ END {
   iangle = 0
   for (q=1; q<iatom; q++) {
       if ( isbound(q) && isbound(q+1) &&
-	   (type_array[q]==polymer_type) &&
-	   (type_array[q+1]==polymer_type) && 
-	   (type_array[q+2]==polymer_type) ) {
+	   (isbead(type_array[q])) &&
+	   (isbead(type_array[q+1])) && 
+	   (isbead(type_array[q+2])) ) {
 	  iangle++
 	  angletype=1
 	  # number of angle, type of angle, three atoms to form an angle
