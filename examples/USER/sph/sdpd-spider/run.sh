@@ -10,16 +10,17 @@ else
     exit -1
 fi
 
-rm -rf dum* im* poly* log.lammps
+#rm -rf dum* im* poly* log.lammps
 
-nproc=2
+nproc=8
 ndim=2d
 Nbeads=25
 Nsolvent=25
 dx=8.333333e-4
-nx=128
-ny=32
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-angle
+nx=1024
+ny=64
+nextbond=5
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H300-next${nextbond}
 
 vars="-var dx ${dx} -var ny ${ny} -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
@@ -33,13 +34,13 @@ awk -v wall_type=4 \
     -v xd=0.3 \
     -v xb=0.1 \
     -v d=-0.0 \
-    -v a=0.5 -v b=-1.0 \
+    -v a=0.5 -v b=-0.15 \
     -f makewall.awk poly3d.txt > poly3.txt
 
 mv poly3.txt poly3d.txt
 
 awk -v wall_type=4 -v polymer_normal=2 -v polymer_extbond=3 \
-    -v nextbound=3 \
+    -v nextbond=${nextbond} \
     -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
 nangles=$(tail -n 1 poly3.txt | awk '{print $1}')

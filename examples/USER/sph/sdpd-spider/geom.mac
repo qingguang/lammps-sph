@@ -6,6 +6,6 @@ b: 0.0003718e-6 / 1e-6;
 c: 53.52e-6;
 d: -9.989e-5 / 1e-6;
 
-r: a*exp(b*z) + c*exp(d*z);
+r(z):= a*exp(b*z) + c*exp(d*z);
 
-rg: 50e-10;
+plot2d([r(z), -r(z)], [z, 0.0, Lx]);

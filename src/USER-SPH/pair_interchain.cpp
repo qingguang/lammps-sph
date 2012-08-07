@@ -27,6 +27,7 @@
 #include "neigh_list.h"
 #include "memory.h"
 #include "error.h"
+#include "domain.h"
 
 using namespace LAMMPS_NS;
 
@@ -107,30 +108,31 @@ void PairInterchain::compute(int eflag, int vflag)
       // the site it interacts with is within the force maximum    
     
       if (eflag_global && rsq < 0.5/b[itype][jtype]) occ++;
-
-      if (rsq < cutsq[itype][jtype]) {
-	r2inv = 1.0/rsq;
-	r = sqrt(rsq);
-	forcelj = - 2.0*a[itype][jtype]*b[itype][jtype] * rsq * 
-	  exp(-b[itype][jtype]*rsq); 
-	fpair = forcelj*r2inv;
-		  
-	f[i][0] += delx*fpair;
-	f[i][1] += dely*fpair;
-	f[i][2] += delz*fpair;
-	if (newton_pair || j < nlocal) {
-	  f[j][0] -= delx*fpair;
-	  f[j][1] -= dely*fpair;
-	  f[j][2] -= delz*fpair;
-	}	
-
-	if (eflag)
-	  evdwl = -(a[itype][jtype]*exp(-b[itype][jtype]*rsq) -
-		    offset[itype][jtype]);
-
-	if (evflag) ev_tally(i,j,nlocal,newton_pair,
-			     evdwl,0.0,fpair,delx,dely,delz);
-      }
+      if ( xtmp+x[j][0] < domain->boxhi[0]+domain->boxlo[0] ) {
+	if (rsq < cutsq[itype][jtype]) {
+	  r2inv = 1.0/rsq;
+	  r = sqrt(rsq);
+	  forcelj = - 2.0*a[itype][jtype]*b[itype][jtype] * rsq * 
+	    exp(-b[itype][jtype]*rsq); 
+	  fpair = forcelj*r2inv;
+	  
+	  f[i][0] += delx*fpair;
+	  f[i][1] += dely*fpair;
+	  f[i][2] += delz*fpair;
+	  if (newton_pair || j < nlocal) {
+	    f[j][0] -= delx*fpair;
+	    f[j][1] -= dely*fpair;
+	    f[j][2] -= delz*fpair;
+	  }	
+	  
+	  if (eflag)
+	    evdwl = -(a[itype][jtype]*exp(-b[itype][jtype]*rsq) -
+		      offset[itype][jtype]);
+	  
+	  if (evflag) ev_tally(i,j,nlocal,newton_pair,
+			       evdwl,0.0,fpair,delx,dely,delz);
+	} // rst < cutsq  condition
+      } // boxhi condition
     }    
   }
 

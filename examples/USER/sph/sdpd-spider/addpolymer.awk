@@ -1,6 +1,6 @@
 function trigerpolymer() {
     _triger_counter++
-    if (_triger_counter%nextbound == 0) {
+    if (_triger_counter%nextbond == 0) {
 	return polymer_extbond
     } else {
 	return polymer_normal
