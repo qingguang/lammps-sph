@@ -40,8 +40,11 @@ variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file vx.av ave running units reduced
 
-include stress.lmp
-dump               dump_id all custom ${Nfreq} dump*.dat id type x y z vx vy vz c_rho_peratom mass
+#include stress.lmp
+compute stress_bond all stress/atom bond
+variable stress_bond_xx atom c_stress_bond[1]
+variable stress_bond_yy atom c_stress_bond[2]
+dump               dump_id all custom ${Nfreq} dump*.dat id type x y z vx vy vz c_stress_bond[1] c_stress_bond[2] c_rho_peratom mass
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
