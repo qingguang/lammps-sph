@@ -4,6 +4,7 @@ if (test $1 = 1) then
 
   cp -p pair_sdpd.cpp ..
   cp -p pair_sdpd_rhosum.cpp ..
+  cp -p pair_interchain.cpp ..
   cp -p wiener.cpp .. 
   cp -p atom_vec_meso.cpp ..
   cp -p pair_sph_heatconduction.cpp ..
@@ -20,6 +21,7 @@ if (test $1 = 1) then
 
   cp -p pair_sdpd.h ..
   cp -p pair_sdpd_rhosum.h ..
+  cp -p pair_interchain.h ..
   cp -p wiener.h .. 
   cp -p atom_vec_meso.h ..
   cp -p pair_sph_heatconduction.h ..
@@ -37,6 +39,7 @@ if (test $1 = 1) then
 elif (test $1 = 0) then
   rm -f ../pair_sdpd.cpp
   rm -f ../pair_sdpd_rhosum.cpp
+  rm -f ../pair_interchain.cpp
   rm -f ../wiener.cpp 
   rm -f ../atom_vec_meso.cpp
   rm -f ../pair_sph_heatconduction.cpp
@@ -53,6 +56,7 @@ elif (test $1 = 0) then
 
   rm -f ../pair_sdpd.h
   rm -f ../pair_sdpd_rhosum.h
+  rm -f ../pair_interchain.h
   rm -f ../wiener.h
   rm -f ../atom_vec_meso.h
   rm -f ../pair_sph_heatconduction.h
