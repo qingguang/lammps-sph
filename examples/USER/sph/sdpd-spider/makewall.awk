@@ -5,12 +5,12 @@ function fabs(var) {
 function iswall(Rx, Ry) {
     Lx = box[x,hi]-box[x,lo]
     Ly = box[y,hi]-box[y,lo]
-    xd_real = xd * Lx
+    xt_real = xt* Lx
     xb_real = xb * Lx
-    a_real = a * xd_real
+    a_real = a * xt_real
     c_real = Ly/2 - a_real
-    b_real = b/xd_real
-    d_real = d/xd_real
+    b_real = b/xt_real
+    d_real = d/xt_real
 
     # three layers of particles on both sides of the channel 
     # belong to wall 
@@ -28,14 +28,14 @@ function iswall(Rx, Ry) {
     
     # move to the center
     Ry = fabs(Ry - Ly/2)
-
-    if (Rx<xd_real+xb_real)  {
+    if (Rx<xt_real+xb_real)  {
 	# initial
 	return Ry>shape(Rx-xb_real)
-    } else if (Rx< Lx - xd_real) {
-	# transition
-	return Ry>shape(xd_real)
+    } else if (Rx< Lx - xt_real) {
+	# transition, tube, constant radii
+	return Ry>shape(xt_real)
     } else {
+	# end of the domain
 	return Ry>shape(Lx-Rx)
     }
 

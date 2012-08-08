@@ -26,11 +26,13 @@ variable          H        equal 100*${spring_temp}*${kb}/${r0}^2
 
 # bond angle  coefficient
 # http://lammps.sandia.gov/doc/angle_harmonic.html
-variable          K        equal 100*${spring_temp}*${kb}
+variable          K        equal 50*${spring_temp}*${kb}
 
 # gauss potential coefficient
 variable         K_gauss   equal 300*${spring_temp}*${kb}
 variable         r_gauss   equal 1.0/${h}^2
+
+# delete and deposit particles this number of time steps
 
 variable          solvent_mass equal ${sdpd_rho_solvent}*${dx}^${dim}
 variable          polymer_mass equal ${sdpd_rho_polymer}*${dx}^${dim}

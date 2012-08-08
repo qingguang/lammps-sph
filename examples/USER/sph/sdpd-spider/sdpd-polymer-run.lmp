@@ -13,7 +13,8 @@ read_data           poly3d.txt
 special_bonds   lj 1 1 1
 
 
-group solvent      type 1
+variable           solvent_type equal 1
+group solvent      type ${solvent_type}
 group polymer      type 2 3
 group wall         type 4
 set  group solvent meso_rho ${sdpd_rho_solvent}
@@ -102,5 +103,24 @@ fix                fwall wall setforce 0.0 0.0 0.0
 group              flow subtract all wall
 variable           var_x atom ${A_body}*${solvent_mass}
 fix                kol_force flow addforce v_var_x 0.0  0.0
+
+fix		   f2d all enforce2d
+
+variable           xtube_real   equal ${xtube}*${Lx}
+variable           xbuffer_real equal ${xbuffer}*${Lx}
+variable           yminwall equal 3*${dx}
+variable           ymaxwall equal ${Ly}-4*${dx}
+
+# buffer region
+region             rbuffer block 0 ${xbuffer_real} ${yminwall} ${ymaxwall} 0 0 units box
+
+# tube region
+variable           xt1 equal ${xbuffer_real}+${xtube_real}
+variable           xt2 equal ${Lx}-${xtube_real}
+region             rtube block  ${xt1} ${xt2} ${yminwall} ${ymaxwall} 0 0 units box
+
+
+fix                fdep flow deposit 10000000 ${solvent_type} ${nstep_del} 29494 region rbuffer units box
+fix                fev  solvent evaporate  ${nstep_del} 1 rtube 49892
 
 run   10000000

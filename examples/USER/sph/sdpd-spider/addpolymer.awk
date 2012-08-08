@@ -1,6 +1,6 @@
 function trigerpolymer() {
     _triger_counter++
-    if (_triger_counter%nextbond == 0) {
+    if (_triger_counter%nextbond == 1) {
 	return polymer_extbond
     } else {
 	return polymer_normal
@@ -113,8 +113,7 @@ inatoms{
       # if atom has a bound we change atom type to natoms_type
       if ( isbound($1, iatom) ) {
 	  $2 = trigerpolymer()
-      }
-      if ( ($1>1) && isbound($1-1, iatom) ) {
+      } else if ( ($1>1) && isbound($1-1, iatom) ) {
 	  $2 = trigerpolymer()
       }
   }
