@@ -21,7 +21,7 @@ function fabs(var) {
 
 # returns true if there is a bound [atom_number, atom_number + 1]
 # uses iatom
-function isbound(atom_number,       period, rem, current_npoly) {
+function isbound(atom_number,iatom,       period, rem, current_npoly) {
   period = Nbeads + Nsolvent
   rem = (atom_number-1)%(period) # from 0 to period-1
   current_npoly = int(atom_number/period) + 1
@@ -111,10 +111,10 @@ inatoms{
 
   if (!($2 == wall_type)) {
       # if atom has a bound we change atom type to natoms_type
-      if ( isbound($1) ) {
+      if ( isbound($1, iatom) ) {
 	  $2 = trigerpolymer()
       }
-      if ( ($1>1) && isbound($1-1) ) {
+      if ( ($1>1) && isbound($1-1, iatom) ) {
 	  $2 = trigerpolymer()
       }
   }
@@ -133,7 +133,7 @@ END {
   printf("\nBonds\n\n")
   ibond = 0
   for (q=1; q<iatom; q++) {
-      if (isbound(q) && ( isbead(type_array[q]) ) && ( isbead(type_array[q+1]) ) ) {
+      if (isbound(q, iatom) && ( isbead(type_array[q]) ) && ( isbead(type_array[q+1]) ) ) {
       ip = q
       jp = q+1
       bondtype=1
@@ -145,7 +145,7 @@ END {
   printf("\nAngles\n\n")
   iangle = 0
   for (q=1; q<iatom; q++) {
-      if ( isbound(q) && isbound(q+1) &&
+      if ( isbound(q, iatom) && isbound(q+1, iatom) &&
 	   (isbead(type_array[q])) &&
 	   (isbead(type_array[q+1])) && 
 	   (isbead(type_array[q+2])) ) {
