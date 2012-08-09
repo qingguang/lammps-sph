@@ -26,7 +26,7 @@ variable          H        equal 100*${spring_temp}*${kb}/${r0}^2
 
 # bond angle  coefficient
 # http://lammps.sandia.gov/doc/angle_harmonic.html
-variable          K        equal 50*${spring_temp}*${kb}
+variable          K        equal 500*${spring_temp}*${kb}
 
 # gauss potential coefficient
 variable         K_gauss   equal 300*${spring_temp}*${kb}

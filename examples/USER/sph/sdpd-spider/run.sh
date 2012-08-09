@@ -14,19 +14,19 @@ fi
 
 nproc=4
 ndim=2d
-Nbeads=25
-Nsolvent=10
+Nbeads=20
+Nsolvent=5
 dx=8.333333e-4
-nx=128
+nx=180
 ny=32
-nextbond=5
+nextbond=4
 polymer_normal=2
 polymer_extbond=3
 xbuffer=0.1
 xtube=0.3
-nstep_del=300
+nstep_del=600
 
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}-K500
 
 vars="-v nstep_del ${nstep_del} -v xtube ${xtube} -v xbuffer ${xbuffer} -var dx ${dx} -var ny ${ny} -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
@@ -40,7 +40,7 @@ awk -v wall_type=4 \
     -v xt=${xtube} \
     -v xb=${xbuffer} \
     -v d=-0.0 \
-    -v a=0.5 -v b=-1.0 \
+    -v a=0.5 -v b=-0.5 \
     -f makewall.awk poly3d.txt > poly3.txt
 
 mv poly3.txt poly3d.txt
