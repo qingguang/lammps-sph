@@ -7,9 +7,9 @@ for filenumber=1:nfile
     disp(name);
 
 %   if(load(fullfile(name)))
- A =load(fullfile(name));
+A =load(fullfile(name));
 warning("sizeof A is: %d",size(A))
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,32,8e-2/3);
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,96,8e-2);
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)

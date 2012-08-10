@@ -9,12 +9,7 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-vars.lmp
 read_data           poly3d.txt
-<<<<<<< HEAD
-#read_restart         sdpd.restart.10000000
-
-=======
-#read_restart         sdpd.restart.2000000
->>>>>>> with_harmonic_spring
+#read_restart         sdpd.restart.12000000
 special_bonds   lj 1 1 1
 
 
@@ -79,26 +74,18 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 1000000    ${dname}/sdpd.restart
+restart 100000    ${dname}/sdpd.restart
 
-<<<<<<< HEAD
-#restart 1000000 sdpd.restart
-=======
-#bond_style fene
-#bond_coeff 1 ${H} ${r0}  0 0
->>>>>>> with_harmonic_spring
+bond_style fene
+bond_coeff 1 ${H} ${r0}  0 0
 
-bond_style harmonic
-bond_coeff 1 ${H} ${r0}
+#bond_style harmonic
+#bond_coeff 1 ${H} ${r0}
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
 
-<<<<<<< HEAD
-run   10000000 every 1000 "velocity all zero linear"
-=======
 run   10000000 every 10000 "velocity all zero linear"
 
->>>>>>> with_harmonic_spring
 

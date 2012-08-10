@@ -6,7 +6,7 @@
 #replot
 
 set terminal png
-set output sprintf("%s.png", "energy-spectra-4RF-2D-6BeadPolymer-96*96")
+set output sprintf("%s.png", "energy-spectra-4RF-2D-polymer-LargeH")
 replot
 set output
 

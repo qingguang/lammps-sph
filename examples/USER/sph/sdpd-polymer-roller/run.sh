@@ -12,12 +12,14 @@ fi
 
 rm -rf dum* im* poly* log.lammps
 
-nproc=6
+nproc=4
 ndim=2d
 Nbeads=0
 Nsolvent=1
-nx=32
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-f81
+Force=162
+nx=96
+eta=0.03.5
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-bg1.0-f${Force}-eta${eta}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
