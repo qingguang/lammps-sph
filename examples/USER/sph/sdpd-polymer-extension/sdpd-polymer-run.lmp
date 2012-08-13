@@ -19,7 +19,7 @@ set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
 group head id == ${N_start}
 group tail id == ${N_end}
-
+group  exten union head tail
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
 pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
@@ -46,6 +46,9 @@ include stress.lmp
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
     id type x y z &
     vx vy vz c_rho_peratom
+dump               dump_ext exten custom ${Nfreq} ${dname}/exten*.dat &
+    id type xu yu zu &
+    c_rho_peratom
 
 dump               dump_stress all custom ${Nfreq} ${dname}/stress*.dat &
     x y z &
@@ -55,6 +58,10 @@ dump               dump_stress all custom ${Nfreq} ${dname}/stress*.dat &
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
+
+dump_modify        dump_ext first yes
+dump_modify        dump_ext sort id
+dump_modify        dump_ext pad 8
 
 dump_modify        dump_stress first yes
 dump_modify        dump_stress sort id
@@ -83,14 +90,16 @@ bond_coeff 1 ${H} ${r0}  0 0
 
 #bond_style harmonic
 #bond_coeff 1 ${H} ${r0}
+run 150000
 
 fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
 fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
 
-run 10000
+run 150000
+
 unfix force_head
 unfix force_tail
 
-run 10000
+run 1000000
 
 

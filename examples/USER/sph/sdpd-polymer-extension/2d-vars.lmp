@@ -20,7 +20,7 @@ variable          h equal 2.7*${dx}
 variable          A_kol equal ${force}
 variable           N_A_kol equal -1*${force}
 variable          Nfreq equal 1000
-variable          Nfreqimage equal 100
+variable          Nfreqimage equal 1000
 variable          r0       equal 3^(1.0/${dim})*${dx}
 #variable          r0       equal ${dx}
 variable          spring_temp equal 1e15
