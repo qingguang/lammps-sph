@@ -1,0 +1,22 @@
+variable sdpd_mu_p equal ${sdpd_eta_p}/${sdpd_rho_polymer}
+variable sdpd_mu_s equal ${sdpd_eta_p}/${sdpd_rho_polymer}
+if "${sdpd_mu_p}>${sdpd_mu_s}" then &
+"variable sdpd_mu equal ${sdpd_mu_p}" &
+else &
+"variable sdpd_mu equal ${sdpd_mu_s}"
+
+variable dt_eta equal 1/8.0*${dx}*${dx}/(${sdpd_mu})
+variable dt_c equal 1/4.0*${dx}/${sdpd_c}
+
+if "${dt_c}>${dt_eta}" then &
+"variable dt equal ${dt_eta}" &
+else &
+"variable dt equal ${dt_c}"
+
+print "(settimestep) dt_c dt_eta dt ${dt_c} ${dt_eta} ${dt}"
+
+variable sdpd_mu_p delete
+variable sdpd_mu_s delete
+variable sdpd_mu delete
+variable dt_eta delete
+variable dt_c delete

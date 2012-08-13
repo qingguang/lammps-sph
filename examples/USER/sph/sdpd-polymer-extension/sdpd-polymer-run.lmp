@@ -17,6 +17,8 @@ group solvent      type 1
 group polymer      type 2
 set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
+group head id == ${N_start}
+group tail id == ${N_end}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
@@ -35,10 +37,10 @@ fix                integrate_fix_full all meso
 compute         pTemp all temp/profile 1 1 0 y 10
 
 # average velocity
-compute vxav all reduce ave vx
-variable  vx_cm atom vx-c_vxav
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
+#compute vxav all reduce ave vx
+#variable  vx_cm atom vx-c_vxav
+#fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+#y center 0.01 v_vx_cm file vx.av ave running units reduced
 
 include stress.lmp
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
@@ -82,10 +84,13 @@ bond_coeff 1 ${H} ${r0}  0 0
 #bond_style harmonic
 #bond_coeff 1 ${H} ${r0}
 
-variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
-variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
-fix                 kol_force all addforce v_var_x v_var_y 0.0
+fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
+fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
 
-run   10000000 every 10000 "velocity all zero linear"
+run 10000
+unfix force_head
+unfix force_tail
+
+run 10000
 
 
