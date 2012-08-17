@@ -14,14 +14,14 @@ rm -rf dum* im* poly* log.lammps
 
 nproc=6
 ndim=2d
-Nbeads=18
-Nsolvent=18
-Force=162
+Nbeads=0
+Nsolvent=1
+Force=54
 nx=96
-eta=0.03
+eta=0.04
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}-eta${eta}
 
-vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var eta ${eta}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt

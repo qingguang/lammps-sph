@@ -1,7 +1,7 @@
 # gnuplot script to fit autocorrelation data
 f(x) = c1*x**tau
 t(x)=c*x**tau
-c=2.6e4
+c=2e2
 #c1=1
 tau=-1.8
 tlim=3
@@ -10,9 +10,9 @@ tlim=3
 set logscale
 set xlabel "k"
 set ylabel "Ek"
-set key right
-plot "spectra.dat" title "4RF 2D solvent 128*128",\
- t(x) title "Ek~k^-1.8"
+set key left
+plot "spectra.dat" title "2D solvent without force 96*96 T=1",\
+ t(x) title "Ek~k^1"
 #plot "spectra.dat"title "Ek-k in 3D polymer Kolmogorov Re=0.87 Wi=2.6", f(x) title "Best-Fit Ek~k^1.54"
 
 #plot "spectra.dat"title "Ek-k in 3D polymer deform Re=1 Wi~260",f(x) title "Fit Curve Tail part Ek~k^-3.1",t(x) title "Fit Curve Ek~k^-2.5"
