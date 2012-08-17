@@ -16,7 +16,8 @@ variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 1e15
 
 variable          h equal 2.7*${dx}
-variable          A_body equal 5*54*(${ny}/20)^(-2)
+#variable          A_body equal 270*(${ny}/20)^(-2)
+variable          A_body equal 0.0*(${ny}/20)^(-2)
 variable          Nfreq equal 10000
 variable          Nfreqimage equal 10000
 
@@ -26,10 +27,10 @@ variable          H        equal 100*${spring_temp}*${kb}/${r0}^2
 
 # bond angle  coefficient
 # http://lammps.sandia.gov/doc/angle_harmonic.html
-variable          K        equal 500*${spring_temp}*${kb}
+variable          K        equal 100*${spring_temp}*${kb}
 
 # gauss potential coefficient
-variable         K_gauss   equal 300*${spring_temp}*${kb}
+variable         K_gauss   equal 100*${spring_temp}*${kb}
 variable         r_gauss   equal 1.0/${h}^2
 
 # delete and deposit particles this number of time steps

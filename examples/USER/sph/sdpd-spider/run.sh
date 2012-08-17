@@ -12,19 +12,19 @@ fi
 
 #rm -rf dum* im* poly* log.lammps
 
-nproc=4
+nproc=8
 ndim=2d
-Nbeads=20
-Nsolvent=5
+Nbeads=40
+Nsolvent=40
 dx=8.333333e-4
-nx=180
+nx=220
 ny=32
 nextbond=4
 polymer_normal=2
 polymer_extbond=3
-xbuffer=0.1
+xbuffer=0.3
 xtube=0.3
-nstep_del=600
+nstep_del=30000
 
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}-K500
 

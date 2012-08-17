@@ -106,21 +106,23 @@ fix                kol_force flow addforce v_var_x 0.0  0.0
 
 fix		   f2d all enforce2d
 
-variable           xtube_real   equal ${xtube}*${Lx}
 variable           xbuffer_real equal ${xbuffer}*${Lx}
+variable           xdepos_end      equal 0.2*${xbuffer}*${Lx}
 variable           yminwall equal 3*${dx}
 variable           ymaxwall equal ${Ly}-4*${dx}
 
-# buffer region
-region             rbuffer block 0 ${xbuffer_real} ${yminwall} ${ymaxwall} 0 0 units box
+variable           yminevap equal 5*${dx}
+variable           ymaxevap equal ${Ly}-5*${dx}
 
-# tube region
-variable           xt1 equal ${xbuffer_real}+${xtube_real}
-variable           xt2 equal ${Lx}-${xtube_real}
-region             rtube block  ${xt1} ${xt2} ${yminwall} ${ymaxwall} 0 0 units box
+# region    for evaporation
+region             rev1    block 0 ${xbuffer_real} ${yminwall} ${yminevap} 0 0 units box
+region             rev2    block 0 ${xbuffer_real} ${ymaxevap} ${ymaxwall} 0 0 units box
+region             rev_all union 2 rev1 rev2 units box
 
+# region for    deposition
+region             rde     block 0 ${xdepos_end} ${yminwall} ${ymaxwall} 0 0 units box
 
-fix                fdep flow deposit 10000000 ${solvent_type} ${nstep_del} 29494 region rbuffer units box
-fix                fev  solvent evaporate  ${nstep_del} 1 rtube 49892
+fix                fdep flow deposit 10000000 ${solvent_type} ${nstep_del} 29494 region rde units box
+fix                fev  solvent evaporate  ${nstep_del} 1 rev_all 49892
 
 run   10000000
