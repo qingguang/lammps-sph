@@ -1,0 +1,15 @@
+/*
+FENE
+http://lammps.sandia.gov/doc/bond_fene.html
+*/
+E_fene: 0.5*K*R0^2 * log(1-(r/R0)^2)$
+diff(E_fene, r);
+
+
+/*
+harmonic
+http://lammps.sandia.gov/doc/bond_harmonic.html
+*/
+E_harmonic: K*(r-r0)^2$
+diff(E_harmonic, r);
+

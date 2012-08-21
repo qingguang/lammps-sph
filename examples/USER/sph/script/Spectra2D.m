@@ -1,5 +1,5 @@
 function Spectra2D()
-filelist=dir(fullfile('dump0*.del.prj'));
+filelist=dir(fullfile('dump*.del.prj'));
 nfile=length(filelist)
 Ek=zeros();
 for filenumber=1:nfile
