@@ -33,8 +33,9 @@ set                group all meso_rho ${sph_rho}
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-pair_style         hybrid/overlay sph/rhosum 1 sph/taitwater/morris
+pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris
 pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * * sph/colorgradient ${h}
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
 
 compute            rho_peratom all meso_rho/atom
@@ -50,19 +51,12 @@ fix                 fb_gx gbubble addforce v_var_gx_bubble 0 0
 variable            var_gx_solvent atom -${gx}*${sph_mass}*count(gsolvent)/count(gbubble)
 fix                 fb_gx gsolvent addforce v_var_gx_solvent 0 0
 
-# average velocity
-variable          Nfreq equal 1000
-compute vxav all reduce ave vx
-variable  vx_cm atom vx-c_vxav
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
-
 dump               dump_id all custom 1000 ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
 thermo_modify      norm no
-thermo             10
+thermo             1000
 
 include            ${ndim}-image.lmp
 variable           sph_mu  equal ${sph_eta}/${sph_rho}

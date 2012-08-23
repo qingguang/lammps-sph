@@ -213,7 +213,7 @@ class Data {
   tagint *tag;
   int *type,*mask,*image;
   int *molecule;
-  double *rho, *e, *cv, *vestx, *vesty, *vestz;
+  double *rho, *colorgradientx, *colorgradienty, *colorgradientz, *e, *cv, *vestx, *vesty, *vestz;
   double *q,*mux,*muy,*muz,*radius,*density,*vfrac,*rmass;
   double *s0,*x0x,*x0y,*x0z;
   double *shapex,*shapey,*shapez;
@@ -951,6 +951,9 @@ int atom_meso(double *buf, Data &data, int iatoms)
   data.vz[iatoms] = buf[m++];
 
   data.rho[iatoms]=buf[m++];
+  data.colorgradientx[iatoms]=buf[m++];
+  data.colorgradienty[iatoms]=buf[m++];
+  data.colorgradientz[iatoms]=buf[m++];
   data.e[iatoms]=buf[m++];
   data.cv[iatoms]=buf[m++];
   data.vestx[iatoms]=buf[m++];
@@ -1272,6 +1275,9 @@ void allocate_charge(Data &data)
 void allocate_meso(Data &data)
 {
   data.rho = new double[data.natoms];
+  data.colorgradientx = new double[data.natoms];
+  data.colorgradienty = new double[data.natoms];
+  data.colorgradientz = new double[data.natoms];
   data.e = new double[data.natoms];
   data.cv = new double[data.natoms];
   data.vestx = new double[data.natoms];
