@@ -41,6 +41,7 @@ pair_coeff         2 2 sph/colorgradient ${h} 0
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
 
 compute            rho_peratom all meso_rho/atom
+compute            colorgradient_peratom all meso_colorgradient/atom
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
@@ -53,7 +54,7 @@ fix                 fb_gx gbubble addforce v_var_gx_bubble 0 0
 variable            var_gx_solvent atom -${gx}*${sph_mass}*count(gsolvent)/count(gbubble)
 fix                 fb_gx gsolvent addforce v_var_gx_solvent 0 0
 
-dump               dump_id all custom 1000 ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom
+dump               dump_id all custom 1000 ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom c_colorgradient_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
