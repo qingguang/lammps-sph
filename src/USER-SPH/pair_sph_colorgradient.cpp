@@ -25,6 +25,7 @@
 #include "update.h"
 #include "domain.h"
 #include <iostream>
+#include <assert.h>
 
 using namespace LAMMPS_NS;
 
@@ -120,6 +121,10 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
       // initialize color gradient with zeros
       for (ii = 0; ii < inum; ii++) {
         colorgradient[i][0] = 0.0;
+        colorgradient[i][1] = 0.0;
+	if (ndim==3) {
+	  colorgradient[i][2] = 0.0;
+	}
       } // ii loop
 
       // add density at each atom via kernel function overlap
@@ -172,8 +177,12 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    }
 	    
 	    double Fij = - wfd;
-	    double Vi = mass[i]/rho[i]; 
-	    double Vj = mass[j]/rho[j];
+	    assert(rho[i]>0);
+	    assert(mass[itype]>0);
+	    double Vi = mass[itype]/rho[i]; 
+	    assert(rho[j]>0);
+	    assert(mass[jtype]>0);
+	    double Vj = mass[jtype]/rho[j];
 	    double rVi = 1.0/Vi; 
 	    double rVj = 1.0/Vj;
 	    double Vi2 = Vi*Vi;
