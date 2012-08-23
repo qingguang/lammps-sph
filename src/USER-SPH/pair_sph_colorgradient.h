@@ -39,6 +39,7 @@ class PairSPHColorGradient : public Pair {
 
  protected:
   double **cut;
+  double **alpha;
   int nstep, first;
 
   void allocate();

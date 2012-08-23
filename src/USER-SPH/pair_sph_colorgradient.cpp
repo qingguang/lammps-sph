@@ -48,6 +48,7 @@ PairSPHColorGradient::~PairSPHColorGradient() {
     memory->destroy(cutsq);
 
     memory->destroy(cut);
+    memory->destroy(alpha);
   }
 }
 
@@ -67,9 +68,11 @@ void PairSPHColorGradient::init_style() {
 void PairSPHColorGradient::compute(int eflag, int vflag) {
   int i, j, ii, jj, jnum, itype, jtype;
   double xtmp, ytmp, ztmp, delx, dely, delz;
-  double r, rsq, imass, h, ih, ihsq;
+  double rsq, imass, h, ih, ihsq;
   int *jlist;
-  double wf;
+  
+  int ndim = domain->dimension;
+  double eij[ndim];
   // neighbor list variables
   int inum, *ilist, *numneigh, **firstneigh;
 
@@ -114,28 +117,9 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
   if (nstep != 0) {
     if ((update->ntimestep % nstep) == 0) {
 
-      // initialize density with self-contribution,
+      // initialize color gradient with zeros
       for (ii = 0; ii < inum; ii++) {
-        i = ilist[ii];
-        itype = type[i];
-        imass = mass[itype];
-
-        h = cut[itype][itype];
-        if (domain->dimension == 3) {
-          // Lucy kernel, 3d
-          wf = 2.0889086280811262819e0 / (h * h * h);
-
-          // quadric kernel, 3d
-          //wf = 2.1541870227086614782 / (h * h * h);
-        } else {
-          // Lucy kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
-
-          // quadric kernel, 2d
-          //wf = 1.5915494309189533576e0 / (h * h);
-        }
-        
-        colorgradient[i][0] = imass * wf;
+        colorgradient[i][0] = 0.0;
       } // ii loop
 
       // add density at each atom via kernel function overlap
@@ -158,39 +142,52 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
           delz = ztmp - x[j][2];
           rsq = delx * delx + dely * dely + delz * delz;
 
-          if (rsq < cutsq[itype][jtype]) {
-            h = cut[itype][jtype];
-            ih = 1.0 / h;
-            ihsq = ih * ih;
+	  if (rsq < cutsq[itype][jtype]) {
 
-            if (domain->dimension == 3) {
-              
-              // Lucy kernel, 3d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf =  2.0889086280811262819e0 * (h + 3. * r) * wf * wf * wf * ih;
+	    if (ndim==2) {
+	      eij[0]= delx/sqrt(rsq); 
+	      eij[1]= dely/sqrt(rsq);    
+	    } else {
+	      eij[0]= delx/sqrt(rsq);
+	      eij[1]= dely/sqrt(rsq);
+	      eij[2]= delz/sqrt(rsq);
+	    }
 
-              // quadric kernel, 3d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 2.1541870227086614782e0 * wf * ihsq * ih;
-            } else {
-              // Lucy kernel, 2d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf = 1.5915494309189533576e0 * (h + 3. * r) * wf * wf * wf;
+	    h = cut[itype][jtype];
+	    ih = 1.0 / h;
+	    ihsq = ih * ih;
 
-              // quadric kernel, 2d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 1.5915494309189533576e0 * wf * ihsq;
-            }
-
-            colorgradient[i][0] += mass[jtype] * wf;
-          }
-
+	    double wfd = h - sqrt(rsq);
+	    if (ndim == 3) {
+	      // Lucy Kernel, 3d
+	      // Note that wfd, the derivative of the weight function with respect to r,
+	      // is lacking a factor of r.
+	      // The missing factor of r is recovered by
+	      // (1) using delV . delX instead of delV . (delX/r) and
+	      // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
+	      wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+	    } else {
+	      // Lucy Kernel, 2d
+	      wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	    }
+	    
+	    double Fij = - wfd;
+	    double Vi = mass[i]/rho[i]; 
+	    double Vj = mass[j]/rho[j];
+	    double rVi = 1.0/Vi; 
+	    double rVj = 1.0/Vj;
+	    double Vi2 = Vi*Vi;
+	    double Vj2 = Vj*Vj;
+	    double rij = sqrt(rsq);
+	    double dphi = Fij*rij*alpha[itype][jtype];
+	    
+	    colorgradient[i][0] += dphi*rVi*Vj2*eij[0];
+	    colorgradient[i][1] += dphi*rVi*Vj2*eij[1];
+	    if (ndim==3) {
+	      colorgradient[i][2] += dphi*rVi*Vj2*eij[2];
+	    }
+          } // rsq < cutsq
+	  
         } // jj loop
       } // ii loop
     }
@@ -216,6 +213,7 @@ void PairSPHColorGradient::allocate() {
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
 
   memory->create(cut, n + 1, n + 1, "pair:cut");
+  memory->create(alpha, n + 1, n + 1, "pair:alpha");
 }
 
 /* ----------------------------------------------------------------------
@@ -234,7 +232,7 @@ void PairSPHColorGradient::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSPHColorGradient::coeff(int narg, char **arg) {
-  if (narg != 3)
+  if (narg != 4)
     error->all(FLERR,"Incorrect number of args for sph/colorgradient coefficients");
   if (!allocated)
     allocate();
@@ -244,12 +242,14 @@ void PairSPHColorGradient::coeff(int narg, char **arg) {
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
   double cut_one = force->numeric(arg[2]);
+  double alpha_one = force->numeric(arg[3]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
+      alpha[i][j] = alpha_one;
       setflag[i][j] = 1;
       count++;
     }
@@ -269,6 +269,7 @@ double PairSPHColorGradient::init_one(int i, int j) {
   }
 
   cut[j][i] = cut[i][j];
+  alpha[j][i] = alpha[i][j];
 
   return cut[i][j];
 }
