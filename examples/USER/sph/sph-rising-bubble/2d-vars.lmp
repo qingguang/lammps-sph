@@ -1,0 +1,13 @@
+variable           ndim index 2d
+variable           dx   equal 2.5e-5
+variable           Lx    equal  20*${dx}
+variable           Ly    equal  20*${dx}
+variable           sph_rho equal 1000
+variable           sph_c equal 3e0
+variable           sph_eta equal 5e-1
+variable          h equal 2.7*${dx}
+variable          Nfreq equal 1000
+variable          Nfreqimage equal 1000
+variable          sph_mass equal ${dx}*${dx}*${sph_rho}
+
+variable            A_kol equal 1e5
