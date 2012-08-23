@@ -9,13 +9,25 @@ include           2d-vars.lmp
 variable           pLz    equal  1.0e-6
 variable           nLz    equal  -1.0e-6
 region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
-create_box         1 box
+create_box         2 box
 
 # create fluid particles
 lattice            sq ${dx}
 create_atoms       1 region box
 
+variable           xcenter equal 0.5*${Lx}
+variable           ycenter equal 0.5*${Ly}
+region             rbubble cylinder z ${xcenter} ${ycenter} ${cyl_r} EDGE EDGE units box
+group	           gbubble region rbubble
+
+# all bubble atoms
+set	           group gbubble type 2
+
+# all solvent atoms
+group              gsolvent type 1
+
 mass               1 ${sph_mass}
+mass               2 ${sph_mass}
 set                group all meso_rho ${sph_rho}
 
 # use Tait's EOS in combination with Morris' laminar viscosity.
@@ -30,9 +42,13 @@ compute            rho_peratom all meso_rho/atom
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
 
+# force on the buble atoms
+variable            var_gx_bubble atom ${gx}*${sph_mass}
+fix                 fb_gx gbubble addforce v_var_gx_bubble 0 0
 
-variable            var_kol atom ${A_kol}*${sph_mass}*cos(2*PI*y/${Ly})
-fix                 kol_force all addforce v_var_kol 0.0 0.0
+# force on the solvent atoms
+variable            var_gx_solvent atom -${gx}*${sph_mass}*count(gsolvent)/count(gbubble)
+fix                 fb_gx gsolvent addforce v_var_gx_solvent 0 0
 
 # average velocity
 variable          Nfreq equal 1000
