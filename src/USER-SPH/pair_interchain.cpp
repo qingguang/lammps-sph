@@ -54,6 +54,7 @@ PairInterchain::~PairInterchain()
     memory->destroy(cut);
     memory->destroy(a);
     memory->destroy(b);
+    memory->destroy(threshold);
     memory->destroy(offset);
   }
 }
@@ -108,7 +109,8 @@ void PairInterchain::compute(int eflag, int vflag)
       // the site it interacts with is within the force maximum    
     
       if (eflag_global && rsq < 0.5/b[itype][jtype]) occ++;
-      if ( xtmp+x[j][0] < domain->boxhi[0]+domain->boxlo[0] ) {
+      /// if x coordianate is smaller than a threshold
+      if ( 0.5*(xtmp+x[j][0]) < threshold[itype][jtype] ) {
 	if (rsq < cutsq[itype][jtype]) {
 	  r2inv = 1.0/rsq;
 	  r = sqrt(rsq);
@@ -159,6 +161,7 @@ void PairInterchain::allocate()
   memory->create(cut,n+1,n+1,"pair:cut_gauss");
   memory->create(a,n+1,n+1,"pair:a");
   memory->create(b,n+1,n+1,"pair:b");
+  memory->create(threshold,n+1,n+1,"pair:threshold");
   memory->create(offset,n+1,n+1,"pair:offset");  
 }
 
@@ -188,7 +191,7 @@ void PairInterchain::settings(int narg, char **arg)
 
 void PairInterchain::coeff(int narg, char **arg)
 {
-  if (narg < 4 || narg > 5) error->all(FLERR,"Incorrect args for pair coefficients");
+  if (narg < 5 || narg > 6) error->all(FLERR,"Incorrect args for pair coefficients");
   if (!allocated) allocate();
 
   int ilo, ihi, jlo, jhi;
@@ -197,15 +200,17 @@ void PairInterchain::coeff(int narg, char **arg)
   
   double a_one = atof(arg[2]);
   double b_one = atof(arg[3]);
+  double threshold_one = atof(arg[4]);
 
   double cut_one = cut_global;
-  if (narg == 5) cut_one = atof(arg[4]);
+  if (narg == 6) cut_one = atof(arg[5]);
   
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j<=jhi; j++) {
       a[i][j] = a_one; 
       b[i][j] = b_one;
+      threshold[i][j] = threshold_one;
       cut[i][j] = cut_one;
       setflag[i][j] = 1;
       count++ ;
@@ -318,7 +323,6 @@ double PairInterchain::single(int i, int j, int itype, int jtype, double rsq,
   double r2inv,forcelj,philj,r;
 
   r = sqrt(rsq);
-  
   r2inv = 1.0/rsq;
   philj = -(a[itype][jtype]*exp(-b[itype][jtype]*rsq) - offset[itype][jtype]);
   

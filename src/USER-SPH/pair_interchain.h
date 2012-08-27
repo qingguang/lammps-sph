@@ -42,7 +42,7 @@ class PairInterchain : public Pair {
  protected: 
   double cut_global;
   double **cut;
-  double **a,**b;
+  double **a,**b, **threshold;
   double **offset;
   
   void allocate();

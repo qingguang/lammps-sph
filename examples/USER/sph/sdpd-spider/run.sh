@@ -13,7 +13,7 @@ fi
 #rm -rf dum* im* poly* log.lammps
 
 nproc=8
-ndim=2d
+ndim=3d
 Nbeads=40
 Nsolvent=40
 dx=8.333333e-4
@@ -24,11 +24,22 @@ polymer_normal=2
 polymer_extbond=3
 xbuffer=0.3
 xtube=0.3
-nstep_del=30000
+nstep_del=9000000000
 
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}-K500
+# force between beads
+#prefix_gauss=150
+prefix_gauss=0
 
-vars="-v nstep_del ${nstep_del} -v xtube ${xtube} -v xbuffer ${xbuffer} -var dx ${dx} -var ny ${ny} -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
+# angle force bond
+#prefix_flex=100
+prefix_flex=200
+
+dname=fene3d-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}-gauss${prefix_gauss}-flex${prefix_flex}
+
+vars="-var prefix_gauss ${prefix_gauss} -var nstep_del ${nstep_del} -var xtube ${xtube} \
+-var prefix_flex ${prefix_flex} \
+-var xbuffer ${xbuffer} -var dx ${dx} -var ny ${ny} \
+-var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
@@ -41,7 +52,9 @@ awk -v wall_type=4 \
     -v xb=${xbuffer} \
     -v d=-0.0 \
     -v a=0.5 -v b=-0.5 \
-    -f makewall.awk poly3d.txt > poly3.txt
+    -f makewall3d.awk poly3d.txt > poly3.txt
+
+# -    -v a=0.5 -v b=-0.5 \
 
 mv poly3.txt poly3d.txt
 

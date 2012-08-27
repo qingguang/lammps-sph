@@ -2,9 +2,10 @@ function fabs(var) {
   return var>0?var:-var
 }
 
-function iswall(Rx, Ry) {
+function iswall(Rx, Ry, Rz) {
     Lx = box[x,hi]-box[x,lo]
     Ly = box[y,hi]-box[y,lo]
+    Lz = box[z,hi]-box[z,lo]
     # size of gland geometry
     xt_real = xt* Lx
     # size of the buffer region at the initial part of the domain
@@ -18,22 +19,19 @@ function iswall(Rx, Ry) {
     # |--- buffer (xb) ---|--- gland (xt) ---|--- channel ---|--- gland (xt) ---|
     # 
 
-    # three layers of particles on both sides of the channel 
-    # belong to wall 
-    if (Ry<=2*dx) {
-	return 1
-    } 
-    if (Ry>=(ny-3)*dx) {
+    R = sqrt((Ry - Ly/2)^2 + (Rz - Lz/2)^2)
+
+
+    if (R>=(ny-3)*dx/2) {
 	return 1
     }
+    return 0
 
     # this is buffer region
     if (Rx<xb_real) {
 	return 0
     }
     
-    # move to the center
-    Ry = fabs(Ry - Ly/2)
     if (Rx<xt_real+xb_real)  {
 	# initial
 	return Ry>shape(Rx-xb_real)
@@ -113,8 +111,9 @@ inatoms{
     # here I get one atom
     Rx=$3
     Ry=$4
+    Rz=$5
 
-    if (iswall(Rx, Ry)) {
+    if (iswall(Rx, Ry, Rz)) {
 	$2= wall_type
     }
     print
