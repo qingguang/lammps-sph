@@ -1,10 +1,10 @@
-F=164
+F=1.8e3
 dim=2
 
 dx=2.5e-3/3
 sdpd_c=20
 sdpd_rho=1
-sdpd_eta=3e-2
+sdpd_eta=1
 sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
@@ -18,14 +18,14 @@ tau=0.1144
 
 ky=2*3.141592653/L
 v0=F/(sdpd_mu*ky**2)
-v0=0.3
+v0=v0*2
 #H=5.3e-4
 #r0=2.0*dx
 #pc=H*r0**2/(kb*T)
 
 Ma=v0/sdpd_c
 #Res=F/(sdpd_mu**2*ky**3)
-Re=v0*L/sdpd_mu
+Re=v0*Lall/sdpd_mu
 Wi=tau*v0/L
 
 vrm=0.023

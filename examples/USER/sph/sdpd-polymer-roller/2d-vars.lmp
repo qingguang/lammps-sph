@@ -1,13 +1,13 @@
 variable          dim equal 2
 variable          kb       equal 1.3806503e-23
 
-variable           dx   equal 8.333333e-4
+variable           dx   equal 8.3333e-4
 variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
 variable           sdpd_rho_polymer equal 1
 variable           sdpd_rho0 equal 1
-variable           sdpd_c equal 20
+variable           sdpd_c equal 400
 variable           sdpd_eta_s equal ${eta}
 variable           sdpd_eta_p equal ${eta}
 
@@ -23,7 +23,7 @@ variable          Nfreqimage equal 100000
 variable          r0       equal 3^(1.0/${dim})*${dx}
 #variable          r0       equal ${dx}
 variable          spring_temp equal 1e15
-variable          H        equal 400*${spring_temp}*${kb}/${r0}^2
+variable          H        equal 100*${spring_temp}*${kb}/${r0}^2
 
 variable          solvent_mass equal ${sdpd_rho_solvent}*${dx}^${dim}
 variable          polymer_mass equal ${sdpd_rho_polymer}*${dx}^${dim}

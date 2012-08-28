@@ -16,9 +16,9 @@ nproc=6
 ndim=2d
 Nbeads=0
 Nsolvent=1
-Force=54
+Force=0
 nx=96
-eta=0.04
+eta=1
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}-eta${eta}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var eta ${eta}"

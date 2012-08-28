@@ -1,7 +1,7 @@
 # gnuplot script to fit autocorrelation data
 f(x) = c1*x**tau
 t(x)=c*x**tau
-c=2e2
+c=2e6
 #c1=1
 tau=-1.8
 tlim=3

@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-read_data           poly3d.txt
-#read_restart         sdpd.restart.200000
+#read_data           poly3d.txt
+read_restart       sdpd.restart.9900000
 special_bonds   lj 1 1 1
 
 
@@ -49,6 +49,7 @@ dump               dump_stress all custom ${Nfreq} ${dname}/stress*.dat &
     x y z &
     c_bstress[1] c_bstress[2] c_bstress[4] &
     c_astress[1] c_astress[2] c_astress[4] &
+    c_substress[1] c_substress[2] c_substress[4]
     
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
@@ -74,7 +75,7 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 100000    ${dname}/sdpd.restart
+restart 1000000    ${dname}/sdpd.restart
 
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
