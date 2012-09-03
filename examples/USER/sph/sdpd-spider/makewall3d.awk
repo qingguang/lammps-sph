@@ -21,26 +21,25 @@ function iswall(Rx, Ry, Rz) {
 
     R = sqrt((Ry - Ly/2)^2 + (Rz - Lz/2)^2)
 
-
-    if (R>=(ny-3)*dx/2) {
+    # external wall (3 layers of particles)
+    if (R > (Ly/2 - 2*dx) ) {
 	return 1
     }
-    return 0
 
-    # this is buffer region
+    # the buffer region
     if (Rx<xb_real) {
 	return 0
     }
     
     if (Rx<xt_real+xb_real)  {
 	# initial
-	return Ry>shape(Rx-xb_real)
+	return R>shape(Rx-xb_real)
     } else if (Rx< Lx - xt_real) {
 	# transition, tube, constant radii
-	return Ry>shape(xt_real)
+	return R>shape(xt_real)
     } else {
 	# end of the domain
-	return Ry>shape(Lx-Rx)
+	return R>shape(Lx-Rx)
     }
 
 }

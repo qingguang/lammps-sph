@@ -14,12 +14,16 @@ fi
 
 nproc=8
 ndim=3d
+
+# polymer configuration
 Nbeads=40
 Nsolvent=40
-dx=8.333333e-4
-nx=220
-ny=32
+# position of the hydrogen bond
 nextbond=4
+
+dx=8.333333e-4
+nx=60
+ny=32
 polymer_normal=2
 polymer_extbond=3
 xbuffer=0.3
@@ -32,7 +36,7 @@ prefix_gauss=0
 
 # angle force bond
 #prefix_flex=100
-prefix_flex=200
+prefix_flex=0
 
 dname=fene3d-nb${Nbeads}-ns${Nsolvent}-nx${nx}-next${nextbond}-deposit${nstep_del}-gauss${prefix_gauss}-flex${prefix_flex}
 
