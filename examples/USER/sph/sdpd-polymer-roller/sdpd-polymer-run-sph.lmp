@@ -19,11 +19,11 @@ group polymer      type 2
 set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
 
-pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd/rhosum   ${h}
-pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
-pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
-pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
+pair_style         hybrid/overlay sph/rhosum 1 sph/taitwater/morris
+pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * *    sph/taitwater/morris ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h}
+#pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
+#pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom

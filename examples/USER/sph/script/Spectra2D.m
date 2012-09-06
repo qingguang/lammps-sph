@@ -8,8 +8,8 @@ for filenumber=1:nfile
 
 %   if(load(fullfile(name)))
 A =load(fullfile(name));
-warning("sizeof A is: %d",size(A))
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,64,0.0016);
+warning("size of input data is: [%d %d]\n",size(A))
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,64,0.054);
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
