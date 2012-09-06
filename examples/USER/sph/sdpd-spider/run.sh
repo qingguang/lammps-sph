@@ -22,7 +22,7 @@ Nsolvent=40
 nextbond=4
 
 dx=8.333333e-4
-nx=60
+nx=220
 ny=32
 polymer_normal=2
 polymer_extbond=3

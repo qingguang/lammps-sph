@@ -1,2 +1,0 @@
-compute bstress all stress/atom bond
-compute astress all stress/atom
