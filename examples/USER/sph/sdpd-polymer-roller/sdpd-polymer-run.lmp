@@ -8,14 +8,9 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-<<<<<<< HEAD
-#read_data           poly3d.txt
-read_restart    sdpd.restart.3000000
-
-=======
 read_data           poly3d.txt
-#read_restart         sdpd.restart.200000
->>>>>>> 4ec8a9286379c7c7c05d0801cdd3f901c5c997dd
+#read_restart   sdpd.restart.19000000
+
 special_bonds   lj 1 1 1
 
 
@@ -79,7 +74,7 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 100000    ${dname}/sdpd.restart
+restart 1000000    ${dname}/sdpd.restart
 
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
@@ -91,6 +86,6 @@ variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
 
-run   10000000 every 10000 "velocity all zero linear"
+run   1000000000 every 10000 "velocity all zero linear"
 
 

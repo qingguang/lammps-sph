@@ -7,8 +7,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-model.lmp
-#read_data           poly3d.txt
-read_restart         sdpd.restart.80000
+read_data           poly3d.txt
+#read_restart         sdpd.restart.80000
 special_bonds   lj 1 1 1
 bond_style fene
 
@@ -37,10 +37,7 @@ fix                integrate_fix_full all meso
 compute         pTemp all temp/profile 1 1 0 y 10
 
 # average velocity
-compute vxav all reduce ave vx
-variable  vx_cm atom vx-c_vxav
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
+include           velocity.lmp
 
 include            stress.lmp
 dump               dump_id all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom

@@ -13,24 +13,14 @@ fi
 
 nproc=6
 ndim=2d
-<<<<<<< HEAD
 Nbeads=0
 Nsolvent=1
+Force=164
 nx=96
-Force=15
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}
-
-vars="-var nx ${nx} -var ndim ${ndim} -var force ${Force} -var dname ${dname}"
-=======
-Nbeads=18
-Nsolvent=18
-Force=162
-nx=96
-eta=0.03
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}-eta${eta}
+eta=3e-2
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}-eta${eta}-T1e11
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
->>>>>>> 4ec8a9286379c7c7c05d0801cdd3f901c5c997dd
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
