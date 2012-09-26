@@ -13,12 +13,21 @@ fi
 
 nproc=6
 ndim=2d
+<<<<<<< HEAD
 Nbeads=24
 Nsolvent=24
 Force=164
 nx=96
 eta=3e-2
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.5-bg1.0-f${Force}-eta${eta}-T1e13
+=======
+Nbeads=16
+Nsolvent=16
+nx=32
+Force=81
+eta=3e-2
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.01-bg1.0-f${Force}-eta${eta}
+>>>>>>> 4c9841d2424360dbd4c4f2b5f5655aa2583abb79
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var eta ${eta}"
 
@@ -34,4 +43,8 @@ ${restart2data} poly3d.restart poly3d.txt
 # output directory name
 
 mkdir -p ${dname}
+<<<<<<< HEAD
+=======
+#${mpirun -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
+>>>>>>> 4c9841d2424360dbd4c4f2b5f5655aa2583abb79
 ${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
