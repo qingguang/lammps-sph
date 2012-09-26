@@ -24,7 +24,7 @@ variable          Nfreqimage equal 1000
 variable          r0       equal 3^(1.0/${dim})*${dx}
 #variable          r0       equal ${dx}
 variable          spring_temp equal 1e15
-variable          H        equal 300*${spring_temp}*${kb}/${r0}^2
+variable          H        equal 400*${spring_temp}*${kb}/${r0}^2
 variable         Nth equal 7
 variable          N_start equal ${Nth}*${Nbeads}+${Nth}*${Nsolvent}+1
 variable          N_end   equal ${N_start}+${Nbeads}-1

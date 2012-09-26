@@ -6,7 +6,7 @@
 #replot
 
 set terminal png
-set output sprintf("%s.png", "energy-spectra-4RF-2D-solvent-128*128")
+set output sprintf("%s.png", "Ek-2D-solvent-64*64-T=1e9-Re0.02")
 replot
 set output
 

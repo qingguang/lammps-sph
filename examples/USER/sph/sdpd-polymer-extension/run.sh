@@ -19,7 +19,7 @@ Nsolvent=12
 Force=0.01
 nx=20
 eta=0.03
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.3-bg1.0-f${Force}-eta${eta}
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
 
 vars="-var nx ${nx} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 

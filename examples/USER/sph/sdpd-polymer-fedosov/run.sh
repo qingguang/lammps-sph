@@ -15,7 +15,11 @@ ndim=3d
 
 cp ${ndim}-vars.lmp ${ndim}-model.lmp
 
+<<<<<<< HEAD
 rm -rf dum* im* poly* log.lammps
+=======
+rm -rf dum* im* poly* log.lammps *.av
+>>>>>>> be864b072055ac58667d59642179864b4eee8e1a
 ${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 

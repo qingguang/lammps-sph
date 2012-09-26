@@ -9,7 +9,7 @@ sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
 kb=1.3806503e-23
-T=1e11
+T=1e13
 vt=(3*kb*T/sdpd_mass)**0.5
 
 Lall=96*dx
@@ -18,7 +18,7 @@ tau=0.1144
 
 ky=2*3.141592653/L
 v0=F/(sdpd_mu*ky**2)
-#v0=0.3
+#v0=v0*2
 #H=5.3e-4
 #r0=2.0*dx
 #pc=H*r0**2/(kb*T)

@@ -8,7 +8,11 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-model.lmp
 read_data           poly3d.txt
+<<<<<<< HEAD
 #read_restart         sdpd.restart.80000
+=======
+#read_restart         sdpd.restart.90000
+>>>>>>> be864b072055ac58667d59642179864b4eee8e1a
 special_bonds   lj 1 1 1
 bond_style fene
 
@@ -37,9 +41,15 @@ fix                integrate_fix_full all meso
 compute         pTemp all temp/profile 1 1 0 y 10
 
 # average velocity
+<<<<<<< HEAD
 include           velocity.lmp
 
+=======
+include   velocity.lmp
+#streee calculation
+>>>>>>> be864b072055ac58667d59642179864b4eee8e1a
 include            stress.lmp
+
 dump               dump_id all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
