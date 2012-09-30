@@ -2,5 +2,5 @@
 
 dname=data
 mkdir -p ${dname}
-mpirun -np 2  ../../../../src/lmp_linux -in bubble.lmp -var dname ${dname}
+mpirun -np 1  ../../../../src/lmp_linux -in bubble.lmp -var dname ${dname}
 

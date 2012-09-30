@@ -33,12 +33,13 @@ set                group all meso_rho ${sph_rho}
 # use Tait's EOS in combination with Morris' laminar viscosity.
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris
+pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         1 1 sph/colorgradient ${h} 0
 pair_coeff         1 2 sph/colorgradient ${h} 1
 pair_coeff         2 2 sph/colorgradient ${h} 0
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_coeff         * * sph/surfacetension ${sph_rho} ${sph_c} ${sph_eta} ${h}
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
