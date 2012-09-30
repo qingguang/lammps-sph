@@ -13,10 +13,10 @@ fi
 
 nproc=6
 ndim=2d
-Nbeads=16
-Nsolvent=16
-nx=32
-Force=81
+Nbeads=24
+Nsolvent=24
+nx=96
+Force=164
 eta=3e-2
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.01-bg1.0-f${Force}-eta${eta}
 
