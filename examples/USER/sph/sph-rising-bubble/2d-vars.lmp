@@ -11,6 +11,7 @@ variable          h equal 2.7*${dx}
 variable          Nfreq equal 1000
 variable          Nfreqimage equal 1000
 variable          sph_mass equal ${dx}*${dx}*${sph_rho}
+variable          alpha equal 0.02
 
 variable            gx equal 1e4
 

@@ -39,7 +39,7 @@ pair_coeff         1 1 sph/colorgradient ${h} 0
 pair_coeff         1 2 sph/colorgradient ${h} 1
 pair_coeff         2 2 sph/colorgradient ${h} 0
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
-pair_coeff         * * sph/surfacetension ${sph_rho} ${sph_c} ${sph_eta} ${h}
+pair_coeff         * * sph/surfacetension ${alpha} ${h}
 
 compute            rho_peratom all meso_rho/atom
 compute            colorgradient_peratom all meso_colorgradient/atom
