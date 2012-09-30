@@ -38,7 +38,7 @@ PairSPHSurfaceTension::~PairSPHSurfaceTension() {
     memory->destroy(setflag);
     memory->destroy(cutsq);
     memory->destroy(cut);
-    memory->destroy(alpha);
+    memory->destroy(alpha_surface);
   }
 }
 
@@ -50,7 +50,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
   int *ilist, *jlist, *numneigh, **firstneigh;
   double imass, jmass, h, ih, ihsq;
-  double rsq, wfd, D, deltaE;
+  double rsq, wfd;
 
   if (eflag || vflag)
     ev_setup(eflag, vflag);
@@ -58,8 +58,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
     evflag = vflag_fdotr = 0;
 
   double **x = atom->x;
-  double *e = atom->e;
-  double *de = atom->de;
+  double **f = atom->f;
   double *mass = atom->mass;
   double *rho = atom->rho;
   int *type = atom->type;
@@ -71,7 +70,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
   numneigh = list->numneigh;
   firstneigh = list->firstneigh;
 
-  // loop over neighbors of my atoms and do heat diffusion
+  // loop over neighbors of my atoms and do surface tension
 
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
@@ -117,15 +116,15 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
         }
 
         jmass = mass[jtype];
-        D = alpha[itype][jtype]; // diffusion coefficient
+        //D = alpha_surface[itype][jtype]; // diffusion coefficient
 
-        deltaE = 2.0 * imass * jmass / (imass+jmass);
-        deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-        deltaE *= D * (e[i] - e[j]) * wfd;
+        //deltaE = 2.0 * imass * jmass / (imass+jmass);
+        //deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
+        //deltaE *= D * (e[i] - e[j]) * wfd;
 
-        de[i] += deltaE;
+        //de[i] += deltaE;
         if (newton_pair || j < nlocal) {
-          de[j] -= deltaE;
+          //de[j] -= deltaE;
         }
 
       }
@@ -148,7 +147,7 @@ void PairSPHSurfaceTension::allocate() {
 
   memory->create(cutsq, n + 1, n + 1, "pair:cutsq");
   memory->create(cut, n + 1, n + 1, "pair:cut");
-  memory->create(alpha, n + 1, n + 1, "pair:alpha");
+  memory->create(alpha_surface, n + 1, n + 1, "pair:alpha_surface");
 }
 
 /* ----------------------------------------------------------------------
@@ -158,7 +157,7 @@ void PairSPHSurfaceTension::allocate() {
 void PairSPHSurfaceTension::settings(int narg, char **arg) {
   if (narg != 0)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sph/heatconduction");
+        "Illegal number of setting arguments for pair_style sph/surfacetension");
 }
 
 /* ----------------------------------------------------------------------
@@ -167,7 +166,7 @@ void PairSPHSurfaceTension::settings(int narg, char **arg) {
 
 void PairSPHSurfaceTension::coeff(int narg, char **arg) {
   if (narg != 4)
-    error->all(FLERR,"Incorrect number of args for pair_style sph/heatconduction coefficients");
+    error->all(FLERR,"Incorrect number of args for pair_style sph/surfacetension coefficients");
   if (!allocated)
     allocate();
 
@@ -175,7 +174,7 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
-  double alpha_one = force->numeric(arg[2]);
+  double alpha_surface_one = force->numeric(arg[2]);
   double cut_one   = force->numeric(arg[3]);
 
   int count = 0;
@@ -183,7 +182,7 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       //printf("setting cut[%d][%d] = %f\n", i, j, cut_one);
       cut[i][j] = cut_one;
-      alpha[i][j] = alpha_one;
+      alpha_surface[i][j] = alpha_surface_one;
       setflag[i][j] = 1;
       count++;
     }
@@ -200,11 +199,11 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
 double PairSPHSurfaceTension::init_one(int i, int j) {
 
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"All pair sph/heatconduction coeffs are not set");
+    error->all(FLERR,"All pair sph/surfacetension coeffs are not set");
   }
 
   cut[j][i] = cut[i][j];
-  alpha[j][i] = alpha[i][j];
+  alpha_surface[j][i] = alpha_surface[i][j];
 
   return cut[i][j];
 }
