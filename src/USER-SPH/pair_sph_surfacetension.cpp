@@ -61,6 +61,9 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *mass = atom->mass;
   double *rho = atom->rho;
+  double **colorgradient = atom->colorgradient;
+  const int ndim = domain->dimension;
+  double eij[ndim];
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -116,6 +119,42 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
         }
 
         jmass = mass[jtype];
+        if (ndim==2) {
+	  eij[0]= delx/sqrt(rsq); 
+	  eij[1]= dely/sqrt(rsq);    
+	} else {
+	  eij[0]= delx/sqrt(rsq);
+	  eij[1]= dely/sqrt(rsq);
+	  eij[2]= delz/sqrt(rsq);
+	}
+
+	double SurfaceForcei[ndim];
+	double SurfaceForcej[ndim];
+	if (ndim==2) {
+	  SurfaceForcei[0] = colorgradient[i][0]*eij[0] + colorgradient[i][1]*eij[1];
+	  SurfaceForcei[1] = colorgradient[i][1]*eij[0] - colorgradient[i][0]*eij[1];
+
+	  SurfaceForcej[0] = colorgradient[j][0]*eij[0] + colorgradient[j][1]*eij[1];
+	  SurfaceForcej[1] = colorgradient[j][1]*eij[0] - colorgradient[j][0]*eij[1];
+	} else {
+	  /// TODO: make 3D case
+	  SurfaceForcei[0] = colorgradient[i][0]*eij[0] + colorgradient[i][1]*eij[1];
+	  SurfaceForcei[1] = colorgradient[i][1]*eij[0] - colorgradient[i][0]*eij[1];
+
+	  SurfaceForcej[0] = colorgradient[j][0]*eij[0] + colorgradient[j][1]*eij[1];
+	  SurfaceForcej[1] = colorgradient[j][1]*eij[0] - colorgradient[j][0]*eij[1];
+	}
+
+	const double Vi = imass / rho[i];
+	const double Vj = jmass / rho[j];
+        const double Fij = -wfd;
+
+	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*delx*Fij;
+	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*dely*Fij;
+	if (ndim==3) {
+	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*delz*Fij;
+	}
+
         //D = alpha_surface[itype][jtype]; // diffusion coefficient
 
         //deltaE = 2.0 * imass * jmass / (imass+jmass);
@@ -124,7 +163,11 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
         //de[i] += deltaE;
         if (newton_pair || j < nlocal) {
-          //de[j] -= deltaE;
+	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*delx*Fij;
+	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*dely*Fij;
+	  if (ndim==3) {
+	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*delz*Fij;
+	  }
         }
 
       }

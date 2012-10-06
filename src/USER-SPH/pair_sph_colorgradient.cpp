@@ -120,6 +120,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 
       // initialize color gradient with zeros
       for (ii = 0; ii < inum; ii++) {
+        i = ilist[ii];
         colorgradient[i][0] = 0.0;
         colorgradient[i][1] = 0.0;
 	if (ndim==3) {
