@@ -15,10 +15,10 @@ nproc=6
 ndim=2d
 Nbeads=16
 Nsolvent=16
-nx=64
+nx=32
 Force=300
 eta=3e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-bg1.0-f${Force}-eta${eta}-4PI-T1e12
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.5-R2-f${Force}-eta${eta}-4PI-T1e12-M10
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var eta ${eta}"
 

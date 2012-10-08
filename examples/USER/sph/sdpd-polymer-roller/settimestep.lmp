@@ -1,5 +1,5 @@
 variable sdpd_mu_p equal ${sdpd_eta_p}/${sdpd_rho_polymer}
-variable sdpd_mu_s equal ${sdpd_eta_p}/${sdpd_rho_polymer}
+variable sdpd_mu_s equal ${sdpd_eta_s}/${sdpd_rho_solvent}
 if "${sdpd_mu_p}>${sdpd_mu_s}" then &
 "variable sdpd_mu equal ${sdpd_mu_p}" &
 else &

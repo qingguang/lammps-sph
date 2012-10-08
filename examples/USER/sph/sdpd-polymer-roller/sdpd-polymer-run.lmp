@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data           poly3d.txt
-read_restart       sdpd.restart.25000000
+read_data           poly3d.txt
+#read_restart       sdpd.restart.30000000
 
 special_bonds   lj 1 1 1
 
@@ -84,8 +84,8 @@ restart 1000000    ${dname}/sdpd.restart
 bond_style harmonic
 bond_coeff 1 ${H} ${r0}
 
-variable            var_x atom ${A_kol}*${solvent_mass}*sin(4*PI*x/${Lx})*cos(4*PI*y/${Ly})
-variable            var_y atom -${A_kol}*${solvent_mass}*cos(4*PI*x/${Lx})*sin(4*PI*y/${Ly})
+variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
+variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
 #variable            var_kol atom ${A_kol}*${solvent_mass}*cos(2*PI*y/${Ly})
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
