@@ -11,16 +11,17 @@ else
 fi
 
 
-nproc=6
+nproc=4
 ndim=2d
-Nbeads=16
-Nsolvent=16
+Nbeads=32
+Nsolvent=96
 nx=32
-Force=300
-eta=3e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.5-R2-f${Force}-eta${eta}-4PI-T1e12-M10
+Force=800
+etas=3e-2
+etap=5e-2
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-4PI-T1e12-M100
 
-vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var eta ${eta}"
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
