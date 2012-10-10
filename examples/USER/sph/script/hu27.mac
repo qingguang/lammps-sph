@@ -8,8 +8,5 @@ eij: [eij[1], eij[2], eij[3]];
 
 Pi(i,j):= 1/sqrt(dc.dc) * ( 1/d * kron_delta(i, j) * dc.dc - dc[i]*dc[j] );
 
-Pi(1,1);
-Pi(1,2);
-
 
 sum(eij*Pi(i, 1), i, 1, 1);
