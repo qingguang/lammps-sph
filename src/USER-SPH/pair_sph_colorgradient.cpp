@@ -176,8 +176,8 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	      // Lucy Kernel, 2d
 	      wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
 	    }
-	    
-	    double Fij = - wfd;
+	    double rij = sqrt(rsq);	    
+	    double Fij = - wfd / rij;
 	    assert(rho[i]>0);
 	    assert(mass[itype]>0);
 	    double Vi = mass[itype]/rho[i]; 
@@ -188,7 +188,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
 	    double rVj = 1.0/Vj;
 	    double Vi2 = Vi*Vi;
 	    double Vj2 = Vj*Vj;
-	    double rij = sqrt(rsq);
+
 	    double dphi = Fij*rij*alpha[itype][jtype];
 	    
 	    colorgradient[i][0] += dphi*rVi*Vj2*eij[0];
@@ -235,6 +235,7 @@ void PairSPHColorGradient::settings(int narg, char **arg) {
     error->all(FLERR,
         "Illegal number of setting arguments for pair_style sph/colorgradient");
   nstep = force->inumeric(arg[0]);
+  printf("(pair_sph_colorgradient.cpp) nstep: %i\n", nstep);
 }
 
 /* ----------------------------------------------------------------------

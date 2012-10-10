@@ -89,7 +89,7 @@ void ComputeMesoColorGradientAtom::compute_peratom()
 					colorgradient[i][2]*colorgradient[i][2]);
 	} else {
 	  colorgradientVector[i] = sqrt(colorgradient[i][0]*colorgradient[i][0] +
-					colorgradient[i][1]*colorgradient[i][1]);
+	  				colorgradient[i][1]*colorgradient[i][1]);
 	}
       }
       else {

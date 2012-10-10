@@ -147,29 +147,22 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
-        const double Fij = -wfd;
+	const double rij = sqrt(rsq);	    
+        const double Fij = - wfd / rij;
 
-	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*delx*Fij;
-	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*dely*Fij;
+	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
+	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
 	if (ndim==3) {
-	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*delz*Fij;
+	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
 	}
 
-        //D = alpha_surface[itype][jtype]; // diffusion coefficient
-
-        //deltaE = 2.0 * imass * jmass / (imass+jmass);
-        //deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-        //deltaE *= D * (e[i] - e[j]) * wfd;
-
-        //de[i] += deltaE;
         if (newton_pair || j < nlocal) {
-	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*delx*Fij;
-	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*dely*Fij;
+	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
+	  f[j][1] -= (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
 	  if (ndim==3) {
-	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*delz*Fij;
+	    f[j][2] -= (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
 	  }
         }
-
       }
     }
   }
