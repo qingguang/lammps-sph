@@ -5,7 +5,7 @@ variable           dx   equal 8.3333e-4
 variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
-variable           sdpd_rho_polymer equal 100
+variable           sdpd_rho_polymer equal 10000
 variable           sdpd_rho0 equal 1
 variable           sdpd_c equal 20
 variable           sdpd_eta_s equal ${etas}

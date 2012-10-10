@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data           poly3d.txt
-read_restart      sdpd.restart.2000000
+read_data           poly3d.txt
+#read_restart      sdpd.restart.11000000
 
 
 special_bonds   lj 1 1 1
