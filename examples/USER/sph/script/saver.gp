@@ -6,7 +6,7 @@
 #replot
 
 set terminal png
-set output sprintf("%s.png", "Ek-2D-solvent-64*64-T=1e11-Re0.02")
+set output sprintf("%s.png", "Ek-2D-solvent-32*32-Re0.2")
 replot
 set output
 

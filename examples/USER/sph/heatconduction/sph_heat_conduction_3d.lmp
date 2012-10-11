@@ -42,6 +42,9 @@ timestep        0.25e-1
 
 dump		dump_fix all custom 10 dump.heat id type x y z c_ie_atom
 dump_modify     dump_fix first yes
+dump            1 all custom 10 dump.heat id type x y z c_ie_atom
+dump_modify     1 first yes
+
 run             160
 undump          dump_fix
 

@@ -35,11 +35,17 @@ timestep        0.25e-1
 neighbor	0.2e-2 bin
 fix             integrate_fix all meso/stationary
 
-dump		dump_fix all custom 10 dump*.dat id type x y z c_ie_atom
+dump		dump_fix all custom 10 dump.dat id type x y z c_ie_atom
 dump_modify     dump_fix first yes
 dump_modify     dump_fix sort id
-run             160
+run             100
 undump          dump_fix
+
+dump            dump_fix1 all custom 10 dump1.dat id type x y z c_ie_atom
+dump_modify     dump_fix1 first yes
+dump_modify     dump_fix1 sort id
+run 100
+undump          dump_fix1
 
 dump		dump_fix all custom 10 dump.last id type x y z c_ie_atom
 dump_modify     dump_fix first yes

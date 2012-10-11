@@ -13,13 +13,13 @@ fi
 
 nproc=6
 ndim=2d
-Nbeads=0
-Nsolvent=1
+Nbeads=16
+Nsolvent=48
 nx=32
 Force=800
 etas=3e-2
 etap=5e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-4PI-T1e12-M10000
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-T1e12-M10000
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 
