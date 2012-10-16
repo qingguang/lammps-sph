@@ -2,11 +2,13 @@
 
 kill(all);
 d: 3;
-dc: [dc[1], dc[2], dc[3]];
-eij: [eij[1], eij[2], eij[3]];
+cg: [cg[0], cg[1], cg[2]];
+eij: [eij[0], eij[1], eij[2]];
 
 
-Pi(i,j):= 1/sqrt(dc.dc) * ( 1/d * kron_delta(i, j) * dc.dc - dc[i]*dc[j] );
+Pi(i,j):= ( 1/d * kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
 
 
-sum(eij*Pi(i, 1), i, 1, 1);
+fullratsimp(sum(eij[i]*Pi(i, 1), i, 1, d));
+fullratsimp(sum(eij[i]*Pi(i, 2), i, 1, d));
+fullratsimp(sum(eij[i]*Pi(i, 3), i, 1, d));
