@@ -62,7 +62,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *mass = atom->mass;
   double *rho = atom->rho;
-  double **colorgradient = atom->colorgradient;
+  double **cg = atom->colorgradient;
   const int ndim = domain->dimension;
   double eij[ndim];
   int *type = atom->type;
@@ -135,22 +135,39 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	double del_i[ndim];
 	double del_j[ndim];
 
-	get_phase_stress(colorgradient[i], del_i);
-	get_phase_stress(colorgradient[i], del_j);
+	double epsilon = 1e-19;
+	double abscgi = sqrt(cg[i][0]*cg[i][0] +
+			     cg[i][1]*cg[i][1] +
+			     cg[i][2]*cg[i][2]) + epsilon;
+
+	double abscgj = sqrt(cg[j][0]*cg[j][0] +
+			     cg[j][1]*cg[j][1] +
+			     cg[j][2]*cg[j][2]) + epsilon;
+
+	//get_phase_stress(cg[i], del_i);
+	//get_phase_stress(cg[i], del_j);
+
 
 	if (ndim==2) {
-	  SurfaceForcei[0] = del_i[0]*eij[0] + del_i[1]*eij[1];
-	  SurfaceForcei[1] = del_i[1]*eij[0] - del_i[0]*eij[1];
+	  SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/2.0/abscgi;
+	  SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/2.0/abscgi;
 
-	  SurfaceForcej[0] = del_j[0]*eij[0] + del_j[1]*eij[1];
-	  SurfaceForcej[1] = del_j[1]*eij[0] - del_j[0]*eij[1];
+	  SurfaceForcei[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/2.0/abscgj;
+	  SurfaceForcei[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/2.0/abscgj;
 	} else {
-	  /// TODO: make 3D case
-	  SurfaceForcei[0] = del_i[0]*eij[0] + del_i[1]*eij[1];
-	  SurfaceForcei[1] = del_i[1]*eij[0] - del_i[0]*eij[1];
+	  SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
+			       -eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;
+	  SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
+			       +3*cg[i][0]*eij[0]*cg[i][1])/abscgi;
+	  SurfaceForcei[2] = ((2*cg[i][2]*cg[i][2]-cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[2]+(3*cg[i][1]*eij[1]+3*cg[i][0]*eij[0])
+			       *cg[i][2])/3.0/abscgi;
 
-	  SurfaceForcej[0] = del_j[0]*eij[0] + del_j[1]*eij[1];
-	  SurfaceForcej[1] = del_j[1]*eij[0] - del_j[0]*eij[1];
+	  SurfaceForcei[0] = (3*cg[j][0]*cg[j][2]*eij[2]-eij[0]*cg[j][2]*cg[j][2]+3*cg[j][0]*cg[j][1]*eij[1]
+			       -eij[0]*cg[j][1]*cg[j][1]+2*cg[j][0]*cg[j][0]*eij[0])/abscgj;
+	  SurfaceForcei[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
+			       +3*cg[j][0]*eij[0]*cg[j][1])/abscgj ;
+	  SurfaceForcei[2] = ((2*cg[j][2]*cg[j][2]-cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[2]+(3*cg[j][1]*eij[1]+3*cg[j][0]*eij[0])
+			       *cg[j][2])/3.0/abscgj;
 	}
 
 	const double Vi = imass / rho[i];
@@ -164,7 +181,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
 	}
 
-	//	std::cerr << "colorgradient: " << xtmp << ' ' << ytmp << ' ' << 
+	//	std::cerr << "cg: " << xtmp << ' ' << ytmp << ' ' << 
 	//	  (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij << ' ' <<
 	//	  (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij << '\n';
 
@@ -224,7 +241,7 @@ void PairSPHSurfaceTension::coeff(int narg, char **arg) {
 
   double alpha_surface_one = force->numeric(arg[2]);
   double cut_one   = force->numeric(arg[3]);
-
+ 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
