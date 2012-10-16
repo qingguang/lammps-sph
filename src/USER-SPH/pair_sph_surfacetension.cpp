@@ -21,6 +21,7 @@
 #include "error.h"
 #include "neigh_list.h"
 #include "domain.h"
+#include <iostream>
 
 using namespace LAMMPS_NS;
 
@@ -130,31 +131,42 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	double SurfaceForcei[ndim];
 	double SurfaceForcej[ndim];
-	if (ndim==2) {
-	  SurfaceForcei[0] = colorgradient[i][0]*eij[0] + colorgradient[i][1]*eij[1];
-	  SurfaceForcei[1] = colorgradient[i][1]*eij[0] - colorgradient[i][0]*eij[1];
 
-	  SurfaceForcej[0] = colorgradient[j][0]*eij[0] + colorgradient[j][1]*eij[1];
-	  SurfaceForcej[1] = colorgradient[j][1]*eij[0] - colorgradient[j][0]*eij[1];
+	double del_i[ndim];
+	double del_j[ndim];
+
+	get_phase_stress(colorgradient[i], del_i);
+	get_phase_stress(colorgradient[i], del_j);
+
+	if (ndim==2) {
+	  SurfaceForcei[0] = del_i[0]*eij[0] + del_i[1]*eij[1];
+	  SurfaceForcei[1] = del_i[1]*eij[0] - del_i[0]*eij[1];
+
+	  SurfaceForcej[0] = del_j[0]*eij[0] + del_j[1]*eij[1];
+	  SurfaceForcej[1] = del_j[1]*eij[0] - del_j[0]*eij[1];
 	} else {
 	  /// TODO: make 3D case
-	  SurfaceForcei[0] = colorgradient[i][0]*eij[0] + colorgradient[i][1]*eij[1];
-	  SurfaceForcei[1] = colorgradient[i][1]*eij[0] - colorgradient[i][0]*eij[1];
+	  SurfaceForcei[0] = del_i[0]*eij[0] + del_i[1]*eij[1];
+	  SurfaceForcei[1] = del_i[1]*eij[0] - del_i[0]*eij[1];
 
-	  SurfaceForcej[0] = colorgradient[j][0]*eij[0] + colorgradient[j][1]*eij[1];
-	  SurfaceForcej[1] = colorgradient[j][1]*eij[0] - colorgradient[j][0]*eij[1];
+	  SurfaceForcej[0] = del_j[0]*eij[0] + del_j[1]*eij[1];
+	  SurfaceForcej[1] = del_j[1]*eij[0] - del_j[0]*eij[1];
 	}
 
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
 	const double rij = sqrt(rsq);	    
-        const double Fij = - wfd / rij;
+        const double Fij = -wfd / rij;
 
 	f[i][0] += (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
 	f[i][1] += (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij;
 	if (ndim==3) {
 	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
 	}
+
+	//	std::cerr << "colorgradient: " << xtmp << ' ' << ytmp << ' ' << 
+	//	  (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij << ' ' <<
+	//	  (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij << '\n';
 
         if (newton_pair || j < nlocal) {
 	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;
@@ -251,4 +263,14 @@ double PairSPHSurfaceTension::single(int i, int j, int itype, int jtype,
   fforce = 0.0;
 
   return 0.0;
+}
+
+/* calculate phase stress base on phase gradient */
+void get_phase_stress(double* v, double* del_phi) {
+  double epsilon = 1e-19;
+  double interm0 = 1.0/ ( sqrt(v[0]*v[0] + v[1]*v[1]) + epsilon );
+  double interm1 = 0.5 * (v[0]*v[0] - v[1]*v[1]);
+  double interm2 = v[0]*v[1];
+  del_phi[0] = interm1*interm0;
+  del_phi[1] = interm2*interm0;
 }
