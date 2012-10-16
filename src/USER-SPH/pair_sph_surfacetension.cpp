@@ -131,43 +131,61 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	double SurfaceForcei[ndim];
 	double SurfaceForcej[ndim];
+	SurfaceForcei[0]=0; SurfaceForcei[1]=0;
+	SurfaceForcej[0]=0; SurfaceForcej[1]=0;
+
+	if (ndim==3) {
+	  SurfaceForcej[2]=0;
+	  SurfaceForcei[2]=0;
+	}
+
 
 	double del_i[ndim];
 	double del_j[ndim];
 
-	double epsilon = 1e-19;
+	double epsilon = 1e-3*sqrt(rsq);
 	double abscgi = sqrt(cg[i][0]*cg[i][0] +
 			     cg[i][1]*cg[i][1] +
-			     cg[i][2]*cg[i][2]) + epsilon;
+			     cg[i][2]*cg[i][2]);
 
 	double abscgj = sqrt(cg[j][0]*cg[j][0] +
 			     cg[j][1]*cg[j][1] +
-			     cg[j][2]*cg[j][2]) + epsilon;
+			     cg[j][2]*cg[j][2]);
 
 	//get_phase_stress(cg[i], del_i);
 	//get_phase_stress(cg[i], del_j);
 
 
 	if (ndim==2) {
-	  SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/2.0/abscgi;
-	  SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/2.0/abscgi;
+	  if (abscgi > epsilon) {
+	    SurfaceForcei[0] = (2*cg[i][0]*cg[i][1]*eij[1]-eij[0]*cg[i][1]*cg[i][1]+cg[i][0]*cg[i][0]*eij[0])/2.0/abscgi;
+	    SurfaceForcei[1] = ((cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]+2*cg[i][0]*eij[0]*cg[i][1])/2.0/abscgi;
+	  }
 
-	  SurfaceForcei[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/2.0/abscgj;
-	  SurfaceForcei[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/2.0/abscgj;
+	  if (abscgj > epsilon) {
+	    SurfaceForcej[0] = (2*cg[j][0]*cg[j][1]*eij[1]-eij[0]*cg[j][1]*cg[j][1]+cg[j][0]*cg[j][0]*eij[0])/2.0/abscgj;
+	    SurfaceForcej[1] = ((cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]+2*cg[j][0]*eij[0]*cg[j][1])/2.0/abscgj;
+	  }
 	} else {
-	  SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
-			       -eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;
-	  SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
-			       +3*cg[i][0]*eij[0]*cg[i][1])/abscgi;
-	  SurfaceForcei[2] = ((2*cg[i][2]*cg[i][2]-cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[2]+(3*cg[i][1]*eij[1]+3*cg[i][0]*eij[0])
-			       *cg[i][2])/3.0/abscgi;
+	  if (abscgi > epsilon) {
+	    std::cerr << cg[i][0] << ' ' << cg[i][1] << ' ' << cg[i][2] << '\n';
+	    SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
+				-eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;
+	    SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
+				+3*cg[i][0]*eij[0]*cg[i][1])/abscgi;
+	    SurfaceForcei[2] = ((2*cg[i][2]*cg[i][2]-cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[2]+(3*cg[i][1]*eij[1]+3*cg[i][0]*eij[0])
+				*cg[i][2])/3.0/abscgi;
+	  }
 
-	  SurfaceForcei[0] = (3*cg[j][0]*cg[j][2]*eij[2]-eij[0]*cg[j][2]*cg[j][2]+3*cg[j][0]*cg[j][1]*eij[1]
-			       -eij[0]*cg[j][1]*cg[j][1]+2*cg[j][0]*cg[j][0]*eij[0])/abscgj;
-	  SurfaceForcei[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
-			       +3*cg[j][0]*eij[0]*cg[j][1])/abscgj ;
-	  SurfaceForcei[2] = ((2*cg[j][2]*cg[j][2]-cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[2]+(3*cg[j][1]*eij[1]+3*cg[j][0]*eij[0])
-			       *cg[j][2])/3.0/abscgj;
+	  if (abscgj > epsilon) {
+	    std::cerr << cg[j][0] << ' ' << cg[j][1] << ' ' << cg[j][2] << '\n';
+	    SurfaceForcej[0] = (3*cg[j][0]*cg[j][2]*eij[2]-eij[0]*cg[j][2]*cg[j][2]+3*cg[j][0]*cg[j][1]*eij[1]
+				-eij[0]*cg[j][1]*cg[j][1]+2*cg[j][0]*cg[j][0]*eij[0])/abscgj;
+	    SurfaceForcej[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
+				+3*cg[j][0]*eij[0]*cg[j][1])/abscgj ;
+	    SurfaceForcej[2] = ((2*cg[j][2]*cg[j][2]-cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[2]+(3*cg[j][1]*eij[1]+3*cg[j][0]*eij[0])
+				*cg[j][2])/3.0/abscgj;
+	  }
 	}
 
 	const double Vi = imass / rho[i];
@@ -180,10 +198,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	if (ndim==3) {
 	  f[i][2] += (SurfaceForcei[2]*Vi*Vi + SurfaceForcej[2]*Vj*Vj)*rij*Fij;
 	}
-
-	//	std::cerr << "cg: " << xtmp << ' ' << ytmp << ' ' << 
-	//	  (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij << ' ' <<
-	//	  (SurfaceForcei[1]*Vi*Vi + SurfaceForcej[1]*Vj*Vj)*rij*Fij << '\n';
 
         if (newton_pair || j < nlocal) {
 	  f[j][0] -= (SurfaceForcei[0]*Vi*Vi + SurfaceForcej[0]*Vj*Vj)*rij*Fij;

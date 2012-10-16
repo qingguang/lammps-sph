@@ -72,7 +72,7 @@ void PairSPHColorGradient::compute(int eflag, int vflag) {
   double rsq, imass, h, ih, ihsq;
   int *jlist;
   
-  int ndim = domain->dimension;
+  const int ndim = domain->dimension;
   double eij[ndim];
   // neighbor list variables
   int inum, *ilist, *numneigh, **firstneigh;
@@ -235,7 +235,6 @@ void PairSPHColorGradient::settings(int narg, char **arg) {
     error->all(FLERR,
         "Illegal number of setting arguments for pair_style sph/colorgradient");
   nstep = force->inumeric(arg[0]);
-  printf("(pair_sph_colorgradient.cpp) nstep: %i\n", nstep);
 }
 
 /* ----------------------------------------------------------------------
