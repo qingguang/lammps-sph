@@ -15,13 +15,17 @@ create_atoms       1 region box
 
 variable           xcenter equal 0.5*${Lx}
 variable           ycenter equal 0.5*${Ly}
+variable           zcenter equal 0.5*${Lz}
+
 variable           xmin    equal ${xcenter}-${cyl_r}
 variable           ymin    equal ${ycenter}-${cyl_r}
+variable           zmin    equal ${zcenter}-${cyl_r}
 
 variable           xmax    equal ${xcenter}+${cyl_r}
 variable           ymax    equal ${ycenter}+${cyl_r}
+variable           zmax    equal ${zcenter}+${cyl_r}
 
-region             rbubble block ${xmin} ${xmax} ${ymin} ${ymax} EDGE EDGE units box
+region             rbubble block ${xmin} ${xmax} ${ymin} ${ymax} ${zmin} ${zmax} units box
 group	           gbubble region rbubble
 
 # all bubble atoms
@@ -77,3 +81,4 @@ timestep           ${dt}
 communicate        single vel yes
 
 run                100000
+#run                100000

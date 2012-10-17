@@ -2,7 +2,7 @@ variable           ndim index 3d
 variable           dx   equal 2.5e-5
 variable           nx   equal 20
 variable           ny   equal 20
-variable           nz   equal 10
+variable           nz   equal 20
 variable           Lx    equal  ${nx}*${dx}
 variable           Ly    equal  ${ny}*${dx}
 variable           Lz    equal  ${nz}*${dx}
@@ -20,6 +20,6 @@ variable          Nfreqimage equal 1000
 variable          sph_mass equal ${dx}*${dx}*${dx}*${sph_rho}
 variable          alpha equal 0.02
 
-variable            gx equal 10.0
+variable            gx equal 0.0
 
 
