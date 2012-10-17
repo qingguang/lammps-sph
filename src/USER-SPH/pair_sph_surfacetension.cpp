@@ -168,7 +168,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  }
 	} else {
 	  if (abscgi > epsilon) {
-	    std::cerr << cg[i][0] << ' ' << cg[i][1] << ' ' << cg[i][2] << '\n';
 	    SurfaceForcei[0] = (3*cg[i][0]*cg[i][2]*eij[2]-eij[0]*cg[i][2]*cg[i][2]+3*cg[i][0]*cg[i][1]*eij[1]
 				-eij[0]*cg[i][1]*cg[i][1]+2*cg[i][0]*cg[i][0]*eij[0])/abscgi;
 	    SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
@@ -178,7 +177,6 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	  }
 
 	  if (abscgj > epsilon) {
-	    std::cerr << cg[j][0] << ' ' << cg[j][1] << ' ' << cg[j][2] << '\n';
 	    SurfaceForcej[0] = (3*cg[j][0]*cg[j][2]*eij[2]-eij[0]*cg[j][2]*cg[j][2]+3*cg[j][0]*cg[j][1]*eij[1]
 				-eij[0]*cg[j][1]*cg[j][1]+2*cg[j][0]*cg[j][0]*eij[0])/abscgj;
 	    SurfaceForcej[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
