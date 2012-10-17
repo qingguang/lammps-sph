@@ -44,7 +44,8 @@ set                group all meso_rho ${sph_rho}
 pair_style         hybrid/overlay sph/rhosum 1 sph/colorgradient 1 sph/taitwater/morris sph/surfacetension
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         1 1 sph/colorgradient ${h} 0
-pair_coeff         1 2 sph/colorgradient ${h} 1e-12
+#pair_coeff         1 2 sph/colorgradient ${h} 1e-12
+pair_coeff         1 2 sph/colorgradient ${h} 0
 pair_coeff         2 2 sph/colorgradient ${h} 0
 pair_coeff         * * sph/taitwater/morris ${sph_rho} ${sph_c} ${sph_eta} ${h}
 pair_coeff         * * sph/surfacetension ${alpha} ${h}
@@ -80,5 +81,5 @@ neigh_modify       delay 0 every 1
 timestep           ${dt}
 communicate        single vel yes
 
-run                100000
+run                500000
 #run                100000

@@ -20,6 +20,6 @@ variable          Nfreqimage equal 1000
 variable          sph_mass equal ${dx}*${dx}*${dx}*${sph_rho}
 variable          alpha equal 0.02
 
-variable            gx equal 0.0
+variable            gx equal 10.0
 
 
