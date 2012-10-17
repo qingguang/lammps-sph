@@ -41,8 +41,5 @@ class PairSPHSurfaceTension : public Pair {
 
 }
 
-  /* helper function */
-void get_phase_stress(double* v, double* del_phi);
-
 #endif
 #endif

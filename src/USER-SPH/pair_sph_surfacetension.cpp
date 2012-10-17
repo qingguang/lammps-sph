@@ -89,6 +89,17 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
+    double abscgi = sqrt(cg[i][0]*cg[i][0] +
+			 cg[i][1]*cg[i][1] +
+			 cg[i][2]*cg[i][2]);
+    double epsilon = 1e-20;
+    // if (abscgi > epsilon) {
+    //   std::cout << "colorgradient: "
+    // 		<< xtmp << ' ' << ytmp << ' ' << ztmp << ' '
+    // 		<< cg[i][0] << ' ' << cg[i][1] << ' ' << cg[i][2] << '\n';
+    // }
+
+
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
       j &= NEIGHMASK;
@@ -131,30 +142,16 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 
 	double SurfaceForcei[ndim];
 	double SurfaceForcej[ndim];
-	SurfaceForcei[0]=0; SurfaceForcei[1]=0;
-	SurfaceForcej[0]=0; SurfaceForcej[1]=0;
+	SurfaceForcei[0]=0; SurfaceForcej[0]=0;
+	SurfaceForcei[1]=0; SurfaceForcej[1]=0;
 
 	if (ndim==3) {
-	  SurfaceForcej[2]=0;
-	  SurfaceForcei[2]=0;
+	  SurfaceForcei[2]=0; SurfaceForcej[2]=0;
 	}
-
-
-	double del_i[ndim];
-	double del_j[ndim];
-
-	double epsilon = 1e-3*sqrt(rsq);
-	double abscgi = sqrt(cg[i][0]*cg[i][0] +
-			     cg[i][1]*cg[i][1] +
-			     cg[i][2]*cg[i][2]);
 
 	double abscgj = sqrt(cg[j][0]*cg[j][0] +
 			     cg[j][1]*cg[j][1] +
 			     cg[j][2]*cg[j][2]);
-
-	//get_phase_stress(cg[i], del_i);
-	//get_phase_stress(cg[i], del_j);
-
 
 	if (ndim==2) {
 	  if (abscgi > epsilon) {
@@ -173,7 +170,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	    SurfaceForcei[1] = (3*cg[i][1]*cg[i][2]*eij[2]-eij[1]*cg[i][2]*cg[i][2]+(2*cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[1]
 				+3*cg[i][0]*eij[0]*cg[i][1])/abscgi;
 	    SurfaceForcei[2] = ((2*cg[i][2]*cg[i][2]-cg[i][1]*cg[i][1]-cg[i][0]*cg[i][0])*eij[2]+(3*cg[i][1]*eij[1]+3*cg[i][0]*eij[0])
-				*cg[i][2])/3.0/abscgi;
+				*cg[i][2])/1.0/abscgi;
 	  }
 
 	  if (abscgj > epsilon) {
@@ -182,7 +179,7 @@ void PairSPHSurfaceTension::compute(int eflag, int vflag) {
 	    SurfaceForcej[1] = (3*cg[j][1]*cg[j][2]*eij[2]-eij[1]*cg[j][2]*cg[j][2]+(2*cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[1]
 				+3*cg[j][0]*eij[0]*cg[j][1])/abscgj ;
 	    SurfaceForcej[2] = ((2*cg[j][2]*cg[j][2]-cg[j][1]*cg[j][1]-cg[j][0]*cg[j][0])*eij[2]+(3*cg[j][1]*eij[1]+3*cg[j][0]*eij[0])
-				*cg[j][2])/3.0/abscgj;
+				*cg[j][2])/1.0/abscgj;
 	  }
 	}
 
