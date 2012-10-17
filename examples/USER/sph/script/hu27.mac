@@ -6,9 +6,10 @@ cg: [cg[0], cg[1], cg[2]];
 eij: [eij[0], eij[1], eij[2]];
 
 
-Pi(i,j):= ( 1/d * kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
+Pi(i,j):= ( 1/d*kron_delta(i, j) * cg.cg - cg[i]*cg[j] );
 
 
-fullratsimp(sum(eij[i]*Pi(i, 1), i, 1, d));
-fullratsimp(sum(eij[i]*Pi(i, 2), i, 1, d));
-fullratsimp(sum(eij[i]*Pi(i, 3), i, 1, d));
+display2d: false;
+sum(eij[i]*Pi(i, 1), i, 1, d);
+sum(eij[i]*Pi(i, 2), i, 1, d);
+sum(eij[i]*Pi(i, 3), i, 1, d);
