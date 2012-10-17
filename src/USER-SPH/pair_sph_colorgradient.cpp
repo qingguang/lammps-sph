@@ -37,7 +37,7 @@ PairSPHColorGradient::PairSPHColorGradient(LAMMPS *lmp) : Pair(lmp)
 
   // set comm size needed by this Pair
 
-  comm_forward = 1;
+  comm_forward = 3;
   first = 1;
 }
 
@@ -307,7 +307,7 @@ int PairSPHColorGradient::pack_comm(int n, int *list, double *buf, int pbc_flag,
     buf[m++] = colorgradient[j][1];
     buf[m++] = colorgradient[j][2];
   }
-  return 1;
+  return 3;
 }
 
 /* ---------------------------------------------------------------------- */
