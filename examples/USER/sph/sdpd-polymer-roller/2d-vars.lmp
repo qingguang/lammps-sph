@@ -5,7 +5,7 @@ variable           dx   equal 8.3333e-4
 variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
-variable           sdpd_rho_polymer equal1
+variable           sdpd_rho_polymer equal 1
 variable           sdpd_rho0 equal 1
 variable           sdpd_c equal 20
 variable           sdpd_eta_s equal ${etas}
@@ -13,16 +13,15 @@ variable           sdpd_eta_p equal ${etap}
 
 variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 1
-#variable           sdpd_fene_temp equal 1e15
+variable           spring_fene_temp equal 1e15
 
 #variable          A_kol equal 5*54*(${nx}/20)^(-2)
 variable           h equal 2.7*${dx}
 variable           A_kol equal ${force}
 variable          Nfreq equal 10000
 variable          Nfreqimage equal 10000
-variable          r0       equal 3^(1.0/${dim})*${dx}/10
-variable          rold     equal 3^(1.0/${dim})*${dx}
-variable          spring_temp equal 1e15
-variable          H        equal 2500*${spring_temp}*${kb}/${rold}^2
+#variable          r0       equal 3^(1.0/${dim})*${dx}/10
+variable          r0     equal 3^(1.0/${dim})*${dx}
+variable          H        equal 300*${spring_fene_temp}*${kb}/${r0}^2
 variable          solvent_mass equal ${sdpd_rho_solvent}*${dx}^${dim}
 variable          polymer_mass equal ${sdpd_rho_polymer}*${dx}^${dim}

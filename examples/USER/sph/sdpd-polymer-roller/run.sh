@@ -11,15 +11,15 @@ else
 fi
 
 
-nproc=1
+nproc=6
 ndim=2d
 Nbeads=16
-Nsolvent=48
-nx=128
-Force=800
+Nsolvent=32
+nx=96
+Force=164
 etas=3e-2
-etap=5e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-T1e12-M10000
+etap=3e-2
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-R0-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 
