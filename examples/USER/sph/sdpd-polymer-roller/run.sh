@@ -19,7 +19,7 @@ nx=128
 Force=800
 etas=3e-2
 etap=5e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-4PI-T1e12-M10000
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2.5-R2-f${Force}-etap${etap}-T1e12-M10000
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 
