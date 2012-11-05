@@ -10,11 +10,7 @@ for filenumber=1:nfile
 A =load(fullfile(name));
 warning("size of A is: %d*%d",size(A));
 warning("max vx is:%e and max vy is:%e \n",max(A(:,3)),max(A(:,4)));
-<<<<<<< HEAD
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,128,1.07e-1);
-=======
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,32,2.67e-2);
->>>>>>> a8c01cb3661fd8d208427fa684c6b3767d2287f2
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,96,8e-2);
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
