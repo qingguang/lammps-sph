@@ -8,8 +8,9 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data           poly3d.txt
-read_restart       sdpd.restart.17000000
+read_data           poly3d.txt
+#read_restart      sdpd.restart.11000000
+
 
 special_bonds   lj 1 1 1
 
@@ -91,6 +92,6 @@ fix                 kol_force all addforce v_var_x v_var_y 0.0
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 
-run   10000000 every 10000 "velocity all zero linear"
+run   100000000 every 10000 "velocity all zero linear"
 
 

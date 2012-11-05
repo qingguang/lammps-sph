@@ -8,8 +8,18 @@ for filenumber=1:nfile
 
 %   if(load(fullfile(name)))
 A =load(fullfile(name));
+<<<<<<< HEAD
 warning("size of input data is: [%d %d]\n",size(A))
  [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,64,0.0534);
+=======
+warning("size of A is: %d*%d",size(A));
+warning("max vx is:%e and max vy is:%e \n",max(A(:,3)),max(A(:,4)));
+<<<<<<< HEAD
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,128,1.07e-1);
+=======
+ [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,32,2.67e-2);
+>>>>>>> a8c01cb3661fd8d208427fa684c6b3767d2287f2
+>>>>>>> c969a01d75d1e28407ff46035f72e224ea6fa54a
 %warning("f1 is %d",f1)    
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
