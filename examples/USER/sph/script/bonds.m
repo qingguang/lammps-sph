@@ -1,0 +1,14 @@
+close all;
+clear all;
+dim=2;
+kb=1.3806503e-23;
+dx=8.3333e-4;
+spring_temp=1e15;
+R0=3^(1.0/dim)*dx;
+K=300*spring_temp*kb*R0^2;
+R0h=R0/10;
+Kh=K*2;
+r=0:1e-4:R0;
+Efene=-0.5*K*R0^2.*log(1-(r/R0).^2);
+Eha=Kh.*(r-R0h).^2;
+plot(r,Efene,'r',r,Eha,'b');
