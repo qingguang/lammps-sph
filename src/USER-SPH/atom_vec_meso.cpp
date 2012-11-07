@@ -185,7 +185,6 @@ int AtomVecMeso::pack_comm_hybrid(int n, int *list, double *buf, int pbc_flag,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecMeso::unpack_comm_hybrid(int n, int first, double *buf) {
-<<<<<<< HEAD
 	//printf("in AtomVecMeso::unpack_comm_hybrid\n");
 	int i, m, last;
 
@@ -202,21 +201,6 @@ int AtomVecMeso::unpack_comm_hybrid(int n, int first, double *buf) {
 		vest[i][2] = buf[m++];
 	}
 	return m;
-=======
-  //printf("in AtomVecMeso::unpack_comm_hybrid\n");
-  int i, m, last;
-
-  m = 0;
-  last = first + n;
-  for (i = first; i < last; i++) {
-    rho[i] = buf[m++];
-    e[i] = buf[m++];
-    vest[i][0] = buf[m++];
-    vest[i][1] = buf[m++];
-    vest[i][2] = buf[m++];
-  }
-  return m;
->>>>>>> 
 }
 
 /* ---------------------------------------------------------------------- */
