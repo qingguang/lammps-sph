@@ -256,7 +256,6 @@ class Data {
   void write_atom_ellipsoid(FILE *, int, int, int, int);
   void write_atom_full(FILE *, int, int, int, int);
   void write_atom_line(FILE *, int, int, int, int);
-  void write_atom_meso(FILE *, int, int, int, int);
   void write_atom_molecular(FILE *, int, int, int, int);
   void write_atom_peri(FILE *, int, int, int, int);
   void write_atom_sphere(FILE *, int, int, int, int);
@@ -267,7 +266,6 @@ class Data {
   void write_atom_atomic_extra(FILE *, int);
   void write_atom_bond_extra(FILE *, int);
   void write_atom_charge_extra(FILE *, int);
-  void write_atom_meso_extra(FILE *, int);
   void write_atom_dipole_extra(FILE *, int);
   void write_atom_ellipsoid_extra(FILE *, int);
   void write_atom_full_extra(FILE *, int);
@@ -283,7 +281,6 @@ class Data {
   void write_vel_atomic(FILE *, int);
   void write_vel_bond(FILE *, int);
   void write_vel_charge(FILE *, int);
-  void write_vel_meso(FILE *, int);
   void write_vel_dipole(FILE *, int);
   void write_vel_ellipsoid(FILE *, int);
   void write_vel_full(FILE *, int);
@@ -299,7 +296,6 @@ class Data {
   void write_vel_atomic_extra(FILE *, int);
   void write_vel_bond_extra(FILE *, int);
   void write_vel_charge_extra(FILE *, int);
-  void write_vel_meso_extra(FILE *, int);
   void write_vel_dipole_extra(FILE *, int);
   void write_vel_ellipsoid_extra(FILE *, int);
   void write_vel_full_extra(FILE *, int);
@@ -1192,12 +1188,6 @@ int atom_line(double *buf, Data &data, int iatoms)
   exit(1);
 }
 
-int atom_meso(double *buf, Data &data, int iatoms)
-{
-  fprintf(stderr,"Support for atom style meso is not fully implemented\n");
-  exit(1);
-}
-
 int atom_molecular(double *buf, Data &data, int iatoms)
 {
   int type,atom1,atom2,atom3,atom4;
@@ -1488,11 +1478,6 @@ void allocate_line(Data &data)
   exit(1);
 }
 
-void allocate_meso(Data &data)
-{
-  fprintf(stderr,"support for atom style meso is not fully implemented\n");
-  exit(1);
-}
 
 void allocate_tri(Data &data)
 {
@@ -4001,11 +3986,6 @@ void Data::write_atom_line(FILE *fp, int i, int ix, int iy, int iz)
   exit(1);
 }
 
-void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
-}
 
 void Data::write_atom_molecular(FILE *fp, int i, int ix, int iy, int iz)
 {
@@ -4085,12 +4065,6 @@ void Data::write_atom_full_extra(FILE *fp, int i)
 void Data::write_atom_line_extra(FILE *fp, int i)
 {
   fprintf(stderr,"support for atom style line is not yet complete\n");
-  exit(1);
-}
-
-void Data::write_atom_meso_extra(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
   exit(1);
 }
 
@@ -4174,11 +4148,6 @@ void Data::write_vel_line(FILE *fp, int i)
   exit(1);
 }
 
-void Data::write_vel_meso(FILE *fp, int i)
-{
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
-}
 
 void Data::write_vel_molecular(FILE *fp, int i)
 {
@@ -4217,7 +4186,6 @@ void Data::write_vel_angle_extra(FILE *fp, int i) {}
 void Data::write_vel_atomic_extra(FILE *fp, int i) {}
 void Data::write_vel_bond_extra(FILE *fp, int i) {}
 void Data::write_vel_charge_extra(FILE *fp, int i) {}
-void Data::write_vel_meso_extra(FILE *fp, int i) {}
 void Data::write_vel_dipole_extra(FILE *fp, int i) {}
 
 void Data::write_vel_ellipsoid_extra(FILE *fp, int i)
