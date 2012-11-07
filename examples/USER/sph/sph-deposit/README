@@ -1,0 +1,9 @@
+Run
+bash run.sh
+
+Postprocessing
+bash post3d.sh
+
+Visualization
+punto -B 0:0:0:5e-4:5e-4:5e-4 -c -z 1:2:3:7  sp
+punto -B 0:0:0:5e-4:5e-4:5e-4 -c -z 1:2:3:7  sp
