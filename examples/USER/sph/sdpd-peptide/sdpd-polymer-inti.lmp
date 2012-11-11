@@ -1,0 +1,25 @@
+echo               both
+#atom_modify	sort 3.0e-6 3.0e-6
+dimension          2
+units              si
+atom_style   hybrid angle  meso
+boundary          p p p
+
+# create simulation box
+#2D box
+variable          Lx equal 1.000e-3
+region             box block 0.0000e-3 ${Lx}  0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
+create_box         1 box
+
+# create fluid particles
+variable           dx equal 2.5e-5
+lattice            sq ${dx}
+create_atoms       1 region box
+
+
+variable           sdpd_mass equal 6.25E-7
+mass               1 ${sdpd_mass}
+
+variable           sdpd_temp index 0.0
+timestep           0.0e-5
+write_restart      poly.restart

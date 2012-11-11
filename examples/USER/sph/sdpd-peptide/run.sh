@@ -7,7 +7,7 @@
 ../../../../tools/restart2data poly.restart poly.txt
 
 
- awk -v cutoff=3.0 -v Nbeads=9 -v Nsolvent=18 -v Npoly=full \
+ awk -v cutoff=3.0 -v Nbeads=9 -v Nsolvent=18 -v Npoly=3 \
      -f addpolymer.awk poly.txt > poly2.txt
 
  nangles=$(tail -n 1 poly2.txt | awk '{print $1}')
