@@ -66,6 +66,13 @@ bond_coeff 1 ${H} ${r0}  0 0
 variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
 fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
+run 20000 every 1000 "velocity all zero linear"
+
+compute imsd all msd
+variable        vmsd_x equal c_imsd[1]
+variable        vmsd_t equal c_imsd[4]
+fix             pmsd all   print 100 "${vmsd_t} ${vmsd_x}" file "msd.dat" screen no
+
 run   1000000 every 1000 "velocity all zero linear"
 # run   1000000 every 1000 "velocity all zero linear" & 
 # "velocity all zero angular"
