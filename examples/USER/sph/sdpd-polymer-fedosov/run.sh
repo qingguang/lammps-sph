@@ -15,15 +15,11 @@ ndim=3d
 
 cp ${ndim}-vars.lmp ${ndim}-model.lmp
 
-<<<<<<< HEAD
-rm -rf dum* im* poly* log.lammps
-=======
 rm -rf dum* im* poly* log.lammps *.av
->>>>>>> be864b072055ac58667d59642179864b4eee8e1a
 ${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
- awk -v cutoff=3.0 -v Nbeads=25 -v Nsolvent=25 -v Npoly=full \
+ awk -v cutoff=3.0 -v Nbeads=0 -v Nsolvent=1 -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt

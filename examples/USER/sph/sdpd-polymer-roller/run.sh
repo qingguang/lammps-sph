@@ -16,10 +16,10 @@ ndim=2d
 Nbeads=16
 Nsolvent=32
 nx=96
-Force=164
+Force=800
 etas=3e-2
 etap=3e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H6-R0-f${Force}-etap${etap}
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-R0-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 
