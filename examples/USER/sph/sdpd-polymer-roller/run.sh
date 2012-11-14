@@ -11,12 +11,12 @@ else
 fi
 
 
-nproc=6
+nproc=3
 ndim=2d
-Nbeads=16
-Nsolvent=32
-nx=96
-Force=164
+Nbeads=4
+Nsolvent=8
+nx=16
+Force=50
 etas=3e-2
 etap=3e-2
 dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-R0-f${Force}-etap${etap}
