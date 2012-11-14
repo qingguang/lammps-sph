@@ -68,12 +68,10 @@ fix reverce_periodic all addforce v_bodyfx 0.0 0.0
 
 run 20000 every 1000 "velocity all zero linear"
 
-compute imsd all msd
+group        solvent type 1
+compute imsd solvent msd
 variable        vmsd_x equal c_imsd[1]
 variable        vmsd_t equal c_imsd[4]
-fix             pmsd all   print 100 "${vmsd_t} ${vmsd_x}" file "msd.dat" screen no
+fix             pmsd solvent print 100 "${vmsd_t} ${vmsd_x}" file "msd.dat" screen yes
 
 run   1000000 every 1000 "velocity all zero linear"
-# run   1000000 every 1000 "velocity all zero linear" & 
-# "velocity all zero angular"
-
