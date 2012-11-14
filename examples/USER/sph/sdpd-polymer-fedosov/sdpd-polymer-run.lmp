@@ -49,7 +49,7 @@ thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 
-include            ${ndim}-image.lmp
+#include            ${ndim}-image.lmp
 
 variable           eps equal 0.25*${dx}
 neighbor           ${eps} bin
@@ -73,5 +73,8 @@ compute imsd solvent msd
 variable        vmsd_x equal c_imsd[1]
 variable        vmsd_t equal c_imsd[4]
 fix             pmsd solvent print 100 "${vmsd_t} ${vmsd_x}" file "msd.dat" screen yes
+
+# add dcd file
+dump               dump_dcd all dcd 1000 poly3d.dcd
 
 run   1000000 every 1000 "velocity all zero linear"
