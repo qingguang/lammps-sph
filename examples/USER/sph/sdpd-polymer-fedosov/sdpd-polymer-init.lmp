@@ -6,7 +6,7 @@ units              si
 atom_style   hybrid  bond meso
 
 # create simulation box
-include            ${ndim}-model.lmp
+include            ${ndim}-vars.lmp
 
 # create fluid particles
 include            ${ndim}-lattice.lmp

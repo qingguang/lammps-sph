@@ -1,0 +1,15 @@
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
+compute vyav all reduce ave vy
+variable  vy_cm atom vy-c_vyav
+fix av_vy all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.02 v_vy_cm file vy.av ave running units reduced
+
+compute vzav all reduce ave vz
+variable  vz_cm atom vz-c_vzav
+fix av_vz all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.02 v_vz_cm file vz.av ave running units reduced

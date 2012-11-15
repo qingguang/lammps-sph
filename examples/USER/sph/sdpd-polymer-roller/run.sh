@@ -13,13 +13,20 @@ fi
 
 nproc=3
 ndim=2d
+<<<<<<< HEAD
 Nbeads=4
 Nsolvent=8
 nx=16
 Force=50
+=======
+Nbeads=16
+Nsolvent=32
+nx=96
+Force=800
+>>>>>>> c95e56dbe6bf900d3c2862d8f80687abbe90e3fd
 etas=3e-2
 etap=3e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.2-R0-f${Force}-etap${etap}
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-R0-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
 

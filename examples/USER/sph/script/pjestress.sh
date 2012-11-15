@@ -7,5 +7,8 @@ awk 'fl{print $1, $2, $7, $8} /ITEM: ATOMS/{fl=1}' $filename > ${filename/.dat/.
 ./zs_mls_projection 2 96 0.08 2.0 ${filename/.dat/.del} 2 2 2 ;
 done
 #./zs_mls_projection 3 20 1 1.8 dump*.del 2 2 2
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> c95e56dbe6bf900d3c2862d8f80687abbe90e3fd

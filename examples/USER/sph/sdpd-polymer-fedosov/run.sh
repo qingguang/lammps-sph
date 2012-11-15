@@ -10,22 +10,26 @@ else
     exit -1
 fi
 
-nproc=6
+
+nproc=2
 ndim=3d
+Nbeads=0
+Nsolvent=1
+Force=0
+dname=fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}
 
-cp ${ndim}-vars.lmp ${ndim}-model.lmp
+vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 
-<<<<<<< HEAD
-rm -rf dum* im* poly* log.lammps
-=======
-rm -rf dum* im* poly* log.lammps *.av
->>>>>>> be864b072055ac58667d59642179864b4eee8e1a
-${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
+${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
- awk -v cutoff=3.0 -v Nbeads=25 -v Nsolvent=25 -v Npoly=full \
+
+ awk -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
 
-${mpirun} -np ${nproc} ${lmp} -var ndim ${ndim} -in sdpd-polymer-run.lmp
+# output directory name
+
+mkdir -p ${dname}
+${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
