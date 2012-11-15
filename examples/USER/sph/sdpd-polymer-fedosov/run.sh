@@ -10,8 +10,7 @@ else
     exit -1
 fi
 
-
-nproc=2
+nproc=8
 ndim=3d
 Nbeads=0
 Nsolvent=1
