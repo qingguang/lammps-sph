@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph-nana.sh
+configfile=$HOME/lammps-sph.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
@@ -12,7 +12,7 @@ fi
 
 #rm -rf dum* im* poly* log.lammps
 
-nproc=8
+nproc=1
 ndim=3d
 
 # polymer configuration

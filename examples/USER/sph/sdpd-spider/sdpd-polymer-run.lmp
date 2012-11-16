@@ -56,11 +56,9 @@ compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file vx.av ave running units reduced
-
 dump dump_id_txt all custom ${Nfreq} ${dname}/dump*.dat &
      id type x y z &
      vx vy vz c_rho_peratom
-
 dump dump_id_xyz all xyz ${Nfreq} ${dname}/dump*.xyz
 dump dump_id_dcd all dcd ${Nfreq} ${dname}/dump.dcd
 
