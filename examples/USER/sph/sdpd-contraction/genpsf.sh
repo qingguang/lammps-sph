@@ -9,7 +9,7 @@ tmpfile=$(mktemp /tmp/XXXXX)
 # generate psf file with vmd
 vmd -dispdev text -eofexit <<EOF
 package require topotools
-topo readlammpsdata  ${input} angle
+topo readlammpsdata  ${input} full
 animate write psf ${tmpfile}
 EOF
 

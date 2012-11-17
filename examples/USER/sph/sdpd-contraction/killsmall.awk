@@ -14,17 +14,10 @@ BEGIN {
 	exit(-1)
     }
     if (!length(polymer_normal)) {
-	printf("Nbeads must be given\n")  > "/dev/stderr"
+	printf("polymer_normal be given\n")  > "/dev/stderr"
 	exit(-1)
     }
-    if (!length(polymer_extbond)) {
-	printf("Nbeads must be given\n")  > "/dev/stderr"
-	exit(-1)
-    }
-
-
 }
-
 
 /Atoms/ && NR==FNR {
     inatoms=1

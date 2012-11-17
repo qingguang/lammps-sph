@@ -1,8 +1,3 @@
-function trigerpolymer() {
-    _triger_counter++
-    return polymer_normal
-}
-
 function isbead(type) {
     if (type==polymer_normal) {
 	return 1
@@ -108,9 +103,9 @@ inatoms{
   if (!($2 == wall_type)) {
       # if atom has a bound we change atom type to natoms_type
       if ( isbound($1, iatom) ) {
-	  $2 = trigerpolymer()
+	  $2 = polymer_normal
       } else if ( ($1>1) && isbound($1-1, iatom) ) {
-	  $2 = trigerpolymer()
+	  $2 = polymer_normal
       }
   }
   # store a type of the atom

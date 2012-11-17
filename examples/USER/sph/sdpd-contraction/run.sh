@@ -1,4 +1,5 @@
 #! /bin/bash
+
 set -e
 set -u
 configfile=$HOME/lammps-sph.sh
@@ -15,25 +16,27 @@ nproc=1
 ndim=3d
 
 # polymer configuration
-Nbeads=10
-Nsolvent=10
-
+Nbeads=5
+Nsolvent=5
 
 dx=8.333333e-4
-nx=220
-ny=32
+nx=64
+ny=20
 polymer_normal=2
-polymer_extbond=3
 xt=0.3
 yt=0.3
+
+# force between beads
+#prefix_gauss=150
+prefix_gauss=0
 
 # angle force bond
 #prefix_flex=100
 prefix_flex=0
 
-dname=fene3d-nb${Nbeads}-ns${Nsolvent}
+dname=fene3d-nb${Nbeads}-ns${Nsolvent}-nx${nx}
 
-vars=" \
+vars="-var prefix_gauss ${prefix_gauss} -var yt ${yt} -var xt ${xt} \
 -var prefix_flex ${prefix_flex} \
 -var dx ${dx} -var ny ${ny} \
 -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
@@ -50,11 +53,12 @@ awk -v wall_type=4 \
     -f contraction.awk poly3d.txt > poly3.txt
 
 mv poly3.txt poly3d.txt
-awk -v wall_type=4 -v polymer_normal=${polymer_normal} -v polymer_extbond=${polymer_extbond} \
+
+awk -v wall_type=4 -v polymer_normal=${polymer_normal} \
     -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
      -f addpolymer.awk poly3d.txt > poly3.txt
 
-awk -v Nbeads=${Nbeads} -v polymer_normal=${polymer_normal} -v polymer_extbond=${polymer_extbond} \
+awk -v Nbeads=${Nbeads} -v polymer_normal=${polymer_normal} -v polymer_normal=${polymer_normal} \
     -f killsmall.awk poly3.txt poly3.txt > poly3d.txt
 
 nangles=$(tail -n 1 poly3d.txt | awk '{print $1}')

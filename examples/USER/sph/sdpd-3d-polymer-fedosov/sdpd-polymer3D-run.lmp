@@ -81,8 +81,10 @@ compute stress_bond all stress/atom bond
 variable vstress_bond atom c_stress_bond[4]
 fix av_xy_bond all ave/spatial 1 ${Nfreq} ${Nfreq} y lower 0.01 v_vstress_bond file sxy-bond.av units reduced ave running
 
-dump               dump_idu all custom 100 dumpu*.dat id type xu yu zu vx vy vz c_rho_peratom
-dump               dump_id  all custom 100 dump*.dat id type x y z vx vy vz c_rho_peratom
+dump               dump_dcd all dcd 100 poly3d.dcd
+
+dump               dump_idu all custom 10 dumpu*.dat id type xu yu zu vx vy vz c_rho_peratom
+dump               dump_id  all custom 10 dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_idu   first yes
 dump_modify        dump_idu   sort id
 dump_modify        dump_idu   pad 8
@@ -93,7 +95,7 @@ dump_modify        dump_id   pad 8
 
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
-thermo             100
+thermo             5
 dump imgDump all image 100 image.*.jpg type type atom no bond atom 5e-6 adiam 1e-5 view 30 30 zoom 3  box yes 0.01
 dump_modify        imgDump pad 9
 
