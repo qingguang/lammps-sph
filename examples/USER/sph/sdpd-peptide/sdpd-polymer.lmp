@@ -1,31 +1,25 @@
 echo               both
-#atom_modify	sort 3.0e-6 3.0e-6
 dimension          2
 units              si
-atom_style       hybrid angle meso
+atom_style         meso
 boundary          p p p
 
 # create simulation box
 #2D box
 variable          Lx equal 1.000e-3
-
 region             box block 0.0000e-3 ${Lx}  0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
-#create_box         1 box
-read_data           poly.txt
+create_box         1 box
 
 # create fluid particles
 lattice            sq 0.025e-3
-bond_style fene
-special_bonds   lj 1 1 1 angle no
-variable        H_fene equal 1
-variable        r0_fene equal 5e-5
-bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0
+create_atoms       1 region box
 
-# angle force parameters
-#angle_style harmonic
-#angle_coeff 1 1e-10 180.0 
-#bond_coeff * 3e-3 1e-1 0 0
-
+#set bead number of polymers and free particles
+#attention the relation between sum(Sum) of beadnum with free and Lx/latticelength(N) satisfy N%Sum=0
+#beadnum          5
+#freenum          5
+#string coefficient H
+#Maxiaml distance   R0
 
 variable           sdpd_mass equal 6.25E-7
 mass               1 ${sdpd_mass}
@@ -35,9 +29,9 @@ set                group all meso_rho 1000.0
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 #The temperature is set to 1e5C.
-variable           sdpd_temp index 1e13
+variable           sdpd_temp index 0.0
 pair_style         hybrid sdpd
-pair_coeff         * *    sdpd 1000 0.1 1.0e-3 6.5e-5 ${sdpd_temp}
+pair_coeff         * *    sdpd 1000 0.1 5.0e-3 6.5e-5 ${sdpd_temp}
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom
@@ -50,12 +44,12 @@ variable           etot equal c_ke+c_esph
 
 # do full time integration for shear driver and fluid, but keep walls stationary
 fix                integrate_fix_full all meso
-#variable            A_kol equal 0.5
+#variable            A_kol equal 1.0
 #variable            var_kol atom ${A_kol}*${sdpd_mass}*sin(2*PI*y/${Lx})
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 
-dump               dump_id all custom 1000 dump*.dat id type x y vx vy c_rho_peratom c_e_peratom
+dump               dump_id all custom 100 dump*.dat id type x y vx vy c_rho_peratom c_e_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
@@ -63,11 +57,7 @@ thermo             10
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 
-dump imgDump all image 1000 image.*.jpg type type bond atom 1e-5 adiam 1e-5 view 0 0 zoom 1.75
-dump_modify        imgDump pad 8
+neighbor           3.0e-6 bin
+timestep           8.0e-5
 
-neighbor           1.0e-6 bin
-timestep            1.0e-7
-
-communicate        single vel yes
-run                1000000
+run                40000 every 1000 "velocity all zero linear"
