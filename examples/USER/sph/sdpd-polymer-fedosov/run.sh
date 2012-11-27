@@ -10,12 +10,12 @@ else
     exit -1
 fi
 
-nproc=1
+nproc=6
 ndim=3d
-Nbeads=0
-Nsolvent=1
+Nbeads=25
+Nsolvent=8
 Force=0
-dname=fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}
+dname=fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}-4
 
 vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 
