@@ -11,7 +11,7 @@ variable           Lx  equal ${Ly}
 variable           Lz  equal ${Ly}
 
 variable           sdpd_rho equal 1000
-variable           sdpd_rho0 equal 1000i
+variable           sdpd_rho0 equal 1000
 
 variable           sdpd_c equal 3e-1
 #variable           sdpd_c equal 1
