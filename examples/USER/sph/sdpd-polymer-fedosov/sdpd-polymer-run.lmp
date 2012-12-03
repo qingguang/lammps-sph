@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data           poly3d.txt
-read_restart         sdpd.restart.50000
+read_data           poly3d.txt
+#read_restart         sdpd.restart.50000
 special_bonds   lj 1 1 1
 bond_style fene
 
@@ -40,7 +40,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 # average velocity
 
 include   velocity.lmp
-include            stress.lmp
+#include            stress.lmp
 
 dump               dump_id all custom 100 ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
@@ -65,20 +65,24 @@ restart 10000 ${dname}/sdpd.restart
 #include           fene.lmp
 
 bond_coeff 1 ${H} ${r0}  0 0
-variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
-fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+#RPF force
+#variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+#fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+#Kolmogorov force
+variable            var_kol atom mass*${gx}*cos(2*PI*y/${Ly})
+fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 #run 50000 every 1000 "velocity all zero linear"
 
-group        solvent type 1
-compute imsd solvent msd
-compute amsd all msd
-variable        vmsd_x equal c_imsd[1]
-variable        vmsd_t equal c_imsd[4]
-fix             pmsd solvent print 100 "${vmsd_t} ${vmsd_x} " file ${dname}/msd.dat screen yes
-variable        amsd_x equal c_amsd[1]
-variable        amsd_t equal c_amsd[4]
-fix             pamsd all print 100 "${amsd_t} ${amsd_x}" file ${dname}/amsd.dat screen yes
+#group        solvent type 1
+#compute imsd solvent msd
+#compute amsd all msd
+#variable        vmsd_x equal c_imsd[1]
+#variable        vmsd_t equal c_imsd[4]
+#fix             pmsd solvent print 100 "${vmsd_t} ${vmsd_x} " file ${dname}/msd.dat screen yes
+#variable        amsd_x equal c_amsd[1]
+#variable        amsd_t equal c_amsd[4]
+#fix             pamsd all print 100 "${amsd_t} ${amsd_x}" file ${dname}/amsd.dat screen yes
 
 # add dcd file
 dump               dump_dcd all dcd 1000 poly3d.dcd

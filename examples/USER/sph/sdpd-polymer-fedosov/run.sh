@@ -19,7 +19,7 @@ dname=fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}-4
 
 vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 
-rm poly*
+#rm poly*
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
