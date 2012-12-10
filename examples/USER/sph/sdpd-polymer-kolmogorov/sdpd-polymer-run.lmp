@@ -40,7 +40,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 # average velocity
 
 include   velocity.lmp
-include            stress.lmp
+#include            stress.lmp
 
 dump               dump_id all custom 100 ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
@@ -66,8 +66,11 @@ restart 10000 ${dname}/sdpd.restart
 
 bond_coeff 1 ${H} ${r0}  0 0
 #RPF force
-variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
-fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+#variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+#fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+#Kolmogorov force
+variable            var_kol atom mass*${gx}*cos(2*PI*y/${Ly})
+fix                 kol_force all addforce v_var_kol 0.0 0.0
 
 #run 50000 every 1000 "velocity all zero linear"
 

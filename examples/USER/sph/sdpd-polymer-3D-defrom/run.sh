@@ -18,7 +18,7 @@ Nsolvent=1
 nx=20
 Force=0
 etas=1.5e-2
-rate=4e2
+rate=2e2
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-R0-f${Force}-rate${rate}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var rate ${rate}"
