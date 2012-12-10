@@ -51,7 +51,7 @@ thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 
-include            ${ndim}-image.lmp
+#include            ${ndim}-image.lmp
 
 variable           eps equal 0.25*${dx}
 neighbor           ${eps} bin
