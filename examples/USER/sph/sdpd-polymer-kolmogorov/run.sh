@@ -10,9 +10,9 @@ else
     exit -1
 fi
 
-nproc=1
+nproc=6
 ndim=2d
-Nbeads=20
+Nbeads=40
 Nsolvent=0
 Force=6.12
 dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}
