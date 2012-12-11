@@ -11,7 +11,7 @@ else
 fi
 
 nproc=6
-ndim=3d
+ndim=2d
 Nbeads=25
 Nsolvent=0
 Force=6.12

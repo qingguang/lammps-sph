@@ -10,8 +10,8 @@ else
     exit -1
 fi
 
-nproc=6
-ndim=3d
+nproc=1
+ndim=2d
 Nbeads=20
 Nsolvent=0
 Force=6.12
