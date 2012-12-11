@@ -4,7 +4,7 @@ variable          kb       equal 1.3806503e-23
 #variable           Ly  equal 1.803e-3
 #variable           Lx  equal ${Ly}/50*20
 variable           dx   equal 2.5e-5
-variable           Ly  equal 20*${dx}
+variable           Ly  equal 40*${dx}
 variable           Lx  equal ${Ly}
 
 variable           sdpd_rho equal 1000
