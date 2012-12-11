@@ -40,9 +40,9 @@ compute         pTemp all temp/profile 1 1 0 y 10
 # average velocity
 
 include   velocity.lmp
-#include            stress.lmp
+include            stress.lmp
 
-dump               dump_id all custom 100 ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
