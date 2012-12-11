@@ -2,9 +2,9 @@ variable           dim   equal 3
 variable          kb       equal 1.3806503e-23
 
 variable           dx   equal 2.5e-5
-variable           Lx    equal  20*${dx}
-variable           Ly    equal  20*${dx}
-variable           Lz    equal  20*${dx}
+variable           Lx    equal  ${nx}*${dx}
+variable           Ly    equal  ${nx}*${dx}
+variable           Lz    equal  ${nx}*${dx}
 variable           sdpd_rho equal 1000
 variable           sdpd_c equal 10
 variable           sdpd_eta equal 1.5e-2
@@ -15,6 +15,7 @@ variable           sdpd_temp index 1e9
 variable          h equal 2.7*${dx}
 #variable          gx equal 6.12
 variable          Nfreq equal 1000
+variable          Nfreqimage equal 10000
 #variable          r0       equal 2.0*${dx}
 #variable          H        equal 5.3e-4
 variable          r0       equal 3^(1.0/${dim})*${dx}

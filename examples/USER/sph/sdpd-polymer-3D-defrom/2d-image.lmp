@@ -1,0 +1,22 @@
+variable  adiam equal 0.5*${dx}
+variable  abond equal 0.25*${dx}
+variable  ximgsize equal 800
+variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
+
+#dump imgDumpno all image ${Nfreqimage} ${dname}/image.*.jpg type type atom yes bond none none adiam ${adiam} view 0 0 zoom 1.8 &
+#box no 0.01 size ${ximgsize} ${yimgsize}
+dump imgDump all image ${Nfreqimage} ${dname}/imagebond.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+box no 0.01 size ${ximgsize} ${yimgsize}
+#dump imgDump all image ${Nfreqimage} image.*.jpg v_velxy type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+#box no 0.01 size ${ximgsize} ${yimgsize}
+
+
+#dump_modify        imgDumpno pad 9
+#dump_modify        imgDumpno backcolor white
+dump_modify        imgDump pad 9
+dump_modify        imgDump backcolor white
+#dump_modify        imgDump acolor 1 black
+variable  adiam delete
+variable  abond delete
+variable ximgsize delete
+variable yimgsize delete

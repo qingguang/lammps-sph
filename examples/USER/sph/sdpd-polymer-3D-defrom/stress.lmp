@@ -21,4 +21,3 @@ fix av_xz_stress all ave/spatial 1 ${Nfreq} ${Nfreq} y lower ${dhists} v_stress_
 
 variable stress_yz atom c_stress[6]
 fix av_yz_stress all ave/spatial 1 ${Nfreq} ${Nfreq} y lower ${dhists} v_stress_yz file ${dname}/syz.av units reduced ave one
-

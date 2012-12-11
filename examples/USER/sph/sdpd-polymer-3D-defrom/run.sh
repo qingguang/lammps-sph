@@ -12,10 +12,10 @@ fi
 
 
 nproc=1
-ndim=2d
+ndim=3d
 Nbeads=0
 Nsolvent=1
-nx=20
+nx=40
 Force=0
 etas=1.5e-2
 rate=2e2
