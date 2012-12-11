@@ -11,8 +11,8 @@ else
 fi
 
 
-nproc=6
-ndim=3d
+nproc=1
+ndim=2d
 Nbeads=0
 Nsolvent=1
 nx=20

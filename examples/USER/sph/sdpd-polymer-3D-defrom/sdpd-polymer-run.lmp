@@ -1,14 +1,13 @@
 echo               both
 log                ${dname}/log.lammps
-dimension          3
+dimension          ${ndim}
 units              si
 atom_style   hybrid  bond meso
 #atom_style        meso
 boundary          p p p
 # create simulation box
 #3D box
-include             3d-vars.lmp
-region             box prism 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} 0 0 0 units box
+include             ${ndim}-vars.lmp
 read_data           poly3d.txt
 
 special_bonds   lj 1 1 1

@@ -1,7 +1,9 @@
-variable           eps equal 1e-3*${Lx}
+variable           eps equal 0.3*${dx}
 variable           negeps equal -${eps}
-region             box block 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} units box
-create_box         1 box
+region             box prism 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps}  0 0 0 units box
+create_box         2 box
 lattice            sq ${dx}
+#lattice            sq ${dx} origin ${eps} ${eps} ${eps}
+
 variable           eps delete
 variable           negeps delete
