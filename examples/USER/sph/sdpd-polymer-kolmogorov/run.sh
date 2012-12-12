@@ -14,7 +14,7 @@ nproc=6
 ndim=2d
 Nbeads=0
 Nsolvent=1
-Force=6.12
+Force=30
 dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"

@@ -60,7 +60,7 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 10000 ${dname}/sdpd.restart
+restart 100000 ${dname}/sdpd.restart
 
 #include           fene.lmp
 
