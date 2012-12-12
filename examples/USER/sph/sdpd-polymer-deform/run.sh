@@ -12,7 +12,7 @@ fi
 
 
 nproc=1
-ndim=3d
+ndim=2d
 Nbeads=0
 Nsolvent=1
 nx=40
