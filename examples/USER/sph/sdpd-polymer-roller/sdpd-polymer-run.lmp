@@ -40,7 +40,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
+y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 include stress.lmp
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &

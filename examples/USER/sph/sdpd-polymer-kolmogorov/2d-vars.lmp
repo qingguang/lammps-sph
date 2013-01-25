@@ -18,5 +18,5 @@ variable          h equal 2.7*${dx}
 variable          gx equal 30
 variable          Nfreq equal 1000
 variable          r0       equal 3^(1.0/${dim})*${dx}
-variable          H        equal 100*${sdpd_temp}*${kb}/${r0}^2
+variable          H        equal 1000*${sdpd_temp}*${kb}/${r0}^2
 variable          sdpd_mass equal ${sdpd_rho}*${dx}^${dim}

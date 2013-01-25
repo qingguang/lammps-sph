@@ -12,10 +12,10 @@ fi
 
 nproc=6
 ndim=2d
-Nbeads=0
-Nsolvent=1
+Nbeads=20
+Nsolvent=20
 Force=30
-dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}
+dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H1-R0-f${Force}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 
