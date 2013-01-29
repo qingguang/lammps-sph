@@ -3,10 +3,17 @@ function fabs(var) {
 }
 
 function isbond(atom_number,        period, rem, current_npoly) {
+    # dispatch based on two atom numbers
+    if (atom_number<0.5*natoms) {
+	Nbeads=Nb1
+    } else {
+	Nbeads=Nb2
+	polymertype=3
+    }
   period = Nbeads + Nsolvent
   rem = (atom_number-1)%(period) # from 0 to period-1
   current_npoly = int(atom_number/period) + 1
-  return (rem<Nbeads-1) && (atom_number<iatom)  && (current_npoly<=Npoly)
+  return (rem<Nbeads-1) && (atom_number<natoms)  && (current_npoly<=Npoly)
 }
 
 BEGIN {
