@@ -33,7 +33,7 @@ class PairLJCutCoulCutGPU : public PairLJCutCoulCut {
   void init_style();
   double memory_usage();
 
- enum { GPU_PAIR, GPU_NEIGH };
+ enum { GPU_FORCE, GPU_NEIGH, GPU_HYB_NEIGH };
 
  private:
   int gpu_mode;
@@ -45,3 +45,18 @@ class PairLJCutCoulCutGPU : public PairLJCutCoulCut {
 #endif
 #endif
 
+/* ERROR/WARNING messages:
+
+E: Out of memory on GPGPU
+
+UNDOCUMENTED
+
+E: Pair style lj/cut/coul/cut/gpu requires atom attribute q
+
+UNDOCUMENTED
+
+E: Cannot use newton pair with lj/cut/coul/cut/gpu pair style
+
+UNDOCUMENTED
+
+*/

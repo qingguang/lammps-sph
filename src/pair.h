@@ -19,6 +19,8 @@
 namespace LAMMPS_NS {
 
 class Pair : protected Pointers {
+  friend class AngleSDK;
+  friend class AngleSDKOMP;
   friend class BondQuartic;
   friend class BondQuarticOMP;
   friend class DihedralCharmm;
@@ -50,9 +52,16 @@ class Pair : protected Pointers {
   double etail,ptail;            // energy/pressure tail corrections
   double etail_ij,ptail_ij;
 
+  int evflag;                    // energy,virial settings
+  int eflag_either,eflag_global,eflag_atom;
+  int vflag_either,vflag_global,vflag_atom;
+
   int nextra;                    // # of extra quantities pair style calculates
   double *pvector;               // vector of extra pair quantities
 
+  int single_extra;              // number of extra single values calculated
+  double *svector;               // vector of extra single quantities
+  
   class NeighList *list;         // standard neighbor list used by most pairs
   class NeighList *listhalf;     // half list used by some pairs
   class NeighList *listfull;     // full list used by some pairs
@@ -115,7 +124,7 @@ class Pair : protected Pointers {
 
   // specific child-class methods for certain Pair styles
   
-  virtual void *extract(char *, int &) {return NULL;}
+  virtual void *extract(const char *, int &) {return NULL;}
   virtual void swap_eam(double *, double **) {}
   virtual void reset_dt() {}
   virtual void min_xf_pointers(int, double **, double **) {}
@@ -135,10 +144,6 @@ class Pair : protected Pointers {
   typedef union {int i; float f;} union_int_float_t;
 
   double THIRD;
-
-  int evflag;                          // energy,virial settings
-  int eflag_either,eflag_global,eflag_atom;
-  int vflag_either,vflag_global,vflag_atom;
 
   int vflag_fdotr;
   int maxeatom,maxvatom;
@@ -165,3 +170,84 @@ class Pair : protected Pointers {
 }
 
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Illegal ... command
+
+Self-explanatory.  Check the input script syntax and compare to the
+documentation for the command.  You can use -echo screen as a
+command-line option when running LAMMPS to see the offending line.
+
+E: Too many total bits for bitmapped lookup table
+
+Table size specified via pair_modify command is too large.  Note that
+a value of N generates a 2^N size table.
+
+E: Cannot have both pair_modify shift and tail set to yes
+
+These 2 options are contradictory.
+
+E: Cannot use pair tail corrections with 2d simulations
+
+The correction factors are only currently defined for 3d systems.
+
+W: Using pair tail corrections with nonperiodic system
+
+This is probably a bogus thing to do, since tail corrections are
+computed by integrating the density of a periodic system out to
+infinity.
+
+E: All pair coeffs are not set
+
+All pair coefficients must be set in the data file or by the
+pair_coeff command before running a simulation.
+
+E: Pair style does not support pair_write
+
+The pair style does not have a single() function, so it can
+not be invoked by pair write.
+
+E: Invalid atom types in pair_write command
+
+Atom types must range from 1 to Ntypes inclusive.
+
+E: Invalid style in pair_write command
+
+Self-explanatory.  Check the input script.
+
+E: Invalid cutoffs in pair_write command
+
+Inner cutoff must be larger than 0.0 and less than outer cutoff.
+
+E: Cannot open pair_write file
+
+The specified output file for pair energies and forces cannot be
+opened.  Check that the path and name are correct.
+
+E: Bitmapped lookup tables require int/float be same size
+
+Cannot use pair tables on this machine, because of word sizes.  Use
+the pair_modify command with table 0 instead.
+
+W: Table inner cutoff >= outer cutoff
+
+You specified an inner cutoff for a Coulombic table that is longer
+than the global cutoff.  Probably not what you wanted.
+
+E: Too many exponent bits for lookup table
+
+Table size specified via pair_modify command does not work with your
+machine's floating point representation.
+
+E: Too many mantissa bits for lookup table
+
+Table size specified via pair_modify command does not work with your
+machine's floating point representation.
+
+E: Too few bits for lookup table
+
+Table size specified via pair_modify command does not work with your
+machine's floating point representation.
+
+*/

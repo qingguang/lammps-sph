@@ -33,7 +33,7 @@ class FixPeriNeigh : public Fix {
 
  public:
   FixPeriNeigh(class LAMMPS *,int, char **);
-  ~FixPeriNeigh();
+  virtual ~FixPeriNeigh();
   int setmask();
   void init();
   void init_list(int, class NeighList *);
@@ -55,7 +55,7 @@ class FixPeriNeigh : public Fix {
   void unpack_comm(int, int, double *);
 
 
- private:
+ protected:
   int first;                 // flag for first time initialization
   int maxpartner;            // max # of peridynamic neighs for any atom
   int *npartner;             // # of neighbors for each atom
@@ -71,3 +71,12 @@ class FixPeriNeigh : public Fix {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Duplicate particle in PeriDynamic bond - simulation box is too small
+
+This is likely because your box length is shorter than 2 times
+the bond length.
+
+*/

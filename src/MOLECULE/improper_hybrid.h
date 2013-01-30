@@ -27,6 +27,10 @@ namespace LAMMPS_NS {
 
 class ImproperHybrid : public Improper {
  public:
+  int nstyles;                  // # of different improper styles
+  Improper **styles;            // class list for each Improper style
+  char **keywords;              // keyword for each improper style
+
   ImproperHybrid(class LAMMPS *);
   ~ImproperHybrid();
   void compute(int, int);
@@ -37,9 +41,6 @@ class ImproperHybrid : public Improper {
   double memory_usage();
 
  private:
-  int nstyles;                  // # of different improper styles
-  Improper **styles;            // class list for each Improper style
-  char **keywords;              // keyword for each improper style
   int *map;                     // which style each improper type points to
 
   int *nimproperlist;           // # of impropers in sub-style improperlists
@@ -53,3 +54,25 @@ class ImproperHybrid : public Improper {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Improper style hybrid cannot use same improper style twice
+
+Self-explanatory.
+
+E: Improper style hybrid cannot have hybrid as an argument
+
+Self-explanatory.
+
+E: Improper style hybrid cannot have none as an argument
+
+Self-explanatory.
+
+E: Improper coeff for hybrid has invalid style
+
+Improper style hybrid uses another improper style as one of its
+coefficients.  The improper style used in the improper_coeff command
+or read from a restart file is not recognized.
+
+*/

@@ -27,6 +27,10 @@ namespace LAMMPS_NS {
 
 class DihedralHybrid : public Dihedral {
  public:
+  int nstyles;                  // # of different dihedral styles
+  Dihedral **styles;            // class list for each Dihedral style
+  char **keywords;              // keyword for each dihedral style
+
   DihedralHybrid(class LAMMPS *);
   ~DihedralHybrid();
   void compute(int, int);
@@ -38,9 +42,6 @@ class DihedralHybrid : public Dihedral {
   double memory_usage();
 
  private:
-  int nstyles;                  // # of different dihedral styles
-  Dihedral **styles;            // class list for each Dihedral style
-  char **keywords;              // keyword for each dihedral style
   int *map;                     // which style each dihedral type points to
 
   int *ndihedrallist;           // # of dihedrals in sub-style dihedrallists
@@ -54,3 +55,25 @@ class DihedralHybrid : public Dihedral {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Dihedral style hybrid cannot use same dihedral style twice
+
+Self-explanatory.
+
+E: Dihedral style hybrid cannot have hybrid as an argument
+
+Self-explanatory.
+
+E: Dihedral style hybrid cannot have none as an argument
+
+Self-explanatory.
+
+E: Dihedral coeff for hybrid has invalid style
+
+Dihedral style hybrid uses another dihedral style as one of its
+coefficients.  The dihedral style used in the dihedral_coeff command
+or read from a restart file is not recognized.
+
+*/

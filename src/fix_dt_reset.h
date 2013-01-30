@@ -31,6 +31,7 @@ class FixDtReset : public Fix {
   int setmask();
   void init();
   void setup(int);
+  void initial_integrate(int);
   void end_of_step();
   double compute_scalar();
   double compute_vector(int);
@@ -40,7 +41,7 @@ class FixDtReset : public Fix {
   int minbound,maxbound;
   double tmin,tmax,xmax;
   double ftm2v;
-  double t_elapsed;
+  double dt,t_elapsed,t_laststep;
   int respaflag;
 };
 
@@ -48,3 +49,23 @@ class FixDtReset : public Fix {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Illegal ... command
+
+Self-explanatory.  Check the input script syntax and compare to the
+documentation for the command.  You can use -echo screen as a
+command-line option when running LAMMPS to see the offending line.
+
+E: Use of fix dt/reset with undefined lattice
+
+Must use lattice command with fix dt/reset command if units option is
+set to lattice.
+
+W: Dump dcd/xtc timestamp may be wrong with fix dt/reset
+
+If the fix changes the timestep, the dump dcd file will not
+reflect the change.
+
+*/
