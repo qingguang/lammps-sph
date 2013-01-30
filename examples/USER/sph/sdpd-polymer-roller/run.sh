@@ -19,9 +19,11 @@ nx=96
 Force=164
 etas=3e-2
 etap=3e-2
-dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H2-R0-f${Force}-etap${etap}
+H0=1.2
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0-f${Force}-etap${etap}
 
-vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var etap ${etap}"
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
+      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt

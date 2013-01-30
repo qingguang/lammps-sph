@@ -22,6 +22,6 @@ variable          Nfreq equal 10000
 variable          Nfreqimage equal 10000
 variable          r0       equal 3^(1.0/${dim})*${dx}/10
 variable          r0_fene     equal 3^(1.0/${dim})*${dx}
-variable          H        equal 2000*${spring_fene_temp}*${kb}/${r0_fene}^2
+variable          H        equal ${H0}*1000*${spring_fene_temp}*${kb}/${r0_fene}^2
 variable          solvent_mass equal ${sdpd_rho_solvent}*${dx}^${dim}
 variable          polymer_mass equal ${sdpd_rho_polymer}*${dx}^${dim}
