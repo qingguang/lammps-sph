@@ -67,10 +67,11 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairLJCutCoulCutGPU::PairLJCutCoulCutGPU(LAMMPS *lmp) : PairLJCutCoulCut(lmp), gpu_mode(GPU_PAIR)
+PairLJCutCoulCutGPU::PairLJCutCoulCutGPU(LAMMPS *lmp) : PairLJCutCoulCut(lmp), gpu_mode(GPU_FORCE)
 {
   respa_enable = 0;
   cpu_time = 0.0;
+  GPU_EXTRA::gpu_ready(lmp->modify, lmp->error); 
 }
 
 /* ----------------------------------------------------------------------
@@ -94,7 +95,7 @@ void PairLJCutCoulCutGPU::compute(int eflag, int vflag)
   
   bool success = true;
   int *ilist, *numneigh, **firstneigh;  
-  if (gpu_mode == GPU_NEIGH) {
+  if (gpu_mode != GPU_FORCE) {
     inum = atom->nlocal;
     firstneigh = ljc_gpu_compute_n(neighbor->ago, inum, nall, atom->x,
 				   atom->type, domain->sublo, domain->subhi,
@@ -162,7 +163,7 @@ void PairLJCutCoulCutGPU::init_style()
 			     force->special_coul, force->qqrd2e);
   GPU_EXTRA::check_flag(success,error,world);
 
-  if (gpu_mode != GPU_NEIGH) {
+  if (gpu_mode == GPU_FORCE) {
     int irequest = neighbor->request(this);
     neighbor->requests[irequest]->half = 0;
     neighbor->requests[irequest]->full = 1;

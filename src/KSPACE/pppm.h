@@ -51,7 +51,6 @@ class PPPM : public KSpace {
   int nfactors;
   int *factors;
   double qsum,qsqsum;
-  double qqrd2e;
   double cutoff;
   double volume;
   double delxinv,delyinv,delzinv,delvolinv;
@@ -96,7 +95,7 @@ class PPPM : public KSpace {
   double rms(double, double, bigint, double, double **);
   double diffpr(double, double, double, double, double **);
   void compute_gf_denom();
-  double gf_denom(double, double, double);
+
   virtual void particle_map();
   virtual void make_rho();
   virtual void brick2fft();
@@ -108,9 +107,137 @@ class PPPM : public KSpace {
 		     const FFT_SCALAR &);
   void compute_rho_coeff();
   void slabcorr(int);
+
+/* ----------------------------------------------------------------------
+   denominator for Hockney-Eastwood Green's function
+     of x,y,z = sin(kx*deltax/2), etc
+
+            inf                 n-1
+   S(n,k) = Sum  W(k+pi*j)**2 = Sum b(l)*(z*z)**l
+           j=-inf               l=0
+
+          = -(z*z)**n /(2n-1)! * (d/dx)**(2n-1) cot(x)  at z = sin(x)
+   gf_b = denominator expansion coeffs 
+------------------------------------------------------------------------- */
+
+  inline double gf_denom(const double &x, const double &y, const double &z) const {
+    double sx,sy,sz;
+    sz = sy = sx = 0.0;
+    for (int l = order-1; l >= 0; l--) {
+      sx = gf_b[l] + sx*x;
+      sy = gf_b[l] + sy*y;
+      sz = gf_b[l] + sz*z;
+    }
+    double s = sx*sy*sz;
+    return s*s;
+  };
 };
 
 }
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Illegal ... command
+
+Self-explanatory.  Check the input script syntax and compare to the
+documentation for the command.  You can use -echo screen as a
+command-line option when running LAMMPS to see the offending line.
+
+E: Cannot (yet) use PPPM with triclinic box
+
+This feature is not yet supported.
+
+E: Cannot use PPPM with 2d simulation
+
+The kspace style pppm cannot be used in 2d simulations.  You can use
+2d PPPM in a 3d simulation; see the kspace_modify command.
+
+E: Kspace style requires atom attribute q
+
+The atom style defined does not have these attributes.
+
+E: Cannot use nonperiodic boundaries with PPPM
+
+For kspace style pppm, all 3 dimensions must have periodic boundaries
+unless you use the kspace_modify command to define a 2d slab with a
+non-periodic z dimension.
+
+E: Incorrect boundaries with slab PPPM
+
+Must have periodic x,y dimensions and non-periodic z dimension to use
+2d slab option with PPPM.
+
+E: PPPM order cannot be greater than %d
+
+Self-explanatory.
+
+E: KSpace style is incompatible with Pair style
+
+Setting a kspace style requires that a pair style with a long-range
+Coulombic component be selected.
+
+E: Bond and angle potentials must be defined for TIP4P
+
+Cannot use TIP4P pair potential unless bond and angle potentials
+are defined.
+
+E: Bad TIP4P angle type for PPPM/TIP4P
+
+Specified angle type is not valid.
+
+E: Bad TIP4P bond type for PPPM/TIP4P
+
+Specified bond type is not valid.
+
+E: Cannot use kspace solver on system with no charge
+
+No atoms in system have a non-zero charge.
+
+W: System is not charge neutral, net charge = %g
+
+The total charge on all atoms on the system is not 0.0, which
+is not valid for Ewald or PPPM.
+
+W: Reducing PPPM order b/c stencil extends beyond neighbor processor
+
+LAMMPS is attempting this in order to allow the simulation
+to run.  It should not effect the PPPM accuracy.
+
+E: PPPM grid is too large
+
+The global PPPM grid is larger than OFFSET in one or more dimensions.
+OFFSET is currently set to 4096.  You likely need to decrease the
+requested precision.
+
+E: PPPM order has been reduced to 0
+
+LAMMPS has attempted to reduce the PPPM order to enable the simulation
+to run, but can reduce the order no further.  Try increasing the
+accuracy of PPPM by reducing the tolerance size, thus inducing a 
+larger PPPM grid.
+
+E: Cannot compute PPPM G
+
+LAMMPS failed to compute a valid approximation for the PPPM g_ewald
+factor that partitions the computation between real space and k-space.
+
+E: Out of range atoms - cannot compute PPPM
+
+One or more atoms are attempting to map their charge to a PPPM grid
+point that is not owned by a processor.  This is likely for one of two
+reasons, both of them bad.  First, it may mean that an atom near the
+boundary of a processor's sub-domain has moved more than 1/2 the
+"neighbor skin distance"_neighbor.html without neighbor lists being
+rebuilt and atoms being migrated to new processors.  This also means
+you may be missing pairwise interactions that need to be computed.
+The solution is to change the re-neighboring criteria via the
+"neigh_modify"_neigh_modify command.  The safest settings are "delay 0
+every 1 check yes".  Second, it may mean that an atom has moved far
+outside a processor's sub-domain or even the entire simulation box.
+This indicates bad physics, e.g. due to highly overlapping atoms, too
+large a timestep, etc.
+
+*/

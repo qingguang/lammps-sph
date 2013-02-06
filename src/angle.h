@@ -34,6 +34,7 @@ class Angle : protected Pointers {
   virtual void compute(int, int) = 0;
   virtual void settings(int, char **) {}
   virtual void coeff(int, char **) = 0;
+  virtual void init_style() {};
   virtual double equilibrium_angle(int) = 0;
   virtual void write_restart(FILE *) = 0;
   virtual void read_restart(FILE *) = 0;
@@ -54,3 +55,17 @@ class Angle : protected Pointers {
 }
 
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Angle coeffs are not set
+
+No angle coefficients have been assigned in the data file or via the
+angle_coeff command.
+
+E: All angle coeffs are not set
+
+All angle coefficients must be set in the data file or by the
+angle_coeff command before running a simulation.
+
+*/

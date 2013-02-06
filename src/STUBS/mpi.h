@@ -14,6 +14,12 @@
 #ifndef MPI_STUBS
 #define MPI_STUBS
 
+/* use C bindings for MPI interface */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Dummy defs for MPI stubs */
 
 #define MPI_COMM_WORLD 0
@@ -46,9 +52,10 @@
 
 /* MPI data structs */
 
-struct MPI_Status {
+struct _MPI_Status {
   int MPI_SOURCE;
 };
+typedef struct _MPI_Status MPI_Status;
 
 /* Function prototypes for MPI stubs */
 
@@ -115,7 +122,14 @@ int MPI_Gather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                void *recvbuf, int recvcount, MPI_Datatype recvtype,
                int root, MPI_Comm comm);
 int MPI_Gatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
-		    void *recvbuf, int *recvcounts, int *displs,
-		    MPI_Datatype recvtype, int root, MPI_Comm comm);
+		void *recvbuf, int *recvcounts, int *displs,
+		MPI_Datatype recvtype, int root, MPI_Comm comm);
+int MPI_Scatterv(void *sendbuf, int *sendcounts, int *displs,
+		 MPI_Datatype sendtype, void *recvbuf, int recvcount,
+		 MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

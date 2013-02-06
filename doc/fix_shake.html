@@ -88,14 +88,25 @@ for in temperature and pressure computations.  Similarly, the SHAKE
 contribution to the pressure of the system (virial) is also accounted
 for.
 </P>
+<P>IMPORTANT NOTE: This command works by using the current forces on
+atoms to caculate an additional constraint force which when added will
+leave the atoms in positions that satisfy the SHAKE constraints
+(e.g. bond length) after the next time integration step.  If you
+define fixes (e.g. <A HREF = "fix_efield.html">fix efield</A>) that add additional
+force to the atoms after fix shake operates, then this fix will not
+take them into account and the time integration will typically not
+satisfy the SHAKE constraints.  The solution for this is to make sure
+that fix shake is defined in your input script after any other fixes
+which add or change forces (to atoms that fix shake operates on).
+</P>
 <HR>
 
 <P>Styles with a <I>cuda</I> suffix are functionally the same as the
 corresponding style without the suffix.  They have been optimized to
 run faster, depending on your available hardware, as discussed in
-<A HREF = "Section_accelerate.html">this section</A> of the manual.  The accelerated
-styles take the same arguments and should produce the same results,
-except for round-off and precision issues.
+<A HREF = "Section_accelerate.html">Section_accelerate</A> of the manual.  The
+accelerated styles take the same arguments and should produce the same
+results, except for round-off and precision issues.
 </P>
 <P>These accelerated styles are part of the USER-CUDA package.  They are
 only enabled if LAMMPS was built with that package.  See the <A HREF = "Section_start.html#start_3">Making
@@ -106,8 +117,8 @@ by including their suffix, or you can use the <A HREF = "Section_start.html#star
 switch</A> when you invoke LAMMPS, or you can
 use the <A HREF = "suffix.html">suffix</A> command in your input script.
 </P>
-<P>See <A HREF = "Section_accelerate.html">this section</A> of the manual for more
-instructions on how to use the accelerated styles effectively.
+<P>See <A HREF = "Section_accelerate.html">Section_accelerate</A> of the manual for
+more instructions on how to use the accelerated styles effectively.
 </P>
 <HR>
 

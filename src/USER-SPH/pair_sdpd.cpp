@@ -228,19 +228,21 @@ void PairSDPD::compute(int eflag, int vflag) {
         fpair = - (fi*Vi*Vi + fj*Vj*Vj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
+ //modify force pair
 
-	//modify force pair
+f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+     if (domain->dimension ==3 ) {
 
-	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
-	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-	if (domain->dimension ==3 ) {
-	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-	} 
+f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+// and change in density
+} 
    
-	drho[i] += jmass * delVdotDelR * wfd;
+    drho[i] += jmass * delVdotDelR * wfd;
 
         // change in thermal energy
         de[i] += deltaE;
+
 
 
 	if (newton_pair || j < nlocal) {
