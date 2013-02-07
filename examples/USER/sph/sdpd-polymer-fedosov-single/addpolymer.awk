@@ -2,13 +2,11 @@ function fabs(var) {
   return var>0?var:-var
 }
 
-# returns true if there is a bound [atom_number, atom_number + 1]
-# uses iatom
-function isbound(atom_number,       period, rem, current_npoly) {
+function isbond(atom_number,        period, rem, current_npoly) {
   period = Nbeads + Nsolvent
   rem = (atom_number-1)%(period) # from 0 to period-1
   current_npoly = int(atom_number/period) + 1
-  return (rem<Nbeads-1) && (current_npoly<=Npoly)
+  return (rem<Nbeads-1) && (atom_number<iatom)  && (current_npoly<=Npoly)
 }
 
 BEGIN {
@@ -19,7 +17,8 @@ BEGIN {
   if (Npoly=="full") {
     Npoly = 1e22
   }
-  image[x]=0; image[y]=0; image[z]=0
+  # polymer type
+  polymertype=2
 }
 
 /LAMMPS/{
@@ -43,11 +42,7 @@ BEGIN {
 }
 
 /atom types/{
-    # number of atoms types
-    natom_type = $1
-  # print a string with atom types 
   print
-
   print "1 bond types"
   next
 }
@@ -84,17 +79,17 @@ inatoms{
         if (R[idim]<prevR[idim]) image[idim]++; else image[idim]--
       }
     }
+  } else {
+    image[x]=0; image[y]=0; image[z]=0
   }
   prevR[x]=R[x]; prevR[y]=R[y]; prevR[z]=R[z]
   # change image field
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
-
-  # if atom has a bound we change atom type to natoms_type
-  if ( isbound($1) ) {
-      $2 = natom_type
-  }
-  if ( ($1>1) && isbound($1-1) ) {
-      $2 = natom_type
+  # add molecule ID
+  # $6=$6 " 0"
+  id=$1
+  if (isbond(id) || isbond(id-1) ) {
+     $2=polymertype
   }
   print $0
   next
@@ -108,13 +103,23 @@ inatoms{
 END {
   printf("\nBonds\n\n")
   ibond = 0
+  ipoly=0
+  printf("") > "poly.id"
   for (q=1; q<iatom; q++) {
-    if (isbound(q)) {
+    if (isbond(q)) {
       ibond++
       ip = q
       jp = q+1
       bondtype=1
       print ibond, bondtype, ip, jp
+      if (ip != prev) {
+	  if (prev>0) {
+	      print prev, ipoly >> "poly.id"
+	  }
+	  ipoly++
+      }
+      print ip, ipoly >> "poly.id"
+      prev=jp    
     }
   }
 }
