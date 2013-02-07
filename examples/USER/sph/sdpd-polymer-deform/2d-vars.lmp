@@ -19,7 +19,7 @@ variable          Nfreqimage equal 10000
 #variable          r0       equal 2.0*${dx}
 #variable          H        equal 5.3e-4
 variable          r0       equal 3^(1.0/${dim})*${dx}
-variable          H        equal 50*${sdpd_temp}*${kb}/${r0}^2
+variable          H        equal 1000*${sdpd_temp}*${kb}/${r0}^2
 
-variable          def_rate      equal 4e2
+variable          def_rate      equal ${rate}
 

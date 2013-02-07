@@ -6,3 +6,9 @@ punto -z 1:2:6 -G -1e-7:1e-7 -B [0:0:0.016666666:0.016666666] stress.dat
 
 1.736110972e-06
 8.680554861e-06
+
+# to generate psf file
+bash genpsf.sh
+
+# to read in vmd
+vmd -psf poly3d.psf  -xyz harmonic-nb32-ns32-nx60-H1-R0-f1000-etap3e-2/data.xyz  -e deposit.tcl  

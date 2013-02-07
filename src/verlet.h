@@ -28,10 +28,10 @@ class Verlet : public Integrate {
  public:
   Verlet(class LAMMPS *, int, char **);
   virtual ~Verlet() {}
-  void init();
-  void setup();
-  void setup_minimal(int);
-  void run(int);
+  virtual void init();
+  virtual void setup();
+  virtual void setup_minimal(int);
+  virtual void run(int);
   void cleanup();
 
  protected:
@@ -46,3 +46,12 @@ class Verlet : public Integrate {
 
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+W: No fixes defined, atoms won't move
+
+If you are not using a fix like nve, nvt, npt then atom velocities and
+coordinates will not be updated during timestepping.
+
+*/

@@ -15,7 +15,6 @@
 #include "stdlib.h"
 #include "error.h"
 #include "universe.h"
-#include "memory.h"
 #include "output.h"
 
 using namespace LAMMPS_NS;
@@ -27,6 +26,7 @@ Error::Error(LAMMPS *lmp) : Pointers(lmp) {}
 /* ----------------------------------------------------------------------
    called by all procs in universe
    close all output, screen, and log files in world and universe
+   no abort, so insure all procs in universe call, else will hang
 ------------------------------------------------------------------------- */
 
 void Error::universe_all(const char *file, int line, const char *str)
@@ -53,6 +53,7 @@ void Error::universe_all(const char *file, int line, const char *str)
 
 /* ----------------------------------------------------------------------
    called by one proc in universe
+   forces abort of entire universe if any proc in universe calls
 ------------------------------------------------------------------------- */
 
 void Error::universe_one(const char *file, int line, const char *str)
@@ -66,6 +67,8 @@ void Error::universe_one(const char *file, int line, const char *str)
 /* ----------------------------------------------------------------------
    called by all procs in one world
    close all output, screen, and log files in world
+   insure all procs in world call, else will hang
+   force MPI_Abort if running in multi-partition mode
 ------------------------------------------------------------------------- */
 
 void Error::all(const char *file, int line, const char *str)
@@ -84,6 +87,7 @@ void Error::all(const char *file, int line, const char *str)
   if (screen && screen != stdout) fclose(screen);
   if (logfile) fclose(logfile);
 
+  if (universe->nworlds > 1) MPI_Abort(universe->uworld,1);
   MPI_Finalize();
   exit(1);
 }
@@ -92,6 +96,7 @@ void Error::all(const char *file, int line, const char *str)
    called by one proc in world
    write to world screen only if non-NULL on this proc
    always write to universe screen 
+   forces abort of entire world (and universe) if any proc in world calls
 ------------------------------------------------------------------------- */
 
 void Error::one(const char *file, int line, const char *str)
@@ -123,7 +128,7 @@ void Error::warning(const char *file, int line, const char *str, int logflag)
    write message to screen and logfile (if logflag is set)
 ------------------------------------------------------------------------- */
 
-void Error::message(const char *file, int line, char *str, int logflag)
+void Error::message(const char *file, int line, const char *str, int logflag)
 {
   if (screen) fprintf(screen,"%s (%s:%d)\n",str,file,line);
   if (logflag && logfile) fprintf(logfile,"%s (%s:%d)\n",str,file,line);
@@ -132,6 +137,7 @@ void Error::message(const char *file, int line, char *str, int logflag)
 /* ----------------------------------------------------------------------
    called by all procs in one world
    close all output, screen, and log files in world
+   no abort, so insure all procs in world call, else will hang
 ------------------------------------------------------------------------- */
 
 void Error::done()

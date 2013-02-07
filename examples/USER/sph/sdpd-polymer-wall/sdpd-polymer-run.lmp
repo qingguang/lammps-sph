@@ -1,0 +1,94 @@
+echo               both
+#atom_modify	sort 3.0e-6 3.0e-6
+dimension          2
+units              si
+atom_style       hybrid bond meso
+boundary          p f p
+
+# create simulation box
+#2D box
+variable          Lx equal 1.00e-3
+read_data           poly.txt
+
+# create wall particles
+variable          ub equal ${Lx}+2.5*${dx}
+variable          lb equal 2.0*${dx}
+variable          hdx equal 0.5*${dx}
+variable          hLx equal ${Lx}+0.5*${dx}
+variable          lLx equal ${Lx}-0.5*${dx}
+region            fluid block 0.0000e-3 ${Lx} ${dx} ${lLx} -1.0e-6 1.0e-6 units box
+region            uwall block 0.0000e-3 ${Lx} ${Lx} ${ub} -1.0e-6 1.0e-6 units box
+region            lwall block 0.0000e-3 ${Lx} -${lb} 0.0000e-3 -1.0e-6 1.0e-6 units box
+lattice            sq ${dx}
+create_atoms       2 region uwall
+create_atoms       2 region lwall
+
+# create fluid particles
+bond_style      fene
+special_bonds   lj 1 1 1
+#H*ro^2/(kT)=100
+variable    H_fene equal 5   
+variable        r0_fene equal 5e-5
+bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0
+
+
+group              uwall region uwall 
+group              lwall region lwall
+group              fluid region fluid 
+#group              integrate_fulll union fluid lwall
+
+variable           sdpd_mass equal 2.778E-6
+mass               1 ${sdpd_mass}
+mass               2 ${sdpd_mass}
+set                group all meso_rho 1000.0
+
+# use Tait's EOS in combination with Morris' laminar viscosity.
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+#The temperature is set to .
+variable           sdpd_temp index 1e13
+pair_style         hybrid sdpd
+pair_coeff         * *    sdpd 1000 0.1 1.0e-3 6.5e-5 ${sdpd_temp}
+
+compute            rho_peratom fluid meso_rho/atom
+compute            e_peratom fluid meso_e/atom
+compute            ke_peratom fluid ke/atom
+compute            esph fluid reduce sum c_e_peratom
+compute            ke fluid ke
+compute            sdpd_kin fluid temp
+variable           etot equal c_ke+c_esph
+
+
+# do full time integration for shear driver and fluid, but keep walls stationary
+fix                integrate_fix_full all meso
+#variable            A_kol equal 0.1
+#variable            var_kol atom ${A_kol}*${sdpd_mass}*cos(2*PI*y/${Lx})
+#fix                 kol_force all addforce v_var_kol 0.0 0.0
+velocity           uwall set 0.01 0.0 0.0 units box
+velocity           lwall set -0.01 0.0 0.0 units box
+fix                freeze_fixu uwall setforce 0.0 0.0 0.0
+fix                freeze_fixl lwall setforce 0.0 0.0 0.0
+
+
+dump               dump_all all custom 10000 dump*.dat x y vx vy id type c_rho_peratom
+dump_modify        dump_all first yes
+dump_modify        dump_all sort id
+dump_modify        dump_all pad 8
+dump               dump_fluid fluid custom 10000 dumpfluid*.dat x y vx vy id type c_rho_peratom
+dump_modify        dump_fluid first yes
+dump_modify        dump_fluid sort id
+dump_modify        dump_fluid pad 8
+
+thermo             10
+thermo_style       custom step  c_sdpd_kin
+thermo_modify      norm no
+
+dump imgDump all image 10000 image.*.jpg type type bond atom 1e-5 adiam 1e-5 view 0 0 zoom 1.75  box no 0.01
+dump_modify        imgDump pad 9
+
+neighbor           1.0e-6 bin
+#timestep <0.5*delta/Cs
+#include detime
+timestep            1.0e-6
+
+run                10000000

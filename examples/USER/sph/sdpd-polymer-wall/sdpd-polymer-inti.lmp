@@ -1,0 +1,32 @@
+echo               both
+#atom_modify	sort 3.0e-6 3.0e-6
+dimension          2
+units              si
+atom_style   hybrid  bond meso
+boundary          p f p
+
+# create simulation box
+#2D box
+variable          Lx equal 1.000e-3
+variable          ub equal ${Lx}+2.5*${dx}
+variable          lb equal 2.0*${dx}
+variable          lLx equal ${Lx}-0.5*${dx}
+region            box block 0.0000e-3 ${Lx} -${lb} ${ub} -1.0e-6 1.0e-6 units box
+region            fluid block 0.0000e-3 ${Lx} ${dx} ${lLx} -1.0e-6 1.0e-6 units box
+create_box         2 box
+
+#create fluid particles
+lattice            sq ${dx}
+create_atoms       1 region fluid
+group              fluid region fluid
+
+
+variable           sdpd_mass equal 2.776E-6
+mass               1 ${sdpd_mass}
+mass               2 ${sdpd_mass}
+#set                group all meso_rho 1000.0
+
+
+timestep           0.0e-5
+write_restart      poly.restart
+

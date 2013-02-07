@@ -44,17 +44,18 @@ class PairReaxC : public Pair {
   void coeff(int, char **);
   void init_style();
   double init_one(int, int);
-  void *extract(char *, int &);
+  void *extract(const char *, int &);
+  int fixbond_flag, fixspecies_flag;
 
- private:
-  reax_system *system;
   control_params *control;
+  reax_system *system;
+  output_controls *out_control;
   simulation_data *data;
   storage *workspace;
   reax_list *lists;
-  output_controls *out_control;
   mpi_datatypes *mpi_data;
-  
+
+ private:
   double cutmax;
   int *map;
   class FixReaxC *fix_reax;

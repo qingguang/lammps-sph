@@ -72,8 +72,8 @@ void Neighbor::half_from_full_no_newton(NeighList *list)
     firstneigh[i] = neighptr;
     numneigh[i] = n;
     npnt += n;
-    if (n > oneatom || npnt >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
   }
 
   list->inum = inum;
@@ -150,8 +150,8 @@ void Neighbor::half_from_full_newton(NeighList *list)
     firstneigh[i] = neighptr;
     numneigh[i] = n;
     npnt += n;
-    if (n > oneatom || npnt >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
   }
 
   list->inum = inum;
@@ -223,8 +223,8 @@ void Neighbor::skip_from(NeighList *list)
     firstneigh[i] = neighptr;
     numneigh[i] = n;
     npnt += n;
-    if (n > oneatom || npnt >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
   }
 
   list->inum = inum;
@@ -325,8 +325,8 @@ void Neighbor::skip_from_granular(NeighList *list)
     firsttouch[i] = touchptr;
     firstshear[i] = shearptr;
     npnt += n;
-    if (n > oneatom || npnt >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
   }
 
   list->inum = inum;
@@ -464,21 +464,21 @@ void Neighbor::skip_from_respa(NeighList *list)
     firstneigh[i] = neighptr;
     numneigh[i] = n;
     npnt += n;
-    if (n > oneatom || npnt >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
 
     firstneigh_inner[i] = neighptr_inner;
     numneigh_inner[i] = n_inner;
     npnt_inner += n_inner;
-    if (npnt_inner >= pgsize)
-      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+    if (n_inner > oneatom)
+      error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
 
     if (respamiddle) {
       firstneigh_middle[i] = neighptr_middle;
       numneigh_middle[i] = n_middle;
       npnt_middle += n_middle;
-      if (npnt_middle >= pgsize)
-	error->one(FLERR,"Neighbor list overflow, boost neigh_modify one or page");
+      if (n_middle > oneatom)
+	error->one(FLERR,"Neighbor list overflow, boost neigh_modify one");
     }
   }
 

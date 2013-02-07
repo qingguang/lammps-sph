@@ -52,7 +52,7 @@ fix		deform_id  all deform 1 xy erate ${def_rate} remap v units box
 
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
-thermo             100
+thermo             1000
 
 ##dump imgDump all image 1000 ${dname}/image.*.jpg type type atom yes bond type 5e-6 adiam 8e-6 view 0 0 zoom 1.3  box yes 0.01
 ##dump_modify        imgDump pad 9
@@ -74,7 +74,7 @@ variable          Nfreq equal 1000
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
+y center 0.025 v_vx_cm file ${dname}/vx.av ave running units reduced
 #run 400
 include stress.lmp
 include             ${ndim}-image.lmp

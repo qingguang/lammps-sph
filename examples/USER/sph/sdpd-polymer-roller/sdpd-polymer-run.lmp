@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-read_data           poly3d.txt
-#read_restart      sdpd.restart.16000000
+#read_data           poly3d.txt
+read_restart      sdpd.restart.9000000
 
 
 special_bonds   lj 1 1 1
@@ -40,7 +40,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
+y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 include stress.lmp
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
@@ -80,11 +80,11 @@ timestep           ${dt}
 
 restart 1000000    ${dname}/sdpd.restart
 
-#bond_style fene
-#bond_coeff 1 ${H} ${r0}  0 0
+bond_style fene
+bond_coeff 1 ${H} ${r0}  0 0
 
-bond_style harmonic
-bond_coeff 1 ${H} ${r0}
+#bond_style harmonic
+#bond_coeff 1 ${H} ${r0}
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})

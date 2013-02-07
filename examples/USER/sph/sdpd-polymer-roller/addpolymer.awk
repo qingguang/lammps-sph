@@ -19,6 +19,7 @@ BEGIN {
   if (Npoly=="full") {
     Npoly = 1e22
   }
+  image[x]=0; image[y]=0; image[z]=0
 }
 
 /LAMMPS/{
@@ -83,8 +84,6 @@ inatoms{
         if (R[idim]<prevR[idim]) image[idim]++; else image[idim]--
       }
     }
-  } else {
-    image[x]=0; image[y]=0; image[z]=0
   }
   prevR[x]=R[x]; prevR[y]=R[y]; prevR[z]=R[z]
   # change image field

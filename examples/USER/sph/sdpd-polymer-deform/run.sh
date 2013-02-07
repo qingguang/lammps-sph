@@ -13,13 +13,13 @@ fi
 
 nproc=1
 ndim=2d
-Nbeads=0
-Nsolvent=1
+Nbeads=20
+Nsolvent=0
 nx=40
 Force=0
-etas=1.5e-2
-rate=2e2
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-R0-f${Force}-rate${rate}
+etas=3e-2
+rate=4e2
+dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H1-R0-f${Force}-rate${rate}-eta${etas}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var force ${Force} -var etas ${etas} -var rate ${rate}"
 

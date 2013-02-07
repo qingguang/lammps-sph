@@ -1,8 +1,8 @@
 compute bstress all stress/atom bond
 compute astress all stress/atom
 compute substress all stress/atom pair
-variable dhist  equal 0.01
-variable dhists equal 0.02
+variable dhist  equal 0.025
+variable dhists equal 0.025
 compute stress all stress/atom virial bond
 variable stress_xx atom c_stress[1]
 fix av_xx_stress all ave/spatial 1 ${Nfreq} ${Nfreq} y lower ${dhists} v_stress_xx file ${dname}/sxx.av units reduced ave one

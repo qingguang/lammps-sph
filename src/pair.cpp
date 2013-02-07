@@ -58,6 +58,8 @@ Pair::Pair(LAMMPS *lmp) : Pointers(lmp)
 
   nextra = 0;
   pvector = NULL;
+  single_extra = 0;
+  svector = NULL;
 
   // pair_modify settings
 
@@ -980,7 +982,8 @@ void Pair::virial_fdotr_compute()
 void Pair::write_file(int narg, char **arg)
 {
   if (narg < 8) error->all(FLERR,"Illegal pair_write command");
-  if (single_enable == 0) error->all(FLERR,"Pair style does not support pair_write");
+  if (single_enable == 0) 
+    error->all(FLERR,"Pair style does not support pair_write");
 
   // parse arguments
 

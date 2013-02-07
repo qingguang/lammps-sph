@@ -14,7 +14,12 @@ region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 create_box         1 box
 
 # create fluid particles
+<<<<<<< .merge_file_mCZOks
+#lattice            fcc 0.025e-3
+lattice            sc 0.025e-3
+=======
 lattice            sc ${dx}
+>>>>>>> .merge_file_UkyZku
 create_atoms       1 region box
 
 mass               1  ${sdpd_mass}
