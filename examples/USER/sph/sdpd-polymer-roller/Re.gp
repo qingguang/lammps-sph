@@ -1,4 +1,4 @@
-F=0.2
+F=1000
 dim=2
 
 dx=2.5e-3/3
@@ -12,7 +12,7 @@ kb=1.3806503e-23
 T=1
 vt=(3*kb*T/sdpd_mass)**0.5
 
-Lall=1000*dx
+Lall=96*dx
 L=Lall/2
 tau=0.1144
 
