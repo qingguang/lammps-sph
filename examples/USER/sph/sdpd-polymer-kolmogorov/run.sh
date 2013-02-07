@@ -13,7 +13,7 @@ fi
 nproc=6
 ndim=2d
 Nbeads=20
-Nsolvent=20
+Nsolvent=7
 Force=30
 dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H1-R0-f${Force}
 
