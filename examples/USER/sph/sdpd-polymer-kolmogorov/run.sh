@@ -10,16 +10,22 @@ else
     exit -1
 fi
 
+
 nproc=6
 ndim=2d
-Nbeads=20
-Nsolvent=7
-Force=30
-dname=kolmo-fene-nb${Nbeads}-ns${Nsolvent}-H1-R0-f${Force}
+Nbeads=16
+Nsolvent=48
+nx=48
+#Force=164
+Force=40
+etas=3e-2
+etap=3e-2
+H0=6
+dname=kolmo-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0-f${Force}-etap${etap}
 
-vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force}"
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
+      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0}"
 
-rm poly*
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 

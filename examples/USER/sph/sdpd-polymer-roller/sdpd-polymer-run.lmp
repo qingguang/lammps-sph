@@ -8,8 +8,8 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data           poly3d.txt
-read_restart      sdpd.restart.9000000
+read_data           poly3d.txt
+#read_restart      sdpd.restart.9000000
 
 
 special_bonds   lj 1 1 1
@@ -27,10 +27,16 @@ pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} 
 pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
 
 compute            rho_peratom all meso_rho/atom
-compute            e_peratom all meso_e/atom
-compute            ke_peratom all ke/atom
+#compute            e_peratom all meso_e/atom
+#compute            ke_peratom all ke/atom
 compute            ke all ke
 compute            sdpd_kin all temp
+compute            pe all pe bond
+
+variable           vke equal c_ke
+variable           vpe equal c_pe
+fix                extra all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+
 fix                integrate_fix_full all meso
 
 # "profile" corrected temperature

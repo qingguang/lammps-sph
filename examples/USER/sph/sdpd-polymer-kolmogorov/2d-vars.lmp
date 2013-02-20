@@ -4,7 +4,7 @@ variable          kb       equal 1.3806503e-23
 #variable           Ly  equal 1.803e-3
 #variable           Lx  equal ${Ly}/50*20
 variable           dx   equal 2.5e-5
-variable           Ly  equal 40*${dx}
+variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${Ly}
 
 variable           sdpd_rho equal 1000
@@ -15,8 +15,10 @@ variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 1e12
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable          h equal 2.7*${dx}
-variable          gx equal 30
+variable          gx equal ${force}
 variable          Nfreq equal 1000
-variable          r0       equal 3^(1.0/${dim})*${dx}
-variable          H        equal 1000*${sdpd_temp}*${kb}/${r0}^2
+variable          Nfreqimage equal 1000
+#variable          r0       equal 3^(1.0/${dim})*${dx}
+variable          r0       equal 2.7*${dx}
+variable          H        equal ${H0}*1000*${sdpd_temp}*${kb}/${r0}^2
 variable          sdpd_mass equal ${sdpd_rho}*${dx}^${dim}
