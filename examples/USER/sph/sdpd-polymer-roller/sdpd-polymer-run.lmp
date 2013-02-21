@@ -3,7 +3,8 @@ log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
 atom_style         hybrid  bond meso
-communicate        single vel yes
+variable           cc equal 5*${dx}
+communicate        single cutoff ${cc} vel yes
 # create simulation box
 
 #3D box
@@ -26,6 +27,9 @@ pair_coeff         * * sdpd/rhosum   ${h}
 pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} 10e15 ${sdpd_background}
 pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
 pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
+
+fix                integrate_fix_full all meso
+thermo   1000
 run   10000 every 10000 "velocity all zero linear"
 
 pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
@@ -44,7 +48,7 @@ variable           vke equal c_ke
 variable           vpe equal c_pe
 fix                extra all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
 
-fix                integrate_fix_full all meso
+#fix                integrate_fix_full all meso
 
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 10
@@ -56,24 +60,7 @@ fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 include stress.lmp
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat &
-    id type x y z &
-    vx vy vz c_rho_peratom
-
-dump               dump_stress all custom ${Nfreq} ${dname}/stress*.dat &
-    x y z &
-    c_bstress[1] c_bstress[2] c_bstress[4] &
-    c_astress[1] c_astress[2] c_astress[4] &
-    c_substress[1] c_substress[2] c_substress[4]
-    
-dump_modify        dump_id first yes
-dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
-
-dump_modify        dump_stress first yes
-dump_modify        dump_stress sort id
-dump_modify        dump_stress pad 8
-
+include dump_set.lmp
 
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
