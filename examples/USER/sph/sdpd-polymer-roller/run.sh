@@ -11,16 +11,16 @@ else
 fi
 
 
-nproc=6
+nproc=8
 ndim=2d
-Nbeads=12
-Nsolvent=24
-nx=96
+Nbeads=32
+Nsolvent=32
+nx=512
 #Force=164
-Force=10
-etas=6e-3
-etap=6e-3
-H0=0.1
+Force=2
+etas=3e-2
+etap=3e-2
+H0=100
 R0=4
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
