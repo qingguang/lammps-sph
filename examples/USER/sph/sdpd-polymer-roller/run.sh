@@ -15,14 +15,14 @@ nproc=8
 ndim=2d
 Nbeads=32
 Nsolvent=32
-nx=512
+nx=128
 #Force=164
-Force=2
+Force=20
 etas=3e-2
 etap=3e-2
-H0=100
-R0=4
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
+H0=30
+R0=0
+dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0} -var R0 ${R0}"

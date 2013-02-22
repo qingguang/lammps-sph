@@ -3,12 +3,12 @@ log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
 atom_style         hybrid  bond meso
-variable           cc equal 5*${dx}
-communicate        single cutoff ${cc} vel yes
 # create simulation box
 
 #3D box
 include            ${ndim}-vars.lmp
+variable           cc equal 5*${dx}
+communicate        single cutoff ${cc} vel yes
 read_data           poly3d.txt
 #read_restart      sdpd.restart.9000000
 
@@ -24,13 +24,13 @@ set  group polymer meso_rho ${sdpd_rho_polymer}
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
 
-pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} 10e15 ${sdpd_background}
-pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
-pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
+#pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} 10e15 ${sdpd_background}
+#pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
+#pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
 
 fix                integrate_fix_full all meso
-thermo   1000
-run   10000 every 10000 "velocity all zero linear"
+#thermo   1000
+#run   10000 every 10000 "velocity all zero linear"
 
 pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
 pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
@@ -80,11 +80,11 @@ timestep           ${dt}
 
 restart 1000000    ${dname}/sdpd.restart
 
-bond_style fene
-bond_coeff 1 ${H} ${r0}  0 0
+#bond_style fene
+#bond_coeff 1 ${H} ${r0}  0 0
 
-#bond_style harmonic
-#bond_coeff 1 ${H} ${r0}
+bond_style harmonic
+bond_coeff 1 ${H} ${r0}
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
