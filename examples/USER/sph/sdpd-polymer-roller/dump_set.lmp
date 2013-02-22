@@ -16,3 +16,7 @@ dump_modify        dump_stress first yes
 dump_modify        dump_stress sort id
 dump_modify        dump_stress pad 8
 
+dump               dump_dcd   all  dcd ${Nfreq} ${dname}/data.dcd
+dump_modify        dump_dcd first yes
+dump_modify        dump_dcd sort id
+dump_modify        dump_dcd pad 8
