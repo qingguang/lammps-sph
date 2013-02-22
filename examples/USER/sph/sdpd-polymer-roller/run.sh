@@ -14,13 +14,13 @@ fi
 nproc=8
 ndim=2d
 Nbeads=32
-Nsolvent=32
-nx=512
+Nsolvent=33
+nx=64
 #Force=164
-Force=2
+Force=0
 etas=3e-2
 etap=3e-2
-H0=100
+H0=1.0
 R0=4
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
