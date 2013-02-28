@@ -21,34 +21,53 @@ group polymer      type 2
 set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
 
+
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
-
-#pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} 10e15 ${sdpd_background}
-#pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
-#pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} 10e15 ${sdpd_background}
-
+variable           local_c equal ${prerun_c}
+variable           local_eta_s equal ${prerun_eta_s}
+variable           local_eta_p equal ${prerun_eta_p}
+variable           local_temp  equal ${prerun_temp}
+variable           local_H0     equal ${prerun_H0}
+variable           local_R0     equal ${prerun_R0}
+include            in.pair_and_bond
 fix                integrate_fix_full all meso
-#thermo   1000
-#run   10000 every 10000 "velocity all zero linear"
 
-pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_s} ${h} ${sdpd_temp} ${sdpd_background}
-pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
-pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${sdpd_c} ${sdpd_eta_p} ${h} ${sdpd_temp} ${sdpd_background}
-
+include            stress.lmp
+include            ${ndim}-image.lmp
 
 compute            rho_peratom all meso_rho/atom
-#compute            e_peratom all meso_e/atom
-#compute            ke_peratom all ke/atom
+include            dump_set.lmp
+
+thermo             100
+
+variable           eta_p equal ${prerun_eta_p}
+variable           eta_s equal ${prerun_eta_s}
+variable           sound_speed equal ${prerun_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
+
+run                ${Nprerun} every 10000 "velocity all zero linear"
+
+#                  end of prerun
+
+variable           local_c equal ${sdpd_c}
+variable           local_eta_s equal ${sdpd_eta_s}
+variable           local_eta_p equal ${sdpd_eta_p}
+variable           local_temp  equal ${sdpd_temp} 
+variable           local_H0     equal ${H0}
+variable           local_R0     equal ${R0}
+include            in.pair_and_bond
+
 compute            ke all ke
 compute            sdpd_kin all temp
 compute            pe all pe bond
 
 variable           vke equal c_ke
 variable           vpe equal c_pe
-fix                extra all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+fix                print_energy all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
 
-#fix                integrate_fix_full all meso
 
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 10
@@ -59,32 +78,27 @@ variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
-include stress.lmp
-include dump_set.lmp
-
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             1000
 variable    velx  atom vx
 variable    vely  atom vy 
 variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
-include            ${ndim}-image.lmp
 
 variable           eps equal 0
 #0.25*${dx}
 neighbor           ${eps} bin
 variable           eps delete
 neigh_modify       every 1
-include            settimestep.lmp
-timestep           ${dt}
 
-restart 1000000    ${dname}/sdpd.restart
 
 #bond_style fene
 #bond_coeff 1 ${H} ${r0}  0 0
 
 bond_style harmonic
 bond_coeff 1 ${H} ${r0}
+restart 1000000    ${dname}/sdpd.restart
+
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
@@ -92,7 +106,12 @@ fix                 kol_force all addforce v_var_x v_var_y 0.0
 #variable            var_kol atom ${A_kol}*${solvent_mass}*cos(2*PI*y/${Ly})
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
 
-
+variable           eta_p equal ${sdpd_eta_p}
+variable           eta_s equal ${sdpd_eta_s}
+variable           sound_speed equal ${sdpd_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
 run   100000000 every 10000 "velocity all zero linear"
 
 

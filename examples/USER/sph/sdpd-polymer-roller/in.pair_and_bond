@@ -1,0 +1,22 @@
+pair_coeff         1 1    sdpd ${sdpd_rho_solvent} ${local_c} ${local_eta_s} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         1 2    sdpd ${sdpd_rho_solvent} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         2 2    sdpd ${sdpd_rho_polymer} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+
+#bond_style fene
+#bond_coeff 1 ${local_H0} ${local_R0}  0 0
+
+#bond_style harmonic
+#bond_coeff 1 ${H} ${r0}
+
+bond_style fene/expand
+bond_coeff 1 ${local_H0} ${local_R0} 0 0 0
+
+
+# one must set this parametres befor including this file
+variable           local_c delete
+variable           local_eta_s delete
+variable           local_eta_p delete
+variable           local_temp  delete
+
+variable           local_H0 delete
+variable           local_R0 delete
