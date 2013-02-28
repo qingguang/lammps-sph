@@ -15,12 +15,12 @@ nproc=8
 ndim=2d
 Nbeads=32
 Nsolvent=32
-nx=128
+nx=256
 #Force=164
 Force=20
 etas=3e-2
 etap=3e-2
-H0=30
+H0=1
 R0=0
 dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
