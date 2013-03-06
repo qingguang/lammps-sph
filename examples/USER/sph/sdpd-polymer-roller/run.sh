@@ -11,17 +11,18 @@ else
 fi
 
 
-nproc=6
+nproc=2
 ndim=2d
-Nbeads=64
+Nbeads=32
 Nsolvent=32
-nx=96
+nx=256
 #Force=164
-Force=300
+Force=20
 etas=3e-2
 etap=3e-2
-H0=6
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0-f${Force}-etap${etap}
+H0=20
+R0=1.2
+dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0}"
