@@ -1,8 +1,8 @@
-F=3
+F=164
 dim=2
 
 dx=2.5e-3/3
-sdpd_c=20
+sdpd_c=5
 sdpd_rho=1
 sdpd_eta=3e-2
 sdpd_mu=sdpd_eta/sdpd_rho
@@ -13,7 +13,7 @@ T=1
 vt=(3*kb*T/sdpd_mass)**0.5
 
 
-Lall=512*dx
+Lall=96*dx
 L=Lall/2
 tau=0.1144
 

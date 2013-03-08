@@ -11,21 +11,23 @@ else
 fi
 
 
-nproc=8
+nproc=4
 ndim=2d
 Nbeads=10
-Nsolvent=33
-nx=64
+Nsolvent=10
+nx=96
 #Force=164
-Force=0
+Force=164
 etas=3e-2
 etap=3e-2
-H0=100.0
-R0=1.2
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
+H0=30
+R0=2
+Delta=1
+dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
-      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0} -var R0 ${R0}"
+      -var force ${Force} -var etas ${etas} -var etap ${etap} \
+      -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt

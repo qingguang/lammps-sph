@@ -39,7 +39,7 @@ include            ${ndim}-image.lmp
 compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 
-thermo             100
+thermo             1000
 
 variable           eta_p equal ${prerun_eta_p}
 variable           eta_s equal ${prerun_eta_s}
