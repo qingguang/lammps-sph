@@ -11,13 +11,13 @@ else
 fi
 
 
-nproc=8
+nproc=2
 ndim=2d
-Nbeads=16
-Nsolvent=16
-nx=128
+Nbeads=32
+Nsolvent=32
+nx=256
 #Force=164
-Force=112
+Force=20
 etas=3e-2
 etap=3e-2
 H0=80

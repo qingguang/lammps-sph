@@ -5,10 +5,10 @@ variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
 
 #dump imgDumpno all image ${Nfreqimage} ${dname}/image.*.jpg type type atom yes bond none none adiam ${adiam} view 0 0 zoom 1.8 &
 #box no 0.01 size ${ximgsize} ${yimgsize}
-dump imgDump all image ${Nfreqimage} ${dname}/imagebond.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+dump imgDumpl all image ${Nfreqimage} ${dname}/imagel.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 10 &
 box no 0.01 size ${ximgsize} ${yimgsize}
-#dump imgDump all image ${Nfreqimage} image.*.jpg v_velxy type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
-#box no 0.01 size ${ximgsize} ${yimgsize}
+dump imgDump all image ${Nfreqimage}  ${dname}/imageg.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+box no 0.01 size ${ximgsize} ${yimgsize}
 
 
 #dump_modify        imgDumpno pad 9
@@ -16,6 +16,8 @@ box no 0.01 size ${ximgsize} ${yimgsize}
 dump_modify        imgDump pad 9
 dump_modify        imgDump backcolor white
 #dump_modify        imgDump acolor 1 black
+dump_modify        imgDumpl pad 9
+dump_modify        imgDumpl backcolor white
 variable  adiam delete
 variable  abond delete
 variable ximgsize delete
