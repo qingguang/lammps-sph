@@ -28,8 +28,8 @@ variable           local_c equal ${prerun_c}
 variable           local_eta_s equal ${prerun_eta_s}
 variable           local_eta_p equal ${prerun_eta_p}
 variable           local_temp  equal ${prerun_temp}
-variable           local_H0     equal ${prerun_H0}
-variable           local_R0     equal ${prerun_R0}
+variable           local_H     equal ${prerun_H}
+variable           local_r0     equal ${prerun_r0}
 include            in.pair_and_bond
 fix                integrate_fix_full all meso
 
@@ -56,8 +56,8 @@ variable           local_c equal ${sdpd_c}
 variable           local_eta_s equal ${sdpd_eta_s}
 variable           local_eta_p equal ${sdpd_eta_p}
 variable           local_temp  equal ${sdpd_temp} 
-variable           local_H0     equal ${H0}
-variable           local_R0     equal ${R0}
+variable           local_H     equal ${H}
+variable           local_r0     equal ${r0}
 include            in.pair_and_bond
 
 compute            ke all ke

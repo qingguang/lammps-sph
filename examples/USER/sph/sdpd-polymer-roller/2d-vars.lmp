@@ -7,7 +7,7 @@ variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
 variable           sdpd_rho_polymer equal 1
 variable           sdpd_rho0 equal 1
-variable           sdpd_c equal 20
+variable           sdpd_c equal 10
 variable           sdpd_eta_s equal ${etas}
 variable           sdpd_eta_p equal ${etap}
 
@@ -37,5 +37,5 @@ variable           prerun_eta_p equal ${sdpd_eta_p}
 
 variable           prerun_c equal 2.0
 variable           prerun_temp  equal 5e17
-variable           prerun_H0          equal ${H0}
-variable           prerun_R0          equal ${R0}
+variable           prerun_H          equal ${H}
+variable           prerun_r0          equal ${r0}
