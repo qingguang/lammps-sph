@@ -5,10 +5,10 @@ variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
 
 #dump imgDumpno all image ${Nfreqimage} ${dname}/image.*.jpg type type atom yes bond none none adiam ${adiam} view 0 0 zoom 1.8 &
 #box no 0.01 size ${ximgsize} ${yimgsize}
-dump imgDump all image ${Nfreqimage} ${dname}/imagebond.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+dump imgDuml all image ${Nfreqimage} ${dname}/imagel.*.jpg type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 20 &
 box no 0.01 size ${ximgsize} ${yimgsize}
-#dump imgDump all image ${Nfreqimage} image.*.jpg v_velxy type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
-#box no 0.01 size ${ximgsize} ${yimgsize}
+dump imgDump all image ${Nfreqimage} imageg.*.jpg v_velxy type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+box no 0.01 size ${ximgsize} ${yimgsize}
 
 
 #dump_modify        imgDumpno pad 9
