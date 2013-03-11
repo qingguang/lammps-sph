@@ -9,5 +9,5 @@ compute bxyav all reduce ave c_bstress[4]
 variable       vbxxav equal c_bxxav
 variable       vbyyav equal c_byyav
 variable       vbxyav equal c_bxyav
-fix            print_avstress all print 1 "${vbxxav} ${vbyyav} ${vbxyav}" file ${dname}/avstress.dat screen no
+fix            print_avstress all print 10 "${vbxxav} ${vbyyav} ${vbxyav}" file ${dname}/avstress.dat screen no
 
