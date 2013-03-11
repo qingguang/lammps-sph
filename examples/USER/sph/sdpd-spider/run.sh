@@ -16,8 +16,8 @@ nproc=1
 ndim=3d
 
 # polymer configuration
-Nbeads=40
-Nsolvent=40
+Nbeads=80
+Nsolvent=1000
 # position of the hydrogen bond
 nextbond=4
 

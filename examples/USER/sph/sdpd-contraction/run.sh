@@ -16,15 +16,15 @@ nproc=8
 ndim=3d
 
 # polymer configuration
-Nbeads=5
-Nsolvent=5
+Nbeads=60
+Nsolvent=400
 
 dx=8.333333e-4
 nx=220
 ny=32
 polymer_normal=2
-xt=0.3
-yt=0.3
+xt=0.2
+yt=0.2
 
 # force between beads
 #prefix_gauss=150

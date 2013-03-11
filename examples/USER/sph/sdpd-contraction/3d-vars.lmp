@@ -10,8 +10,8 @@ variable           sdpd_rho_polymer equal 1
 variable           sdpd_rho_wall equal 1
 variable           sdpd_rho0 equal 1
 variable           sdpd_c equal 20
-variable           sdpd_eta_s equal 4e-3
-variable           sdpd_eta_p equal 4e-3
+variable           sdpd_eta_s equal 4e-5
+variable           sdpd_eta_p equal 4e-5
 
 variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 3e12
