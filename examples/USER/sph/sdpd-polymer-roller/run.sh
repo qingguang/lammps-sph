@@ -20,19 +20,19 @@ nx=256
 Force=20
 etas=3e-2
 etap=3e-2
-H0=20
+H0=40
 R0=1.2
 dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
-      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0}"
+      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0} -var R0 ${R0}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 
 
  awk -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
-     -f addpolymer_net.awk poly3d.txt > poly3.txt
+     -f addpolymer.awk poly3d.txt > poly3.txt
  nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
  sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
 

@@ -1,8 +1,8 @@
 # gnuplot script to fit autocorrelation data
 f(x) = c1*x**tau
 t(x)=c*x**tau
-c1=5e4
-tau=-1.5
+c1=7e7
+tau=-3.8
 tlim=3
 #fit  f(x) "<tail -14 spectra.dat" via c1
 #fit  t(x) "<head -8 spectra.dat" via c

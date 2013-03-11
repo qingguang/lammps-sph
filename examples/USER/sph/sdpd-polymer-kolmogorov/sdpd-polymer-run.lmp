@@ -8,8 +8,9 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-#read_data          poly3d.txt
-read_restart         sdpd.restart.1500000
+read_data          poly3d.txt
+#read_restart         sdpd.restart.1500000
+
 special_bonds   lj 1 1 1
 bond_style fene
 
@@ -65,6 +66,7 @@ restart 100000 ${dname}/sdpd.restart
 #include           fene.lmp
 
 bond_coeff 1 ${H} ${r0}  0 0
+
 #Kolmogorov force
 variable            var_kol atom mass*${gx}*cos(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_kol 0.0 0.0
@@ -84,4 +86,4 @@ fix                 kol_force all addforce v_var_kol 0.0 0.0
 # add dcd file
 dump               dump_dcd all dcd 1000 poly3d.dcd
 
-run   1500000 every 1000 "velocity all zero linear"
+run   10000000 every 1000 "velocity all zero linear"

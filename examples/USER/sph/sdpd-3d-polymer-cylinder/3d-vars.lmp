@@ -1,21 +1,28 @@
-#variable           Ly  equal 1.803e-3
-#variable           Lx  equal ${Ly}
-#variable           Lz  equal ${Ly}/50*10
-#variable           rcyl equal ${Lx}/2.5*1.0
+variable           dim equal 3
+variable          kb       equal 1.3806503e-23
 variable           dx   equal 2.5e-5
-variable           Ly  equal 10*${dx}
+variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${Ly}
 variable           Lz  equal ${Ly}
 variable           rcyl equal ${Lx}/2.5*0.5
 variable           Npart equal ${Lx}*${Ly}*${Lz}/(${dx}*${dx}*${dx})
 variable           sdpd_rho equal 1000
-variable           sdpd_c equal 3e-1
+variable           sdpd_c equal 20
 variable           sdpd_eta equal 1.5e-2
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
+variable           sdpd_temp index 1e9
+variable           sdpd_background equal 1.0
 variable           h equal 2.7*${dx}
 variable           gx equal 6.12
 variable           Nfreq equal 1000
-variable           r0       equal 1.4*${dx}
-variable           H        equal 5.3e-4
+variable          Nfreqimage equal 1000
+
+variable           r0       equal 2.7*${dx}
+#variable           H        equal 5.3e-4
+#variable          r0       equal 4*${dx}
+variable          r0_fene     equal 3^(1.0/${dim})*${dx}
+variable          H        equal ${H0}*1000*${sdpd_temp}*${kb}/${r0_fene}^2
+
 variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
+
 variable           w equal 2

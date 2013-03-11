@@ -1,5 +1,6 @@
 echo               both
-variable           ndim string  3d
+#variable           ndim string  3d
+log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
 atom_style         hybrid  bond meso
@@ -8,7 +9,7 @@ communicate        single vel yes
 # create simulation box
 #3D box
 include            ${ndim}-vars.lmp
-region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
+#region             box block 0.0 ${Lx}  0.0 ${Ly} 0.0 ${Lz} units box
 read_data           poly3d.txt
 group               flow type 1
 
