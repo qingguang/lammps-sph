@@ -3,7 +3,9 @@
 set -e
 set -u
 
-input=poly3d.txt
+awk -f addmollabel.awk poly3d.txt poly3d.txt poly3d.txt  > poly3m.txt
+
+input=poly3m.txt
 output=poly3d.psf
 tmpfile=$(mktemp /tmp/XXXXX)
 # generate psf file with vmd

@@ -17,14 +17,15 @@ ndim=3d
 
 # polymer configuration
 Nbeads=60
-Nsolvent=400
+Nsolvent=600
 
 dx=8.333333e-4
-nx=220
-ny=32
+nx=300
+ny=64
+nz=12
 polymer_normal=2
 xt=0.2
-yt=0.2
+yt=0.15
 
 # force between beads
 #prefix_gauss=150
@@ -34,11 +35,11 @@ prefix_gauss=0
 #prefix_flex=100
 prefix_flex=0
 
-dname=fene3d-nb${Nbeads}-ns${Nsolvent}-nx${nx}
+dname=fene${ndim}-nb${Nbeads}-ns${Nsolvent}-nx${nx}-xt${xt}-yt${yt}-new
 
 vars="-var prefix_gauss ${prefix_gauss} -var yt ${yt} -var xt ${xt} \
 -var prefix_flex ${prefix_flex} \
--var dx ${dx} -var ny ${ny} \
+-var dx ${dx} -var ny ${ny} -var nz ${nz} \
 -var nx ${nx} -var ndim ${ndim} -var dname ${dname}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp

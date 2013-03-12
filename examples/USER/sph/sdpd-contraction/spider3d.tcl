@@ -6,26 +6,26 @@ proc @ {} {
     concat
 }
 
-set sel_solvent [atomselect top "resname 1"]
+set sel_solvent [atomselect top "name 1"]
 $sel_solvent set name sol
 
-set sel_polymer [atomselect top "resname 2"]
+set sel_polymer [atomselect top "name 2"]
 $sel_polymer set name polymer
 
-set sel_wall [atomselect top "resname 4"]
+set sel_wall [atomselect top "name 4"]
 $sel_wall set name wall
 
 
-# boundary conditions
-#pbc box
-
 # domain size from lammps configuration file
-set Lx 0.183333
-set Ly 0.0266667
-set Lz 0.0266667
+set Lx 0.25
+set Ly 0.0533333
+set Lz 0.01
 
 # dx for particle placing
 set dx 8.333333e-4
+
+set sel [atomselect top all]
+$sel set radius ${dx}
 
 set xmin [expr 2*${dx}]
 set xmax [expr $Lx-2*${dx}]
@@ -52,8 +52,8 @@ color Name S blue
 
 color Axes Labels blue
 
-set xt 0.3
-set yt 0.3
+set xt 0.2
+set yt 0.15
 # contraction starts at
 set xcmin [expr {${Lx} * 0.5 * (1-${xt})}]
 set ycmin [expr {${Ly} * 0.5 * (1-${yt})}]
