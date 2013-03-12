@@ -66,7 +66,7 @@ compute            pe all pe bond
 
 variable           vke equal c_ke
 variable           vpe equal c_pe
-fix                print_energy all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+fix                print_energy all print 1000 "${vke} ${vpe}" file ${dname}/energy.dat screen no
 
 
 # "profile" corrected temperature
@@ -75,7 +75,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 # average velocity
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
-fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+fix av_vx all ave/spatial 1000 ${Nfreq} ${Nfreq} &
 y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 thermo_style       custom step c_sdpd_kin c_pTemp
