@@ -10,7 +10,7 @@ communicate        single vel yes
 include            ${ndim}-vars.lmp
 read_data           poly3d.txt
 #restart.4780000
-#read_restart            flow/restart.200000
+#read_restart            restart/restart.13000
 special_bonds   lj 1 1 1
 
 variable           solvent_type equal 1
@@ -66,8 +66,8 @@ restart 1000000    ${dname}/sdpd.restart
 bond_style fene
 bond_coeff 1 ${H} ${r0}  0 0
 
-#angle_style harmonic
-#angle_coeff 1 ${K} 180
+angle_style harmonic
+angle_coeff 1 ${K} 180
 
 fix                fwall wall setforce 0.0 0.0 0.0
 

@@ -43,14 +43,18 @@ proc makeS {sstring} {
 }
 
 set sstring "x>${xmin} and x<${xmax} and y>${ymin} and y<${ymax} and z>${zmin} and z<${zmax} and name polymer"
-user add key n {animate next; makeS $sstring}
-user add key p {animate prev; makeS $sstring}
 
 mol modselect 0 0 name polymer
 color Display Background white
 color Name S blue
 
 color Axes Labels blue
+
+mol representation Lines 3.000000
+
+mol addrep 0
+mol modselect 1 0 name polymer
+mol modstyle 1 0 VDW 0.500000 12.000000
 
 set xt 0.2
 set yt 0.15
@@ -101,5 +105,13 @@ foreach xl [list 0 ${Lx}] {
     }
 }
 
-user add key n {animate next; makeS $sstring}
-user add key p {animate prev; makeS $sstring}
+#pbc join resid -all  -verbose -sel "name polymer"
+
+# after 4000
+# set num 41
+# for {set i 0} {$i < $num} {incr i} {
+#     # go to the given frame
+#     animate goto $i
+#     set filename snap.[format "%04d" $i].rgb
+#     render snapshot $filename
+# }
