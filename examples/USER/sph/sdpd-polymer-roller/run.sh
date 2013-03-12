@@ -16,7 +16,6 @@ ndim=2d
 Nbeads=8
 Nsolvent=8
 nx=128
-#Force=164
 Force=112
 etas=3e-2
 etap=3e-2

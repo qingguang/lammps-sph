@@ -66,7 +66,7 @@ compute            pe all pe bond
 
 variable           vke equal c_ke
 variable           vpe equal c_pe
-fix                print_energy all print 1 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+fix                print_energy all print 1000 "${vke} ${vpe}" file ${dname}/energy.dat screen no
 
 
 # "profile" corrected temperature
