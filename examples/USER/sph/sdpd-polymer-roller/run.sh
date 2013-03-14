@@ -13,16 +13,16 @@ fi
 
 nproc=2
 ndim=2d
-Nbeads=16
-Nsolvent=16
+Nbeads=32
+Nsolvent=32
 nx=256
 #Force=164
 Force=20
 etas=3e-2
 etap=3e-2
-H0=80
+H0=10
 R0=4
-Delta=1
+Delta=0.5
 dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
 #dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 

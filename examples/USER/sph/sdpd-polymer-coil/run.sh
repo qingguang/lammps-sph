@@ -11,20 +11,23 @@ else
 fi
 
 
-nproc=6
+nproc=2
 ndim=3d
-Nbeads=16
-Nsolvent=48
-nx=48
+Nbeads=0
+Nsolvent=1
+nx=5.5
 #Force=164
-Force=40
+Force=0
 etas=3e-2
 etap=3e-2
-H0=6
-dname=kolmo-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0-f${Force}-etap${etap}
-
+H0=10
+R0=4
+Delta=0.5
+dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
+#dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
-      -var force ${Force} -var etas ${etas} -var etap ${etap} -var H0 ${H0}"
+      -var force ${Force} -var etas ${etas} -var etap ${etap} \
+      -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
