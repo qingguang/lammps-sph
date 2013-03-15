@@ -1,0 +1,6 @@
+variable           eps equal 0.3*${dx}
+region             box prism 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz}  0 0 0 units box
+create_box         2 box
+lattice            sc ${dx} origin ${eps} ${eps} ${eps}
+
+variable           eps delete

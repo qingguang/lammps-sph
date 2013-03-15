@@ -1,0 +1,2 @@
+variable var_Fx atom ${F0}*${solvent_mass}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+fix reverce_periodic all addforce v_var_Fx 0.0 0.0
