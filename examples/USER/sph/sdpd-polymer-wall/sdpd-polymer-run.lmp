@@ -5,10 +5,13 @@ units              si
 atom_style       hybrid bond meso
 boundary          p f p
 
+include           ${ndim}-vars.lmp
+variable           cc equal 5*${dx}
+communicate        single cutoff ${cc} vel yes
+
 # create simulation box
 #2D box
-variable          Lx equal 1.00e-3
-read_data           poly.txt
+read_data           poly3d.txt
 
 # create wall particles
 variable          ub equal ${Lx}+2.5*${dx}
@@ -79,7 +82,7 @@ dump_modify        dump_fluid first yes
 dump_modify        dump_fluid sort id
 dump_modify        dump_fluid pad 8
 
-thermo             10
+thermo             1000
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 

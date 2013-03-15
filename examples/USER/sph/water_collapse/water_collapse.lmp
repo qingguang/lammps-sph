@@ -2,7 +2,7 @@
 atom_style         meso
 dimension          2
 newton             on
-boundary           p p p
+boundary           f f p
 units              lj
 read_data          data.initial
 
@@ -36,16 +36,11 @@ fix                integrate_water_fix water meso
 
 # time-integrate only internal energy and density of boundary particles
 fix                integrate_bc_fix bc meso/stationary
-dump               dump_id water custom 100 dump*.dat id type xs ys zs c_rho_peratom c_e_peratom fx fy
+dump               dump_id all custom 100 dump.lammpstrj id type xs ys zs c_rho_peratom c_e_peratom fx fy
 dump_modify        dump_id first yes
-dump_modify        dump_id sort id 
-dump_modify        dump_id  pad 8
 thermo             10
 thermo_style       custom step ke c_esph v_etot f_gfix press f_dtfix[1] f_dtfix
 thermo_modify      norm no
-
-dump imgDump all image 10 image.*.jpg type type adiam 0.2 view 0 0 zoom 1.6  box yes 0.01
-dump_modify        imgDump pad 9
 
 neigh_modify       every 5 delay 0 check no
 variable           skin equal 0.3*${h}
