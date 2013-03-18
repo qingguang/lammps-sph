@@ -16,12 +16,12 @@ nproc=8
 ndim=3d
 
 # polymer configuration
-Nbeads=60
+Nbeads=20
 Nsolvent=600
 
 dx=8.333333e-4
-nx=300
-ny=64
+nx=32
+ny=32
 nz=12
 polymer_normal=2
 xt=0.2
@@ -32,7 +32,7 @@ yt=0.15
 prefix_gauss=0
 
 # angle force bond
-prefix_flex=2
+prefix_flex=50
 
 dname=fene${ndim}-nb${Nbeads}-ns${Nsolvent}-nx${nx}-xt${xt}-yt${yt}-restart
 
