@@ -85,8 +85,7 @@ variable    velx  atom vx
 variable    vely  atom vy 
 variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
 
-variable           eps equal 0
-#0.25*${dx}
+variable           eps equal 0.25*${dx}
 neighbor           ${eps} bin
 variable           eps delete
 neigh_modify       every 1

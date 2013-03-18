@@ -10,7 +10,7 @@ else
     exit -1
 fi
 # choose case "roller" "kolmogorov" "wall" "deform" "RPF"
-case=roller
+case=wall
 #case=roller
 nproc=2
 ndim=2d
