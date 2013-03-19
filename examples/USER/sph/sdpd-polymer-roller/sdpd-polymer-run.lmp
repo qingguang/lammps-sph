@@ -24,6 +24,13 @@ set  group polymer meso_rho ${sdpd_rho_polymer}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
+fix                integrate_fix_full all meso
+
+include            stress.lmp
+include            ${ndim}-image.lmp
+
+compute            rho_peratom all meso_rho/atom
+include            dump_set.lmp
 #### begin prerun ####
 
 include           in.prerun

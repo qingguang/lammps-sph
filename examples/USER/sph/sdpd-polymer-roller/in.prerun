@@ -5,13 +5,6 @@ variable           local_temp  equal ${prerun_temp}
 variable           local_H     equal ${prerun_H}
 variable           local_r0     equal ${prerun_r0}
 include            in.pair_and_bond
-fix                integrate_fix_full all meso
-
-include            stress.lmp
-include            ${ndim}-image.lmp
-
-compute            rho_peratom all meso_rho/atom
-include            dump_set.lmp
 
 thermo             1000
 
@@ -23,5 +16,3 @@ timestep           ${dt}
 variable           dt delete
 
 run                ${Nprerun} every 10000 "velocity all zero linear"
-
-#                  end of prerun
