@@ -7,3 +7,4 @@ awk 'fl{print $1, $2, $5, $6} /ITEM: ATOMS/{fl=1}' $filename > ${filename/.dat/.
 ./zs_mls_projection 2 512 0.427 2.5 ${filename/.dat/.del} 2 2 2 ;
 done
 #./zs_mls_projection 3 20 1 1.8 dump*.del 2 2 2
+cp stress*.del.prj ~/sph-projection/.
