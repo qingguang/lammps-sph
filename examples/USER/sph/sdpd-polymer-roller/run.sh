@@ -11,15 +11,15 @@ else
 fi
 
 
-nproc=8
+nproc=6
 ndim=2d
 Nbeads=32
 Nsolvent=32
 nx=512
-Force=20
+Force=3
 etas=3e-2
 etap=3e-2
-H0=0.5
+H0=0.1
 R0=4
 Delta=1.0
 dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
