@@ -92,7 +92,7 @@ variable           eps delete
 neigh_modify       every 1
 
 
-restart 1000000    ${dname}/sdpd.restart
+restart 10000    ${dname}/sdpd.restart
 
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})

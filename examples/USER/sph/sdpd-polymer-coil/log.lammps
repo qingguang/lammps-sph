@@ -1,0 +1,4 @@
+LAMMPS (9 Nov 2011)
+echo               both
+log                ${dname}/log.lammps
+log                feex-nb0-ns1-nx5.5-H10-R04-D0.5-f0-etap3e-2/log.lammps

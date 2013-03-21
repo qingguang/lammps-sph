@@ -1,0 +1,3 @@
+variable            var_Fx atom ${F0}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
+variable            var_Fy atom -${F0}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
+fix                 ext_force all addforce v_var_Fx v_var_Fy 0.0

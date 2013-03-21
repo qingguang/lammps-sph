@@ -1,0 +1,115 @@
+echo               both
+log                ${dname}/log.lammps
+dimension          ${ndim}
+units              si
+boundary           f f f
+atom_style         hybrid  bond meso
+# create simulation box
+
+#3D box
+include            ${ndim}-vars.lmp
+variable           cc equal 5*${dx}
+communicate        single cutoff ${cc} vel yes
+read_data           poly3d.txt
+#read_restart      sdpd.restart.9000000
+
+
+special_bonds   lj 1 1 1
+#region              void cylinder y ${Lx} ${Ly} ${Lz} -${Lz} EDGE units box
+region              void cylinder y 0 0 ${Ly} -${Ly} ${Lz} units box side in
+
+group solvent      type 1
+group polymer      type 2
+set  group solvent meso_rho ${sdpd_rho_solvent}
+set  group polymer meso_rho ${sdpd_rho_polymer}
+
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd/rhosum   ${h}
+variable           local_c equal ${prerun_c}
+variable           local_eta_s equal ${prerun_eta_s}
+variable           local_eta_p equal ${prerun_eta_p}
+variable           local_temp  equal ${prerun_temp}
+variable           local_H     equal ${prerun_H}
+variable           local_r0     equal ${prerun_r0}
+include            in.pair_and_bond
+fix                integrate_fix_full all meso
+fix wall all wall/region void lj93 1.0 1.0 ${h}
+ 
+include            stress.lmp
+include            ${ndim}-image.lmp
+
+compute            rho_peratom all meso_rho/atom
+include            dump_set.lmp
+
+thermo             1000
+
+variable           eta_p equal ${prerun_eta_p}
+variable           eta_s equal ${prerun_eta_s}
+variable           sound_speed equal ${prerun_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
+
+run                ${Nprerun} every 10000 "velocity all zero linear"
+
+#                  end of prerun
+
+variable           local_c equal ${sdpd_c}
+variable           local_eta_s equal ${sdpd_eta_s}
+variable           local_eta_p equal ${sdpd_eta_p}
+variable           local_temp  equal ${sdpd_temp} 
+variable           local_H     equal ${H}
+variable           local_r0     equal ${r0}
+include            in.pair_and_bond
+
+compute            ke all ke
+compute            sdpd_kin all temp
+compute            pe all pe bond
+
+variable           vke equal c_ke
+variable           vpe equal c_pe
+fix                print_energy all print 1000 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+
+
+# "profile" corrected temperature
+compute         pTemp all temp/profile 1 1 0 y 10
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
+
+thermo_style       custom step c_sdpd_kin c_pTemp
+thermo_modify      norm no
+thermo             1000
+variable    velx  atom vx
+variable    vely  atom vy 
+variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
+
+variable           eps equal 0
+#0.25*${dx}
+neighbor           ${eps} bin
+variable           eps delete
+neigh_modify       every 1
+
+
+restart 1000000    ${dname}/sdpd.restart
+
+
+variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
+variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
+fix                 kol_force all addforce v_var_x v_var_y 0.0
+#variable            var_kol atom ${A_kol}*${solvent_mass}*cos(2*PI*y/${Ly})
+#fix                 kol_force all addforce v_var_kol 0.0 0.0
+
+variable           eta_p equal ${sdpd_eta_p}
+variable           eta_s equal ${sdpd_eta_s}
+variable           sound_speed equal ${sdpd_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
+run   100000000 every 10000 "velocity all zero linear"
+
+

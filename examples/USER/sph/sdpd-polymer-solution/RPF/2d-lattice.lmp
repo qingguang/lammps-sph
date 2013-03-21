@@ -1,0 +1,10 @@
+variable           eps equal 0.3*${dx}
+variable           negeps equal -${eps}
+region             box block 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} units box
+# two types of atoms
+# 1: solvent
+# 2: polymer
+create_box         2 box
+lattice            sq ${dx}
+variable           eps delete
+variable           negeps delete
