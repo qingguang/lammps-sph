@@ -86,7 +86,7 @@ thermo             1000
 thermo_style       custom step  c_sdpd_kin
 thermo_modify      norm no
 
-dump imgDump all image 10000 image.*.jpg type type bond atom 1e-5 adiam 1e-5 view 0 0 zoom 1.75  box no 0.01
+dump imgDump all image 10000 image.*.jpg type type bond atom 1e-3 adiam 1e-3 view 0 0 zoom 1.75  box no 0.01
 dump_modify        imgDump pad 9
 
 neighbor           1.0e-6 bin
