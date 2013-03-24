@@ -6,7 +6,7 @@ function isbond(atom_number,        period, rem, current_npoly) {
   period = Nbeads + Nsolvent
   rem = (atom_number-1)%(period) # from 0 to period-1
   current_npoly = int(atom_number/period) + 1
-  return (rem<Nbeads-1) && (atom_number<iatom)  && (current_npoly<=Npoly)
+  return (rem<Nbeads-1) && (atom_number<natoms)  && (current_npoly<=Npoly)
 }
 
 BEGIN {
@@ -58,6 +58,9 @@ BEGIN {
     cutoff[x] =   0.5*(box[x,hi] - box[x,lo])
     cutoff[y] =   0.5*(box[y,hi] - box[y,lo])
     cutoff[z] =   0.5*(box[z,hi] - box[z,lo])
+    printf "cutoff[x]: %e\n", cutoff[x] > "/dev/stderr"
+    printf "cutoff[y]: %e\n", cutoff[y] > "/dev/stderr"
+    printf "cutoff[z]: %e\n", cutoff[z] > "/dev/stderr"
     inatoms=1
     print
     # skip empty line

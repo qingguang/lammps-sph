@@ -1,9 +1,11 @@
 variable           dim equal 2
 variable          kb       equal 1.3806503e-23
 
-variable           Ly  equal 1.803e-3
-variable           Lx  equal ${Ly}/50*20
 variable           dx   equal 2.5e-5
+variable           Ly  equal 44*${dx}
+variable           Lx  equal 44*${dx}
+variable           Lz  equal 44*${dx}
+
 variable           sdpd_rho equal 1000
 variable           sdpd_rho0 equal 1000
 variable           sdpd_c equal 3e-1

@@ -10,10 +10,11 @@ else
     exit -1
 fi
 
-nproc=6
+nproc=8
 ndim=3d
-Nbeads=100
-Nsolvent=100
+# 5, 10, 20, 40, 60, 80
+Nbeads=80
+Nsolvent=200
 Npoly=100
 dname=dataNpoly-${Npoly}Nbeads-${Nbeads}
 

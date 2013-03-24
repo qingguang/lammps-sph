@@ -42,11 +42,13 @@ color Name S blue
 
 color Axes Labels blue
 
-mol representation Lines 3.000000
+mol modselect 0 0 resid 10
+mol modstyle 0 0 Points 8.000000
 
 mol addrep 0
-mol modselect 1 0 resid 1
-#mol modstyle 1 0 VDW 0.500000 12.000000
+mol modselect 1 0 resid 10
+mol modstyle 1 0 Lines 2.000000
+display resetview
 
 set xt 0.2
 set yt 0.15
@@ -57,9 +59,9 @@ set ycmin [expr {${Ly} * 0.5 * (1-${yt})}]
 set xcmax [expr { ${xcmin} + ${Lx}*${xt}}]
 set ycmax [expr { ${ycmin} + ${Ly}*${yt}}]
 
-# set pbclist [list $Lx $Ly $Lz]
-# pbc set ${pbclist} -all
-# pbc box
+set pbclist [list $Lx $Ly $Lz]
+pbc set ${pbclist} -all
+#pbc box
 
 
 #pbc join resid -all  -verbose -sel "name polymer"

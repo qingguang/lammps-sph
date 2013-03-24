@@ -1,0 +1,2 @@
+bash genpsf.sh
+vmd -e single.tcl -psf poly3d.psf -dcd dataNpoly-100Nbeads-100/dump.dcd

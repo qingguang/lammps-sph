@@ -14,6 +14,7 @@ function mintag(f,s) {
 
 FNR==1 {
     ifile++
+    polymertype=2
 }
 
 ifile==1 && $0=="Bonds"{
