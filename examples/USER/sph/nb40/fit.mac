@@ -1,0 +1,14 @@
+kill(all);
+
+assume(mu>0);
+assume(N>1);
+logexpand: true;
+eq: log((N-1)^mu)  + log(A) = log(Rg);
+
+
+eq1: ev(eq, N=40, Rg=4.19666e-05);
+eq2: ev(eq, N=80, Rg=7.03773e-05);
+
+s: solve([eq1, eq2], [log(A), mu]);
+
+float(s);

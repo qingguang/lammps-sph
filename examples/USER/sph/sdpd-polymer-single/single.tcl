@@ -43,7 +43,7 @@ color Name S blue
 color Axes Labels blue
 
 mol modselect 0 0 resid 10
-mol modstyle 0 0 Points 8.000000
+mol modstyle 0 0 Points 40.000000
 
 mol addrep 0
 mol modselect 1 0 resid 10
@@ -67,3 +67,6 @@ pbc set ${pbclist} -all
 #pbc join resid -all  -verbose -sel "name polymer"
 
 user add key q {quit}
+
+set sel_res [atomselect top "resid 30"]
+animate write xyz data.xyz sel $sel_res 0
