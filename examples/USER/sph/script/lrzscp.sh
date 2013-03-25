@@ -1,2 +1,2 @@
-scp di56vul@lxlogin2.lrz.de:dump* .
+scp di56vul@lxlogin2.lrz.de:dump0100* .
 

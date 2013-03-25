@@ -40,3 +40,4 @@ variable           prerun_c equal 2.0
 variable           prerun_temp  equal 1e18
 variable           prerun_H          equal 100*${H}
 variable           prerun_r0          equal ${r0}
+variable           Npertrun equal  50000
