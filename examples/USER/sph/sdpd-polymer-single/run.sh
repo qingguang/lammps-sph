@@ -18,16 +18,17 @@ Nsolvent=40
 Npoly=1
 dname=dataNpoly-${Npoly}-Nbeads-${Nbeads}
 
-${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
-${restart2data} poly3d.restart poly3d.txt
+function preproc() {
+    ${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
+    ${restart2data} poly3d.restart poly3d.txt
+    awk -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=${Npoly} \
+	-f addpolymer.awk poly3d.txt > poly3.txt
+    nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
+    sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
+}
 
-awk -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=${Npoly} \
-    -f addpolymer.awk poly3d.txt > poly3.txt
-nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
-sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
-
-# add molecular IDs
-#awk -f addmollabel.awk poly3d.txt poly3d.txt poly3d.txt  > poly3m.txt
-#mv poly3m.txt poly3d.txt
-
-${mpirun} -np ${nproc} ${lmp} -var dname ${dname} -var ndim ${ndim} -in sdpd-polymer-run.lmp
+if [ $# -eq 1 ]; then
+    preproc
+else
+    ${mpirun} -np ${nproc} ${lmp} -var dname ${dname} -var ndim ${ndim} -in sdpd-polymer-run.lmp
+fi
