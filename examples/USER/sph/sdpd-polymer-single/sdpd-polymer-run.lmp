@@ -42,7 +42,7 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 10000 sdpd.restart
+restart 10000 ${dname}/sdpd.restart
 
 bond_coeff 1 ${H} ${r0}  0 0
 

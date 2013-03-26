@@ -13,12 +13,11 @@ fi
 nproc=8
 ndim=3d
 # 5, 10, 20, 40, 60, 80
-Nbeads=80
-Nsolvent=200
-Npoly=100
-dname=dataNpoly-${Npoly}Nbeads-${Nbeads}
+Nbeads=40
+Nsolvent=40
+Npoly=1
+dname=dataNpoly-${Npoly}-Nbeads-${Nbeads}
 
-rm -rf dum* im* poly* log.lammps
 ${lmp} -var ndim ${ndim} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt
 

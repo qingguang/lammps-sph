@@ -15,6 +15,9 @@ $sel_polymer set name polymer
 set sel_wall [atomselect top "name 4"]
 $sel_wall set name wall
 
+set sel_all [atomselect top "all"]
+$sel_all set mass 1.0
+$sel_all set radius 3e-6
 
 # domain size from lammps configuration file
 set Lx 0.0011
@@ -42,11 +45,11 @@ color Name S blue
 
 color Axes Labels blue
 
-mol modselect 0 0 resid 10
+mol modselect 0 0 resid 1
 mol modstyle 0 0 Points 40.000000
 
 mol addrep 0
-mol modselect 1 0 resid 10
+mol modselect 1 0 resid 1
 mol modstyle 1 0 Lines 2.000000
 display resetview
 
@@ -68,5 +71,5 @@ pbc set ${pbclist} -all
 
 user add key q {quit}
 
-set sel_res [atomselect top "resid 30"]
+set sel_res [atomselect top "resid 1"]
 animate write xyz data.xyz sel $sel_res 0
