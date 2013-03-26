@@ -13,10 +13,10 @@ fi
 
 nproc=2
 ndim=2d
-Nbeads=0
-Nsolvent=1
+Nbeads=32
+Nsolvent=32
 nx=512
-Force=164
+Force=3
 etas=3e-2
 etap=3e-2
 H0=0.1

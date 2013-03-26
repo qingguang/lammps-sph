@@ -9,8 +9,8 @@ atom_style         hybrid  bond meso
 include            ${ndim}-vars.lmp
 variable           cc equal 5*${dx}
 communicate        single cutoff ${cc} vel yes
-read_data           poly3d.txt
-#read_restart      sdpd.restart.2400000
+#read_data           poly3d.txt
+read_restart      sdpd.restart.1200000
 
 
 special_bonds   lj 1 1 1
