@@ -2,7 +2,7 @@ variable          dim equal 2
 variable          kb       equal 1.3806503e-23
 
 variable           dx   equal 8.3333e-4
-variable           Ly  equal ${nx}*${dx}*0.5
+variable           Ly  equal ${nx}*${dx}
 variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
 variable           sdpd_rho_polymer equal 1
@@ -40,3 +40,4 @@ variable           prerun_c equal 2.0
 variable           prerun_temp  equal 1e18
 variable           prerun_H          equal 100*${H}
 variable           prerun_r0          equal ${r0}
+variable           Npertrun equal  50000

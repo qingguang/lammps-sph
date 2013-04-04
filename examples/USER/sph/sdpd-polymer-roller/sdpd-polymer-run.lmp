@@ -10,7 +10,7 @@ include            ${ndim}-vars.lmp
 variable           cc equal 5*${dx}
 communicate        single cutoff ${cc} vel yes
 read_data           poly3d.txt
-#read_restart      sdpd.restart.1000000
+#read_restart      sdpd.restart.2400000
 
 
 special_bonds   lj 1 1 1
@@ -32,9 +32,9 @@ include            ${ndim}-image.lmp
 compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
-
+restart     ${Nprerun}  ${dname}/sdpd.restart.tem
 include           in.prerun
-
+restart     0
 #### end of prerun ####
 
 variable           local_c equal ${sdpd_c}
@@ -77,9 +77,22 @@ neighbor           ${eps} bin
 variable           eps delete
 neigh_modify       every 1
 
+variable           eta_p equal ${sdpd_eta_p}
+variable           eta_s equal ${sdpd_eta_s}
+variable           sound_speed equal ${sdpd_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
 
-restart 1000000    ${dname}/sdpd.restart
+##################
+restart           ${Npertrun}    ${dname}/sdpd.restart.pert
+include   in.perturbation
+run   ${Npertrun} every 5000 "velocity all zero linear"
+unfix  pert
+restart     0
+#####################
 
+restart 200000    ${dname}/sdpd.restart
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
@@ -87,12 +100,6 @@ fix                 kol_force all addforce v_var_x v_var_y 0.0
 #variable            var_kol atom ${A_kol}*${solvent_mass}*cos(2*PI*y/${Ly})
 #fix                 kol_force all addforce v_var_kol 0.0 0.0
 
-variable           eta_p equal ${sdpd_eta_p}
-variable           eta_s equal ${sdpd_eta_s}
-variable           sound_speed equal ${sdpd_c}
-include            settimestep.lmp
-timestep           ${dt}
-variable           dt delete
 
 run   100000000 every 10000 "velocity all zero linear"
 

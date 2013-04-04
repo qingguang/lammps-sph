@@ -1,5 +1,5 @@
 function Spectra2D()
-filelist=dir(fullfile('dump*.del.prj'));
+filelist=dir(fullfile('dump00120*.del.prj'));
 nfile=length(filelist)
 Ek=zeros();
 for filenumber=1:nfile
@@ -11,7 +11,8 @@ A =load(fullfile(name));
 warning("size of input data is: [%d %d]\n",size(A))
 # [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,96,0.08);
 warning("size of A is: %d*%d",size(A));
- [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,256,2.14e-1);
+# [f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,256,2.14e-1);
+[f1,f2,f3,f4,f5,f6,f7]=ES_Part(A,512,4.27e-1);
 warning("max vx is:%e and max vy is:%e \n",max(A(:,3)),max(A(:,4)));
 Ek=Ek+f3;
 %warning("Ek is %d",Ek)
