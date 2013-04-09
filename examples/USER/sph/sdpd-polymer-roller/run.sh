@@ -24,8 +24,8 @@ R0=4
 Delta=1
 c=10
 # use restart file 0: no, 1: yes
-restart=0
-restart_file=norestart
+restart=1
+restart_file=initial/nb16ns16H0.01R04.dat
 
 dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
