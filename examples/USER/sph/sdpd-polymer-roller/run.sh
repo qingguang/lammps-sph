@@ -13,31 +13,36 @@ fi
 
 nproc=8
 ndim=2d
-Nbeads=32
-Nsolvent=32
+Nbeads=4
+Nsolvent=5
 nx=512
-Force=3
-etas=3e-2
-etap=3e-2
-H0=0.1
+Force=1.0
+etas=3e-4
+etap=3e-4
+H0=0.01
 R0=4
-Delta=1.0
-dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
-#dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
+Delta=1
+c=10
+# use restart file 0: no, 1: yes
+restart=0
+restart_file=norestart
+
+dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} \
-      -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta}"
+      -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta} -var sdpd_c ${c} \
+      -var restart ${restart} -var restart_file ${restart_file}"
 
-${lmp} ${vars} -in sdpd-polymer-init.lmp
-${restart2data} poly3d.restart poly3d.txt
-
-
- awk -v cutoff=3.0 -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
-     -f addpolymer.awk poly3d.txt > poly3.txt
-nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
- sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
-
-# output directory name
+function preproc() {
+    ${lmp} ${vars} -in sdpd-polymer-init.lmp
+    ${restart2data} poly3d.restart poly3d.txt
+    awk -v Nbeads=${Nbeads} -v Nsolvent=${Nsolvent} -v Npoly=full \
+	-f addpolymer.awk poly3d.txt > poly3.txt
+    nbound=$(tail -n 1 poly3.txt | awk '{print $1}')
+    sed "s/_NUMBER_OF_BOUNDS_/$nbound/1" poly3.txt > poly3d.txt
+}
 
 mkdir -p ${dname}
+
+preproc
 ${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp

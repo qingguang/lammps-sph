@@ -15,4 +15,5 @@ include            settimestep.lmp
 timestep           ${dt}
 variable           dt delete
 
-run                ${Nprerun} every 10000 "velocity all zero linear"
+if "${restart}==0" then & 
+"run                ${Nprerun} every 10000 'velocity all zero linear'"

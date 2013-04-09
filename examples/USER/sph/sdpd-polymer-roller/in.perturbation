@@ -3,8 +3,8 @@ variable seed equal 12345
 variable xcener equal 0.5*${Lx}
 variable ycener equal 0.5*${Lx}
 
-variable perx atom -5*${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})*(x>${xcener})
-variable pery atom 5*${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})*(y>${xcener})
+variable perx atom -2*${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})*(x>${xcener})
+variable pery atom 2*${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})*(y>${xcener})
 
 fix pert all addforce v_perx v_pery 0.0
 

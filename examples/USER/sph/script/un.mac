@@ -1,0 +1,24 @@
+kill(all);
+load("dimension");
+
+put(rho, mass/length^3, dimension);
+put(v, length/time, dimension);
+put(c, length/time, dimension);
+put(t, time, dimension);
+put(dx, length, dimension);
+put(L, length, dimension);
+put(eta, length^2/time, dimension);
+put(F, length/time^2, dimension);
+put(H, mass*dimension(F)/length, dimension);
+put(kT, mass*dimension(F)*length, dimension);
+put(R0, length, dimension);
+
+
+/* (dx: 8.3333e-4, nx: 512, L: nx*dx, c: 10, eta: 3e-3, H: 0.01, F: 8, rho: 1); */
+
+dimension(F/eta*L^2);
+dimension(H*R0^2/kT);
+
+natural_unit(eta, [L, rho, c]);
+natural_unit(F, [L, rho, c]);
+natural_unit(H, [L, rho, c]);
