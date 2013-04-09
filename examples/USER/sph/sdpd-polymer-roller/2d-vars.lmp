@@ -7,17 +7,17 @@ variable           Lx  equal ${nx}*${dx}
 variable           sdpd_rho_solvent equal 1
 variable           sdpd_rho_polymer equal 1
 variable           sdpd_rho0 equal 1
-variable           sdpd_eta_s equal ${etas}*${nx}/512
-variable           sdpd_eta_p equal ${etap}*${nx}/512
+variable           sdpd_eta_s equal ${etas}
+variable           sdpd_eta_p equal ${etap}
 
 variable           sdpd_background equal 0
 variable           sdpd_temp equal 0
 variable           spring_fene_temp equal 1e15
 
 variable           h equal 2.7*${dx}
-variable          A_kol equal ${force}*512/${nx}
-variable          Nfreq equal 500
-variable          Nfreqimage equal 500
+variable          A_kol equal ${force}
+variable          Nfreq equal 5000
+variable          Nfreqimage equal 5000
 variable          Nfreqstress equal 2000
 variable          r0       equal ${R0}*${dx}
 variable          r0_fene     equal 3^(1.0/${dim})*${dx}
@@ -35,6 +35,6 @@ variable           prerun_eta_p equal ${sdpd_eta_p}
 variable           Npertrun equal  50000
 variable           prerun_c equal ${sdpd_c}
 variable           prerun_temp  equal 1e14
-variable           prerun_H          equal ${H0}*${nx}/512
+variable           prerun_H          equal ${H0}
 variable           prerun_r0          equal ${r0}
 

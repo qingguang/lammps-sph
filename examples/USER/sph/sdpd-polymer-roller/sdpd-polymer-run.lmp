@@ -50,7 +50,7 @@ variable           local_c equal ${sdpd_c}
 variable           local_eta_s equal ${sdpd_eta_s}
 variable           local_eta_p equal ${sdpd_eta_p}
 variable           local_temp  equal ${sdpd_temp} 
-variable           local_H     equal ${H0}*${nx}/512
+variable           local_H     equal ${H0}
 variable           local_r0     equal ${r0}
 include            in.pair_and_bond
 
