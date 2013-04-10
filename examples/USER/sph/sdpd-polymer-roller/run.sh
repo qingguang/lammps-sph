@@ -11,10 +11,10 @@ else
 fi
 
 
-nproc=2
+nproc=6
 ndim=2d
 Nbeads=32
-Nsolvent=32
+Nsolvent=33
 nx=512
 Force=3
 etas=3e-2
@@ -22,7 +22,7 @@ etap=3e-2
 H0=0.1
 R0=4
 Delta=1.0
-dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
+dname=test-feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
 #dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} \
