@@ -84,7 +84,7 @@ variable           eps equal 0
 #0.25*${dx}
 neighbor           ${eps} bin
 variable           eps delete
-neigh_modify       every 1
+neigh_modify       every 1 check no
 
 variable           eta_p equal ${sdpd_eta_p}
 variable           eta_s equal ${sdpd_eta_s}
@@ -109,6 +109,9 @@ restart 30000    ${dname}/sdpd.restart
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
+
+# variable bodyfx atom mass*${A_kol}*mass*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+# fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
 run   280000 every 10000 "velocity all zero linear" &
 "velocity all zero angular"
