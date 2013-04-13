@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -83,7 +83,8 @@ void Irregular::migrate_atoms()
   atom->nghost = 0;
   atom->avec->clear_bonus();
 
-  // subbox bounds for orthogonal or triclinic
+  // subbox bounds for orthogonal or triclinic box
+  // other comm/domain data used by coord2proc()
 
   double *sublo,*subhi;
   if (triclinic == 0) {
@@ -93,6 +94,13 @@ void Irregular::migrate_atoms()
     sublo = domain->sublo_lamda;
     subhi = domain->subhi_lamda;
   }
+
+  uniform = comm->uniform;
+  xsplit = comm->xsplit;
+  ysplit = comm->ysplit;
+  zsplit = comm->zsplit;
+  boxlo = domain->boxlo;
+  prd = domain->prd;
 
   // loop over atoms, flag any that are not in my sub-box
   // fill buffer with atoms leaving my box, using < and >=
@@ -109,20 +117,21 @@ void Irregular::migrate_atoms()
   int nsendatom = 0;
   int *sizes = new int[nlocal];
   int *proclist = new int[nlocal];
+  int igx,igy,igz;
 
   int i = 0;
   while (i < nlocal) {
     if (x[i][0] < sublo[0] || x[i][0] >= subhi[0] ||
-	x[i][1] < sublo[1] || x[i][1] >= subhi[1] ||
-	x[i][2] < sublo[2] || x[i][2] >= subhi[2]) {
-      proclist[nsendatom] = coord2proc(x[i]);
+        x[i][1] < sublo[1] || x[i][1] >= subhi[1] ||
+        x[i][2] < sublo[2] || x[i][2] >= subhi[2]) {
+      proclist[nsendatom] = coord2proc(x[i],igx,igy,igz);
       if (proclist[nsendatom] != me) {
-	if (nsend > maxsend) grow_send(nsend,1);
-	sizes[nsendatom] = avec->pack_exchange(i,&buf_send[nsend]);
-	nsend += sizes[nsendatom];
-	nsendatom++;
-	avec->copy(nlocal-1,i,1);
-	nlocal--;
+        if (nsend > maxsend) grow_send(nsend,1);
+        sizes[nsendatom] = avec->pack_exchange(i,&buf_send[nsend]);
+        nsend += sizes[nsendatom];
+        nsendatom++;
+        avec->copy(nlocal-1,i,1);
+        nlocal--;
       } else i++;
     } else i++;
   }
@@ -147,6 +156,88 @@ void Irregular::migrate_atoms()
   // reset global->local map
 
   if (map_style) atom->map_set();
+}
+
+/* ----------------------------------------------------------------------
+   check if any atoms need to migrate further than one proc away in any dim
+   if not, caller can decide to use comm->exchange() instead
+   atoms must be remapped to be inside simulation box before this is called
+   for triclinic: atoms must be in lamda coords (0-1) before this is called
+   return 1 if migrate required, 0 if not
+------------------------------------------------------------------------- */
+
+int Irregular::migrate_check()
+{
+  // subbox bounds for orthogonal or triclinic box
+  // other comm/domain data used by coord2proc()
+
+  double *sublo,*subhi;
+  if (triclinic == 0) {
+    sublo = domain->sublo;
+    subhi = domain->subhi;
+  } else {
+    sublo = domain->sublo_lamda;
+    subhi = domain->subhi_lamda;
+  }
+
+  uniform = comm->uniform;
+  xsplit = comm->xsplit;
+  ysplit = comm->ysplit;
+  zsplit = comm->zsplit;
+  boxlo = domain->boxlo;
+  prd = domain->prd;
+
+  // loop over atoms, check for any that are not in my sub-box
+  // assign which proc it belongs to via coord2proc()
+  // if logical igx,igy,igz of newproc > one away from myloc, set flag = 1
+  // this check needs to observe PBC
+  // cannot check via comm->procneigh since it ignores PBC
+
+  AtomVec *avec = atom->avec;
+  double **x = atom->x;
+  int nlocal = atom->nlocal;
+
+  int *periodicity = domain->periodicity;
+  int *myloc = comm->myloc;
+  int *procgrid = comm->procgrid;
+  int newproc,igx,igy,igz,glo,ghi;
+
+  int flag = 0;
+  for (int i = 0; i < nlocal; i++) {
+    if (x[i][0] < sublo[0] || x[i][0] >= subhi[0] ||
+        x[i][1] < sublo[1] || x[i][1] >= subhi[1] ||
+        x[i][2] < sublo[2] || x[i][2] >= subhi[2]) {
+      newproc = coord2proc(x[i],igx,igy,igz);
+
+      glo = myloc[0] - 1;
+      ghi = myloc[0] + 1;
+      if (periodicity[0]) {
+        if (glo < 0) glo = procgrid[0] - 1;
+        if (ghi >= procgrid[0]) ghi = 0;
+      }
+      if (igx != myloc[0] && igx != glo && igx != ghi) flag = 1;
+
+      glo = myloc[1] - 1;
+      ghi = myloc[1] + 1;
+      if (periodicity[1]) {
+        if (glo < 0) glo = procgrid[1] - 1;
+        if (ghi >= procgrid[1]) ghi = 0;
+      }
+      if (igy != myloc[1] && igy != glo && igy != ghi) flag = 1;
+
+      glo = myloc[2] - 1;
+      ghi = myloc[2] + 1;
+      if (periodicity[2]) {
+        if (glo < 0) glo = procgrid[2] - 1;
+        if (ghi >= procgrid[2]) ghi = 0;
+      }
+      if (igz != myloc[2] && igz != glo && igz != ghi) flag = 1;
+    }
+  }
+
+  int flagall;
+  MPI_Allreduce(&flag,&flagall,1,MPI_INT,MPI_MAX,world);
+  return flagall;
 }
 
 /* ----------------------------------------------------------------------
@@ -277,7 +368,7 @@ int Irregular::create_atom(int n, int *sizes, int *proclist)
 
   delete [] count;
   delete [] list;
-    
+
   // initialize plan
 
   aplan->nsend = nsend;
@@ -314,7 +405,7 @@ void Irregular::exchange_atom(double *sendbuf, int *sizes, double *recvbuf)
   offset = 0;
   for (int irecv = 0; irecv < aplan->nrecv; irecv++) {
     MPI_Irecv(&recvbuf[offset],aplan->length_recv[irecv],MPI_DOUBLE,
-	      aplan->proc_recv[irecv],0,world,&aplan->request[irecv]);
+              aplan->proc_recv[irecv],0,world,&aplan->request[irecv]);
     offset += aplan->length_recv[irecv];
   }
 
@@ -337,12 +428,12 @@ void Irregular::exchange_atom(double *sendbuf, int *sizes, double *recvbuf)
     for (i = 0; i < num_send; i++) {
       m = index_send[n++];
       memcpy(&buf[offset],&sendbuf[aplan->offset_send[m]],
-	     sizes[m]*sizeof(double));
+             sizes[m]*sizeof(double));
       offset += sizes[m];
     }
     MPI_Send(buf,aplan->length_send[isend],MPI_DOUBLE,
-	     aplan->proc_send[isend],0,world);
-  }       
+             aplan->proc_send[isend],0,world);
+  }
 
   // free temporary send buffer
 
@@ -499,7 +590,7 @@ int Irregular::create_data(int n, int *proclist)
 
   delete [] count;
   delete [] list;
-    
+
   // initialize plan and return it
 
   dplan->nsend = nsend;
@@ -536,7 +627,7 @@ void Irregular::exchange_data(char *sendbuf, int nbytes, char *recvbuf)
   offset = dplan->num_self*nbytes;
   for (int irecv = 0; irecv < dplan->nrecv; irecv++) {
     MPI_Irecv(&recvbuf[offset],dplan->num_recv[irecv]*nbytes,MPI_CHAR,
-	      dplan->proc_recv[irecv],0,world,&dplan->request[irecv]);
+              dplan->proc_recv[irecv],0,world,&dplan->request[irecv]);
     offset += dplan->num_recv[irecv]*nbytes;
   }
 
@@ -560,8 +651,8 @@ void Irregular::exchange_data(char *sendbuf, int nbytes, char *recvbuf)
       memcpy(&buf[i*nbytes],&sendbuf[m*nbytes],nbytes);
     }
     MPI_Send(buf,dplan->num_send[isend]*nbytes,MPI_CHAR,
-	     dplan->proc_send[isend],0,world);
-  }       
+             dplan->proc_send[isend],0,world);
+  }
 
   // free temporary send buffer
 
@@ -603,38 +694,79 @@ void Irregular::destroy_data()
 /* ----------------------------------------------------------------------
    determine which proc owns atom with coord x[3]
    x will be in box (orthogonal) or lamda coords (triclinic)
+   for uniform = 1, directly calculate owning proc
+   for non-uniform, iteratively find owning proc via binary search
+   return owning proc ID via grid2proc
+   return igx,igy,igz = logical grid loc of owing proc within 3d grid of procs
 ------------------------------------------------------------------------- */
 
-int Irregular::coord2proc(double *x)
+int Irregular::coord2proc(double *x, int &igx, int &igy, int &igz)
 {
-  int loc[3];
-  if (triclinic == 0) {
-    double *boxlo = domain->boxlo;
-    double *boxhi = domain->boxhi;
-    loc[0] = static_cast<int>
-      (procgrid[0] * (x[0]-boxlo[0]) / (boxhi[0]-boxlo[0]));
-    loc[1] = static_cast<int>
-      (procgrid[1] * (x[1]-boxlo[1]) / (boxhi[1]-boxlo[1]));
-    loc[2] = static_cast<int>
-      (procgrid[2] * (x[2]-boxlo[2]) / (boxhi[2]-boxlo[2]));
+  if (uniform) {
+    if (triclinic == 0) {
+      igx = static_cast<int> (procgrid[0] * (x[0]-boxlo[0]) / prd[0]);
+      igy = static_cast<int> (procgrid[1] * (x[1]-boxlo[1]) / prd[1]);
+      igz = static_cast<int> (procgrid[2] * (x[2]-boxlo[2]) / prd[2]);
+    } else {
+      igx = static_cast<int> (procgrid[0] * x[0]);
+      igy = static_cast<int> (procgrid[1] * x[1]);
+      igz = static_cast<int> (procgrid[2] * x[2]);
+    }
+
   } else {
-    loc[0] = static_cast<int> (procgrid[0] * x[0]);
-    loc[1] = static_cast<int> (procgrid[1] * x[1]);
-    loc[2] = static_cast<int> (procgrid[2] * x[2]);
+    if (triclinic == 0) {
+      igx = binary((x[0]-boxlo[0])/prd[0],procgrid[0],xsplit);
+      igy = binary((x[1]-boxlo[1])/prd[1],procgrid[1],ysplit);
+      igz = binary((x[2]-boxlo[2])/prd[2],procgrid[2],zsplit);
+    } else {
+      igx = binary(x[0],procgrid[0],xsplit);
+      igy = binary(x[1],procgrid[1],ysplit);
+      igz = binary(x[2],procgrid[2],zsplit);
+    }
   }
 
-  if (loc[0] < 0) loc[0] = 0;
-  if (loc[0] >= procgrid[0]) loc[0] = procgrid[0] - 1;
-  if (loc[1] < 0) loc[1] = 0;
-  if (loc[1] >= procgrid[1]) loc[1] = procgrid[1] - 1;
-  if (loc[2] < 0) loc[2] = 0;
-  if (loc[2] >= procgrid[2]) loc[2] = procgrid[2] - 1;
+  if (igx < 0) igx = 0;
+  if (igx >= procgrid[0]) igx = procgrid[0] - 1;
+  if (igy < 0) igy = 0;
+  if (igy >= procgrid[1]) igy = procgrid[1] - 1;
+  if (igz < 0) igz = 0;
+  if (igz >= procgrid[2]) igz = procgrid[2] - 1;
 
-  return grid2proc[loc[0]][loc[1]][loc[2]];
+  return grid2proc[igx][igy][igz];
 }
 
 /* ----------------------------------------------------------------------
-   realloc the size of the send buffer as needed with BUFFACTOR & BUFEXTRA 
+   binary search for value in N-length ascending vec
+   value may be outside range of vec limits
+   always return index from 0 to N-1 inclusive
+   return 0 if value < vec[0]
+   reutrn N-1 if value >= vec[N-1]
+   return index = 1 to N-2 if vec[index] <= value < vec[index+1]
+------------------------------------------------------------------------- */
+
+int Irregular::binary(double value, int n, double *vec)
+{
+  int lo = 0;
+  int hi = n-1;
+
+  if (value < vec[lo]) return lo;
+  if (value >= vec[hi]) return hi;
+
+  // insure vec[lo] <= value < vec[hi] at every iteration
+  // done when lo,hi are adjacent
+
+  int index = (lo+hi)/2;
+  while (lo < hi-1) {
+    if (value < vec[index]) hi = index;
+    else if (value >= vec[index]) lo = index;
+    index = (lo+hi)/2;
+  }
+
+  return index;
+}
+
+/* ----------------------------------------------------------------------
+   realloc the size of the send buffer as needed with BUFFACTOR & BUFEXTRA
    if flag = 1, realloc
    if flag = 0, don't need to realloc with copy, just free/malloc
 ------------------------------------------------------------------------- */
@@ -651,7 +783,7 @@ void Irregular::grow_send(int n, int flag)
 }
 
 /* ----------------------------------------------------------------------
-   free/malloc the size of the recv buffer as needed with BUFFACTOR 
+   free/malloc the size of the recv buffer as needed with BUFFACTOR
 ------------------------------------------------------------------------- */
 
 void Irregular::grow_recv(int n)

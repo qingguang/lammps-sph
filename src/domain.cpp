@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -31,19 +31,23 @@
 #include "region.h"
 #include "lattice.h"
 #include "comm.h"
+#include "universe.h"
+#include "math_const.h"
 #include "memory.h"
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace MathConst;
 
 #define BIG   1.0e20
 #define SMALL 1.0e-4
 #define DELTA 1
+#define BONDSTRETCH 1.1
 
 enum{NO_REMAP,X_REMAP,V_REMAP};                   // same as fix_deform.cpp
 
 /* ----------------------------------------------------------------------
-   default is periodic 
+   default is periodic
 ------------------------------------------------------------------------- */
 
 Domain::Domain(LAMMPS *lmp) : Pointers(lmp)
@@ -62,16 +66,18 @@ Domain::Domain(LAMMPS *lmp) : Pointers(lmp)
   boundary[2][0] = boundary[2][1] = 0;
 
   triclinic = 0;
+  tiltsmall = 1;
+
   boxlo[0] = boxlo[1] = boxlo[2] = -0.5;
   boxhi[0] = boxhi[1] = boxhi[2] = 0.5;
   xy = xz = yz = 0.0;
 
   h[3] = h[4] = h[5] = 0.0;
   h_inv[3] = h_inv[4] = h_inv[5] = 0.0;
-  h_rate[0] = h_rate[1] = h_rate[2] = 
+  h_rate[0] = h_rate[1] = h_rate[2] =
     h_rate[3] = h_rate[4] = h_rate[5] = 0.0;
   h_ratelo[0] = h_ratelo[1] = h_ratelo[2] = 0.0;
-  
+
   prd_lamda[0] = prd_lamda[1] = prd_lamda[2] = 1.0;
   prd_half_lamda[0] = prd_half_lamda[1] = prd_half_lamda[2] = 0.5;
   boxlo_lamda[0] = boxlo_lamda[1] = boxlo_lamda[2] = 0.0;
@@ -110,8 +116,8 @@ void Domain::init()
     if (strcmp(modify->fix[i]->style,"deform") == 0) {
       deform_flag = 1;
       if (((FixDeform *) modify->fix[i])->remapflag == V_REMAP) {
-	deform_vremap = 1;
-	deform_groupbit = modify->fix[i]->groupbit;
+        deform_vremap = 1;
+        deform_groupbit = modify->fix[i]->groupbit;
       }
     }
 
@@ -132,39 +138,44 @@ void Domain::set_initial_box()
   if (boxlo[0] >= boxhi[0] || boxlo[1] >= boxhi[1] || boxlo[2] >= boxhi[2])
     error->one(FLERR,"Box bounds are invalid");
 
-  if (triclinic) {
-    if (domain->dimension == 2 && (xz != 0.0 || yz != 0.0))
-      error->all(FLERR,"Cannot skew triclinic box in z for 2d simulation");
-    if (xy != 0.0 && (!xperiodic || !yperiodic))
-      error->all(FLERR,"Triclinic box must be periodic in skewed dimensions");
-    if (xz != 0.0 && (!xperiodic || !zperiodic))
-      error->all(FLERR,"Triclinic box must be periodic in skewed dimensions");
-    if (yz != 0.0 && (!yperiodic || !zperiodic))
-      error->all(FLERR,"Triclinic box must be periodic in skewed dimensions");
+  if (domain->dimension == 2 && (xz != 0.0 || yz != 0.0))
+    error->all(FLERR,"Cannot skew triclinic box in z for 2d simulation");
 
-    if (fabs(xy/(boxhi[0]-boxlo[0])) > 0.5)
-      error->all(FLERR,"Triclinic box skew is too large");
-    if (fabs(xz/(boxhi[0]-boxlo[0])) > 0.5)
-      error->all(FLERR,"Triclinic box skew is too large");
-    if (fabs(yz/(boxhi[1]-boxlo[1])) > 0.5)
-      error->all(FLERR,"Triclinic box skew is too large");
+  // error check or warning on triclinic tilt factors
+
+  if (triclinic) {
+    if ((fabs(xy/(boxhi[0]-boxlo[0])) > 0.5 && xperiodic) || 
+        (fabs(xz/(boxhi[0]-boxlo[0])) > 0.5 && xperiodic) ||
+        (fabs(yz/(boxhi[1]-boxlo[1])) > 0.5 && yperiodic)) {
+      if (tiltsmall)
+        error->all(FLERR,"Triclinic box skew is too large");
+      else if (comm->me == 0)
+        error->warning(FLERR,"Triclinic box skew is large");
+    }
   }
+
+  // set small based on box size and SMALL
+  // this works for any unit system
+
+  small[0] = SMALL * (boxhi[0] - boxlo[0]);
+  small[1] = SMALL * (boxhi[1] - boxlo[1]);
+  small[2] = SMALL * (boxhi[2] - boxlo[2]);
 
   // adjust box lo/hi for shrink-wrapped dims
 
-  if (boundary[0][0] == 2) boxlo[0] -= SMALL;
+  if (boundary[0][0] == 2) boxlo[0] -= small[0];
   else if (boundary[0][0] == 3) minxlo = boxlo[0];
-  if (boundary[0][1] == 2) boxhi[0] += SMALL;
+  if (boundary[0][1] == 2) boxhi[0] += small[0];
   else if (boundary[0][1] == 3) minxhi = boxhi[0];
 
-  if (boundary[1][0] == 2) boxlo[1] -= SMALL;
+  if (boundary[1][0] == 2) boxlo[1] -= small[1];
   else if (boundary[1][0] == 3) minylo = boxlo[1];
-  if (boundary[1][1] == 2) boxhi[1] += SMALL;
+  if (boundary[1][1] == 2) boxhi[1] += small[1];
   else if (boundary[1][1] == 3) minyhi = boxhi[1];
 
-  if (boundary[2][0] == 2) boxlo[2] -= SMALL;
+  if (boundary[2][0] == 2) boxlo[2] -= small[2];
   else if (boundary[2][0] == 3) minzlo = boxlo[2];
-  if (boundary[2][1] == 2) boxhi[2] += SMALL;
+  if (boundary[2][1] == 2) boxhi[2] += small[2];
   else if (boundary[2][1] == 3) minzhi = boxhi[2];
 }
 
@@ -197,7 +208,7 @@ void Domain::set_global_box()
     h_inv[3] = -h[3] / (h[1]*h[2]);
     h_inv[4] = (h[3]*h[5] - h[1]*h[4]) / (h[0]*h[1]*h[2]);
     h_inv[5] = -h[5] / (h[0]*h[1]);
-    
+
     boxlo_bound[0] = MIN(boxlo[0],boxlo[0]+xy);
     boxlo_bound[0] = MIN(boxlo_bound[0],boxlo_bound[0]+xz);
     boxlo_bound[1] = MIN(boxlo[1],boxlo[1]+yz);
@@ -211,58 +222,57 @@ void Domain::set_global_box()
 }
 
 /* ----------------------------------------------------------------------
-   set lamda box params, only need be done one time
-   assumes global box is defined and proc assignment has been made by comm
-   for uppermost proc, insure subhi = 1.0 (in case round-off occurs)
+   set lamda box params
+   assumes global box is defined and proc assignment has been made
+   uses comm->xyz_split to define subbox boundaries in consistent manner
 ------------------------------------------------------------------------- */
 
 void Domain::set_lamda_box()
 {
   int *myloc = comm->myloc;
-  int *procgrid = comm->procgrid;
+  double *xsplit = comm->xsplit;
+  double *ysplit = comm->ysplit;
+  double *zsplit = comm->zsplit;
 
-  sublo_lamda[0] = 1.0*myloc[0] / procgrid[0];
-  sublo_lamda[1] = 1.0*myloc[1] / procgrid[1];
-  sublo_lamda[2] = 1.0*myloc[2] / procgrid[2];
+  sublo_lamda[0] = xsplit[myloc[0]];
+  subhi_lamda[0] = xsplit[myloc[0]+1];
 
-  if (myloc[0] < procgrid[0]-1)
-    subhi_lamda[0] = 1.0*(myloc[0]+1) / procgrid[0];
-  else subhi_lamda[0] = 1.0;
+  sublo_lamda[1] = ysplit[myloc[1]];
+  subhi_lamda[1] = ysplit[myloc[1]+1];
 
-  if (myloc[1] < procgrid[1]-1)
-    subhi_lamda[1] = 1.0*(myloc[1]+1) / procgrid[1];
-  else subhi_lamda[1] = 1.0;
-
-  if (myloc[2] < procgrid[2]-1)
-    subhi_lamda[2] = 1.0*(myloc[2]+1) / procgrid[2];
-  else subhi_lamda[2] = 1.0;
+  sublo_lamda[2] = zsplit[myloc[2]];
+  subhi_lamda[2] = zsplit[myloc[2]+1];
 }
 
 /* ----------------------------------------------------------------------
-   set local subbox params
+   set local subbox params for orthogonal boxes
    assumes global box is defined and proc assignment has been made
-   for uppermost proc, insure subhi = boxhi (in case round-off occurs)
+   uses comm->xyz_split to define subbox boundaries in consistent manner
+   insure subhi[max] = boxhi
 ------------------------------------------------------------------------- */
 
 void Domain::set_local_box()
 {
   int *myloc = comm->myloc;
   int *procgrid = comm->procgrid;
+  double *xsplit = comm->xsplit;
+  double *ysplit = comm->ysplit;
+  double *zsplit = comm->zsplit;
 
   if (triclinic == 0) {
-    sublo[0] = boxlo[0] + myloc[0] * xprd / procgrid[0];
+    sublo[0] = boxlo[0] + xprd*xsplit[myloc[0]];
     if (myloc[0] < procgrid[0]-1)
-      subhi[0] = boxlo[0] + (myloc[0]+1) * xprd / procgrid[0];
+      subhi[0] = boxlo[0] + xprd*xsplit[myloc[0]+1];
     else subhi[0] = boxhi[0];
-    
-    sublo[1] = boxlo[1] + myloc[1] * yprd / procgrid[1];
+
+    sublo[1] = boxlo[1] + yprd*ysplit[myloc[1]];
     if (myloc[1] < procgrid[1]-1)
-      subhi[1] = boxlo[1] + (myloc[1]+1) * yprd / procgrid[1];
+      subhi[1] = boxlo[1] + yprd*ysplit[myloc[1]+1];
     else subhi[1] = boxhi[1];
 
-    sublo[2] = boxlo[2] + myloc[2] * zprd / procgrid[2];
+    sublo[2] = boxlo[2] + zprd*zsplit[myloc[2]];
     if (myloc[2] < procgrid[2]-1)
-      subhi[2] = boxlo[2] + (myloc[2]+1) * zprd / procgrid[2];
+      subhi[2] = boxlo[2] + zprd*zsplit[myloc[2]+1];
     else subhi[2] = boxhi[2];
   }
 }
@@ -270,19 +280,16 @@ void Domain::set_local_box()
 /* ----------------------------------------------------------------------
    reset global & local boxes due to global box boundary changes
    if shrink-wrapped, determine atom extent and reset boxlo/hi
-   if shrink-wrapped and triclinic, perform shrink-wrap in box coords
+   for triclinic, atoms must be in lamda coords (0-1) before reset_box is called
 ------------------------------------------------------------------------- */
 
 void Domain::reset_box()
 {
+  // perform shrink-wrapping
+  // compute extent of atoms on this proc
+  // for triclinic, this is done in lamda space
+
   if (nonperiodic == 2) {
-
-    // convert back to box coords for shrink-wrap operation
-
-    if (triclinic) lamda2x(atom->nlocal);
-
-    // compute extent of atoms on this proc
-
     double extent[3][2],all[3][2];
 
     extent[2][0] = extent[1][0] = extent[0][0] = BIG;
@@ -290,7 +297,7 @@ void Domain::reset_box()
 
     double **x = atom->x;
     int nlocal = atom->nlocal;
-    
+
     for (int i = 0; i < nlocal; i++) {
       extent[0][0] = MIN(extent[0][0],x[i][0]);
       extent[0][1] = MAX(extent[0][1],x[i][0]);
@@ -309,37 +316,91 @@ void Domain::reset_box()
 
     MPI_Allreduce(extent,all,6,MPI_DOUBLE,MPI_MAX,world);
 
+    // for triclinic, convert back to box coords before changing box
+
+    if (triclinic) lamda2x(atom->nlocal);
+
     // in shrink-wrapped dims, set box by atom extent
     // if minimum set, enforce min box size settings
+    // for triclinic, convert lamda extent to box coords, then set box lo/hi
+    // decided NOT to do the next comment - don't want to sneakily change tilt
+    // for triclinic, adjust tilt factors if 2nd dim is shrink-wrapped,
+    //   so that displacement in 1st dim stays the same
 
-    if (xperiodic == 0) {
-      if (boundary[0][0] == 2) boxlo[0] = -all[0][0] - SMALL;
-      else if (boundary[0][0] == 3) boxlo[0] = MIN(-all[0][0]-SMALL,minxlo);
-      if (boundary[0][1] == 2) boxhi[0] = all[0][1] + SMALL;
-      else if (boundary[0][1] == 3) boxhi[0] = MAX(all[0][1]+SMALL,minxhi);
-      if (boxlo[0] > boxhi[0]) error->all(FLERR,"Illegal simulation box");
-    }
-    if (yperiodic == 0) {
-      if (boundary[1][0] == 2) boxlo[1] = -all[1][0] - SMALL;
-      else if (boundary[1][0] == 3) boxlo[1] = MIN(-all[1][0]-SMALL,minylo);
-      if (boundary[1][1] == 2) boxhi[1] = all[1][1] + SMALL;
-      else if (boundary[1][1] == 3) boxhi[1] = MAX(all[1][1]+SMALL,minyhi);
-      if (boxlo[1] > boxhi[1]) error->all(FLERR,"Illegal simulation box");
-    }
-    if (zperiodic == 0) {
-      if (boundary[2][0] == 2) boxlo[2] = -all[2][0] - SMALL;
-      else if (boundary[2][0] == 3) boxlo[2] = MIN(-all[2][0]-SMALL,minzlo);
-      if (boundary[2][1] == 2) boxhi[2] = all[2][1] + SMALL;
-      else if (boundary[2][1] == 3) boxhi[2] = MAX(all[2][1]+SMALL,minzhi);
-      if (boxlo[2] > boxhi[2]) error->all(FLERR,"Illegal simulation box");
+    if (triclinic == 0) {
+      if (xperiodic == 0) {
+        if (boundary[0][0] == 2) boxlo[0] = -all[0][0] - small[0];
+        else if (boundary[0][0] == 3)
+          boxlo[0] = MIN(-all[0][0]-small[0],minxlo);
+        if (boundary[0][1] == 2) boxhi[0] = all[0][1] + small[0];
+        else if (boundary[0][1] == 3) boxhi[0] = MAX(all[0][1]+small[0],minxhi);
+        if (boxlo[0] > boxhi[0]) error->all(FLERR,"Illegal simulation box");
+      }
+      if (yperiodic == 0) {
+        if (boundary[1][0] == 2) boxlo[1] = -all[1][0] - small[1];
+        else if (boundary[1][0] == 3)
+          boxlo[1] = MIN(-all[1][0]-small[1],minylo);
+        if (boundary[1][1] == 2) boxhi[1] = all[1][1] + small[1];
+        else if (boundary[1][1] == 3) boxhi[1] = MAX(all[1][1]+small[1],minyhi);
+        if (boxlo[1] > boxhi[1]) error->all(FLERR,"Illegal simulation box");
+      }
+      if (zperiodic == 0) {
+        if (boundary[2][0] == 2) boxlo[2] = -all[2][0] - small[2];
+        else if (boundary[2][0] == 3)
+          boxlo[2] = MIN(-all[2][0]-small[2],minzlo);
+        if (boundary[2][1] == 2) boxhi[2] = all[2][1] + small[2];
+        else if (boundary[2][1] == 3) boxhi[2] = MAX(all[2][1]+small[2],minzhi);
+        if (boxlo[2] > boxhi[2]) error->all(FLERR,"Illegal simulation box");
+      }
+
+    } else {
+      double lo[3],hi[3];
+      if (xperiodic == 0) {
+        lo[0] = -all[0][0]; lo[1] = 0.0; lo[2] = 0.0;
+        lamda2x(lo,lo);
+        hi[0] = all[0][1]; hi[1] = 0.0; hi[2] = 0.0;
+        lamda2x(hi,hi);
+        if (boundary[0][0] == 2) boxlo[0] = lo[0] - small[0];
+        else if (boundary[0][0] == 3) boxlo[0] = MIN(lo[0]-small[0],minxlo);
+        if (boundary[0][1] == 2) boxhi[0] = hi[0] + small[0];
+        else if (boundary[0][1] == 3) boxhi[0] = MAX(hi[0]+small[0],minxhi);
+        if (boxlo[0] > boxhi[0]) error->all(FLERR,"Illegal simulation box");
+      }
+      if (yperiodic == 0) {
+        lo[0] = 0.0; lo[1] = -all[1][0]; lo[2] = 0.0;
+        lamda2x(lo,lo);
+        hi[0] = 0.0; hi[1] = all[1][1]; hi[2] = 0.0;
+        lamda2x(hi,hi);
+        if (boundary[1][0] == 2) boxlo[1] = lo[1] - small[1];
+        else if (boundary[1][0] == 3) boxlo[1] = MIN(lo[1]-small[1],minylo);
+        if (boundary[1][1] == 2) boxhi[1] = hi[1] + small[1];
+        else if (boundary[1][1] == 3) boxhi[1] = MAX(hi[1]+small[1],minyhi);
+        if (boxlo[1] > boxhi[1]) error->all(FLERR,"Illegal simulation box");
+        //xy *= (boxhi[1]-boxlo[1]) / yprd;
+      }
+      if (zperiodic == 0) {
+        lo[0] = 0.0; lo[1] = 0.0; lo[2] = -all[2][0];
+        lamda2x(lo,lo);
+        hi[0] = 0.0; hi[1] = 0.0; hi[2] = all[2][1];
+        lamda2x(hi,hi);
+        if (boundary[2][0] == 2) boxlo[2] = lo[2] - small[2];
+        else if (boundary[2][0] == 3) boxlo[2] = MIN(lo[2]-small[2],minzlo);
+        if (boundary[2][1] == 2) boxhi[2] = hi[2] + small[2];
+        else if (boundary[2][1] == 3) boxhi[2] = MAX(hi[2]+small[2],minzhi);
+        if (boxlo[2] > boxhi[2]) error->all(FLERR,"Illegal simulation box");
+        //xz *= (boxhi[2]-boxlo[2]) / xprd;
+        //yz *= (boxhi[2]-boxlo[2]) / yprd;
+      }
     }
   }
+
+  // reset box whether shrink-wrapping or not
 
   set_global_box();
   set_local_box();
 
-  // if shrink-wrapped, convert to lamda coords for new box
-  // must re-invoke pbc() b/c x2lamda result can be outside 0,1 due to roundoff
+  // if shrink-wrapped & triclinic, re-convert to lamda coords for new box
+  // re-invoke pbc() b/c x2lamda result can be outside [0,1] due to roundoff
 
   if (nonperiodic == 2 && triclinic) {
     x2lamda(atom->nlocal);
@@ -360,13 +421,14 @@ void Domain::reset_box()
 
 void Domain::pbc()
 {
-  int i,idim,otherdims;
+  int i;
+  tagint idim,otherdims;
   double *lo,*hi,*period;
   int nlocal = atom->nlocal;
   double **x = atom->x;
   double **v = atom->v;
   int *mask = atom->mask;
-  int *image = atom->image;
+  tagint *image = atom->image;
 
   if (triclinic == 0) {
     lo = boxlo;
@@ -381,102 +443,157 @@ void Domain::pbc()
   for (i = 0; i < nlocal; i++) {
     if (xperiodic) {
       if (x[i][0] < lo[0]) {
-	x[i][0] += period[0];
-	if (deform_vremap && mask[i] & deform_groupbit) v[i][0] += h_rate[0];
-	idim = image[i] & 1023;
+        x[i][0] += period[0];
+        if (deform_vremap && mask[i] & deform_groupbit) v[i][0] += h_rate[0];
+        idim = image[i] & IMGMASK;
         otherdims = image[i] ^ idim;
-	idim--;
-	idim &= 1023;
-	image[i] = otherdims | idim;
+        idim--;
+        idim &= IMGMASK;
+        image[i] = otherdims | idim;
       }
       if (x[i][0] >= hi[0]) {
-	x[i][0] -= period[0];
-	x[i][0] = MAX(x[i][0],lo[0]);
-	if (deform_vremap && mask[i] & deform_groupbit) v[i][0] -= h_rate[0];
-	idim = image[i] & 1023;
-	otherdims = image[i] ^ idim;
-	idim++;
-	idim &= 1023;
-	image[i] = otherdims | idim;
+        x[i][0] -= period[0];
+        x[i][0] = MAX(x[i][0],lo[0]);
+        if (deform_vremap && mask[i] & deform_groupbit) v[i][0] -= h_rate[0];
+        idim = image[i] & IMGMASK;
+        otherdims = image[i] ^ idim;
+        idim++;
+        idim &= IMGMASK;
+        image[i] = otherdims | idim;
       }
     }
 
     if (yperiodic) {
       if (x[i][1] < lo[1]) {
-	x[i][1] += period[1];
-	if (deform_vremap && mask[i] & deform_groupbit) {
-	  v[i][0] += h_rate[5];
-	  v[i][1] += h_rate[1];
-	}
-	idim = (image[i] >> 10) & 1023;
-        otherdims = image[i] ^ (idim << 10);
-	idim--;
-	idim &= 1023;
-	image[i] = otherdims | (idim << 10);
+        x[i][1] += period[1];
+        if (deform_vremap && mask[i] & deform_groupbit) {
+          v[i][0] += h_rate[5];
+          v[i][1] += h_rate[1];
+        }
+        idim = (image[i] >> IMGBITS) & IMGMASK;
+        otherdims = image[i] ^ (idim << IMGBITS);
+        idim--;
+        idim &= IMGMASK;
+        image[i] = otherdims | (idim << IMGBITS);
       }
       if (x[i][1] >= hi[1]) {
-	x[i][1] -= period[1];
-	x[i][1] = MAX(x[i][1],lo[1]);
-	if (deform_vremap && mask[i] & deform_groupbit) {
-	  v[i][0] -= h_rate[5];
-	  v[i][1] -= h_rate[1];
-	}
-	idim = (image[i] >> 10) & 1023;
-        otherdims = image[i] ^ (idim << 10);
-	idim++;
-	idim &= 1023;
-	image[i] = otherdims | (idim << 10);
+        x[i][1] -= period[1];
+        x[i][1] = MAX(x[i][1],lo[1]);
+        if (deform_vremap && mask[i] & deform_groupbit) {
+          v[i][0] -= h_rate[5];
+          v[i][1] -= h_rate[1];
+        }
+        idim = (image[i] >> IMGBITS) & IMGMASK;
+        otherdims = image[i] ^ (idim << IMGBITS);
+        idim++;
+        idim &= IMGMASK;
+        image[i] = otherdims | (idim << IMGBITS);
       }
     }
 
     if (zperiodic) {
       if (x[i][2] < lo[2]) {
-	x[i][2] += period[2];
-	if (deform_vremap && mask[i] & deform_groupbit) {
-	  v[i][0] += h_rate[4];
-	  v[i][1] += h_rate[3];
-	  v[i][2] += h_rate[2];
-	}
-	idim = image[i] >> 20;
-        otherdims = image[i] ^ (idim << 20);
-	idim--;
-	idim &= 1023;
-	image[i] = otherdims | (idim << 20);
+        x[i][2] += period[2];
+        if (deform_vremap && mask[i] & deform_groupbit) {
+          v[i][0] += h_rate[4];
+          v[i][1] += h_rate[3];
+          v[i][2] += h_rate[2];
+        }
+        idim = image[i] >> IMG2BITS;
+        otherdims = image[i] ^ (idim << IMG2BITS);
+        idim--;
+        idim &= IMGMASK;
+        image[i] = otherdims | (idim << IMG2BITS);
       }
       if (x[i][2] >= hi[2]) {
-	x[i][2] -= period[2];
-	x[i][2] = MAX(x[i][2],lo[2]);
-	if (deform_vremap && mask[i] & deform_groupbit) {
-	  v[i][0] -= h_rate[4];
-	  v[i][1] -= h_rate[3];
-	  v[i][2] -= h_rate[2];
-	}
-	idim = image[i] >> 20;
-        otherdims = image[i] ^ (idim << 20);
-	idim++;
-	idim &= 1023;
-	image[i] = otherdims | (idim << 20);
+        x[i][2] -= period[2];
+        x[i][2] = MAX(x[i][2],lo[2]);
+        if (deform_vremap && mask[i] & deform_groupbit) {
+          v[i][0] -= h_rate[4];
+          v[i][1] -= h_rate[3];
+          v[i][2] -= h_rate[2];
+        }
+        idim = image[i] >> IMG2BITS;
+        otherdims = image[i] ^ (idim << IMG2BITS);
+        idim++;
+        idim &= IMGMASK;
+        image[i] = otherdims | (idim << IMG2BITS);
       }
     }
   }
 }
 
 /* ----------------------------------------------------------------------
-   minimum image convention check
-   return 1 if any distance > 1/2 of box size
+   check that no pair of atoms in a bonded interaction
+   are further apart than half a periodic box length
 ------------------------------------------------------------------------- */
 
-int Domain::minimum_image_check(double dx, double dy, double dz)
+void Domain::box_too_small_check()
 {
-  if (xperiodic && fabs(dx) > xprd_half) return 1;
-  if (yperiodic && fabs(dy) > yprd_half) return 1;
-  if (zperiodic && fabs(dz) > zprd_half) return 1;
-  return 0;
+  int i,j,k;
+
+  // only need to check if system is molecular and some dimension is periodic
+  // if running verlet/split, don't check on KSpace partition since
+  //    it has no ghost atoms and thus bond partners won't exist
+
+  if (!atom->molecular) return;
+  if (!xperiodic && !yperiodic && (dimension == 2 || !zperiodic)) return;
+  if (strcmp(update->integrate_style,"verlet/split") == 0 &&
+      universe->iworld != 0) return;
+
+  // maxbondall = longest current bond length
+  // NOTE: if box is tiny (less than 2 * bond-length),
+  //       the check itself may compute bad bond lengths
+  //       not sure how to account for that extreme case
+
+  int *num_bond = atom->num_bond;
+  int **bond_atom = atom->bond_atom;
+  double **x = atom->x;
+  int nlocal = atom->nlocal;
+
+  double delx,dely,delz,rsq,r;
+  double maxbondme = 0.0;
+
+  for (i = 0; i < nlocal; i++)
+    for (j = 0; j < num_bond[i]; j++) {
+      k = atom->map(bond_atom[i][j]);
+      if (k == -1) error->one(FLERR,"Bond atom missing in box size check");
+      delx = x[i][0] - x[k][0];
+      dely = x[i][1] - x[k][1];
+      delz = x[i][2] - x[k][2];
+      domain->minimum_image(delx,dely,delz);
+      rsq = delx*delx + dely*dely + delz*delz;
+      maxbondme = MAX(maxbondme,rsq);
+    }
+
+  double maxbondall;
+  MPI_Allreduce(&maxbondme,&maxbondall,1,MPI_DOUBLE,MPI_MAX,world);
+  maxbondall = sqrt(maxbondall);
+
+  // maxdelta = furthest apart 2 atoms in a bonded interaction can be
+  // include BONDSTRETCH factor to account for dynamics
+
+  double maxdelta = maxbondall * BONDSTRETCH;
+  if (atom->nangles) maxdelta = 2.0 * maxbondall * BONDSTRETCH;
+  if (atom->ndihedrals) maxdelta = 3.0 * maxbondall * BONDSTRETCH;
+
+  // maxdelta cannot be more than half a periodic box length,
+  // else when use minimg() in bond/angle/dihdral compute,
+  // could calculate incorrect distance between 2 atoms
+
+  int flag = 0;
+  if (xperiodic && maxdelta > xprd_half) flag = 1;
+  if (yperiodic && maxdelta > yprd_half) flag = 1;
+  if (dimension == 3 && zperiodic && maxdelta > zprd_half) flag = 1;
+
+  if (flag)
+    error->all(FLERR,
+               "Bond/angle/dihedral extent > half of periodic box length");
 }
 
 /* ----------------------------------------------------------------------
    minimum image convention
-   use 1/2 of box size as test 
+   use 1/2 of box size as test
    for triclinic, also add/subtract tilt factors in other dims as needed
 ------------------------------------------------------------------------- */
 
@@ -485,52 +602,52 @@ void Domain::minimum_image(double &dx, double &dy, double &dz)
   if (triclinic == 0) {
     if (xperiodic) {
       if (fabs(dx) > xprd_half) {
-	if (dx < 0.0) dx += xprd;
-	else dx -= xprd;
+        if (dx < 0.0) dx += xprd;
+        else dx -= xprd;
       }
     }
     if (yperiodic) {
       if (fabs(dy) > yprd_half) {
-	if (dy < 0.0) dy += yprd;
-	else dy -= yprd;
+        if (dy < 0.0) dy += yprd;
+        else dy -= yprd;
       }
     }
     if (zperiodic) {
       if (fabs(dz) > zprd_half) {
-	if (dz < 0.0) dz += zprd;
-	else dz -= zprd;
+        if (dz < 0.0) dz += zprd;
+        else dz -= zprd;
       }
     }
 
   } else {
     if (zperiodic) {
       if (fabs(dz) > zprd_half) {
-	if (dz < 0.0) {
-	  dz += zprd;
-	  dy += yz;
-	  dx += xz;
-	} else {
-	  dz -= zprd;
-	  dy -= yz;
-	  dx -= xz;
-	}
+        if (dz < 0.0) {
+          dz += zprd;
+          dy += yz;
+          dx += xz;
+        } else {
+          dz -= zprd;
+          dy -= yz;
+          dx -= xz;
+        }
       }
     }
     if (yperiodic) {
       if (fabs(dy) > yprd_half) {
-	if (dy < 0.0) {
-	  dy += yprd;
-	  dx += xy;
-	} else {
-	  dy -= yprd;
-	  dx -= xy;
-	}
+        if (dy < 0.0) {
+          dy += yprd;
+          dx += xy;
+        } else {
+          dy -= yprd;
+          dx -= xy;
+        }
       }
     }
     if (xperiodic) {
       if (fabs(dx) > xprd_half) {
-	if (dx < 0.0) dx += xprd;
-	else dx -= xprd;
+        if (dx < 0.0) dx += xprd;
+        else dx -= xprd;
       }
     }
   }
@@ -547,173 +664,198 @@ void Domain::minimum_image(double *delta)
   if (triclinic == 0) {
     if (xperiodic) {
       if (fabs(delta[0]) > xprd_half) {
-	if (delta[0] < 0.0) delta[0] += xprd;
-	else delta[0] -= xprd;
+        if (delta[0] < 0.0) delta[0] += xprd;
+        else delta[0] -= xprd;
       }
     }
     if (yperiodic) {
       if (fabs(delta[1]) > yprd_half) {
-	if (delta[1] < 0.0) delta[1] += yprd;
-	else delta[1] -= yprd;
+        if (delta[1] < 0.0) delta[1] += yprd;
+        else delta[1] -= yprd;
       }
     }
     if (zperiodic) {
       if (fabs(delta[2]) > zprd_half) {
-	if (delta[2] < 0.0) delta[2] += zprd;
-	else delta[2] -= zprd;
+        if (delta[2] < 0.0) delta[2] += zprd;
+        else delta[2] -= zprd;
       }
     }
 
   } else {
     if (zperiodic) {
       if (fabs(delta[2]) > zprd_half) {
-	if (delta[2] < 0.0) {
-	  delta[2] += zprd;
-	  delta[1] += yz;
-	  delta[0] += xz;
-	} else {
-	  delta[2] -= zprd;
-	  delta[1] -= yz;
-	  delta[0] -= xz;
-	}
+        if (delta[2] < 0.0) {
+          delta[2] += zprd;
+          delta[1] += yz;
+          delta[0] += xz;
+        } else {
+          delta[2] -= zprd;
+          delta[1] -= yz;
+          delta[0] -= xz;
+        }
       }
     }
     if (yperiodic) {
       if (fabs(delta[1]) > yprd_half) {
-	if (delta[1] < 0.0) {
-	  delta[1] += yprd;
-	  delta[0] += xy;
-	} else {
-	  delta[1] -= yprd;
-	  delta[0] -= xy;
-	}
+        if (delta[1] < 0.0) {
+          delta[1] += yprd;
+          delta[0] += xy;
+        } else {
+          delta[1] -= yprd;
+          delta[0] -= xy;
+        }
       }
     }
     if (xperiodic) {
       if (fabs(delta[0]) > xprd_half) {
-	if (delta[0] < 0.0) delta[0] += xprd;
-	else delta[0] -= xprd;
+        if (delta[0] < 0.0) delta[0] += xprd;
+        else delta[0] -= xprd;
       }
     }
   }
 }
 
 /* ----------------------------------------------------------------------
-   find Xj image = periodic image of Xj that is closest to Xi
-   for triclinic, also add/subtract tilt factors in other dims as needed
+   return local index of atom J or any of its images that is closest to atom I
+   if J is not a valid index like -1, just return it
 ------------------------------------------------------------------------- */
 
-void Domain::closest_image(const double * const xi, 
-			   const double * const xj,
-			   double * const xjimage)
+int Domain::closest_image(int i, int j)
 {
-  double dx,dy,dz;
+  if (j < 0) return j;
+
+  int *sametag = atom->sametag;
+  double **x = atom->x;
+  double *xi = x[i];
+
+  int closest = j;
+  double delx = xi[0] - x[j][0];
+  double dely = xi[1] - x[j][1];
+  double delz = xi[2] - x[j][2];
+  double rsqmin = delx*delx + dely*dely + delz*delz;
+  double rsq;
+
+  while (sametag[j] >= 0) {
+    j = sametag[j];
+    delx = xi[0] - x[j][0];
+    dely = xi[1] - x[j][1];
+    delz = xi[2] - x[j][2];
+    rsq = delx*delx + dely*dely + delz*delz;
+    if (rsq < rsqmin) {
+      rsqmin = rsq;
+      closest = j;
+    }
+  }
+  return closest;
+}
+
+/* ----------------------------------------------------------------------
+   find and return Xj image = periodic image of Xj that is closest to Xi
+   for triclinic, add/subtract tilt factors in other dims as needed
+------------------------------------------------------------------------- */
+
+void Domain::closest_image(const double * const xi, const double * const xj,
+                           double * const xjimage)
+{
+  double dx = xj[0] - xi[0];
+  double dy = xj[1] - xi[1];
+  double dz = xj[2] - xi[2];
 
   if (triclinic == 0) {
     if (xperiodic) {
-      dx = xj[0] - xi[0];
       if (dx < 0.0) {
-	while (dx < 0.0) dx += xprd;
-	if (dx > xprd_half) dx -= xprd;
+        while (dx < 0.0) dx += xprd;
+        if (dx > xprd_half) dx -= xprd;
       } else {
-	while (dx > 0.0) dx -= xprd;
-	if (dx < -xprd_half) dx += xprd;
+        while (dx > 0.0) dx -= xprd;
+        if (dx < -xprd_half) dx += xprd;
       }
-      xjimage[0] = xi[0] + dx;
     }
     if (yperiodic) {
-      dy = xj[1] - xi[1];
       if (dy < 0.0) {
-	while (dy < 0.0) dy += yprd;
-	if (dy > yprd_half) dy -= yprd;
+        while (dy < 0.0) dy += yprd;
+        if (dy > yprd_half) dy -= yprd;
       } else {
-	while (dy > 0.0) dy -= yprd;
-	if (dy < -yprd_half) dy += yprd;
+        while (dy > 0.0) dy -= yprd;
+        if (dy < -yprd_half) dy += yprd;
       }
-      xjimage[1] = xi[1] + dy;
     }
     if (zperiodic) {
-      dz = xj[2] - xi[2];
       if (dz < 0.0) {
-	while (dz < 0.0) dz += zprd;
-	if (dz > zprd_half) dz -= zprd;
+        while (dz < 0.0) dz += zprd;
+        if (dz > zprd_half) dz -= zprd;
       } else {
-	while (dz > 0.0) dz -= zprd;
-	if (dz < -zprd_half) dz += zprd;
+        while (dz > 0.0) dz -= zprd;
+        if (dz < -zprd_half) dz += zprd;
       }
-      xjimage[2] = xi[2] + dz;
     }
 
   } else {
-    dx = xj[0] - xi[0];
-    dy = xj[1] - xi[1];
-    dz = xj[2] - xi[2];
-
     if (zperiodic) {
       if (dz < 0.0) {
-	while (dz < 0.0) {
-	  dz += zprd;
-	  dy += yz;
-	  dx += xz;
-	}
-	if (dz > zprd_half) {
-	  dz -= zprd;
-	  dy -= yz;
-	  dx -= xz;
-	}
+        while (dz < 0.0) {
+          dz += zprd;
+          dy += yz;
+          dx += xz;
+        }
+        if (dz > zprd_half) {
+          dz -= zprd;
+          dy -= yz;
+          dx -= xz;
+        }
       } else {
-	while (dz > 0.0) {
-	  dz -= zprd;
-	  dy -= yz;
-	  dx -= xz;
-	}
-	if (dz < -zprd_half) {
-	  dz += zprd;
-	  dy += yz;
-	  dx += xz;
-	}
+        while (dz > 0.0) {
+          dz -= zprd;
+          dy -= yz;
+          dx -= xz;
+        }
+        if (dz < -zprd_half) {
+          dz += zprd;
+          dy += yz;
+          dx += xz;
+        }
       }
     }
     if (yperiodic) {
       if (dy < 0.0) {
-	while (dy < 0.0) {
-	  dy += yprd;
-	  dx += xy;
-	}
-	if (dy > yprd_half) {
-	  dy -= yprd;
-	  dx -= xy;
-	}
+        while (dy < 0.0) {
+          dy += yprd;
+          dx += xy;
+        }
+        if (dy > yprd_half) {
+          dy -= yprd;
+          dx -= xy;
+        }
       } else {
-	while (dy > 0.0) {
-	  dy -= yprd;
-	  dx -= xy;
-	}
-	if (dy < -yprd_half) {
-	  dy += yprd;
-	  dx += xy;
-	}
+        while (dy > 0.0) {
+          dy -= yprd;
+          dx -= xy;
+        }
+        if (dy < -yprd_half) {
+          dy += yprd;
+          dx += xy;
+        }
       }
     }
     if (xperiodic) {
       if (dx < 0.0) {
-	while (dx < 0.0) dx += xprd;
-	if (dx > xprd_half) dx -= xprd;
+        while (dx < 0.0) dx += xprd;
+        if (dx > xprd_half) dx -= xprd;
       } else {
-	while (dx > 0.0) dx -= xprd;
-	if (dx < -xprd_half) dx += xprd;
+        while (dx > 0.0) dx -= xprd;
+        if (dx < -xprd_half) dx += xprd;
       }
     }
-
-    xjimage[0] = xi[0] + dx;
-    xjimage[1] = xi[1] + dy;
-    xjimage[2] = xi[2] + dz;
   }
+
+  xjimage[0] = xi[0] + dx;
+  xjimage[1] = xi[1] + dy;
+  xjimage[2] = xi[2] + dz;
 }
 
 /* ----------------------------------------------------------------------
    remap the point into the periodic box no matter how far away
-   adjust image accordingly
+   adjust 3 image flags encoded in image accordingly
    resulting coord must satisfy lo <= coord < hi
    MAX is important since coord - prd < lo can happen when coord = hi
    for triclinic, point is converted to lamda coords (0-1) before doing remap
@@ -721,10 +863,11 @@ void Domain::closest_image(const double * const xi,
    increment/decrement in wrap-around fashion
 ------------------------------------------------------------------------- */
 
-void Domain::remap(double *x, int &image)
+void Domain::remap(double *x, tagint &image)
 {
   double *lo,*hi,*period,*coord;
   double lamda[3];
+  tagint idim,otherdims;
 
   if (triclinic == 0) {
     lo = boxlo;
@@ -742,18 +885,18 @@ void Domain::remap(double *x, int &image)
   if (xperiodic) {
     while (coord[0] < lo[0]) {
       coord[0] += period[0];
-      int idim = image & 1023;
-      int otherdims = image ^ idim;
+      idim = image & IMGMASK;
+      otherdims = image ^ idim;
       idim--;
-      idim &= 1023;
+      idim &= IMGMASK;
       image = otherdims | idim;
     }
     while (coord[0] >= hi[0]) {
       coord[0] -= period[0];
-      int idim = image & 1023;
-      int otherdims = image ^ idim;
+      idim = image & IMGMASK;
+      otherdims = image ^ idim;
       idim++;
-      idim &= 1023;
+      idim &= IMGMASK;
       image = otherdims | idim;
     }
     coord[0] = MAX(coord[0],lo[0]);
@@ -762,19 +905,19 @@ void Domain::remap(double *x, int &image)
   if (yperiodic) {
     while (coord[1] < lo[1]) {
       coord[1] += period[1];
-      int idim = (image >> 10) & 1023;
-      int otherdims = image ^ (idim << 10);
+      idim = (image >> IMGBITS) & IMGMASK;
+      otherdims = image ^ (idim << IMGBITS);
       idim--;
-      idim &= 1023;
-      image = otherdims | (idim << 10);
+      idim &= IMGMASK;
+      image = otherdims | (idim << IMGBITS);
     }
     while (coord[1] >= hi[1]) {
       coord[1] -= period[1];
-      int idim = (image >> 10) & 1023;
-      int otherdims = image ^ (idim << 10);
+      idim = (image >> IMGBITS) & IMGMASK;
+      otherdims = image ^ (idim << IMGBITS);
       idim++;
-      idim &= 1023;
-      image = otherdims | (idim << 10);
+      idim &= IMGMASK;
+      image = otherdims | (idim << IMGBITS);
     }
     coord[1] = MAX(coord[1],lo[1]);
   }
@@ -782,19 +925,19 @@ void Domain::remap(double *x, int &image)
   if (zperiodic) {
     while (coord[2] < lo[2]) {
       coord[2] += period[2];
-      int idim = image >> 20;
-      int otherdims = image ^ (idim << 20);
+      idim = image >> IMG2BITS;
+      otherdims = image ^ (idim << IMG2BITS);
       idim--;
-      idim &= 1023;
-      image = otherdims | (idim << 20);
+      idim &= IMGMASK;
+      image = otherdims | (idim << IMG2BITS);
     }
     while (coord[2] >= hi[2]) {
       coord[2] -= period[2];
-      int idim = image >> 20;
-      int otherdims = image ^ (idim << 20);
+      idim = image >> IMG2BITS;
+      otherdims = image ^ (idim << IMG2BITS);
       idim++;
-      idim &= 1023;
-      image = otherdims | (idim << 20);
+      idim &= IMGMASK;
+      image = otherdims | (idim << IMG2BITS);
     }
     coord[2] = MAX(coord[2],lo[2]);
   }
@@ -804,6 +947,7 @@ void Domain::remap(double *x, int &image)
 
 /* ----------------------------------------------------------------------
    remap the point into the periodic box no matter how far away
+   no image flag calculation
    resulting coord must satisfy lo <= coord < hi
    MAX is important since coord - prd < lo can happen when coord = hi
    for triclinic, point is converted to lamda coords (0-1) before remap
@@ -931,11 +1075,11 @@ void Domain::remap_near(double *xnew, double *xold)
    for triclinic, use h[] to add in tilt factors in other dims as needed
 ------------------------------------------------------------------------- */
 
-void Domain::unmap(double *x, int image)
+void Domain::unmap(double *x, tagint image)
 {
-  int xbox = (image & 1023) - 512;
-  int ybox = (image >> 10 & 1023) - 512;
-  int zbox = (image >> 20) - 512;
+  int xbox = (image & IMGMASK) - IMGMAX;
+  int ybox = (image >> IMGBITS & IMGMASK) - IMGMAX;
+  int zbox = (image >> IMG2BITS) - IMGMAX;
 
   if (triclinic == 0) {
     x[0] += xbox*xprd;
@@ -954,11 +1098,11 @@ void Domain::unmap(double *x, int image)
    for triclinic, use h[] to add in tilt factors in other dims as needed
 ------------------------------------------------------------------------- */
 
-void Domain::unmap(double *x, int image, double *y)
+void Domain::unmap(double *x, tagint image, double *y)
 {
-  int xbox = (image & 1023) - 512;
-  int ybox = (image >> 10 & 1023) - 512;
-  int zbox = (image >> 20) - 512;
+  int xbox = (image & IMGMASK) - IMGMAX;
+  int ybox = (image >> IMGBITS & IMGMASK) - IMGMAX;
+  int zbox = (image >> IMG2BITS) - IMGMAX;
 
   if (triclinic == 0) {
     y[0] = x[0] + xbox*xprd;
@@ -968,6 +1112,44 @@ void Domain::unmap(double *x, int image, double *y)
     y[0] = x[0] + h[0]*xbox + h[5]*ybox + h[4]*zbox;
     y[1] = x[1] + h[1]*ybox + h[3]*zbox;
     y[2] = x[2] + h[2]*zbox;
+  }
+}
+
+/* ----------------------------------------------------------------------
+   adjust image flags due to triclinic box flip
+   flip operation is changing box vectors A,B,C to new A',B',C'
+     A' = A              (A does not change)
+     B' = B + mA         (B shifted by A)
+     C' = C + pB + nA    (C shifted by B and/or A)
+   this requires the image flags change from (a,b,c) to (a',b',c')
+   so that x_unwrap for each atom is same before/after
+     x_unwrap_before = xlocal + aA + bB + cC
+     x_unwrap_after = xlocal + a'A' + b'B' + c'C'
+   this requires:
+     c' = c
+     b' = b - cp
+     a' = a - (b-cp)m - cn = a - b'm - cn
+   in other words, for xy flip, change in x flag depends on current y flag
+   this is b/c the xy flip dramatically changes which tiled image of
+     simulation box an unwrapped point maps to
+------------------------------------------------------------------------- */
+
+void Domain::image_flip(int m, int n, int p)
+{
+  tagint *image = atom->image;
+  int nlocal = atom->nlocal;
+
+  for (int i = 0; i < nlocal; i++) {
+    int xbox = (image[i] & IMGMASK) - IMGMAX;
+    int ybox = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+    int zbox = (image[i] >> IMG2BITS) - IMGMAX;
+
+    ybox -= p*zbox;
+    xbox -= m*ybox + n*zbox;
+
+    image[i] = ((tagint) (xbox + IMGMAX) & IMGMASK) | 
+      (((tagint) (ybox + IMGMAX) & IMGMASK) << IMGBITS) | 
+      (((tagint) (zbox + IMGMAX) & IMGMASK) << IMG2BITS);
   }
 }
 
@@ -1005,7 +1187,7 @@ void Domain::add_region(int narg, char **arg)
 
   if (nregion == maxregion) {
     maxregion += DELTA;
-    regions = (Region **) 
+    regions = (Region **)
       memory->srealloc(regions,maxregion*sizeof(Region *),"domain:regions");
   }
 
@@ -1054,10 +1236,12 @@ int Domain::find_region(char *name)
 }
 
 /* ----------------------------------------------------------------------
-   boundary settings from the input script 
+   (re)set boundary settings
+   flag = 0, called from the input script
+   flag = 1, called from change box command
 ------------------------------------------------------------------------- */
 
-void Domain::set_boundary(int narg, char **arg)
+void Domain::set_boundary(int narg, char **arg, int flag)
 {
   if (narg != 3) error->all(FLERR,"Illegal boundary command");
 
@@ -1072,12 +1256,15 @@ void Domain::set_boundary(int narg, char **arg)
       else if (c == 'f') boundary[idim][iside] = 1;
       else if (c == 's') boundary[idim][iside] = 2;
       else if (c == 'm') boundary[idim][iside] = 3;
-      else error->all(FLERR,"Illegal boundary command");
+      else {
+        if (flag == 0) error->all(FLERR,"Illegal boundary command");
+        if (flag == 1) error->all(FLERR,"Illegal change_box command");
+      }
     }
 
   for (int idim = 0; idim < 3; idim++)
     if ((boundary[idim][0] == 0 && boundary[idim][1]) ||
-	(boundary[idim][0] && boundary[idim][1] == 0))
+        (boundary[idim][0] && boundary[idim][1] == 0))
       error->all(FLERR,"Both sides of boundary must be periodic");
 
   if (boundary[0][0] == 0) xperiodic = 1;
@@ -1095,8 +1282,28 @@ void Domain::set_boundary(int narg, char **arg)
   if (xperiodic == 0 || yperiodic == 0 || zperiodic == 0) {
     nonperiodic = 1;
     if (boundary[0][0] >= 2 || boundary[0][1] >= 2 ||
-	boundary[1][0] >= 2 || boundary[1][1] >= 2 ||
-	boundary[2][0] >= 2 || boundary[2][1] >= 2) nonperiodic = 2;
+        boundary[1][0] >= 2 || boundary[1][1] >= 2 ||
+        boundary[2][0] >= 2 || boundary[2][1] >= 2) nonperiodic = 2;
+  }
+}
+
+/* ----------------------------------------------------------------------
+   set domain attributes
+------------------------------------------------------------------------- */
+
+void Domain::set_box(int narg, char **arg)
+{
+  if (narg < 1) error->all(FLERR,"Illegal box command");
+
+  int iarg = 0;
+  while (iarg < narg) {
+    if (strcmp(arg[iarg],"tilt") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal box command");
+      if (strcmp(arg[iarg+1],"small") == 0) tiltsmall = 1;
+      else if (strcmp(arg[iarg+1],"large") == 0) tiltsmall = 0;
+      else error->all(FLERR,"Illegal box command");
+      iarg += 2;
+    } else error->all(FLERR,"Illegal box command");
   }
 }
 
@@ -1109,29 +1316,49 @@ void Domain::print_box(const char *str)
   if (comm->me == 0) {
     if (screen) {
       if (triclinic == 0)
-	fprintf(screen,"%sorthogonal box = (%g %g %g) to (%g %g %g)\n",
-		str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2]);
+        fprintf(screen,"%sorthogonal box = (%g %g %g) to (%g %g %g)\n",
+                str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2]);
       else {
-	char *format = (char *)
-	  "%striclinic box = (%g %g %g) to (%g %g %g) with tilt (%g %g %g)\n";
-	fprintf(screen,format,
-		str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2],
-		xy,xz,yz);
+        char *format = (char *)
+          "%striclinic box = (%g %g %g) to (%g %g %g) with tilt (%g %g %g)\n";
+        fprintf(screen,format,
+                str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2],
+                xy,xz,yz);
       }
     }
     if (logfile) {
       if (triclinic == 0)
-	fprintf(logfile,"%sorthogonal box = (%g %g %g) to (%g %g %g)\n",
-		str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2]);
+        fprintf(logfile,"%sorthogonal box = (%g %g %g) to (%g %g %g)\n",
+                str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2]);
       else {
-	char *format = (char *)
-	  "%striclinic box = (%g %g %g) to (%g %g %g) with tilt (%g %g %g)\n";
-	fprintf(logfile,format,
-		str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2],
-		xy,xz,yz);
+        char *format = (char *)
+          "%striclinic box = (%g %g %g) to (%g %g %g) with tilt (%g %g %g)\n";
+        fprintf(logfile,format,
+                str,boxlo[0],boxlo[1],boxlo[2],boxhi[0],boxhi[1],boxhi[2],
+                xy,xz,yz);
       }
     }
   }
+}
+
+/* ----------------------------------------------------------------------
+   format boundary string for output
+   assume str is 9 chars or more in length
+------------------------------------------------------------------------- */
+
+void Domain::boundary_string(char *str)
+{
+  int m = 0;
+  for (int idim = 0; idim < 3; idim++) {
+    for (int iside = 0; iside < 2; iside++) {
+      if (boundary[idim][iside] == 0) str[m++] = 'p';
+      else if (boundary[idim][iside] == 1) str[m++] = 'f';
+      else if (boundary[idim][iside] == 2) str[m++] = 's';
+      else if (boundary[idim][iside] == 3) str[m++] = 'm';
+    }
+    str[m++] = ' ';
+  }
+  str[8] = '\0';
 }
 
 /* ----------------------------------------------------------------------
@@ -1143,7 +1370,7 @@ void Domain::lamda2x(int n)
 {
   double **x = atom->x;
 
-  for (int i = 0; i < n; i++) { 
+  for (int i = 0; i < n; i++) {
     x[i][0] = h[0]*x[i][0] + h[5]*x[i][1] + h[4]*x[i][2] + boxlo[0];
     x[i][1] = h[1]*x[i][1] + h[3]*x[i][2] + boxlo[1];
     x[i][2] = h[2]*x[i][2] + boxlo[2];
@@ -1160,7 +1387,7 @@ void Domain::x2lamda(int n)
   double delta[3];
   double **x = atom->x;
 
-  for (int i = 0; i < n; i++) { 
+  for (int i = 0; i < n; i++) {
     delta[0] = x[i][0] - boxlo[0];
     delta[1] = x[i][1] - boxlo[1];
     delta[2] = x[i][2] - boxlo[2];
@@ -1200,6 +1427,26 @@ void Domain::x2lamda(double *x, double *lamda)
   lamda[0] = h_inv[0]*delta[0] + h_inv[5]*delta[1] + h_inv[4]*delta[2];
   lamda[1] = h_inv[1]*delta[1] + h_inv[3]*delta[2];
   lamda[2] = h_inv[2]*delta[2];
+}
+
+/* ----------------------------------------------------------------------
+   convert box coords to triclinic 0-1 lamda coords for one atom
+   use my_boxlo & my_h_inv stored by caller for previous state of box
+   lamda = H^-1 (x - x0)
+   x and lamda can point to same 3-vector
+------------------------------------------------------------------------- */
+
+void Domain::x2lamda(double *x, double *lamda,
+                     double *my_boxlo, double *my_h_inv)
+{
+  double delta[3];
+  delta[0] = x[0] - my_boxlo[0];
+  delta[1] = x[1] - my_boxlo[1];
+  delta[2] = x[2] - my_boxlo[2];
+
+  lamda[0] = my_h_inv[0]*delta[0] + my_h_inv[5]*delta[1] + my_h_inv[4]*delta[2];
+  lamda[1] = my_h_inv[1]*delta[1] + my_h_inv[3]*delta[2];
+  lamda[2] = my_h_inv[2]*delta[2];
 }
 
 /* ----------------------------------------------------------------------

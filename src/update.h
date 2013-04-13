@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -51,6 +51,7 @@ class Update : protected Pointers {
   void create_integrate(int, char **, char *);
   void create_minimize(int, char **);
   void reset_timestep(int, char **);
+  void reset_timestep(bigint);
   bigint memory_usage();
 
  private:
@@ -66,11 +67,11 @@ class Update : protected Pointers {
 
 E: USER-CUDA mode requires CUDA variant of run style
 
-UNDOCUMENTED
+CUDA mode is enabled, so the run style must include a cuda suffix.
 
 E: USER-CUDA mode requires CUDA variant of min style
 
-UNDOCUMENTED
+CUDA mode is enabled, so the min style must include a cuda suffix.
 
 E: Illegal ... command
 
@@ -80,18 +81,15 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Illegal integrate style
 
-UNDOCUMENTED
+Self-explanatory.
 
-E: Cannot reset timestep with dump file already written to
+E: Timestep must be >= 0
 
-Changing the timestep will confuse when a dump file is written.  Use
-the undump command, then restart the dump file.
+Specified timestep is invalid.
 
-E: Cannot reset timestep with restart file already written
+E: Too big a timestep
 
-Changing the timestep will confuse when a restart file is written.
-Use the "restart 0" command to turn off restarts, then start them
-again.
+Specified timestep is too large.
 
 E: Cannot reset timestep with a time-dependent fix defined
 
@@ -103,13 +101,5 @@ E: Cannot reset timestep with a dynamic region defined
 Dynamic regions (see the region command) have a time dependence.
 Thus you cannot change the timestep when one or more of these
 are defined.
-
-E: Timestep must be >= 0
-
-Specified timestep size is invalid.
-
-E: Too big a timestep
-
-UNDOCUMENTED
 
 */

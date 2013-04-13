@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -56,8 +56,13 @@ class FixBoxRelax : public Fix {
   double boxlo0[2][3];           // box bounds at start of line search
   double boxhi0[2][3];
   double boxtilt0[2][3];         // xy,xz,yz tilts at start of line search
-  double s0[3];                  // scale matrix at start of line search
   double ds[6];                  // increment in scale matrix
+
+  int scaleyz;                   // 1 if yz scaled with lz
+  int scalexz;                   // 1 if xz scaled with lz
+  int scalexy;                   // 1 if xy scaled with ly
+
+  double fixedpoint[3];          // Location of dilation fixed-point
 
   char *id_temp,*id_press;
   class Compute *temperature,*pressure;
@@ -67,7 +72,7 @@ class FixBoxRelax : public Fix {
   int *rfix;
 
   double sigma[6];                 // scaled target stress
-  double utsigma[3];               // weighting for upper-tri elements 
+  double utsigma[3];               // weighting for upper-tri elements
                                    // of modified sigma
   int sigmamod_flag;               // 1 if modified sigma to be used
   double fdev[6];                  // Deviatoric force on cell
@@ -119,6 +124,18 @@ E: Cannot use fix box/relax on a 2nd non-periodic dimension
 When specifying an off-diagonal pressure component, the 2nd of the two
 dimensions must be periodic.  E.g. if the xy component is specified,
 then the y dimension must be periodic.
+
+E: Cannot use fix box/relax with tilt factor scaling on a 2nd non-periodic dimension"
+
+When specifying scaling on a tilt factor component, the 2nd of the two
+dimensions must be periodic.  E.g. if the xy component is specified,
+then the y dimension must be periodic.
+
+E: Cannot use fix box/relax with both relaxation and scaling on a tilt factor
+
+When specifying scaling on a tilt factor component, that component can not
+also be controlled by the barostat. E.g. if scalexy yes is specified and
+also keyword tri or xy, this is wrong.
 
 E: Can not specify Pxy/Pxz/Pyz in fix box/relax with non-triclinic box
 

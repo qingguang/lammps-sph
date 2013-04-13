@@ -20,6 +20,7 @@
 #include "neighbor.h"
 #include "neigh_list.h"
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 
 #define EPSILON 1.0e-10
@@ -28,6 +29,7 @@ using namespace LAMMPS_NS;
 PairGaussOMP::PairGaussOMP(LAMMPS *lmp) :
   PairGauss(lmp), ThrOMP(lmp, THR_PAIR)
 {
+  suffix_flag |= Suffix::OMP;
   respa_enable = 0;
 }
 
@@ -56,11 +58,11 @@ void PairGaussOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_pair) occ = eval<1,1,1>(ifrom, ito, thr);
-	else occ = eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_pair) occ = eval<1,1,1>(ifrom, ito, thr);
+        else occ = eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_pair) occ = eval<1,0,1>(ifrom, ito, thr);
-	else occ = eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_pair) occ = eval<1,0,1>(ifrom, ito, thr);
+        else occ = eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_pair) occ = eval<0,0,1>(ifrom, ito, thr);
@@ -78,7 +80,7 @@ double PairGaussOMP::eval(int iifrom, int iito, ThrData * const thr)
 {
   int i,j,ii,jj,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,evdwl,fpair;
-  double r,rsq,r2inv,forcelj,factor_lj;
+  double rsq,r2inv,forcelj,factor_lj;
   int *ilist,*jlist,*numneigh,**firstneigh;
   int occ = 0;
 
@@ -120,35 +122,34 @@ double PairGaussOMP::eval(int iifrom, int iito, ThrData * const thr)
       jtype = type[j];
 
       // define a Gaussian well to be occupied if
-      // the site it interacts with is within the force maximum    
-    
+      // the site it interacts with is within the force maximum
+
       if (EFLAG)
-	if (eflag_global && rsq < 0.5/b[itype][jtype]) occ++;
+        if (eflag_global && rsq < 0.5/b[itype][jtype]) occ++;
 
       if (rsq < cutsq[itype][jtype]) {
-	r2inv = 1.0/rsq;
-	r = sqrt(rsq);
-	forcelj = - 2.0*a[itype][jtype]*b[itype][jtype] * rsq * 
-	  exp(-b[itype][jtype]*rsq); 
-	fpair = factor_lj*forcelj*r2inv;
+        r2inv = 1.0/rsq;
+        forcelj = - 2.0*a[itype][jtype]*b[itype][jtype] * rsq *
+          exp(-b[itype][jtype]*rsq);
+        fpair = factor_lj*forcelj*r2inv;
 
-	fxtmp += delx*fpair;
-	fytmp += dely*fpair;
-	fztmp += delz*fpair;
-	if (NEWTON_PAIR || j < nlocal) {
-	  f[j][0] -= delx*fpair;
-	  f[j][1] -= dely*fpair;
-	  f[j][2] -= delz*fpair;
-	}
+        fxtmp += delx*fpair;
+        fytmp += dely*fpair;
+        fztmp += delz*fpair;
+        if (NEWTON_PAIR || j < nlocal) {
+          f[j][0] -= delx*fpair;
+          f[j][1] -= dely*fpair;
+          f[j][2] -= delz*fpair;
+        }
 
-	if (EFLAG) {
-	  evdwl = -(a[itype][jtype]*exp(-b[itype][jtype]*rsq) -
-		    offset[itype][jtype]);
-	  evdwl *= factor_lj;
-	}
+        if (EFLAG) {
+          evdwl = -(a[itype][jtype]*exp(-b[itype][jtype]*rsq) -
+                    offset[itype][jtype]);
+          evdwl *= factor_lj;
+        }
 
-	if (EVFLAG) ev_tally_thr(this, i,j,nlocal,NEWTON_PAIR,
-				 evdwl,0.0,fpair,delx,dely,delz,thr);
+        if (EVFLAG) ev_tally_thr(this, i,j,nlocal,NEWTON_PAIR,
+                                 evdwl,0.0,fpair,delx,dely,delz,thr);
       }
     }
     f[i][0] += fxtmp;

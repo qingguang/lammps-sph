@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -31,7 +31,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-ComputePE::ComputePE(LAMMPS *lmp, int narg, char **arg) : 
+ComputePE::ComputePE(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg)
 {
   if (narg < 3) error->all(FLERR,"Illegal compute pe command");
@@ -88,6 +88,7 @@ double ComputePE::compute_scalar()
   MPI_Allreduce(&one,&scalar,1,MPI_DOUBLE,MPI_SUM,world);
 
   if (kspaceflag && force->kspace) scalar += force->kspace->energy;
+
   if (pairflag && force->pair && force->pair->tail_flag) {
     double volume = domain->xprd * domain->yprd * domain->zprd;
     scalar += force->pair->etail / volume;

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -35,12 +35,13 @@ class FixAveSpatial : public Fix {
   void end_of_step();
   double compute_array(int,int);
   double memory_usage();
+  void reset_timestep(bigint);
 
  private:
   int me,nvalues;
   int nrepeat,nfreq,irepeat;
   bigint nvalid;
-  int ndim,normflag,regionflag,iregion;
+  int ndim,normflag,regionflag,iregion,overwrite;
   char *tstring,*sstring,*idregion;
   int *which,*argindex,*value2index;
   char **ids;
@@ -52,9 +53,10 @@ class FixAveSpatial : public Fix {
   double xscale,yscale,zscale;
   double bin_volume;
 
+  long filepos;
   int dim[3],originflag[3],nlayers[3];
   double origin[3],delta[3];
-  double offset[3],invdelta[3]; 
+  double offset[3],invdelta[3];
 
   int maxvar;
   double *varatom;
@@ -172,5 +174,10 @@ E: Fix for fix ave/spatial not computed at compatible time
 
 Fixes generate their values on specific timesteps.  Fix ave/spatial is
 requesting a value on a non-allowed timestep.
+
+E: Fix ave/spatial missed timestep
+
+You cannot reset the timestep to a value beyond where the fix
+expects to next perform averaging.
 
 */

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -34,6 +34,9 @@ class Variable : protected Pointers {
   int int_between_brackets(char *&);
   double evaluate_boolean(char *);
 
+  unsigned int data_mask(int ivar);
+  unsigned int data_mask(char *str);
+
  private:
   int nvar;                // # of defined variables
   int maxvar;              // max # of variables arrays can hold
@@ -43,6 +46,7 @@ class Variable : protected Pointers {
   int *which;              // next available value for each variable
   int *pad;                // 1 = pad loop/uloop variables with 0s, 0 = no pad
   char ***data;            // str value of each variable's values
+  int *eval_in_progress;   // flag if evaluation of variable is in progress
 
   class RanMars *randomequal;   // random number generator for equal-style vars
   class RanMars *randomatom;    // random number generator for atom-style vars
@@ -62,7 +66,7 @@ class Variable : protected Pointers {
   };
 
   void remove(int);
-  void extend();
+  void grow();
   void copy(int, char **, char **);
   double evaluate(char *, Tree **);
   double collapse_tree(Tree *);
@@ -72,10 +76,10 @@ class Variable : protected Pointers {
   int math_function(char *, char *, Tree **, Tree **, int &, double *, int &);
   int group_function(char *, char *, Tree **, Tree **, int &, double *, int &);
   int region_function(char *);
-  int special_function(char *, char *, Tree **, Tree **, 
-		       int &, double *, int &);
+  int special_function(char *, char *, Tree **, Tree **,
+                       int &, double *, int &);
   void peratom2global(int, char *, double *, int, int,
-		      Tree **, Tree **, int &, double *, int &);
+                      Tree **, Tree **, int &, double *, int &);
   int is_atom_vector(char *);
   void atom_vector(char *, Tree **, Tree **, int &);
   int is_constant(char *);

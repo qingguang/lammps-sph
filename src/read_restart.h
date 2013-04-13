@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -34,16 +34,21 @@ class ReadRestart : protected Pointers {
   int me,nprocs,nprocs_file;
   FILE *fp;
   int nfix_restart_global,nfix_restart_peratom;
+  int swapflag;
 
   void file_search(char *, char *);
   void header();
   void type_arrays();
   void force_fields();
 
+  void nread_int(int *, int, FILE *);
+  void nread_double(double *, int, FILE *);
+  void nread_char(char *, int, FILE *);
   int read_int();
   double read_double();
   char *read_char();
   bigint read_bigint();
+  int autodetect(FILE **, char *);
 };
 
 }

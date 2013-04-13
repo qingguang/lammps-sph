@@ -31,6 +31,7 @@
 #include "pair.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -74,7 +75,6 @@ void FixMesoStationary::initial_integrate(int vflag) {
   double *e = atom->e;
   double *de = atom->de;
 
-  int *type = atom->type;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
   int i;
@@ -100,7 +100,6 @@ void FixMesoStationary::final_integrate() {
   double *drho = atom->drho;
   int *type = atom->type;
   int *mask = atom->mask;
-  double *mass = atom->mass;
   int nlocal = atom->nlocal;
   if (igroup == atom->firstgroup)
     nlocal = atom->nfirst;
@@ -119,4 +118,3 @@ void FixMesoStationary::reset_dt() {
   dtv = update->dt;
   dtf = 0.5 * update->dt * force->ftm2v;
 }
-

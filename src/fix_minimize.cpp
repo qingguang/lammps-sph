@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -19,6 +19,7 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -109,7 +110,7 @@ void FixMinimize::reset_coords()
 {
   box_swap();
   domain->set_global_box();
-    
+
   double **x = atom->x;
   double *x0 = vectors[0];
   int nlocal = atom->nlocal;
@@ -126,7 +127,7 @@ void FixMinimize::reset_coords()
     if (dz != dz0) x0[n+2] = x[i][2] - dz;
     n += 3;
   }
-  
+
   box_swap();
   domain->set_global_box();
 }
@@ -161,7 +162,7 @@ void FixMinimize::box_swap()
 }
 
 /* ----------------------------------------------------------------------
-   memory usage of local atom-based arrays 
+   memory usage of local atom-based arrays
 ------------------------------------------------------------------------- */
 
 double FixMinimize::memory_usage()
@@ -173,7 +174,7 @@ double FixMinimize::memory_usage()
 }
 
 /* ----------------------------------------------------------------------
-   allocate local atom-based arrays 
+   allocate local atom-based arrays
 ------------------------------------------------------------------------- */
 
 void FixMinimize::grow_arrays(int nmax)
@@ -183,7 +184,7 @@ void FixMinimize::grow_arrays(int nmax)
 }
 
 /* ----------------------------------------------------------------------
-   copy values within local atom-based arrays 
+   copy values within local atom-based arrays
 ------------------------------------------------------------------------- */
 
 void FixMinimize::copy_arrays(int i, int j)
@@ -199,7 +200,7 @@ void FixMinimize::copy_arrays(int i, int j)
 }
 
 /* ----------------------------------------------------------------------
-   pack values in local atom-based arrays for exchange with another proc 
+   pack values in local atom-based arrays for exchange with another proc
 ------------------------------------------------------------------------- */
 
 int FixMinimize::pack_exchange(int i, double *buf)
@@ -216,7 +217,7 @@ int FixMinimize::pack_exchange(int i, double *buf)
 }
 
 /* ----------------------------------------------------------------------
-   unpack values in local atom-based arrays from exchange with another proc 
+   unpack values in local atom-based arrays from exchange with another proc
 ------------------------------------------------------------------------- */
 
 int FixMinimize::unpack_exchange(int nlocal, double *buf)

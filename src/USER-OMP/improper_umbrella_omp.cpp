@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,8 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
-#include "mpi.h"
 #include "math.h"
 #include "improper_umbrella_omp.h"
 #include "atom.h"
@@ -27,10 +25,19 @@
 #include "update.h"
 #include "error.h"
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 
 #define TOLERANCE 0.05
 #define SMALL     0.001
+
+/* ---------------------------------------------------------------------- */
+
+ImproperUmbrellaOMP::ImproperUmbrellaOMP(class LAMMPS *lmp)
+  : ImproperUmbrella(lmp), ThrOMP(lmp,THR_IMPROPER)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +64,11 @@ void ImproperUmbrellaOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -100,21 +107,18 @@ void ImproperUmbrellaOMP::eval(int nfrom, int nto, ThrData * const thr)
     vb1x = x[i2][0] - x[i1][0];
     vb1y = x[i2][1] - x[i1][1];
     vb1z = x[i2][2] - x[i1][2];
-    domain->minimum_image(vb1x,vb1y,vb1z);
 
     // 2nd bond
 
     vb2x = x[i3][0] - x[i1][0];
     vb2y = x[i3][1] - x[i1][1];
     vb2z = x[i3][2] - x[i1][2];
-    domain->minimum_image(vb2x,vb2y,vb2z);
 
     // 3rd bond
 
     vb3x = x[i4][0] - x[i1][0];
     vb3y = x[i4][1] - x[i1][1];
     vb3z = x[i4][2] - x[i1][2];
-    domain->minimum_image(vb3x,vb3y,vb3z);
 
     // c0 calculation
     // A = vb1 X vb2 is perpendicular to IJK plane
@@ -146,22 +150,22 @@ void ImproperUmbrellaOMP::eval(int nfrom, int nto, ThrData * const thr)
       int me = comm->me;
 
       if (screen) {
-	char str[128];
-	sprintf(str,"Improper problem: %d/%d " BIGINT_FORMAT " %d %d %d %d",
-		me,thr->get_tid(),update->ntimestep,
-		atom->tag[i1],atom->tag[i2],atom->tag[i3],atom->tag[i4]);
-	error->warning(FLERR,str,0);
-	fprintf(screen,"  1st atom: %d %g %g %g\n",
-		me,x[i1][0],x[i1][1],x[i1][2]);
-	fprintf(screen,"  2nd atom: %d %g %g %g\n",
-		me,x[i2][0],x[i2][1],x[i2][2]);
-	fprintf(screen,"  3rd atom: %d %g %g %g\n",
-		me,x[i3][0],x[i3][1],x[i3][2]);
-	fprintf(screen,"  4th atom: %d %g %g %g\n",
-		me,x[i4][0],x[i4][1],x[i4][2]);
+        char str[128];
+        sprintf(str,"Improper problem: %d/%d " BIGINT_FORMAT " %d %d %d %d",
+                me,thr->get_tid(),update->ntimestep,
+                atom->tag[i1],atom->tag[i2],atom->tag[i3],atom->tag[i4]);
+        error->warning(FLERR,str,0);
+        fprintf(screen,"  1st atom: %d %g %g %g\n",
+                me,x[i1][0],x[i1][1],x[i1][2]);
+        fprintf(screen,"  2nd atom: %d %g %g %g\n",
+                me,x[i2][0],x[i2][1],x[i2][2]);
+        fprintf(screen,"  3rd atom: %d %g %g %g\n",
+                me,x[i3][0],x[i3][1],x[i3][2]);
+        fprintf(screen,"  4th atom: %d %g %g %g\n",
+                me,x[i4][0],x[i4][1],x[i4][2]);
       }
     }
-    
+
     if (c > 1.0) s = 1.0;
     if (c < -1.0) s = -1.0;
 
@@ -169,15 +173,15 @@ void ImproperUmbrellaOMP::eval(int nfrom, int nto, ThrData * const thr)
     if (s < SMALL) s = SMALL;
     cotphi = c/s;
 
-    projhfg = (vb3x*vb1x+vb3y*vb1y+vb3z*vb1z) / 
-      sqrt(vb1x*vb1x+vb1y*vb1y+vb1z*vb1z); 
-    projhfg += (vb3x*vb2x+vb3y*vb2y+vb3z*vb2z) / 
+    projhfg = (vb3x*vb1x+vb3y*vb1y+vb3z*vb1z) /
+      sqrt(vb1x*vb1x+vb1y*vb1y+vb1z*vb1z);
+    projhfg += (vb3x*vb2x+vb3y*vb2y+vb3z*vb2z) /
       sqrt(vb2x*vb2x+vb2y*vb2y+vb2z*vb2z);
     if (projhfg > 0.0) {
       s *= -1.0;
       cotphi *= -1.0;
     }
-	
+
     //  force and energy
     // if w0 = 0: E = k * (1 - cos w)
     // if w0 != 0: E = 0.5 * C (cos w - cos w0)^2, C = k/(sin(w0)^2
@@ -247,6 +251,6 @@ void ImproperUmbrellaOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     if (EVFLAG)
       ev_tally_thr(this,i1,i2,i3,i4,nlocal,NEWTON_BOND,eimproper,f1,f3,f4,
-		   vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,thr);
+                   vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,thr);
   }
 }

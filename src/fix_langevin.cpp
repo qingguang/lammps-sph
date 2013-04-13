@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -39,6 +39,7 @@
 #include "group.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 enum{NOBIAS,BIAS};
 enum{CONSTANT,EQUAL,ATOM};
@@ -65,6 +66,7 @@ FixLangevin::FixLangevin(LAMMPS *lmp, int narg, char **arg) :
     strcpy(tstr,&arg[3][2]);
   } else {
     t_start = atof(arg[3]);
+    t_target = t_start;
     tstyle = CONSTANT;
   }
 
@@ -84,7 +86,7 @@ FixLangevin::FixLangevin(LAMMPS *lmp, int narg, char **arg) :
   gfactor1 = new double[atom->ntypes+1];
   gfactor2 = new double[atom->ntypes+1];
   ratio = new double[atom->ntypes+1];
-  
+
   // optional args
 
   for (int i = 1; i <= atom->ntypes; i++) ratio[i] = 1.0;
@@ -111,7 +113,7 @@ FixLangevin::FixLangevin(LAMMPS *lmp, int narg, char **arg) :
       int itype = atoi(arg[iarg+1]);
       double scale = atof(arg[iarg+2]);
       if (itype <= 0 || itype > atom->ntypes)
-	error->all(FLERR,"Illegal fix langevin command");
+        error->all(FLERR,"Illegal fix langevin command");
       ratio[itype] = scale;
       iarg += 3;
     } else if (strcmp(arg[iarg],"tally") == 0) {
@@ -133,7 +135,7 @@ FixLangevin::FixLangevin(LAMMPS *lmp, int narg, char **arg) :
 
   if (aflag) {
     avec = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
-    if (!avec) 
+    if (!avec)
       error->all(FLERR,"Fix langevin angmom requires atom style ellipsoid");
   }
 
@@ -182,15 +184,15 @@ int FixLangevin::setmask()
 void FixLangevin::init()
 {
   if (oflag && !atom->sphere_flag)
-    error->all(FLERR,"Fix langevin omega require atom style sphere");
+    error->all(FLERR,"Fix langevin omega requires atom style sphere");
   if (aflag && !atom->ellipsoid_flag)
-    error->all(FLERR,"Fix langevin angmom require atom style ellipsoid");
+    error->all(FLERR,"Fix langevin angmom requires atom style ellipsoid");
 
   // check variable
 
   if (tstr) {
     tvar = input->variable->find(tstr);
-    if (tvar < 0) 
+    if (tvar < 0)
       error->all(FLERR,"Variable name for fix langevin does not exist");
     if (input->variable->equalstyle(tvar)) tstyle = EQUAL;
     else if (input->variable->atomstyle(tvar)) tstyle = ATOM;
@@ -206,8 +208,8 @@ void FixLangevin::init()
 
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit)
-	if (radius[i] == 0.0)
-	  error->one(FLERR,"Fix langevin omega requires extended particles");
+        if (radius[i] == 0.0)
+          error->one(FLERR,"Fix langevin omega requires extended particles");
   }
 
   if (aflag) {
@@ -217,8 +219,8 @@ void FixLangevin::init()
 
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit)
-	if (ellipsoid[i] < 0)
-	  error->one(FLERR,"Fix langevin angmom requires extended particles");
+        if (ellipsoid[i] < 0)
+          error->one(FLERR,"Fix langevin angmom requires extended particles");
   }
 
   // set force prefactors
@@ -226,9 +228,9 @@ void FixLangevin::init()
   if (!atom->rmass) {
     for (int i = 1; i <= atom->ntypes; i++) {
       gfactor1[i] = -atom->mass[i] / t_period / force->ftm2v;
-      gfactor2[i] = sqrt(atom->mass[i]) * 
-	sqrt(24.0*force->boltz/t_period/update->dt/force->mvv2e) / 
-	force->ftm2v;
+      gfactor2[i] = sqrt(atom->mass[i]) *
+        sqrt(24.0*force->boltz/t_period/update->dt/force->mvv2e) /
+        force->ftm2v;
       gfactor1[i] *= 1.0/ratio[i];
       gfactor2[i] *= 1.0/sqrt(ratio[i]);
     }
@@ -273,7 +275,7 @@ void FixLangevin::post_force_respa(int vflag, int ilevel, int iloop)
 
 void FixLangevin::post_force_no_tally()
 {
-  double gamma1,gamma2,t_target;
+  double gamma1,gamma2;
 
   double **v = atom->v;
   double **f = atom->f;
@@ -297,20 +299,20 @@ void FixLangevin::post_force_no_tally()
     if (tstyle == EQUAL) {
       t_target = input->variable->compute_equal(tvar);
       if (t_target < 0.0)
-	error->one(FLERR,"Fix langevin variable returned negative temperature");
+        error->one(FLERR,"Fix langevin variable returned negative temperature");
       tsqrt = sqrt(t_target);
     } else {
       if (nlocal > maxatom2) {
-	maxatom2 = atom->nmax;
-	memory->destroy(tforce);
-	memory->create(tforce,maxatom2,"langevin:tforce");
+        maxatom2 = atom->nmax;
+        memory->destroy(tforce);
+        memory->create(tforce,maxatom2,"langevin:tforce");
       }
       input->variable->compute_atom(tvar,igroup,tforce,1,0);
       for (int i = 0; i < nlocal; i++)
-	if (mask[i] & groupbit)
-	    if (tforce[i] < 0.0) 
-	      error->one(FLERR,
-			 "Fix langevin variable returned negative temperature");
+        if (mask[i] & groupbit)
+            if (tforce[i] < 0.0)
+              error->one(FLERR,
+                         "Fix langevin variable returned negative temperature");
     }
     modify->addstep_compute(update->ntimestep + 1);
   }
@@ -323,7 +325,7 @@ void FixLangevin::post_force_no_tally()
   //   and added force has extra term not multiplied by v = 0
   // for ZEROFLAG:
   //   sum random force over all atoms in group
-  //   subtract sum/count from each atom in group    
+  //   subtract sum/count from each atom in group
 
   double fran[3],fsum[3],fsumall[3];
   fsum[0] = fsum[1] = fsum[2] = 0.0;
@@ -333,103 +335,103 @@ void FixLangevin::post_force_no_tally()
   double dt = update->dt;
   double mvv2e = force->mvv2e;
   double ftm2v = force->ftm2v;
-  
+
   if (zeroflag) {
     count = group->count(igroup);
     if (count == 0)
       error->all(FLERR,"Cannot zero Langevin force of 0 atoms");
   }
-  
+
   if (rmass) {
     if (which == NOBIAS) {
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = -rmass[i] / t_period / ftm2v;
-	  gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
-	  gamma1 *= 1.0/ratio[type[i]];
-	  gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
-	  fran[0] = gamma2*(random->uniform()-0.5);
-	  fran[1] = gamma2*(random->uniform()-0.5);
-	  fran[2] = gamma2*(random->uniform()-0.5);
-	  f[i][0] += gamma1*v[i][0] + fran[0];
-	  f[i][1] += gamma1*v[i][1] + fran[1];
-	  f[i][2] += gamma1*v[i][2] + fran[2];
-	  fsum[0] += fran[0];
-	  fsum[1] += fran[1];
-	  fsum[2] += fran[2];
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = -rmass[i] / t_period / ftm2v;
+          gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
+          gamma1 *= 1.0/ratio[type[i]];
+          gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
+          fran[0] = gamma2*(random->uniform()-0.5);
+          fran[1] = gamma2*(random->uniform()-0.5);
+          fran[2] = gamma2*(random->uniform()-0.5);
+          f[i][0] += gamma1*v[i][0] + fran[0];
+          f[i][1] += gamma1*v[i][1] + fran[1];
+          f[i][2] += gamma1*v[i][2] + fran[2];
+          fsum[0] += fran[0];
+          fsum[1] += fran[1];
+          fsum[2] += fran[2];
+        }
       }
 
     } else if (which == BIAS) {
       temperature->compute_scalar();
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = -rmass[i] / t_period / ftm2v;
-	  gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
-	  gamma1 *= 1.0/ratio[type[i]];
-	  gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
-	  temperature->remove_bias(i,v[i]);
-	  fran[0] = gamma2*(random->uniform()-0.5);
-	  fran[1] = gamma2*(random->uniform()-0.5);
-	  fran[2] = gamma2*(random->uniform()-0.5);
-	  if (v[i][0] != 0.0)
-	    f[i][0] += gamma1*v[i][0] + fran[0];
-	  if (v[i][1] != 0.0)
-	    f[i][1] += gamma1*v[i][1] + fran[1];
-	  if (v[i][2] != 0.0)
-	    f[i][2] += gamma1*v[i][2] + fran[2];
-	  fsum[0] += fran[0];
-	  fsum[1] += fran[1];
-	  fsum[2] += fran[2];
-	  temperature->restore_bias(i,v[i]);
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = -rmass[i] / t_period / ftm2v;
+          gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
+          gamma1 *= 1.0/ratio[type[i]];
+          gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
+          temperature->remove_bias(i,v[i]);
+          fran[0] = gamma2*(random->uniform()-0.5);
+          fran[1] = gamma2*(random->uniform()-0.5);
+          fran[2] = gamma2*(random->uniform()-0.5);
+          if (v[i][0] != 0.0)
+            f[i][0] += gamma1*v[i][0] + fran[0];
+          if (v[i][1] != 0.0)
+            f[i][1] += gamma1*v[i][1] + fran[1];
+          if (v[i][2] != 0.0)
+            f[i][2] += gamma1*v[i][2] + fran[2];
+          fsum[0] += fran[0];
+          fsum[1] += fran[1];
+          fsum[2] += fran[2];
+          temperature->restore_bias(i,v[i]);
+        }
       }
     }
 
   } else {
-    
+
     if (which == NOBIAS) {
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = gfactor1[type[i]];
-	  gamma2 = gfactor2[type[i]] * tsqrt;
-	  fran[0] = gamma2*(random->uniform()-0.5);
-	  fran[1] = gamma2*(random->uniform()-0.5);
-	  fran[2] = gamma2*(random->uniform()-0.5);
-	  f[i][0] += gamma1*v[i][0] + fran[0];
-	  f[i][1] += gamma1*v[i][1] + fran[1];
-	  f[i][2] += gamma1*v[i][2] + fran[2];
-	  fsum[0] += fran[0];
-	  fsum[1] += fran[1];
-	  fsum[2] += fran[2];
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = gfactor1[type[i]];
+          gamma2 = gfactor2[type[i]] * tsqrt;
+          fran[0] = gamma2*(random->uniform()-0.5);
+          fran[1] = gamma2*(random->uniform()-0.5);
+          fran[2] = gamma2*(random->uniform()-0.5);
+          f[i][0] += gamma1*v[i][0] + fran[0];
+          f[i][1] += gamma1*v[i][1] + fran[1];
+          f[i][2] += gamma1*v[i][2] + fran[2];
+          fsum[0] += fran[0];
+          fsum[1] += fran[1];
+          fsum[2] += fran[2];
+        }
       }
 
     } else if (which == BIAS) {
       temperature->compute_scalar();
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = gfactor1[type[i]];
-	  gamma2 = gfactor2[type[i]] * tsqrt;
-	  temperature->remove_bias(i,v[i]);
-	  fran[0] = gamma2*(random->uniform()-0.5);
-	  fran[1] = gamma2*(random->uniform()-0.5);
-	  fran[2] = gamma2*(random->uniform()-0.5);
-	  if (v[i][0] != 0.0)
-	    f[i][0] += gamma1*v[i][0] + fran[0];
-	  if (v[i][1] != 0.0)
-	    f[i][1] += gamma1*v[i][1] + fran[1];
-	  if (v[i][2] != 0.0)
-	    f[i][2] += gamma1*v[i][2] + fran[2];
-	  fsum[0] += fran[0];
-	  fsum[1] += fran[1];
-	  fsum[2] += fran[2];
-	  temperature->restore_bias(i,v[i]);
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = gfactor1[type[i]];
+          gamma2 = gfactor2[type[i]] * tsqrt;
+          temperature->remove_bias(i,v[i]);
+          fran[0] = gamma2*(random->uniform()-0.5);
+          fran[1] = gamma2*(random->uniform()-0.5);
+          fran[2] = gamma2*(random->uniform()-0.5);
+          if (v[i][0] != 0.0)
+            f[i][0] += gamma1*v[i][0] + fran[0];
+          if (v[i][1] != 0.0)
+            f[i][1] += gamma1*v[i][1] + fran[1];
+          if (v[i][2] != 0.0)
+            f[i][2] += gamma1*v[i][2] + fran[2];
+          fsum[0] += fran[0];
+          fsum[1] += fran[1];
+          fsum[2] += fran[2];
+          temperature->restore_bias(i,v[i]);
+        }
       }
     }
   }
@@ -443,9 +445,9 @@ void FixLangevin::post_force_no_tally()
     fsumall[2] /= count;
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
-	f[i][0] -= fsumall[0];
-	f[i][1] -= fsumall[1];
-	f[i][2] -= fsumall[2];
+        f[i][0] -= fsumall[0];
+        f[i][1] -= fsumall[1];
+        f[i][2] -= fsumall[2];
       }
     }
   }
@@ -460,7 +462,7 @@ void FixLangevin::post_force_no_tally()
 
 void FixLangevin::post_force_tally()
 {
-  double gamma1,gamma2,t_target;
+  double gamma1,gamma2;
 
   // reallocate flangevin if necessary
 
@@ -492,20 +494,20 @@ void FixLangevin::post_force_tally()
     if (tstyle == EQUAL) {
       t_target = input->variable->compute_equal(tvar);
       if (t_target < 0.0)
-	error->one(FLERR,"Fix langevin variable returned negative temperature");
+        error->one(FLERR,"Fix langevin variable returned negative temperature");
       tsqrt = sqrt(t_target);
     } else {
       if (nlocal > maxatom2) {
-	maxatom2 = atom->nmax;
-	memory->destroy(tforce);
-	memory->create(tforce,maxatom2,"langevin:tforce");
+        maxatom2 = atom->nmax;
+        memory->destroy(tforce);
+        memory->create(tforce,maxatom2,"langevin:tforce");
       }
       input->variable->compute_atom(tvar,igroup,tforce,1,0);
       for (int i = 0; i < nlocal; i++)
-	if (mask[i] & groupbit)
-	    if (tforce[i] < 0.0) 
-	      error->one(FLERR,
-			 "Fix langevin variable returned negative temperature");
+        if (mask[i] & groupbit)
+            if (tforce[i] < 0.0)
+              error->one(FLERR,
+                         "Fix langevin variable returned negative temperature");
     }
     modify->addstep_compute(update->ntimestep + 1);
   }
@@ -525,80 +527,80 @@ void FixLangevin::post_force_tally()
   if (rmass) {
     if (which == NOBIAS) {
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = -rmass[i] / t_period / ftm2v;
-	  gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
-	  gamma1 *= 1.0/ratio[type[i]];
-	  gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
-	  flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
-	  f[i][0] += flangevin[i][0];
-	  f[i][1] += flangevin[i][1];
-	  f[i][2] += flangevin[i][2];
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = -rmass[i] / t_period / ftm2v;
+          gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
+          gamma1 *= 1.0/ratio[type[i]];
+          gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
+          flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
+          flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
+          flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
+          f[i][0] += flangevin[i][0];
+          f[i][1] += flangevin[i][1];
+          f[i][2] += flangevin[i][2];
+        }
       }
 
     } else if (which == BIAS) {
       temperature->compute_scalar();
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = -rmass[i] / t_period / ftm2v;
-	  gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
-	  gamma1 *= 1.0/ratio[type[i]];
-	  gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
-	  temperature->remove_bias(i,v[i]);
-	  flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
-	  if (v[i][0] != 0.0) f[i][0] += flangevin[i][0];
-	  else flangevin[i][0] = 0;
-	  if (v[i][1] != 0.0) f[i][1] += flangevin[i][1];
-	  else flangevin[i][1] = 0;
-	  if (v[i][2] != 0.0) f[i][2] += flangevin[i][2];
-	  else flangevin[i][2] = 0;
-	  temperature->restore_bias(i,v[i]);
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = -rmass[i] / t_period / ftm2v;
+          gamma2 = sqrt(rmass[i]) * sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
+          gamma1 *= 1.0/ratio[type[i]];
+          gamma2 *= 1.0/sqrt(ratio[type[i]]) * tsqrt;
+          temperature->remove_bias(i,v[i]);
+          flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
+          flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
+          flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
+          if (v[i][0] != 0.0) f[i][0] += flangevin[i][0];
+          else flangevin[i][0] = 0;
+          if (v[i][1] != 0.0) f[i][1] += flangevin[i][1];
+          else flangevin[i][1] = 0;
+          if (v[i][2] != 0.0) f[i][2] += flangevin[i][2];
+          else flangevin[i][2] = 0;
+          temperature->restore_bias(i,v[i]);
+        }
       }
     }
 
   } else {
     if (which == NOBIAS) {
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = gfactor1[type[i]];
-	  gamma2 = gfactor2[type[i]] * tsqrt;
-	  flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
-	  f[i][0] += flangevin[i][0];
-	  f[i][1] += flangevin[i][1];
-	  f[i][2] += flangevin[i][2];
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = gfactor1[type[i]];
+          gamma2 = gfactor2[type[i]] * tsqrt;
+          flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
+          flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
+          flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
+          f[i][0] += flangevin[i][0];
+          f[i][1] += flangevin[i][1];
+          f[i][2] += flangevin[i][2];
+        }
       }
 
     } else if (which == BIAS) {
       temperature->compute_scalar();
       for (int i = 0; i < nlocal; i++) {
-	if (mask[i] & groupbit) {
-	  if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
-	  gamma1 = gfactor1[type[i]];
-	  gamma2 = gfactor2[type[i]] * tsqrt;
-	  temperature->remove_bias(i,v[i]);
-	  flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
-	  flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
-	  if (v[i][0] != 0.0) f[i][0] += flangevin[i][0];
-	  else flangevin[i][0] = 0.0;
-	  if (v[i][1] != 0.0) f[i][1] += flangevin[i][1];
-	  else flangevin[i][1] = 0.0;
-	  if (v[i][2] != 0.0) f[i][2] += flangevin[i][2];
-	  else flangevin[i][2] = 0.0;
-	  temperature->restore_bias(i,v[i]);
-	}
+        if (mask[i] & groupbit) {
+          if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
+          gamma1 = gfactor1[type[i]];
+          gamma2 = gfactor2[type[i]] * tsqrt;
+          temperature->remove_bias(i,v[i]);
+          flangevin[i][0] = gamma1*v[i][0] + gamma2*(random->uniform()-0.5);
+          flangevin[i][1] = gamma1*v[i][1] + gamma2*(random->uniform()-0.5);
+          flangevin[i][2] = gamma1*v[i][2] + gamma2*(random->uniform()-0.5);
+          if (v[i][0] != 0.0) f[i][0] += flangevin[i][0];
+          else flangevin[i][0] = 0.0;
+          if (v[i][1] != 0.0) f[i][1] += flangevin[i][1];
+          else flangevin[i][1] = 0.0;
+          if (v[i][2] != 0.0) f[i][2] += flangevin[i][2];
+          else flangevin[i][2] = 0.0;
+          temperature->restore_bias(i,v[i]);
+        }
       }
     }
   }
@@ -684,7 +686,7 @@ void FixLangevin::angmom_thermostat()
       inertia[2] = EINERTIA*rmass[i] * (shape[0]*shape[0]+shape[1]*shape[1]);
       quat = bonus[ellipsoid[i]].quat;
       MathExtra::mq_to_omega(angmom[i],quat,inertia,omega);
-      
+
       if (tstyle == ATOM) tsqrt = sqrt(tforce[i]);
       gamma1 = -1.0 / t_period / ftm2v;
       gamma2 = sqrt(24.0*boltz/t_period/dt/mvv2e) / ftm2v;
@@ -710,14 +712,14 @@ void FixLangevin::end_of_step()
 
   double **v = atom->v;
   int *mask = atom->mask;
-  int nlocal = atom->nlocal;  
+  int nlocal = atom->nlocal;
 
   energy_onestep = 0.0;
- 
+
   for (int i = 0; i < nlocal; i++)
     if (mask[i] & groupbit)
-      energy_onestep += flangevin[i][0]*v[i][0] + flangevin[i][1]*v[i][1] + 
-	flangevin[i][2]*v[i][2];
+      energy_onestep += flangevin[i][0]*v[i][0] + flangevin[i][1]*v[i][1] +
+        flangevin[i][2]*v[i][2];
 
   energy += energy_onestep*update->dt;
 }
@@ -726,7 +728,7 @@ void FixLangevin::end_of_step()
 
 void FixLangevin::reset_target(double t_new)
 {
-  t_start = t_stop = t_new;
+  t_target = t_start = t_stop = t_new;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -735,9 +737,9 @@ void FixLangevin::reset_dt()
 {
   if (atom->mass) {
     for (int i = 1; i <= atom->ntypes; i++) {
-      gfactor2[i] = sqrt(atom->mass[i]) * 
-	sqrt(24.0*force->boltz/t_period/update->dt/force->mvv2e) / 
-	force->ftm2v;
+      gfactor2[i] = sqrt(atom->mass[i]) *
+        sqrt(24.0*force->boltz/t_period/update->dt/force->mvv2e) /
+        force->ftm2v;
       gfactor2[i] *= 1.0/sqrt(ratio[i]);
     }
   }
@@ -755,13 +757,13 @@ int FixLangevin::modify_param(int narg, char **arg)
     strcpy(id_temp,arg[1]);
 
     int icompute = modify->find_compute(id_temp);
-    if (icompute < 0) 
+    if (icompute < 0)
       error->all(FLERR,"Could not find fix_modify temperature ID");
     temperature = modify->compute[icompute];
 
     if (temperature->tempflag == 0)
       error->all(FLERR,
-		 "Fix_modify temperature ID does not compute temperature");
+                 "Fix_modify temperature ID does not compute temperature");
     if (temperature->igroup != igroup && comm->me == 0)
       error->warning(FLERR,"Group for fix_modify temp != fix group");
     return 2;
@@ -779,22 +781,35 @@ double FixLangevin::compute_scalar()
 
   double **v = atom->v;
   int *mask = atom->mask;
-  int nlocal = atom->nlocal;  
+  int nlocal = atom->nlocal;
 
   if (update->ntimestep == update->beginstep) {
     energy_onestep = 0.0;
-    for (int i = 0; i < nlocal; i++) 
-      if (mask[i] & groupbit) 
-	energy_onestep += flangevin[i][0]*v[i][0] + flangevin[i][1]*v[i][1] + 
-	  flangevin[i][2]*v[i][2];
+    for (int i = 0; i < nlocal; i++)
+      if (mask[i] & groupbit)
+        energy_onestep += flangevin[i][0]*v[i][0] + flangevin[i][1]*v[i][1] +
+          flangevin[i][2]*v[i][2];
     energy = 0.5*energy_onestep*update->dt;
   }
 
   double energy_me = energy - 0.5*energy_onestep*update->dt;
 
-  double energy_all;	 
-  MPI_Allreduce(&energy_me,&energy_all,1,MPI_DOUBLE,MPI_SUM,world);	
+  double energy_all;
+  MPI_Allreduce(&energy_me,&energy_all,1,MPI_DOUBLE,MPI_SUM,world);
   return -energy_all;
+}
+
+/* ----------------------------------------------------------------------
+   extract thermostat properties
+------------------------------------------------------------------------- */
+
+void *FixLangevin::extract(const char *str, int &dim)
+{
+  dim = 0;
+  if (strcmp(str,"t_target") == 0) {
+    return &t_target;
+  }
+  return NULL;
 }
 
 /* ----------------------------------------------------------------------

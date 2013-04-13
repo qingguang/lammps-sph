@@ -11,7 +11,6 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -131,7 +130,7 @@ void AtomVecTri::grow_bonus()
     error->one(FLERR,"Per-processor system is too big");
 
   bonus = (Bonus *) memory->srealloc(bonus,nmax_bonus*sizeof(Bonus),
-				     "atom:bonus");
+                                     "atom:bonus");
 }
 
 /* ----------------------------------------------------------------------
@@ -257,7 +256,7 @@ void AtomVecTri::set_equilateral(int i, double size)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecTri::pack_comm(int n, int *list, double *buf,
-			  int pbc_flag, int *pbc)
+                          int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -271,11 +270,11 @@ int AtomVecTri::pack_comm(int n, int *list, double *buf,
       buf[m++] = x[j][1];
       buf[m++] = x[j][2];
       if (tri[j] >= 0) {
-	quat = bonus[tri[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[tri[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   } else {
@@ -294,11 +293,11 @@ int AtomVecTri::pack_comm(int n, int *list, double *buf,
       buf[m++] = x[j][1] + dy;
       buf[m++] = x[j][2] + dz;
       if (tri[j] >= 0) {
-	quat = bonus[tri[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[tri[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   }
@@ -309,7 +308,7 @@ int AtomVecTri::pack_comm(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecTri::pack_comm_vel(int n, int *list, double *buf,
-			      int pbc_flag, int *pbc)
+                              int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -323,11 +322,11 @@ int AtomVecTri::pack_comm_vel(int n, int *list, double *buf,
       buf[m++] = x[j][1];
       buf[m++] = x[j][2];
       if (tri[j] >= 0) {
-	quat = bonus[tri[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[tri[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
       buf[m++] = v[j][0];
       buf[m++] = v[j][1];
@@ -348,52 +347,52 @@ int AtomVecTri::pack_comm_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (tri[j] >= 0) {
-	  quat = bonus[tri[j]].quat;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (tri[j] >= 0) {
+          quat = bonus[tri[j]].quat;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (tri[j] >= 0) {
-	  quat = bonus[tri[j]].quat;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (tri[j] >= 0) {
+          quat = bonus[tri[j]].quat;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     }
   }
@@ -567,7 +566,7 @@ int AtomVecTri::unpack_reverse_hybrid(int n, int *list, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecTri::pack_border(int n, int *list, double *buf,
-			    int pbc_flag, int *pbc)
+                            int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -586,28 +585,28 @@ int AtomVecTri::pack_border(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (tri[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	quat = bonus[tri[j]].quat;
-	c1 = bonus[tri[j]].c1;
-	c2 = bonus[tri[j]].c2;
-	c3 = bonus[tri[j]].c3;
-	inertia = bonus[tri[j]].inertia;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
-	buf[m++] = c1[0];
-	buf[m++] = c1[1];
-	buf[m++] = c1[2];
-	buf[m++] = c2[0];
-	buf[m++] = c2[1];
-	buf[m++] = c2[2];
-	buf[m++] = c3[0];
-	buf[m++] = c3[1];
-	buf[m++] = c3[2];
-	buf[m++] = inertia[0];
-	buf[m++] = inertia[1];
-	buf[m++] = inertia[2];
+        buf[m++] = 1;
+        quat = bonus[tri[j]].quat;
+        c1 = bonus[tri[j]].c1;
+        c2 = bonus[tri[j]].c2;
+        c3 = bonus[tri[j]].c3;
+        inertia = bonus[tri[j]].inertia;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
+        buf[m++] = c1[0];
+        buf[m++] = c1[1];
+        buf[m++] = c1[2];
+        buf[m++] = c2[0];
+        buf[m++] = c2[1];
+        buf[m++] = c2[2];
+        buf[m++] = c3[0];
+        buf[m++] = c3[1];
+        buf[m++] = c3[2];
+        buf[m++] = inertia[0];
+        buf[m++] = inertia[1];
+        buf[m++] = inertia[2];
       }
     }
   } else {
@@ -631,28 +630,28 @@ int AtomVecTri::pack_border(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (tri[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	quat = bonus[tri[j]].quat;
-	c1 = bonus[tri[j]].c1;
-	c2 = bonus[tri[j]].c2;
-	c3 = bonus[tri[j]].c3;
-	inertia = bonus[tri[j]].inertia;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
-	buf[m++] = c1[0];
-	buf[m++] = c1[1];
-	buf[m++] = c1[2];
-	buf[m++] = c2[0];
-	buf[m++] = c2[1];
-	buf[m++] = c2[2];
-	buf[m++] = c3[0];
-	buf[m++] = c3[1];
-	buf[m++] = c3[2];
-	buf[m++] = inertia[0];
-	buf[m++] = inertia[1];
-	buf[m++] = inertia[2];
+        buf[m++] = 1;
+        quat = bonus[tri[j]].quat;
+        c1 = bonus[tri[j]].c1;
+        c2 = bonus[tri[j]].c2;
+        c3 = bonus[tri[j]].c3;
+        inertia = bonus[tri[j]].inertia;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
+        buf[m++] = c1[0];
+        buf[m++] = c1[1];
+        buf[m++] = c1[2];
+        buf[m++] = c2[0];
+        buf[m++] = c2[1];
+        buf[m++] = c2[2];
+        buf[m++] = c3[0];
+        buf[m++] = c3[1];
+        buf[m++] = c3[2];
+        buf[m++] = inertia[0];
+        buf[m++] = inertia[1];
+        buf[m++] = inertia[2];
       }
     }
   }
@@ -662,7 +661,7 @@ int AtomVecTri::pack_border(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecTri::pack_border_vel(int n, int *list, double *buf,
-				int pbc_flag, int *pbc)
+                                int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -681,28 +680,28 @@ int AtomVecTri::pack_border_vel(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (tri[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	quat = bonus[tri[j]].quat;
-	c1 = bonus[tri[j]].c1;
-	c2 = bonus[tri[j]].c2;
-	c3 = bonus[tri[j]].c3;
-	inertia = bonus[tri[j]].inertia;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
-	buf[m++] = c1[0];
-	buf[m++] = c1[1];
-	buf[m++] = c1[2];
-	buf[m++] = c2[0];
-	buf[m++] = c2[1];
-	buf[m++] = c2[2];
-	buf[m++] = c3[0];
-	buf[m++] = c3[1];
-	buf[m++] = c3[2];
-	buf[m++] = inertia[0];
-	buf[m++] = inertia[1];
-	buf[m++] = inertia[2];
+        buf[m++] = 1;
+        quat = bonus[tri[j]].quat;
+        c1 = bonus[tri[j]].c1;
+        c2 = bonus[tri[j]].c2;
+        c3 = bonus[tri[j]].c3;
+        inertia = bonus[tri[j]].inertia;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
+        buf[m++] = c1[0];
+        buf[m++] = c1[1];
+        buf[m++] = c1[2];
+        buf[m++] = c2[0];
+        buf[m++] = c2[1];
+        buf[m++] = c2[2];
+        buf[m++] = c3[0];
+        buf[m++] = c3[1];
+        buf[m++] = c3[2];
+        buf[m++] = inertia[0];
+        buf[m++] = inertia[1];
+        buf[m++] = inertia[2];
       }
       buf[m++] = v[j][0];
       buf[m++] = v[j][1];
@@ -723,96 +722,96 @@ int AtomVecTri::pack_border_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = molecule[j];
-	if (tri[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  quat = bonus[tri[j]].quat;
-	  c1 = bonus[tri[j]].c1;
-	  c2 = bonus[tri[j]].c2;
-	  c3 = bonus[tri[j]].c3;
-	  inertia = bonus[tri[j]].inertia;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	  buf[m++] = c1[0];
-	  buf[m++] = c1[1];
-	  buf[m++] = c1[2];
-	  buf[m++] = c2[0];
-	  buf[m++] = c2[1];
-	  buf[m++] = c2[2];
-	  buf[m++] = c3[0];
-	  buf[m++] = c3[1];
-	  buf[m++] = c3[2];
-	  buf[m++] = inertia[0];
-	  buf[m++] = inertia[1];
-	  buf[m++] = inertia[2];
-	}
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = molecule[j];
+        if (tri[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          quat = bonus[tri[j]].quat;
+          c1 = bonus[tri[j]].c1;
+          c2 = bonus[tri[j]].c2;
+          c3 = bonus[tri[j]].c3;
+          inertia = bonus[tri[j]].inertia;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+          buf[m++] = c1[0];
+          buf[m++] = c1[1];
+          buf[m++] = c1[2];
+          buf[m++] = c2[0];
+          buf[m++] = c2[1];
+          buf[m++] = c2[2];
+          buf[m++] = c3[0];
+          buf[m++] = c3[1];
+          buf[m++] = c3[2];
+          buf[m++] = inertia[0];
+          buf[m++] = inertia[1];
+          buf[m++] = inertia[2];
+        }
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = molecule[j];
-	if (tri[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  quat = bonus[tri[j]].quat;
-	  c1 = bonus[tri[j]].c1;
-	  c2 = bonus[tri[j]].c2;
-	  c3 = bonus[tri[j]].c3;
-	  inertia = bonus[tri[j]].inertia;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	  buf[m++] = c1[0];
-	  buf[m++] = c1[1];
-	  buf[m++] = c1[2];
-	  buf[m++] = c2[0];
-	  buf[m++] = c2[1];
-	  buf[m++] = c2[2];
-	  buf[m++] = c3[0];
-	  buf[m++] = c3[1];
-	  buf[m++] = c3[2];
-	  buf[m++] = inertia[0];
-	  buf[m++] = inertia[1];
-	  buf[m++] = inertia[2];
-	}
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = molecule[j];
+        if (tri[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          quat = bonus[tri[j]].quat;
+          c1 = bonus[tri[j]].c1;
+          c2 = bonus[tri[j]].c2;
+          c3 = bonus[tri[j]].c3;
+          inertia = bonus[tri[j]].inertia;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+          buf[m++] = c1[0];
+          buf[m++] = c1[1];
+          buf[m++] = c1[2];
+          buf[m++] = c2[0];
+          buf[m++] = c2[1];
+          buf[m++] = c2[2];
+          buf[m++] = c3[0];
+          buf[m++] = c3[1];
+          buf[m++] = c3[2];
+          buf[m++] = inertia[0];
+          buf[m++] = inertia[1];
+          buf[m++] = inertia[2];
+        }
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     }
   }
@@ -1015,7 +1014,7 @@ int AtomVecTri::unpack_border_hybrid(int n, int first, double *buf)
 
 /* ----------------------------------------------------------------------
    pack data for atom I for sending to another proc
-   xyz must be 1st 3 values, so comm::exchange() can test on them 
+   xyz must be 1st 3 values, so comm::exchange() can test on them
 ------------------------------------------------------------------------- */
 
 int AtomVecTri::pack_exchange(int i, double *buf)
@@ -1030,7 +1029,7 @@ int AtomVecTri::pack_exchange(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
 
   buf[m++] = molecule[i];
   buf[m++] = rmass[i];
@@ -1066,7 +1065,7 @@ int AtomVecTri::pack_exchange(int i, double *buf)
   }
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->pack_exchange(i,&buf[m]);
 
   buf[0] = m;
@@ -1090,7 +1089,7 @@ int AtomVecTri::unpack_exchange(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
 
   molecule[nlocal] = static_cast<int> (buf[m++]);
   rmass[nlocal] = buf[m++];
@@ -1128,9 +1127,9 @@ int AtomVecTri::unpack_exchange(double *buf)
   }
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->
-	unpack_exchange(nlocal,&buf[m]);
+        unpack_exchange(nlocal,&buf[m]);
 
   atom->nlocal++;
   return m;
@@ -1152,9 +1151,9 @@ int AtomVecTri::size_restart()
     else n += 17;
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       for (i = 0; i < nlocal; i++)
-	n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
   return n;
 }
@@ -1162,7 +1161,7 @@ int AtomVecTri::size_restart()
 /* ----------------------------------------------------------------------
    pack atom I's data for restart file including extra quantities
    xyz must be 1st 3 values, so that read_restart can test on them
-   molecular types may be negative, but write as positive   
+   molecular types may be negative, but write as positive
 ------------------------------------------------------------------------- */
 
 int AtomVecTri::pack_restart(int i, double *buf)
@@ -1174,7 +1173,7 @@ int AtomVecTri::pack_restart(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
   buf[m++] = v[i][0];
   buf[m++] = v[i][1];
   buf[m++] = v[i][2];
@@ -1213,7 +1212,7 @@ int AtomVecTri::pack_restart(int i, double *buf)
   }
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       m += modify->fix[atom->extra_restart[iextra]]->pack_restart(i,&buf[m]);
 
   buf[0] = m;
@@ -1240,7 +1239,7 @@ int AtomVecTri::unpack_restart(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
   v[nlocal][0] = buf[m++];
   v[nlocal][1] = buf[m++];
   v[nlocal][2] = buf[m++];
@@ -1306,7 +1305,8 @@ void AtomVecTri::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = (512 << 20) | (512 << 10) | 512;
+  image[nlocal] = ((tagint) IMGMAX << IMG2BITS) |
+    ((tagint) IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
@@ -1326,7 +1326,7 @@ void AtomVecTri::create_atom(int itype, double *coord)
    initialize other atom quantities
 ------------------------------------------------------------------------- */
 
-void AtomVecTri::data_atom(double *coord, int imagetmp, char **values)
+void AtomVecTri::data_atom(double *coord, tagint imagetmp, char **values)
 {
   int nlocal = atom->nlocal;
   if (nlocal == nmax) grow(0);
@@ -1472,7 +1472,7 @@ void AtomVecTri::data_atom_bonus(int m, char **values)
 
   int ierror = MathExtra::jacobi(tensor,bonus[nlocal_bonus].inertia,evectors);
   if (ierror) error->one(FLERR,"Insufficient Jacobi rotations for triangle");
-  
+
   double ex_space[3],ey_space[3],ez_space[3];
   ex_space[0] = evectors[0][0];
   ex_space[1] = evectors[1][0];
@@ -1491,7 +1491,7 @@ void AtomVecTri::data_atom_bonus(int m, char **values)
   if (MathExtra::dot3(norm,ez_space) < 0.0) MathExtra::negate3(ez_space);
 
   // create initial quaternion
-  
+
   MathExtra::exyz_to_q(ex_space,ey_space,ez_space,bonus[nlocal_bonus].quat);
 
   // bonus c1,c2,c3 = displacement of c1,c2,c3 from centroid
@@ -1500,13 +1500,13 @@ void AtomVecTri::data_atom_bonus(int m, char **values)
   double disp[3];
   MathExtra::sub3(c1,centroid,disp);
   MathExtra::transpose_matvec(ex_space,ey_space,ez_space,
-			      disp,bonus[nlocal_bonus].c1);
+                              disp,bonus[nlocal_bonus].c1);
   MathExtra::sub3(c2,centroid,disp);
   MathExtra::transpose_matvec(ex_space,ey_space,ez_space,
-			      disp,bonus[nlocal_bonus].c2);
+                              disp,bonus[nlocal_bonus].c2);
   MathExtra::sub3(c3,centroid,disp);
   MathExtra::transpose_matvec(ex_space,ey_space,ez_space,
-			      disp,bonus[nlocal_bonus].c3);
+                              disp,bonus[nlocal_bonus].c3);
 
   bonus[nlocal_bonus].ilocal = m;
   tri[m] = nlocal_bonus++;
@@ -1539,7 +1539,7 @@ int AtomVecTri::data_vel_hybrid(int m, char **values)
 }
 
 /* ----------------------------------------------------------------------
-   return # of bytes of allocated memory 
+   return # of bytes of allocated memory
 ------------------------------------------------------------------------- */
 
 bigint AtomVecTri::memory_usage()

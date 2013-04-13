@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -16,7 +16,6 @@
                         Axel Kohlmeyer (Temple U), support for groups
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "math.h"
 #include "inttypes.h"
 #include "stdio.h"
@@ -65,7 +64,7 @@ DumpDCD::DumpDCD(LAMMPS *lmp, int narg, char **arg) : Dump(lmp, narg, arg)
 
   unwrap_flag = 0;
   format_default = NULL;
-    
+
   // allocate global array for atom coords
 
   bigint n = group->count(igroup);
@@ -163,29 +162,14 @@ void DumpDCD::write_header(bigint n)
     dim[5] = domain->zprd;
     dim[1] = dim[3] = dim[4] = 0.0;
   }
-  
+
   if (me == 0) {
     uint32_t out_integer = 48;
     fwrite_int32(fp,out_integer);
-    fwrite(dim,out_integer,1,fp); 
+    fwrite(dim,out_integer,1,fp);
     fwrite_int32(fp,out_integer);
     if (flush_flag) fflush(fp);
   }
-}
-
-/* ---------------------------------------------------------------------- */
-
-int DumpDCD::count()
-{
-  if (igroup == 0) return atom->nlocal;
-
-  int *mask = atom->mask;
-  int nlocal = atom->nlocal;
-
-  int m = 0;
-  for (int i = 0; i < nlocal; i++)
-    if (mask[i] & groupbit) m++;
-  return m;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -196,7 +180,7 @@ void DumpDCD::pack(int *ids)
 
   int *tag = atom->tag;
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -211,30 +195,30 @@ void DumpDCD::pack(int *ids)
 
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
-	int ix = (image[i] & 1023) - 512;
-	int iy = (image[i] >> 10 & 1023) - 512;
-	int iz = (image[i] >> 20) - 512;
+        int ix = (image[i] & IMGMASK) - IMGMAX;
+        int iy = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+        int iz = (image[i] >> IMG2BITS) - IMGMAX;
 
-	if (domain->triclinic) {
-	  buf[m++] = x[i][0] + ix * xprd + iy * xy + iz * xz;
-	  buf[m++] = x[i][1] + iy * yprd + iz * yz;
-	  buf[m++] = x[i][2] + iz * zprd;
-	} else {
-	  buf[m++] = x[i][0] + ix * xprd;
-	  buf[m++] = x[i][1] + iy * yprd;
-	  buf[m++] = x[i][2] + iz * zprd;
-	}
-	ids[n++] = tag[i];
+        if (domain->triclinic) {
+          buf[m++] = x[i][0] + ix * xprd + iy * xy + iz * xz;
+          buf[m++] = x[i][1] + iy * yprd + iz * yz;
+          buf[m++] = x[i][2] + iz * zprd;
+        } else {
+          buf[m++] = x[i][0] + ix * xprd;
+          buf[m++] = x[i][1] + iy * yprd;
+          buf[m++] = x[i][2] + iz * zprd;
+        }
+        ids[n++] = tag[i];
       }
     }
 
   } else {
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	buf[m++] = x[i][0];
-	buf[m++] = x[i][1];
-	buf[m++] = x[i][2];
-	ids[n++] = tag[i];
+        buf[m++] = x[i][0];
+        buf[m++] = x[i][1];
+        buf[m++] = x[i][2];
+        ids[n++] = tag[i];
       }
   }
 }
@@ -302,7 +286,7 @@ void DumpDCD::write_frame()
   fwrite_int32(fp,out_integer);
   fwrite(zf,out_integer,1,fp);
   fwrite_int32(fp,out_integer);
-  
+
   // update NFILE and NSTEP fields in DCD header
 
   nframes++;
@@ -335,7 +319,7 @@ void DumpDCD::write_dcd_header(const char *remarks)
   fwrite_int32(fp,ntimestep);            // START = timestep of first snapshot
   fwrite_int32(fp,nevery_save);          // SKIP = interval between snapshots
   fwrite_int32(fp,ntimestep);            // NSTEP = timestep of last snapshot
-  fwrite_int32(fp,0);			 // NAMD writes NSTEP or ISTART
+  fwrite_int32(fp,0);                         // NAMD writes NSTEP or ISTART
   fwrite_int32(fp,0);
   fwrite_int32(fp,0);
   fwrite_int32(fp,0);
@@ -361,7 +345,7 @@ void DumpDCD::write_dcd_header(const char *remarks)
   cur_time=time(NULL);
   tmbuf=localtime(&cur_time);
   memset(title_string,' ',81);
-  strftime(title_string,80,"REMARKS Created %d %B,%Y at %R",tmbuf);
+  strftime(title_string,80,"REMARKS Created %d %B,%Y at %H:%M",tmbuf);
   fwrite(title_string,80,1,fp);
   fwrite_int32(fp,164);
   fwrite_int32(fp,4);

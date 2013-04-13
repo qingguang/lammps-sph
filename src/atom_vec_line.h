@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -60,7 +60,7 @@ class AtomVecLine : public AtomVec {
   int pack_restart(int, double *);
   int unpack_restart(double *);
   void create_atom(int, double *);
-  void data_atom(double *, int, char **);
+  void data_atom(double *, tagint, char **);
   int data_atom_hybrid(int, char **);
   void data_vel(int, char **);
   int data_vel_hybrid(int, char **);
@@ -76,7 +76,8 @@ class AtomVecLine : public AtomVec {
   void set_length(int, double);
 
  private:
-  int *tag,*type,*mask,*image;
+  int *tag,*type,*mask;
+  tagint *image;
   double **x,**v,**f;
   int *molecule;
   double *rmass;
@@ -99,7 +100,7 @@ class AtomVecLine : public AtomVec {
 
 E: Atom_style line can only be used in 2d simulations
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Per-processor system is too big
 
@@ -120,18 +121,11 @@ Density value cannot be <= 0.0.
 
 E: Assigning line parameters to non-line atom
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Inconsistent line segment in data file
 
-UNDOCUMENTED
-
-E: BAD VECLINE PTRS: %s: %d %d: %d\n
-
-UNDOCUMENTED
-
-E: BAD VECLINE COUNT: %s: %d %d: %d %d\n
-
-UNDOCUMENTED
+The end points of the line segment are not equal distances from the
+center point which is the atom coordinate.
 
 */

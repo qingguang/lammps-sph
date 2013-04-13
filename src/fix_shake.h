@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -181,19 +181,19 @@ E: Shake atoms %d %d missing on proc %d at step %ld
 
 The 2 atoms in a single shake cluster specified by the fix shake
 command are not all accessible to a processor.  This probably means
-an atom has moved too far. :dd
+an atom has moved too far.
 
 E: Shake atoms %d %d %d missing on proc %d at step %ld
 
 The 3 atoms in a single shake cluster specified by the fix shake
 command are not all accessible to a processor.  This probably means
-an atom has moved too far. :dd
+an atom has moved too far.
 
 E: Shake atoms %d %d %d %d missing on proc %d at step %ld
 
 The 4 atoms in a single shake cluster specified by the fix shake
 command are not all accessible to a processor.  This probably means
-an atom has moved too far. :dd
+an atom has moved too far.
 
 E: Did not find fix shake partner info
 

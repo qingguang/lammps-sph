@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -14,6 +14,7 @@
 #ifndef LMP_DOMAIN_H
 #define LMP_DOMAIN_H
 
+#include "math.h"
 #include "pointers.h"
 
 namespace LAMMPS_NS {
@@ -34,7 +35,8 @@ class Domain : protected Pointers {
                                          // 2 = shrink-wrap non-periodic
                                          // 3 = shrink-wrap non-per w/ min
 
-  int triclinic;		         // 0 = orthog box, 1 = triclinic
+  int triclinic;                         // 0 = orthog box, 1 = triclinic
+  int tiltsmall;                         // 1 if limit tilt, else 0
 
                                          // orthogonal box
   double xprd,yprd,zprd;                 // global box dimensions
@@ -70,7 +72,7 @@ class Domain : protected Pointers {
 
                                          // triclinic box
   double xy,xz,yz;                       // 3 tilt factors
-  double h[6],h_inv[6];	          	 // shape matrix in Voigt notation
+  double h[6],h_inv[6];                  // shape matrix in Voigt notation
   double h_rate[6],h_ratelo[3];          // rate of box size/shape change
 
   int box_change;                 // 1 if box bounds ever change, 0 if fixed
@@ -93,28 +95,48 @@ class Domain : protected Pointers {
   virtual void set_local_box();
   virtual void reset_box();
   virtual void pbc();
-  void remap(double *, int &);
-  void remap(double *);
-  void remap_near(double *, double *);
-  void unmap(double *, int);
-  void unmap(double *, int, double *);
-  int minimum_image_check(double, double, double);
+  void box_too_small_check();
   void minimum_image(double &, double &, double &);
   void minimum_image(double *);
-  void closest_image(const double * const, const double * const, double * const);
+  int closest_image(int, int);
+  void closest_image(const double * const, const double * const,
+                     double * const);
+  void remap(double *, tagint &);
+  void remap(double *);
+  void remap_near(double *, double *);
+  void unmap(double *, tagint);
+  void unmap(double *, tagint, double *);
+  void image_flip(int, int, int);
   void set_lattice(int, char **);
   void add_region(int, char **);
   void delete_region(int, char **);
   int find_region(char *);
-  void set_boundary(int, char **);
+  void set_boundary(int, char **, int);
+  void set_box(int, char **);
   void print_box(const char *);
+  void boundary_string(char *);
 
   virtual void lamda2x(int);
   virtual void x2lamda(int);
-  void lamda2x(double *, double *);
-  void x2lamda(double *, double *);
+  virtual void lamda2x(double *, double *);
+  virtual void x2lamda(double *, double *);
+  void x2lamda(double *, double *, double *, double *);
   void bbox(double *, double *, double *, double *);
   void box_corners();
+
+  // minimum image convention check
+  // return 1 if any distance > 1/2 of box size
+  // inline since called from neighbor build inner loop
+
+  inline int minimum_image_check(double dx, double dy, double dz) {
+    if (xperiodic && fabs(dx) > xprd_half) return 1;
+    if (yperiodic && fabs(dy) > yprd_half) return 1;
+    if (zperiodic && fabs(dz) > zprd_half) return 1;
+    return 0;
+  }
+
+ protected:
+  double small[3];                  // fractions of box lengths
 };
 
 }
@@ -132,11 +154,6 @@ E: Cannot skew triclinic box in z for 2d simulation
 
 Self-explanatory.
 
-E: Triclinic box must be periodic in skewed dimensions
-
-This is a requirement for using a non-orthogonal box.  E.g. to set a
-non-zero xy tilt, both x and y must be periodic dimensions.
-
 E: Triclinic box skew is too large
 
 The displacement in a skewed direction must be less than half the box
@@ -146,6 +163,21 @@ length in that dimension.  E.g. the xy tilt must be between -half and
 E: Illegal simulation box
 
 The lower bound of the simulation box is greater than the upper bound.
+
+E: Bond atom missing in box size check
+
+The 2nd atoms needed to compute a particular bond is missing on this
+processor.  Typically this is because the pairwise cutoff is set too
+short or the bond has blown apart and an atom is too far away.
+
+E: Bond/angle/dihedral extent > half of periodic box length
+
+This is a restriction because LAMMPS can be confused about which image
+of an atom in the bonded interaction is the correct one to use.
+"Extent" in this context means the maximum end-to-end length of the
+bond/angle/dihedral.  LAMMPS computes this by taking the maximum bond
+length, multiplying by the number of bonds in the interaction (e.g. 3
+for a dihedral) and adding a small amount of stretch.
 
 E: Illegal ... command
 

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -25,6 +25,7 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 #define MAXTOUCH 15
 
@@ -33,12 +34,8 @@ using namespace LAMMPS_NS;
 FixShearHistory::FixShearHistory(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  // set time_depend so that history will be preserved correctly
-  // across multiple runs via laststep setting in granular pair styles
-
   restart_peratom = 1;
   create_attribute = 1;
-  time_depend = 1;
 
   // perform initial allocation of atom-based arrays
   // register with atom class
@@ -78,6 +75,7 @@ int FixShearHistory::setmask()
 {
   int mask = 0;
   mask |= PRE_EXCHANGE;
+  mask |= MIN_PRE_EXCHANGE;
   return mask;
 }
 
@@ -85,20 +83,38 @@ int FixShearHistory::setmask()
 
 void FixShearHistory::init()
 {
-  if (atom->tag_enable == 0) 
-    error->all(FLERR,"Pair style granular with history requires atoms have IDs");
+  if (atom->tag_enable == 0)
+    error->all(FLERR,
+               "Pair style granular with history requires atoms have IDs");
+
+  int dim;
+  computeflag = (int *) pair->extract("computeflag",dim);
 }
 
-/* ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+   called by setup of run or minimize
+   called by write_restart as input script command
+   only invoke pre_exchange() if neigh list stores more current history info
+     than npartner/partner arrays in this fix
+   that will only be case if pair->compute() has been invoked since
+     upate of npartner/npartner
+   this logic avoids 2 problems:
+     run 100; write_restart; run 100
+       setup_pre_exchange is called twice (by write_restart and 2nd run setup)
+       w/out a neighbor list being created in between
+     read_restart; run 100
+       setup_pre_exchange called by run setup whacks restart shear history info
+------------------------------------------------------------------------- */
 
 void FixShearHistory::setup_pre_exchange()
 {
-  pre_exchange();
+  if (*computeflag) pre_exchange();
+  *computeflag = 0;
 }
 
 /* ----------------------------------------------------------------------
    copy shear partner info from neighbor lists to atom arrays
-   so can be exchanged with atoms
+   so can be migrated or stored with atoms
 ------------------------------------------------------------------------- */
 
 void FixShearHistory::pre_exchange()
@@ -108,7 +124,7 @@ void FixShearHistory::pre_exchange()
   int *touch,**firsttouch;
   double *shear,*allshear,**firstshear;
 
-  // zero npartners for all current atoms
+  // zero npartner for all current atoms
 
   int nlocal = atom->nlocal;
   for (i = 0; i < nlocal; i++) npartner[i] = 0;
@@ -116,7 +132,6 @@ void FixShearHistory::pre_exchange()
   // copy shear info from neighbor list atoms to atom arrays
 
   int *tag = atom->tag;
-
   NeighList *list = pair->list;
   inum = list->inum;
   ilist = list->ilist;
@@ -134,27 +149,27 @@ void FixShearHistory::pre_exchange()
 
     for (jj = 0; jj < jnum; jj++) {
       if (touch[jj]) {
-	shear = &allshear[3*jj];
-	j = jlist[jj];
-	j &= NEIGHMASK;
-	if (npartner[i] < MAXTOUCH) {
-	  m = npartner[i];
-	  partner[i][m] = tag[j];
-	  shearpartner[i][m][0] = shear[0];
-	  shearpartner[i][m][1] = shear[1];
-	  shearpartner[i][m][2] = shear[2];
-	}
-	npartner[i]++;
-	if (j < nlocal) {
-	  if (npartner[j] < MAXTOUCH) {
-	    m = npartner[j];
-	    partner[j][m] = tag[i];
-	    shearpartner[j][m][0] = -shear[0];
-	    shearpartner[j][m][1] = -shear[1];
-	    shearpartner[j][m][2] = -shear[2];
-	  }
-	  npartner[j]++;
-	}
+        shear = &allshear[3*jj];
+        j = jlist[jj];
+        j &= NEIGHMASK;
+        if (npartner[i] < MAXTOUCH) {
+          m = npartner[i];
+          partner[i][m] = tag[j];
+          shearpartner[i][m][0] = shear[0];
+          shearpartner[i][m][1] = shear[1];
+          shearpartner[i][m][2] = shear[2];
+        }
+        npartner[i]++;
+        if (j < nlocal) {
+          if (npartner[j] < MAXTOUCH) {
+            m = npartner[j];
+            partner[j][m] = tag[i];
+            shearpartner[j][m][0] = -shear[0];
+            shearpartner[j][m][1] = -shear[1];
+            shearpartner[j][m][2] = -shear[2];
+          }
+          npartner[j]++;
+        }
       }
     }
   }
@@ -166,7 +181,23 @@ void FixShearHistory::pre_exchange()
     if (npartner[i] >= MAXTOUCH) flag = 1;
   int flag_all;
   MPI_Allreduce(&flag,&flag_all,1,MPI_INT,MPI_SUM,world);
-  if (flag_all) error->all(FLERR,"Too many touching neighbors - boost MAXTOUCH");
+  if (flag_all)
+    error->all(FLERR,"Too many touching neighbors - boost MAXTOUCH");
+}
+
+/* ---------------------------------------------------------------------- */
+
+void FixShearHistory::min_setup_pre_exchange()
+{
+  if (*computeflag) pre_exchange();
+  *computeflag = 0;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void FixShearHistory::min_pre_exchange()
+{
+  pre_exchange();
 }
 
 /* ----------------------------------------------------------------------

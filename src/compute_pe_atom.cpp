@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -22,6 +22,7 @@
 #include "angle.h"
 #include "dihedral.h"
 #include "improper.h"
+#include "kspace.h"
 #include "memory.h"
 #include "error.h"
 
@@ -29,7 +30,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-ComputePEAtom::ComputePEAtom(LAMMPS *lmp, int narg, char **arg) : 
+ComputePEAtom::ComputePEAtom(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg)
 {
   if (narg < 3) error->all(FLERR,"Illegal compute pe/atom command");
@@ -43,9 +44,11 @@ ComputePEAtom::ComputePEAtom(LAMMPS *lmp, int narg, char **arg) :
   if (narg == 3) {
     pairflag = 1;
     bondflag = angleflag = dihedralflag = improperflag = 1;
+    kspaceflag = 1;
   } else {
     pairflag = 0;
     bondflag = angleflag = dihedralflag = improperflag = 0;
+    kspaceflag = 0;
     int iarg = 3;
     while (iarg < narg) {
       if (strcmp(arg[iarg],"pair") == 0) pairflag = 1;
@@ -53,6 +56,7 @@ ComputePEAtom::ComputePEAtom(LAMMPS *lmp, int narg, char **arg) :
       else if (strcmp(arg[iarg],"angle") == 0) angleflag = 1;
       else if (strcmp(arg[iarg],"dihedral") == 0) dihedralflag = 1;
       else if (strcmp(arg[iarg],"improper") == 0) improperflag = 1;
+      else if (strcmp(arg[iarg],"kspace") == 0) kspaceflag = 1;
       else error->all(FLERR,"Illegal compute pe/atom command");
       iarg++;
     }
@@ -107,7 +111,7 @@ void ComputePEAtom::compute_peratom()
   for (i = 0; i < ntotal; i++) energy[i] = 0.0;
 
   // add in per-atom contributions from each force
-  
+
   if (pairflag && force->pair) {
     double *eatom = force->pair->eatom;
     for (i = 0; i < npair; i++) energy[i] += eatom[i];
@@ -136,6 +140,13 @@ void ComputePEAtom::compute_peratom()
   // communicate ghost energy between neighbor procs
 
   if (force->newton) comm->reverse_comm_compute(this);
+
+  // KSpace contribution is already per local atom
+
+  if (kspaceflag && force->kspace) {
+    double *eatom = force->kspace->eatom;
+    for (i = 0; i < nlocal; i++) energy[i] += eatom[i];
+  }
 
   // zero energy of atoms not in group
   // only do this after comm since ghost contributions must be included

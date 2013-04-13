@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -73,7 +73,7 @@ Use the communicate vel yes command to enable this.
 
 W: Pair dpd needs newton pair on for momentum conservation
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: All pair coeffs are not set
 

@@ -1,11 +1,11 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -26,6 +26,7 @@ class Pair : protected Pointers {
   friend class DihedralCharmm;
   friend class DihedralCharmmOMP;
   friend class FixGPU;
+  friend class FixOMP;
   friend class ThrOMP;
 
  public:
@@ -39,6 +40,7 @@ class Pair : protected Pointers {
 
   int comm_forward;              // size of forward communication (0 if none)
   int comm_reverse;              // size of reverse communication (0 if none)
+  int comm_reverse_off;          // size of reverse comm even if newton off
 
   int single_enable;             // 1 if single() routine exists
   int restartinfo;               // 1 if pair style writes restart info
@@ -48,6 +50,12 @@ class Pair : protected Pointers {
   int ghostneigh;                // 1 if pair style needs neighbors of ghosts
   double **cutghost;             // cutoff for each ghost pair
 
+  int ewaldflag;                 // 1 if compatible with Ewald solver
+  int pppmflag;                  // 1 if compatible with PPPM solver
+  int msmflag;                   // 1 if compatible with MSM solver
+  int dispersionflag;            // 1 if compatible with LJ/dispersion solver
+  int tip4pflag;                 // 1 if compatible with TIP4P solver
+
   int tail_flag;                 // pair_modify flag for LJ tail correction
   double etail,ptail;            // energy/pressure tail corrections
   double etail_ij,ptail_ij;
@@ -56,12 +64,18 @@ class Pair : protected Pointers {
   int eflag_either,eflag_global,eflag_atom;
   int vflag_either,vflag_global,vflag_atom;
 
+  int ncoultablebits;            // size of Coulomb table, accessed by KSpace
+  double tabinnersq;
+  double *rtable,*drtable,*ftable,*dftable,*ctable,*dctable;
+  double *etable,*detable,*ptable,*dptable,*vtable,*dvtable;
+  int ncoulshiftbits,ncoulmask;
+
   int nextra;                    // # of extra quantities pair style calculates
   double *pvector;               // vector of extra pair quantities
 
   int single_extra;              // number of extra single values calculated
   double *svector;               // vector of extra single quantities
-  
+
   class NeighList *list;         // standard neighbor list used by most pairs
   class NeighList *listhalf;     // half list used by some pairs
   class NeighList *listfull;     // full list used by some pairs
@@ -69,6 +83,11 @@ class Pair : protected Pointers {
   class NeighList *listinner;    // rRESPA lists used by some pairs
   class NeighList *listmiddle;
   class NeighList *listouter;
+
+  unsigned int datamask;
+  unsigned int datamask_ext;
+
+  int compute_flag;              // 0 if skip compute()
 
   Pair(class LAMMPS *);
   virtual ~Pair();
@@ -82,17 +101,20 @@ class Pair : protected Pointers {
   void write_file(int, char **);
   void init_bitmap(double, double, int, int &, int &, int &, int &);
   virtual void modify_params(int, char **);
+  void compute_dummy(int, int);
 
   // need to be public, so can be called by pair_style reaxc
 
-  void v_tally(int, double *);
+  void v_tally(int, double *, double *);
   void ev_tally(int, int, int, int, double, double, double,
-		double, double, double);
+                double, double, double);
   void ev_tally3(int, int, int, double, double,
-		 double *, double *, double *, double *);
+                 double *, double *, double *, double *);
   void v_tally3(int, int, int, double *, double *, double *, double *);
   void v_tally4(int, int, int, int, double *, double *, double *,
-		double *, double *, double *);
+                double *, double *, double *);
+  void ev_tally_xyz(int, int, int, int, double, double,
+                    double, double, double, double, double, double);
 
   // general child-class methods
 
@@ -102,7 +124,7 @@ class Pair : protected Pointers {
   virtual void compute_outer(int, int) {}
 
   virtual double single(int, int, int, int,
-			double, double, double, double &) {return 0.0;}
+                        double, double, double, double &) {return 0.0;}
 
   virtual void settings(int, char **) = 0;
   virtual void coeff(int, char **) = 0;
@@ -110,6 +132,9 @@ class Pair : protected Pointers {
   virtual void init_style();
   virtual void init_list(int, class NeighList *);
   virtual double init_one(int, int) {return 0.0;}
+
+  virtual void init_tables(double, double *);
+  virtual void free_tables();
 
   virtual void write_restart(FILE *) {}
   virtual void read_restart(FILE *) {}
@@ -123,7 +148,7 @@ class Pair : protected Pointers {
   virtual double memory_usage();
 
   // specific child-class methods for certain Pair styles
-  
+
   virtual void *extract(const char *, int &) {return NULL;}
   virtual void swap_eam(double *, double **) {}
   virtual void reset_dt() {}
@@ -131,12 +156,17 @@ class Pair : protected Pointers {
   virtual void min_xf_get(int) {}
   virtual void min_x_set(int) {}
 
+  virtual unsigned int data_mask() {return datamask;}
+  virtual unsigned int data_mask_ext() {return datamask_ext;}
+
  protected:
-  int allocated;                       // 0/1 = whether arrays are allocated
+  enum{GEOMETRIC,ARITHMETIC,SIXTHPOWER};   // mixing options
+
+  int allocated;               // 0/1 = whether arrays are allocated
+  int suffix_flag;             // suffix compatibility flag
 
                                        // pair_modify settings
   int offset_flag,mix_flag;            // flags for offset and mixing
-  int ncoultablebits;                  // size of Coulomb table
   double tabinner;                     // inner cutoff for Coulomb table
 
   // custom data type for accessing Coulomb tables
@@ -149,17 +179,16 @@ class Pair : protected Pointers {
   int maxeatom,maxvatom;
 
   virtual void ev_setup(int, int);
+  void ev_unset();
   void ev_tally_full(int, double, double, double, double, double, double);
-  void ev_tally_xyz(int, int, int, int, double, double,
-		    double, double, double, double, double, double);
   void ev_tally_xyz_full(int, double, double,
-			 double, double, double, double, double, double);
+                         double, double, double, double, double, double);
   void ev_tally4(int, int, int, int, double,
-		 double *, double *, double *, double *, double *, double *);
-  void ev_tally_list(int, int *, double, double *);
+                 double *, double *, double *, double *, double *, double *);
+  void ev_tally_tip4p(int, int *, double *, double, double);
   void v_tally2(int, int, double, double *);
   void v_tally_tensor(int, int, int, int,
-		      double, double, double, double, double, double);
+                      double, double, double, double, double, double);
   void virial_fdotr_compute();
 
   inline int sbmask(int j) {

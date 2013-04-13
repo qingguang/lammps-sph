@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -29,6 +29,7 @@ class FixGravity : public Fix {
 
  public:
   FixGravity(class LAMMPS *, int, char **);
+  ~FixGravity();
   int setmask();
   void init();
   void setup(int);
@@ -38,8 +39,8 @@ class FixGravity : public Fix {
 
  protected:
   int style;
-  double magnitude,dt;
-  double phi,theta,phigrad,thetagrad;
+  double magnitude;
+  double vert,phi,theta;
   double xdir,ydir,zdir;
   double xgrav,ygrav,zgrav,xacc,yacc,zacc;
   double degree2rad;
@@ -47,6 +48,13 @@ class FixGravity : public Fix {
   int time_origin;
   int eflag;
   double egrav,egrav_all;
+
+  int varflag;
+  int mstyle,vstyle,pstyle,tstyle,xstyle,ystyle,zstyle;
+  int mvar,vvar,pvar,tvar,xvar,yvar,zvar;
+  char *mstr,*vstr,*pstr,*tstr,*xstr,*ystr,*zstr;
+
+  void set_acceleration();
 };
 
 }
@@ -61,5 +69,13 @@ E: Illegal ... command
 Self-explanatory.  Check the input script syntax and compare to the
 documentation for the command.  You can use -echo screen as a
 command-line option when running LAMMPS to see the offending line.
+
+E: Variable name for fix gravity does not exist
+
+Self-explanatory.
+
+E: Variable for fix gravity is invalid style
+
+Only equal-style variables can be used.
 
 */

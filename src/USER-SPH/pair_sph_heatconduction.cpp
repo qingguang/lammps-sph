@@ -14,6 +14,8 @@
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sph_heatconduction.h"
+#include "sph_kernel_quintic.h"
+#include "sph_energy_equation.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -50,7 +52,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
 
   int *ilist, *jlist, *numneigh, **firstneigh;
   double imass, jmass, h, ih, ihsq;
-  double rsq, wfd, D, deltaE;
+  double rsq, wfd, D;
 
   if (eflag || vflag)
     ev_setup(eflag, vflag);
@@ -60,8 +62,9 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
   double **x = atom->x;
   double *e = atom->e;
   double *de = atom->de;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *rho = atom->rho;
+  double *cv = atom->cv;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -84,7 +87,7 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    imass = rmass[i];
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -95,37 +98,29 @@ void PairSPHHeatConduction::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      jmass = rmass[j];
 
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
-        ihsq = ih * ih;
-
         // kernel function
-        wfd = h - sqrt(rsq);
         if (domain->dimension == 3) {
-          // Lucy Kernel, 3d
-          // Note that wfd, the derivative of the weight function with respect to r,
-          // is lacking a factor of r.
-          // The missing factor of r is recovered by
-          // deltaE, which is missing a factor of 1/r
-          wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-          // Lucy Kernel, 2d
-          wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 
-        jmass = mass[jtype];
+        jmass = rmass[j];
         D = alpha[itype][jtype]; // diffusion coefficient
 
-        deltaE = 2.0 * imass * jmass / (imass+jmass);
-        deltaE *= (rho[i] + rho[j]) / (rho[i] * rho[j]);
-        deltaE *= D * (e[i] - e[j]) * wfd;
-
-        de[i] += deltaE;
+        double Ti = sph_energy2t(e[i], cv[i]);
+	double Tj = sph_energy2t(e[j], cv[j]);
+        double deltaE = 2.0*D*(Ti - Tj)*wfd/(rho[i]*rho[j]);
+        de[i] += deltaE*jmass;
         if (newton_pair || j < nlocal) {
-          de[j] -= deltaE;
+          de[j] -= deltaE*imass;
         }
 
       }

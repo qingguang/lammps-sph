@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -96,7 +96,7 @@ Self-explanatory.
 
 E: Compute reduce compute array is accessed out-of-range
 
-Self-explanatory.
+An index for the array is out of bounds.
 
 E: Compute reduce compute does not calculate a local vector
 
@@ -124,7 +124,7 @@ Self-explanatory.
 
 E: Compute reduce fix array is accessed out-of-range
 
-Self-explanatory.
+An index for the array is out of bounds.
 
 E: Compute reduce fix does not calculate a local vector
 
@@ -148,7 +148,7 @@ Self-explanatory.
 
 E: Fix used in compute reduce not computed at compatible time
 
-Fixes generate their values on specific timesteps.  Compute sum is
+Fixes generate their values on specific timesteps.  Compute reduce is
 requesting a value on a non-allowed timestep.
 
 */

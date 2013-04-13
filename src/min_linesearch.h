@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -22,7 +22,7 @@ class MinLineSearch : public Min {
  public:
   MinLineSearch(class LAMMPS *);
   ~MinLineSearch();
-  void init_style();
+  void init();
   void setup_style();
   void reset_vectors();
 
@@ -46,8 +46,10 @@ class MinLineSearch : public Min {
   FnPtr linemin;
   int linemin_backtrack(double, double &);
   int linemin_quadratic(double, double &);
+  int linemin_forcezero(double, double &);
 
   double alpha_step(double, int);
+  double compute_dir_deriv(double &);
 };
 
 }

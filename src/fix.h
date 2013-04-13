@@ -1,11 +1,11 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -36,7 +36,7 @@ class Fix : protected Pointers {
   int virial_flag;               // 1 if Fix contributes to virial, 0 if not
   int no_change_box;             // 1 if cannot swap ortho <-> triclinic
   int time_integrate;            // 1 if fix performs time integration, 0 if no
-  int time_depend;               // 1 if fix is timestep dependent, 0 if not
+  int time_depend;               // 1 if requires continuous timestepping
   int create_attribute;          // 1 if fix stores attributes that need
                                  //      setting when a new atom is created
   int restart_pbc;               // 1 if fix moves atoms (except integrate)
@@ -76,13 +76,8 @@ class Fix : protected Pointers {
   double virial[6];              // accumlated virial
   double **vatom;                // accumulated per-atom virial
 
-  int INITIAL_INTEGRATE,POST_INTEGRATE;    // mask settings
-  int PRE_EXCHANGE,PRE_NEIGHBOR;
-  int PRE_FORCE,POST_FORCE,FINAL_INTEGRATE,END_OF_STEP,THERMO_ENERGY;
-  int INITIAL_INTEGRATE_RESPA,POST_INTEGRATE_RESPA;
-  int PRE_FORCE_RESPA,POST_FORCE_RESPA,FINAL_INTEGRATE_RESPA;
-  int MIN_PRE_EXCHANGE,MIN_PRE_FORCE,MIN_POST_FORCE,MIN_ENERGY;
-  int POST_RUN;
+  unsigned int datamask;
+  unsigned int datamask_ext;
 
   Fix(class LAMMPS *, int, char **);
   virtual ~Fix();
@@ -125,6 +120,7 @@ class Fix : protected Pointers {
   virtual void post_force_respa(int, int, int) {}
   virtual void final_integrate_respa(int, int) {}
 
+  virtual void min_setup_pre_exchange() {}
   virtual void min_setup_pre_force(int) {}
   virtual void min_pre_exchange() {}
   virtual void min_pre_force(int) {}
@@ -153,10 +149,19 @@ class Fix : protected Pointers {
   virtual void deform(int) {}
   virtual void reset_target(double) {}
   virtual void reset_dt() {}
+  virtual void reset_timestep(bigint) {}
+
+  virtual void read_data_header(char *) {}
+  virtual void read_data_section(char *, int, char *) {}
+  virtual bigint read_data_skip_lines(char *) {return 0;}
 
   virtual int modify_param(int, char **) {return 0;}
+  virtual void *extract(const char *, int &) {return NULL;}
 
   virtual double memory_usage() {return 0.0;}
+
+  virtual unsigned int data_mask() {return datamask;}
+  virtual unsigned int data_mask_ext() {return datamask_ext;}
 
  protected:
   int evflag;
@@ -166,6 +171,29 @@ class Fix : protected Pointers {
   void v_setup(int);
   void v_tally(int, int *, double, double *);
 };
+
+namespace FixConst {
+  static const int INITIAL_INTEGRATE =       1<<0;
+  static const int POST_INTEGRATE =          1<<1;
+  static const int PRE_EXCHANGE =            1<<2;
+  static const int PRE_NEIGHBOR =            1<<3;
+  static const int PRE_FORCE =               1<<4;
+  static const int POST_FORCE =              1<<5;
+  static const int FINAL_INTEGRATE =         1<<6;
+  static const int END_OF_STEP =             1<<7;
+  static const int THERMO_ENERGY =           1<<8;
+  static const int INITIAL_INTEGRATE_RESPA = 1<<9;
+  static const int POST_INTEGRATE_RESPA =    1<<10;
+  static const int PRE_FORCE_RESPA =         1<<11;
+  static const int POST_FORCE_RESPA =        1<<12;
+  static const int FINAL_INTEGRATE_RESPA =   1<<13;
+  static const int MIN_PRE_EXCHANGE =        1<<14;
+  static const int MIN_PRE_FORCE =           1<<15;
+  static const int MIN_POST_FORCE =          1<<16;
+  static const int MIN_ENERGY =              1<<17;
+  static const int POST_RUN =                1<<18;
+  static const int FIX_CONST_LAST =          1<<19;
+}
 
 }
 

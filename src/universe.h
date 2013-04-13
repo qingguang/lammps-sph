@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -36,7 +36,7 @@ class Universe : protected Pointers {
   int *root_proc;         // root proc in each world
 
   MPI_Comm uorig;         // original communicator passed to LAMMPS instance
-  int *uni2orig;          // proc I in universe uworld is 
+  int *uni2orig;          // proc I in universe uworld is
                           // proc uni2orig[I] in original communicator
 
   Universe(class LAMMPS *, MPI_Comm);
@@ -54,27 +54,23 @@ class Universe : protected Pointers {
 
 E: Invalid -reorder N value
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Nprocs not a multiple of N for -reorder
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Cannot open -reorder file
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Unexpected end of -reorder file
 
-UNDOCUMENTED
+Self-explanatory.
 
-E: Invalid entry in reorder file
+E: Invalid entry in -reorder file
 
-UNDOCUMENTED
-
-E: Unexpected end of reorder file
-
-UNDOCUMENTED
+Self-explanatory.
 
 E: Invalid command-line argument
 

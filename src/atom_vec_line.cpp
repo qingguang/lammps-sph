@@ -11,7 +11,6 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -130,7 +129,7 @@ void AtomVecLine::grow_bonus()
     error->one(FLERR,"Per-processor system is too big");
 
   bonus = (Bonus *) memory->srealloc(bonus,nmax_bonus*sizeof(Bonus),
-				     "atom:bonus");
+                                     "atom:bonus");
 }
 
 /* ----------------------------------------------------------------------
@@ -200,7 +199,7 @@ void AtomVecLine::clear_bonus()
    this may create or delete entry in bonus data
 ------------------------------------------------------------------------- */
 
-void AtomVecLine::set_length(int i, double value) 
+void AtomVecLine::set_length(int i, double value)
 {
   if (line[i] < 0) {
     if (value == 0.0) return;
@@ -219,7 +218,7 @@ void AtomVecLine::set_length(int i, double value)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecLine::pack_comm(int n, int *list, double *buf,
-			   int pbc_flag, int *pbc)
+                           int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -258,7 +257,7 @@ int AtomVecLine::pack_comm(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecLine::pack_comm_vel(int n, int *list, double *buf,
-			       int pbc_flag, int *pbc)
+                               int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -290,40 +289,40 @@ int AtomVecLine::pack_comm_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (line[j] >= 0) buf[m++] = bonus[line[j]].theta;
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = omega[j][0];
-	buf[m++] = omega[j][1];
-	buf[m++] = omega[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (line[j] >= 0) buf[m++] = bonus[line[j]].theta;
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = omega[j][0];
+        buf[m++] = omega[j][1];
+        buf[m++] = omega[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (line[j] >= 0) buf[m++] = bonus[line[j]].theta;
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = omega[j][0];
-	buf[m++] = omega[j][1];
-	buf[m++] = omega[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (line[j] >= 0) buf[m++] = bonus[line[j]].theta;
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = omega[j][0];
+        buf[m++] = omega[j][1];
+        buf[m++] = omega[j][2];
       }
     }
   }
@@ -469,7 +468,7 @@ int AtomVecLine::unpack_reverse_hybrid(int n, int *list, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecLine::pack_border(int n, int *list, double *buf,
-			     int pbc_flag, int *pbc)
+                             int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -487,9 +486,9 @@ int AtomVecLine::pack_border(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (line[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	buf[m++] = bonus[line[j]].length;
-	buf[m++] = bonus[line[j]].theta;
+        buf[m++] = 1;
+        buf[m++] = bonus[line[j]].length;
+        buf[m++] = bonus[line[j]].theta;
       }
     }
   } else {
@@ -513,9 +512,9 @@ int AtomVecLine::pack_border(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (line[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	buf[m++] = bonus[line[j]].length;
-	buf[m++] = bonus[line[j]].theta;
+        buf[m++] = 1;
+        buf[m++] = bonus[line[j]].length;
+        buf[m++] = bonus[line[j]].theta;
       }
     }
   }
@@ -525,7 +524,7 @@ int AtomVecLine::pack_border(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecLine::pack_border_vel(int n, int *list, double *buf,
-				 int pbc_flag, int *pbc)
+                                 int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -543,9 +542,9 @@ int AtomVecLine::pack_border_vel(int n, int *list, double *buf,
       buf[m++] = molecule[j];
       if (line[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	buf[m++] = bonus[line[j]].length;
-	buf[m++] = bonus[line[j]].theta;
+        buf[m++] = 1;
+        buf[m++] = bonus[line[j]].length;
+        buf[m++] = bonus[line[j]].theta;
       }
       buf[m++] = v[j][0];
       buf[m++] = v[j][1];
@@ -566,58 +565,58 @@ int AtomVecLine::pack_border_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = molecule[j];
-	if (line[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  buf[m++] = bonus[line[j]].length;
-	  buf[m++] = bonus[line[j]].theta;
-	}
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = omega[j][0];
-	buf[m++] = omega[j][1];
-	buf[m++] = omega[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = molecule[j];
+        if (line[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          buf[m++] = bonus[line[j]].length;
+          buf[m++] = bonus[line[j]].theta;
+        }
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = omega[j][0];
+        buf[m++] = omega[j][1];
+        buf[m++] = omega[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = molecule[j];
-	if (line[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  buf[m++] = bonus[line[j]].length;
-	  buf[m++] = bonus[line[j]].theta;
-	}
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = omega[j][0];
-	buf[m++] = omega[j][1];
-	buf[m++] = omega[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = molecule[j];
+        if (line[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          buf[m++] = bonus[line[j]].length;
+          buf[m++] = bonus[line[j]].theta;
+        }
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = omega[j][0];
+        buf[m++] = omega[j][1];
+        buf[m++] = omega[j][2];
       }
     }
   }
@@ -740,7 +739,7 @@ int AtomVecLine::unpack_border_hybrid(int n, int first, double *buf)
 
 /* ----------------------------------------------------------------------
    pack data for atom I for sending to another proc
-   xyz must be 1st 3 values, so comm::exchange() can test on them 
+   xyz must be 1st 3 values, so comm::exchange() can test on them
 ------------------------------------------------------------------------- */
 
 int AtomVecLine::pack_exchange(int i, double *buf)
@@ -755,7 +754,7 @@ int AtomVecLine::pack_exchange(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
 
   buf[m++] = molecule[i];
   buf[m++] = rmass[i];
@@ -772,7 +771,7 @@ int AtomVecLine::pack_exchange(int i, double *buf)
   }
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->pack_exchange(i,&buf[m]);
 
   buf[0] = m;
@@ -796,7 +795,7 @@ int AtomVecLine::unpack_exchange(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
 
   molecule[nlocal] = static_cast<int> (buf[m++]);
   rmass[nlocal] = buf[m++];
@@ -815,9 +814,9 @@ int AtomVecLine::unpack_exchange(double *buf)
   }
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->
-	unpack_exchange(nlocal,&buf[m]);
+        unpack_exchange(nlocal,&buf[m]);
 
   atom->nlocal++;
   return m;
@@ -839,9 +838,9 @@ int AtomVecLine::size_restart()
     else n += 17;
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       for (i = 0; i < nlocal; i++)
-	n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
   return n;
 }
@@ -849,7 +848,7 @@ int AtomVecLine::size_restart()
 /* ----------------------------------------------------------------------
    pack atom I's data for restart file including extra quantities
    xyz must be 1st 3 values, so that read_restart can test on them
-   molecular types may be negative, but write as positive   
+   molecular types may be negative, but write as positive
 ------------------------------------------------------------------------- */
 
 int AtomVecLine::pack_restart(int i, double *buf)
@@ -861,7 +860,7 @@ int AtomVecLine::pack_restart(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
   buf[m++] = v[i][0];
   buf[m++] = v[i][1];
   buf[m++] = v[i][2];
@@ -881,7 +880,7 @@ int AtomVecLine::pack_restart(int i, double *buf)
   }
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       m += modify->fix[atom->extra_restart[iextra]]->pack_restart(i,&buf[m]);
 
   buf[0] = m;
@@ -908,7 +907,7 @@ int AtomVecLine::unpack_restart(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
   v[nlocal][0] = buf[m++];
   v[nlocal][1] = buf[m++];
   v[nlocal][2] = buf[m++];
@@ -955,7 +954,8 @@ void AtomVecLine::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = (512 << 20) | (512 << 10) | 512;
+  image[nlocal] = ((tagint) IMGMAX << IMG2BITS) |
+    ((tagint) IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
@@ -975,7 +975,7 @@ void AtomVecLine::create_atom(int itype, double *coord)
    initialize other atom quantities
 ------------------------------------------------------------------------- */
 
-void AtomVecLine::data_atom(double *coord, int imagetmp, char **values)
+void AtomVecLine::data_atom(double *coord, tagint imagetmp, char **values)
 {
   int nlocal = atom->nlocal;
   if (nlocal == nmax) grow(0);
@@ -1107,7 +1107,7 @@ int AtomVecLine::data_vel_hybrid(int m, char **values)
 }
 
 /* ----------------------------------------------------------------------
-   return # of bytes of allocated memory 
+   return # of bytes of allocated memory
 ------------------------------------------------------------------------- */
 
 bigint AtomVecLine::memory_usage()
@@ -1144,29 +1144,28 @@ void AtomVecLine::consistency_check(int n, char *str)
   int iflag = 0;
   int count = 0;
   for (int i = 0; i < n; i++) {
-      
+
     if (line[i] >= 0) {
       count++;
       if (line[i] >= nlocal_bonus) iflag++;
       if (bonus[line[i]].ilocal != i) iflag++;
       //if (comm->me == 1 && update->ntimestep == 873)
-      //	printf("CCHK %s: %d %d: %d %d: %d %d\n",
+      //        printf("CCHK %s: %d %d: %d %d: %d %d\n",
       //       str,i,n,line[i],nlocal_bonus,bonus[line[i]].ilocal,iflag);
     }
   }
 
   if (iflag) {
-    char msg[128];
-    sprintf(msg,"BAD VECLINE PTRS: %s: %d %d: %d\n",str,comm->me,
-	    update->ntimestep,iflag);
-    error->one(FLERR,msg);
+    printf("BAD vecline ptrs: %s: %d %d: %d\n",str,comm->me,
+           update->ntimestep,iflag);
+    MPI_Abort(world,1);
   }
 
   if (count != nlocal_bonus) {
     char msg[128];
-    sprintf(msg,"BAD VECLINE COUNT: %s: %d %d: %d %d\n",
-	    str,comm->me,update->ntimestep,count,nlocal_bonus);
-    error->one(FLERR,msg);
+    printf("BAD vecline count: %s: %d %d: %d %d\n",
+           str,comm->me,update->ntimestep,count,nlocal_bonus);
+    MPI_Abort(world,1);
   }
 }
 */

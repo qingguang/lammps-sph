@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -56,54 +56,55 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Compute ID for compute slice does not exist
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice compute does not calculate a global array
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice compute vector is accessed out-of-range
 
-UNDOCUMENTED
+The index for the vector is out of bounds.
 
 E: Compute slice compute does not calculate a global vector
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice compute array is accessed out-of-range
 
-UNDOCUMENTED
+An index for the array is out of bounds.
 
 E: Compute slice compute does not calculate global vector or array
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix ID for compute slice does not exist
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice fix does not calculate a global array
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice fix vector is accessed out-of-range
 
-UNDOCUMENTED
+The index for the vector is out of bounds.
 
 E: Compute slice fix does not calculate a global vector
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Compute slice fix array is accessed out-of-range
 
-UNDOCUMENTED
+An index for the array is out of bounds.
 
 E: Compute slice fix does not calculate global vector or array
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix used in compute slice not computed at compatible time
 
-UNDOCUMENTED
+Fixes generate their values on specific timesteps.  Compute slice is
+requesting a value on a non-allowed timestep.
 
 */

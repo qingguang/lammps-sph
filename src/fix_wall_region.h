@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -79,11 +79,11 @@ Self-explanatory.
 
 E: Fix wall/region colloid requires atom style sphere
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix wall/region colloid requires extended particles
 
-Self-explanatory.
+One of the particles has radius 0.0.
 
 E: Particle on or inside surface of region used in fix wall/region
 

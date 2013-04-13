@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -67,8 +67,8 @@ E: Use of displace_atoms with undefined lattice
 Must use lattice command with displace_atoms command if units option
 is set to lattice.
 
-E: Lost atoms via displace_atoms: original %ld current %ld
+W: Lost atoms via displace_atoms: original %ld current %ld
 
-UNDOCUMENTED
+The command options you have used caused atoms to be lost.
 
 */

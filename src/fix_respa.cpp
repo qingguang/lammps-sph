@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -18,6 +18,7 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,7 +58,7 @@ int FixRespa::setmask()
 }
 
 /* ----------------------------------------------------------------------
-   memory usage of local atom-based arrays 
+   memory usage of local atom-based arrays
 ------------------------------------------------------------------------- */
 
 double FixRespa::memory_usage()
@@ -67,7 +68,7 @@ double FixRespa::memory_usage()
 }
 
 /* ----------------------------------------------------------------------
-   allocate local atom-based arrays 
+   allocate local atom-based arrays
 ------------------------------------------------------------------------- */
 
 void FixRespa::grow_arrays(int nmax)
@@ -76,7 +77,7 @@ void FixRespa::grow_arrays(int nmax)
 }
 
 /* ----------------------------------------------------------------------
-   copy values within local atom-based arrays 
+   copy values within local atom-based arrays
 ------------------------------------------------------------------------- */
 
 void FixRespa::copy_arrays(int i, int j)
@@ -89,7 +90,7 @@ void FixRespa::copy_arrays(int i, int j)
 }
 
 /* ----------------------------------------------------------------------
-   pack values in local atom-based arrays for exchange with another proc 
+   pack values in local atom-based arrays for exchange with another proc
 ------------------------------------------------------------------------- */
 
 int FixRespa::pack_exchange(int i, double *buf)
@@ -104,7 +105,7 @@ int FixRespa::pack_exchange(int i, double *buf)
 }
 
 /* ----------------------------------------------------------------------
-   unpack values in local atom-based arrays from exchange with another proc 
+   unpack values in local atom-based arrays from exchange with another proc
 ------------------------------------------------------------------------- */
 
 int FixRespa::unpack_exchange(int nlocal, double *buf)

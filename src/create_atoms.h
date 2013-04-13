@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -33,6 +33,10 @@ class CreateAtoms : protected Pointers {
   int itype,style,nregion,nbasis,nrandom,seed;
   int *basistype;
   double xone[3];
+  int remapflag;
+
+  int triclinic;
+  double sublo[3],subhi[3];   // epsilon-extended proc sub-box for adding atoms
 
   void add_single();
   void add_random();
@@ -80,5 +84,9 @@ command.
 E: Too many total atoms
 
 See the setting for bigint in the src/lmptype.h file.
+
+E: No overlap of box and region for create_atoms
+
+Self-explanatory.
 
 */

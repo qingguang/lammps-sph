@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -45,7 +45,7 @@ using namespace LAMMPS_NS;
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_2d_no_newton(NeighList *list,
-					     int sx, int sy, int sz)
+                                             int sx, int sy, int sz)
 {
   int i,j;
   int *stencil = list->stencil;
@@ -54,7 +54,29 @@ void Neighbor::stencil_half_bin_2d_no_newton(NeighList *list,
   for (j = -sy; j <= sy; j++)
     for (i = -sx; i <= sx; i++)
       if (bin_distance(i,j,0) < cutneighmaxsq)
-	stencil[nstencil++] = j*mbinx + i;
+        stencil[nstencil++] = j*mbinx + i;
+
+  list->nstencil = nstencil;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Neighbor::stencil_half_ghost_bin_2d_no_newton(NeighList *list,
+                                                   int sx, int sy, int sz)
+{
+  int i,j,k;
+  int *stencil = list->stencil;
+  int **stencilxyz = list->stencilxyz;
+  int nstencil = 0;
+
+  for (j = -sy; j <= sy; j++)
+    for (i = -sx; i <= sx; i++)
+      if (bin_distance(i,j,0) < cutneighmaxsq) {
+        stencilxyz[nstencil][0] = i;
+        stencilxyz[nstencil][1] = j;
+        stencilxyz[nstencil][2] = 0;
+        stencil[nstencil++] = j*mbinx + i;
+      }
 
   list->nstencil = nstencil;
 }
@@ -62,7 +84,7 @@ void Neighbor::stencil_half_bin_2d_no_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_3d_no_newton(NeighList *list,
-					     int sx, int sy, int sz)
+                                             int sx, int sy, int sz)
 {
   int i,j,k;
   int *stencil = list->stencil;
@@ -71,8 +93,31 @@ void Neighbor::stencil_half_bin_3d_no_newton(NeighList *list,
   for (k = -sz; k <= sz; k++)
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (bin_distance(i,j,k) < cutneighmaxsq)
-	  stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        if (bin_distance(i,j,k) < cutneighmaxsq)
+          stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+
+  list->nstencil = nstencil;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Neighbor::stencil_half_ghost_bin_3d_no_newton(NeighList *list,
+                                                   int sx, int sy, int sz)
+{
+  int i,j,k;
+  int *stencil = list->stencil;
+  int **stencilxyz = list->stencilxyz;
+  int nstencil = 0;
+
+  for (k = -sz; k <= sz; k++)
+    for (j = -sy; j <= sy; j++)
+      for (i = -sx; i <= sx; i++)
+        if (bin_distance(i,j,k) < cutneighmaxsq) {
+          stencilxyz[nstencil][0] = i;
+          stencilxyz[nstencil][1] = j;
+          stencilxyz[nstencil][2] = k;
+          stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        }
 
   list->nstencil = nstencil;
 }
@@ -80,7 +125,7 @@ void Neighbor::stencil_half_bin_3d_no_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_2d_newton(NeighList *list,
-					  int sx, int sy, int sz)
+                                          int sx, int sy, int sz)
 {
   int i,j;
   int *stencil = list->stencil;
@@ -89,8 +134,8 @@ void Neighbor::stencil_half_bin_2d_newton(NeighList *list,
   for (j = 0; j <= sy; j++)
     for (i = -sx; i <= sx; i++)
       if (j > 0 || (j == 0 && i > 0))
-	if (bin_distance(i,j,0) < cutneighmaxsq)
-	  stencil[nstencil++] = j*mbinx + i;
+        if (bin_distance(i,j,0) < cutneighmaxsq)
+          stencil[nstencil++] = j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -98,7 +143,7 @@ void Neighbor::stencil_half_bin_2d_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_3d_newton(NeighList *list,
-					  int sx, int sy, int sz)
+                                          int sx, int sy, int sz)
 {
   int i,j,k;
   int *stencil = list->stencil;
@@ -107,9 +152,9 @@ void Neighbor::stencil_half_bin_3d_newton(NeighList *list,
   for (k = 0; k <= sz; k++)
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (k > 0 || j > 0 || (j == 0 && i > 0))
-	  if (bin_distance(i,j,k) < cutneighmaxsq)
-	    stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        if (k > 0 || j > 0 || (j == 0 && i > 0))
+          if (bin_distance(i,j,k) < cutneighmaxsq)
+            stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -117,7 +162,7 @@ void Neighbor::stencil_half_bin_3d_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_2d_newton_tri(NeighList *list,
-					      int sx, int sy, int sz)
+                                              int sx, int sy, int sz)
 {
   int i,j;
   int *stencil = list->stencil;
@@ -126,7 +171,7 @@ void Neighbor::stencil_half_bin_2d_newton_tri(NeighList *list,
   for (j = 0; j <= sy; j++)
     for (i = -sx; i <= sx; i++)
       if (bin_distance(i,j,0) < cutneighmaxsq)
-	stencil[nstencil++] = j*mbinx + i;
+        stencil[nstencil++] = j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -134,7 +179,7 @@ void Neighbor::stencil_half_bin_2d_newton_tri(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_bin_3d_newton_tri(NeighList *list,
-					      int sx, int sy, int sz)
+                                              int sx, int sy, int sz)
 {
   int i,j,k;
   int *stencil = list->stencil;
@@ -143,8 +188,8 @@ void Neighbor::stencil_half_bin_3d_newton_tri(NeighList *list,
   for (k = 0; k <= sz; k++)
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (bin_distance(i,j,k) < cutneighmaxsq)
-	  stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        if (bin_distance(i,j,k) < cutneighmaxsq)
+          stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -152,7 +197,7 @@ void Neighbor::stencil_half_bin_3d_newton_tri(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_2d_no_newton(NeighList *list,
-					       int sx, int sy, int sz)
+                                               int sx, int sy, int sz)
 {
   int i,j,n;
   double rsq,typesq;
@@ -171,11 +216,11 @@ void Neighbor::stencil_half_multi_2d_no_newton(NeighList *list,
     n = 0;
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++) {
-	rsq = bin_distance(i,j,0);
-	if (rsq < typesq) {
-	  distsq[n] = rsq;
-	  s[n++] = j*mbinx + i;
-	}
+        rsq = bin_distance(i,j,0);
+        if (rsq < typesq) {
+          distsq[n] = rsq;
+          s[n++] = j*mbinx + i;
+        }
       }
     nstencil_multi[itype] = n;
   }
@@ -184,7 +229,7 @@ void Neighbor::stencil_half_multi_2d_no_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_3d_no_newton(NeighList *list,
-					       int sx, int sy, int sz)
+                                               int sx, int sy, int sz)
 {
   int i,j,k,n;
   double rsq,typesq;
@@ -203,13 +248,13 @@ void Neighbor::stencil_half_multi_3d_no_newton(NeighList *list,
     n = 0;
     for (k = -sz; k <= sz; k++)
       for (j = -sy; j <= sy; j++)
-	for (i = -sx; i <= sx; i++) {
-	  rsq = bin_distance(i,j,k);
-	  if (rsq < typesq) {
-	    distsq[n] = rsq;
-	    s[n++] = k*mbiny*mbinx + j*mbinx + i;
-	  }
-	}
+        for (i = -sx; i <= sx; i++) {
+          rsq = bin_distance(i,j,k);
+          if (rsq < typesq) {
+            distsq[n] = rsq;
+            s[n++] = k*mbiny*mbinx + j*mbinx + i;
+          }
+        }
     nstencil_multi[itype] = n;
   }
 }
@@ -217,7 +262,7 @@ void Neighbor::stencil_half_multi_3d_no_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_2d_newton(NeighList *list,
-					    int sx, int sy, int sz)
+                                            int sx, int sy, int sz)
 {
   int i,j,n;
   double rsq,typesq;
@@ -236,13 +281,13 @@ void Neighbor::stencil_half_multi_2d_newton(NeighList *list,
     n = 0;
     for (j = 0; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (j > 0 || (j == 0 && i > 0)) {
-	  rsq = bin_distance(i,j,0);
-	  if (rsq < typesq) {
-	    distsq[n] = rsq;
-	    s[n++] = j*mbinx + i;
-	  }
-	}
+        if (j > 0 || (j == 0 && i > 0)) {
+          rsq = bin_distance(i,j,0);
+          if (rsq < typesq) {
+            distsq[n] = rsq;
+            s[n++] = j*mbinx + i;
+          }
+        }
     nstencil_multi[itype] = n;
   }
 }
@@ -250,7 +295,7 @@ void Neighbor::stencil_half_multi_2d_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_3d_newton(NeighList *list,
-					    int sx, int sy, int sz)
+                                            int sx, int sy, int sz)
 {
   int i,j,k,n;
   double rsq,typesq;
@@ -269,14 +314,14 @@ void Neighbor::stencil_half_multi_3d_newton(NeighList *list,
     n = 0;
     for (k = 0; k <= sz; k++)
       for (j = -sy; j <= sy; j++)
-	for (i = -sx; i <= sx; i++)
-	  if (k > 0 || j > 0 || (j == 0 && i > 0)) {
-	    rsq = bin_distance(i,j,k);
-	    if (rsq < typesq) {
-	      distsq[n] = rsq;
-	      s[n++] = k*mbiny*mbinx + j*mbinx + i;
-	    }
-	  }
+        for (i = -sx; i <= sx; i++)
+          if (k > 0 || j > 0 || (j == 0 && i > 0)) {
+            rsq = bin_distance(i,j,k);
+            if (rsq < typesq) {
+              distsq[n] = rsq;
+              s[n++] = k*mbiny*mbinx + j*mbinx + i;
+            }
+          }
     nstencil_multi[itype] = n;
   }
 }
@@ -284,7 +329,7 @@ void Neighbor::stencil_half_multi_3d_newton(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_2d_newton_tri(NeighList *list,
-						int sx, int sy, int sz)
+                                                int sx, int sy, int sz)
 {
   int i,j,n;
   double rsq,typesq;
@@ -303,11 +348,11 @@ void Neighbor::stencil_half_multi_2d_newton_tri(NeighList *list,
     n = 0;
     for (j = 0; j <= sy; j++)
       for (i = -sx; i <= sx; i++) {
-	rsq = bin_distance(i,j,0);
-	if (rsq < typesq) {
-	  distsq[n] = rsq;
-	  s[n++] = j*mbinx + i;
-	}
+        rsq = bin_distance(i,j,0);
+        if (rsq < typesq) {
+          distsq[n] = rsq;
+          s[n++] = j*mbinx + i;
+        }
       }
     nstencil_multi[itype] = n;
   }
@@ -317,7 +362,7 @@ void Neighbor::stencil_half_multi_2d_newton_tri(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_half_multi_3d_newton_tri(NeighList *list,
-						int sx, int sy, int sz)
+                                                int sx, int sy, int sz)
 {
   int i,j,k,n;
   double rsq,typesq;
@@ -336,13 +381,13 @@ void Neighbor::stencil_half_multi_3d_newton_tri(NeighList *list,
     n = 0;
     for (k = 0; k <= sz; k++)
       for (j = -sy; j <= sy; j++)
-	for (i = -sx; i <= sx; i++) {
-	  rsq = bin_distance(i,j,k);
-	  if (rsq < typesq) {
-	    distsq[n] = rsq;
-	    s[n++] = k*mbiny*mbinx + j*mbinx + i;
-	  }
-	}
+        for (i = -sx; i <= sx; i++) {
+          rsq = bin_distance(i,j,k);
+          if (rsq < typesq) {
+            distsq[n] = rsq;
+            s[n++] = k*mbiny*mbinx + j*mbinx + i;
+          }
+        }
     nstencil_multi[itype] = n;
   }
 }
@@ -350,7 +395,7 @@ void Neighbor::stencil_half_multi_3d_newton_tri(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_bin_2d(NeighList *list,
-				   int sx, int sy, int sz)
+                                   int sx, int sy, int sz)
 {
   int i,j;
   int *stencil = list->stencil;
@@ -359,7 +404,7 @@ void Neighbor::stencil_full_bin_2d(NeighList *list,
   for (j = -sy; j <= sy; j++)
     for (i = -sx; i <= sx; i++)
       if (bin_distance(i,j,0) < cutneighmaxsq)
-	stencil[nstencil++] = j*mbinx + i;
+        stencil[nstencil++] = j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -367,7 +412,7 @@ void Neighbor::stencil_full_bin_2d(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_ghost_bin_2d(NeighList *list,
-					 int sx, int sy, int sz)
+                                         int sx, int sy, int sz)
 {
   int i,j;
   int *stencil = list->stencil;
@@ -377,10 +422,10 @@ void Neighbor::stencil_full_ghost_bin_2d(NeighList *list,
   for (j = -sy; j <= sy; j++)
     for (i = -sx; i <= sx; i++)
       if (bin_distance(i,j,0) < cutneighmaxsq) {
-	stencilxyz[nstencil][0] = i;
-	stencilxyz[nstencil][1] = j;
-	stencilxyz[nstencil][2] = 0;
-	stencil[nstencil++] = j*mbinx + i;
+        stencilxyz[nstencil][0] = i;
+        stencilxyz[nstencil][1] = j;
+        stencilxyz[nstencil][2] = 0;
+        stencil[nstencil++] = j*mbinx + i;
       }
 
   list->nstencil = nstencil;
@@ -389,7 +434,7 @@ void Neighbor::stencil_full_ghost_bin_2d(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_bin_3d(NeighList *list,
-				   int sx, int sy, int sz)
+                                   int sx, int sy, int sz)
 {
   int i,j,k;
   int *stencil = list->stencil;
@@ -398,8 +443,8 @@ void Neighbor::stencil_full_bin_3d(NeighList *list,
   for (k = -sz; k <= sz; k++)
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (bin_distance(i,j,k) < cutneighmaxsq)
-	  stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        if (bin_distance(i,j,k) < cutneighmaxsq)
+          stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
 
   list->nstencil = nstencil;
 }
@@ -407,7 +452,7 @@ void Neighbor::stencil_full_bin_3d(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_ghost_bin_3d(NeighList *list,
-					 int sx, int sy, int sz)
+                                         int sx, int sy, int sz)
 {
   int i,j,k;
   int *stencil = list->stencil;
@@ -417,12 +462,12 @@ void Neighbor::stencil_full_ghost_bin_3d(NeighList *list,
   for (k = -sz; k <= sz; k++)
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++)
-	if (bin_distance(i,j,k) < cutneighmaxsq) {
-	  stencilxyz[nstencil][0] = i;
-	  stencilxyz[nstencil][1] = j;
-	  stencilxyz[nstencil][2] = k;
-	  stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
-	}
+        if (bin_distance(i,j,k) < cutneighmaxsq) {
+          stencilxyz[nstencil][0] = i;
+          stencilxyz[nstencil][1] = j;
+          stencilxyz[nstencil][2] = k;
+          stencil[nstencil++] = k*mbiny*mbinx + j*mbinx + i;
+        }
 
   list->nstencil = nstencil;
 }
@@ -430,7 +475,7 @@ void Neighbor::stencil_full_ghost_bin_3d(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_multi_2d(NeighList *list,
-				     int sx, int sy, int sz)
+                                     int sx, int sy, int sz)
 {
   int i,j,n;
   double rsq,typesq;
@@ -449,11 +494,11 @@ void Neighbor::stencil_full_multi_2d(NeighList *list,
     n = 0;
     for (j = -sy; j <= sy; j++)
       for (i = -sx; i <= sx; i++) {
-	rsq = bin_distance(i,j,0);
-	if (rsq < typesq) {
-	  distsq[n] = rsq;
-	  s[n++] = j*mbinx + i;
-	}
+        rsq = bin_distance(i,j,0);
+        if (rsq < typesq) {
+          distsq[n] = rsq;
+          s[n++] = j*mbinx + i;
+        }
       }
     nstencil_multi[itype] = n;
   }
@@ -462,7 +507,7 @@ void Neighbor::stencil_full_multi_2d(NeighList *list,
 /* ---------------------------------------------------------------------- */
 
 void Neighbor::stencil_full_multi_3d(NeighList *list,
-				     int sx, int sy, int sz)
+                                     int sx, int sy, int sz)
 {
   int i,j,k,n;
   double rsq,typesq;
@@ -481,13 +526,13 @@ void Neighbor::stencil_full_multi_3d(NeighList *list,
     n = 0;
     for (k = -sz; k <= sz; k++)
       for (j = -sy; j <= sy; j++)
-	for (i = -sx; i <= sx; i++) {
-	  rsq = bin_distance(i,j,k);
-	  if (rsq < typesq) {
-	    distsq[n] = rsq;
-	    s[n++] = k*mbiny*mbinx + j*mbinx + i;
-	  }
-	}
+        for (i = -sx; i <= sx; i++) {
+          rsq = bin_distance(i,j,k);
+          if (rsq < typesq) {
+            distsq[n] = rsq;
+            s[n++] = k*mbiny*mbinx + j*mbinx + i;
+          }
+        }
     nstencil_multi[itype] = n;
   }
 }

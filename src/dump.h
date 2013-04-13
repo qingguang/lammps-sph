@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -102,7 +102,7 @@ class Dump : protected Pointers {
   virtual void openfile();
   virtual int modify_param(int, char **) {return 0;}
   virtual void write_header(bigint) = 0;
-  virtual int count() = 0;
+  virtual int count();
   virtual void pack(int *) = 0;
   virtual void write_data(int, double *) = 0;
 

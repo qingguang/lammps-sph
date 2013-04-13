@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -120,6 +120,15 @@ W: No fixes defined, atoms won't move
 
 If you are not using a fix like nve, nvt, npt then atom velocities and
 coordinates will not be updated during timestepping.
+
+W: Fix shake with rRESPA computes invalid pressures
+
+This is a known bug in LAMMPS that has not yet been fixed.  If you use
+SHAKE with rRESPA and perform a constant volume simulation (e.g. using
+fix npt) this only affects the output pressure, not the dynamics of
+the simulation.  If you use SHAKE with rRESPA and perform a constant
+pressure simulation (e.g. using fix npt) then you will be
+equilibrating to the wrong volume.
 
 E: Pair style does not support rRESPA inner/middle/outer
 

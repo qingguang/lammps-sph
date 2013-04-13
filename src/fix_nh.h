@@ -1,11 +1,11 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -38,15 +38,15 @@ class FixNH : public Fix {
   int modify_param(int, char **);
   void reset_target(double);
   void reset_dt();
+  virtual void *extract(const char*,int &);
 
  protected:
   int dimension,which;
   double dtv,dtf,dthalf,dt4,dt8,dto;
   double boltz,nktv2p,tdof;
   double vol0;                      // reference volume
-  double t0;                        // reference temperature 
+  double t0;                        // reference temperature
                                     // used for barostat mass
-
   double t_start,t_stop;
   double t_current,t_target,ke_target;
   double t_freq;
@@ -65,7 +65,9 @@ class FixNH : public Fix {
   double pdrag_factor;             // drag factor on barostat
   int kspace_flag;                 // 1 if KSpace invoked, 0 if not
   int nrigid;                      // number of rigid fixes
+  int dilate_group_bit;            // mask for dilation group
   int *rfix;                       // indices of rigid fixes
+  char *id_dilate;                 // group name to dilate
   class Irregular *irregular;      // for migrating atoms after box flips
 
   int nlevels_respa;
@@ -79,14 +81,14 @@ class FixNH : public Fix {
   double *eta_dotdot;
   double *eta_mass;
   int mtchain;                     // length of chain
-  int mtchain_default_flag;        // 1 = mtchain is default   
-                                   
+  int mtchain_default_flag;        // 1 = mtchain is default
+
   double *etap;                    // chain thermostat for barostat
   double *etap_dot;
   double *etap_dotdot;
   double *etap_mass;
   int mpchain;                     // length of chain
-                                   
+
   int mtk_flag;                    // 0 if using Hoover barostat
   int pdim;                        // number of barostatted dims
   double p_freq_max;               // maximum barostat frequency
@@ -107,9 +109,12 @@ class FixNH : public Fix {
   int omega_mass_flag;             // 1 if omega_mass updated, 0 if not.
   int etap_mass_flag;              // 1 if etap_mass updated, 0 if not.
 
-  int scaleyz;                     // 1 if yz scaled with lz 
-  int scalexz;                     // 1 if xz scaled with lz 
-  int scalexy;                     // 1 if xy scaled with ly 
+  int scaleyz;                     // 1 if yz scaled with lz
+  int scalexz;                     // 1 if xz scaled with lz
+  int scalexy;                     // 1 if xy scaled with ly
+  int flipflag;                    // 1 if box flips are invoked as needed
+
+  double fixedpoint[3];            // location of dilation fixed-point
 
   void couple();
   void remap();
@@ -150,6 +155,10 @@ E: Invalid fix nvt/npt/nph command for a 2d simulation
 
 Cannot control z dimension in a 2d model.
 
+E: Fix nvt/npt/nph dilate group ID does not exist
+
+Self-explanatory.
+
 E: Invalid fix nvt/npt/nph command pressure settings
 
 If multiple dimensions are coupled, those dimensions must be
@@ -166,29 +175,29 @@ When specifying an off-diagonal pressure component, the 2nd of the two
 dimensions must be periodic.  E.g. if the xy component is specified,
 then the y dimension must be periodic.
 
-E: Cannot use fix nvt/npt/nph with yz dynamics when z is non-periodic dimension
+E: Cannot use fix nvt/npt/nph with yz scaling when z is non-periodic dimension
 
-UNDOCUMENTED
+The 2nd dimension in the barostatted tilt factor must be periodic.
 
-E: Cannot use fix nvt/npt/nph with xz dynamics when z is non-periodic dimension
+E: Cannot use fix nvt/npt/nph with xz scaling when z is non-periodic dimension
 
-UNDOCUMENTED
+The 2nd dimension in the barostatted tilt factor must be periodic.
 
-E: Cannot use fix nvt/npt/nph with xy dynamics when y is non-periodic dimension
+E: Cannot use fix nvt/npt/nph with xy scaling when y is non-periodic dimension
 
-UNDOCUMENTED
+The 2nd dimension in the barostatted tilt factor must be periodic.
 
-E: Cannot use fix nvt/npt/nph withboth yz dynamics and yz scaling
+E: Cannot use fix nvt/npt/nph with both yz dynamics and yz scaling
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Cannot use fix nvt/npt/nph with both xz dynamics and xz scaling
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Cannot use fix nvt/npt/nph with both xy dynamics and xy scaling
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Can not specify Pxy/Pxz/Pyz in fix nvt/npt/nph with non-triclinic box
 
@@ -217,7 +226,8 @@ Self-explanatory.
 
 E: Fix npt/nph has tilted box too far in one step - periodic cell is too far from equilibrium state
 
-UNDOCUMENTED
+Self-explanatory.  The change in the box tilt is too extreme
+on a short timescale.
 
 E: Could not find fix_modify temperature ID
 

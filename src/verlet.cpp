@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -46,6 +46,8 @@ Verlet::Verlet(LAMMPS *lmp, int narg, char **arg) :
 
 void Verlet::init()
 {
+  Integrate::init();
+
   // warn if no fixes
 
   if (modify->nfix == 0 && comm->me == 0)
@@ -109,6 +111,7 @@ void Verlet::setup()
   if (atom->sortfreq > 0) atom->sort();
   comm->borders();
   if (triclinic) domain->lamda2x(atom->nlocal+atom->nghost);
+  domain->box_too_small_check();
   neighbor->build();
   neighbor->ncalls = 0;
 
@@ -118,7 +121,8 @@ void Verlet::setup()
   force_clear();
   modify->setup_pre_force(vflag);
 
-  if (force->pair) force->pair->compute(eflag,vflag);
+  if (pair_compute_flag) force->pair->compute(eflag,vflag);
+  else if (force->pair) force->pair->compute_dummy(eflag,vflag);
 
   if (atom->molecular) {
     if (force->bond) force->bond->compute(eflag,vflag);
@@ -129,13 +133,14 @@ void Verlet::setup()
 
   if (force->kspace) {
     force->kspace->setup();
-    force->kspace->compute(eflag,vflag);
+    if (kspace_compute_flag) force->kspace->compute(eflag,vflag);
+    else force->kspace->compute_dummy(eflag,vflag);
   }
 
   if (force->newton) comm->reverse_comm();
 
   modify->setup(vflag);
-  output->setup(1);
+  output->setup();
   update->setupflag = 0;
 }
 
@@ -154,6 +159,7 @@ void Verlet::setup_minimal(int flag)
   // build neighbor lists
 
   if (flag) {
+    modify->setup_pre_exchange();
     if (triclinic) domain->x2lamda(atom->nlocal);
     domain->pbc();
     domain->reset_box();
@@ -162,6 +168,7 @@ void Verlet::setup_minimal(int flag)
     comm->exchange();
     comm->borders();
     if (triclinic) domain->lamda2x(atom->nlocal+atom->nghost);
+    domain->box_too_small_check();
     neighbor->build();
     neighbor->ncalls = 0;
   }
@@ -172,7 +179,8 @@ void Verlet::setup_minimal(int flag)
   force_clear();
   modify->setup_pre_force(vflag);
 
-  if (force->pair) force->pair->compute(eflag,vflag);
+  if (pair_compute_flag) force->pair->compute(eflag,vflag);
+  else if (force->pair) force->pair->compute_dummy(eflag,vflag);
 
   if (atom->molecular) {
     if (force->bond) force->bond->compute(eflag,vflag);
@@ -183,7 +191,8 @@ void Verlet::setup_minimal(int flag)
 
   if (force->kspace) {
     force->kspace->setup();
-    force->kspace->compute(eflag,vflag);
+    if (kspace_compute_flag) force->kspace->compute(eflag,vflag);
+    else force->kspace->compute_dummy(eflag,vflag);
   }
 
   if (force->newton) comm->reverse_comm();
@@ -234,9 +243,9 @@ void Verlet::run(int n)
       if (triclinic) domain->x2lamda(atom->nlocal);
       domain->pbc();
       if (domain->box_change) {
-	domain->reset_box();
-	comm->setup();
-	if (neighbor->style) neighbor->setup_bins();
+        domain->reset_box();
+        comm->setup();
+        if (neighbor->style) neighbor->setup_bins();
       }
       timer->stamp();
       comm->exchange();
@@ -256,7 +265,7 @@ void Verlet::run(int n)
 
     timer->stamp();
 
-    if (force->pair) {
+    if (pair_compute_flag) {
       force->pair->compute(eflag,vflag);
       timer->stamp(TIME_PAIR);
     }
@@ -269,7 +278,7 @@ void Verlet::run(int n)
       timer->stamp(TIME_BOND);
     }
 
-    if (force->kspace) {
+    if (kspace_compute_flag) {
       force->kspace->compute(eflag,vflag);
       timer->stamp(TIME_KSPACE);
     }
@@ -302,6 +311,7 @@ void Verlet::run(int n)
 void Verlet::cleanup()
 {
   modify->post_run();
+  domain->box_too_small_check();
 }
 
 /* ----------------------------------------------------------------------
@@ -348,13 +358,13 @@ void Verlet::force_clear()
       f[i][1] = 0.0;
       f[i][2] = 0.0;
     }
-    
+
     if (torqueflag) {
       double **torque = atom->torque;
       for (i = 0; i < nall; i++) {
-	torque[i][0] = 0.0;
-	torque[i][1] = 0.0;
-	torque[i][2] = 0.0;
+        torque[i][0] = 0.0;
+        torque[i][1] = 0.0;
+        torque[i][2] = 0.0;
       }
     }
 
@@ -377,33 +387,33 @@ void Verlet::force_clear()
       nall = atom->nlocal + atom->nghost;
 
       for (i = atom->nlocal; i < nall; i++) {
-	f[i][0] = 0.0;
-	f[i][1] = 0.0;
-	f[i][2] = 0.0;
+        f[i][0] = 0.0;
+        f[i][1] = 0.0;
+        f[i][2] = 0.0;
       }
-    
+
       if (torqueflag) {
-	double **torque = atom->torque;
-	for (i = atom->nlocal; i < nall; i++) {
-	  torque[i][0] = 0.0;
-	  torque[i][1] = 0.0;
-	  torque[i][2] = 0.0;
-	}
+        double **torque = atom->torque;
+        for (i = atom->nlocal; i < nall; i++) {
+          torque[i][0] = 0.0;
+          torque[i][1] = 0.0;
+          torque[i][2] = 0.0;
+        }
       }
 
       if (erforceflag) {
-	double *erforce = atom->erforce;
-	for (i = atom->nlocal; i < nall; i++) erforce[i] = 0.0;
+        double *erforce = atom->erforce;
+        for (i = atom->nlocal; i < nall; i++) erforce[i] = 0.0;
       }
 
       if (e_flag) {
-	double *de = atom->de;
-	for (i = 0; i < nall; i++) de[i] = 0.0;
+        double *de = atom->de;
+        for (i = 0; i < nall; i++) de[i] = 0.0;
       }
 
       if (rho_flag) {
-	double *drho = atom->drho;
-	for (i = 0; i < nall; i++) drho[i] = 0.0;
+        double *drho = atom->drho;
+        for (i = 0; i < nall; i++) drho[i] = 0.0;
       }
     }
   }

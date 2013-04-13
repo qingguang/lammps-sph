@@ -27,6 +27,7 @@
 #include "neighbor.h"
 #include "neigh_list.h"
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
@@ -34,6 +35,7 @@ using namespace LAMMPS_NS;
 PairPeriPMBOMP::PairPeriPMBOMP(LAMMPS *lmp) :
  PairPeriPMB(lmp), ThrOMP(lmp, THR_PAIR)
 {
+  suffix_flag |= Suffix::OMP;
   respa_enable = 0;
 }
 
@@ -69,11 +71,11 @@ void PairPeriPMBOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_pair) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_pair) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_pair) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_pair) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_pair) eval<0,0,1>(ifrom, ito, thr);
@@ -156,7 +158,7 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
       if (periodic) domain->minimum_image(delx0,dely0,delz0);
       rsq0 = delx0*delx0 + dely0*dely0 + delz0*delz0;
       jtype = type[j];
- 
+
       r = sqrt(rsq);
 
       // short-range interaction distance based on initial particle position
@@ -171,23 +173,23 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
       if (r < d_ij) {
         dr = r - d_ij;
 
-        rk = (15.0 * kspring[itype][jtype] * vfrac[j]) * 
-	  (dr / cut[itype][jtype]);
+        rk = (15.0 * kspring[itype][jtype] * vfrac[j]) *
+          (dr / cut[itype][jtype]);
         if (r > 0.0) fpair = -(rk/r);
         else fpair = 0.0;
 
-	fxtmp += delx*fpair;
-	fytmp += dely*fpair;
-	fztmp += delz*fpair;
-	if (NEWTON_PAIR || j < nlocal) {
-	  f[j][0] -= delx*fpair;
-	  f[j][1] -= dely*fpair;
-	  f[j][2] -= delz*fpair;
-	}
+        fxtmp += delx*fpair;
+        fytmp += dely*fpair;
+        fztmp += delz*fpair;
+        if (NEWTON_PAIR || j < nlocal) {
+          f[j][0] -= delx*fpair;
+          f[j][1] -= dely*fpair;
+          f[j][2] -= delz*fpair;
+        }
 
         if (EFLAG) evdwl = 0.5*rk*dr;
-	if (EVFLAG) ev_tally_thr(this,i,j,nlocal,NEWTON_PAIR,evdwl,0.0,
-				 fpair*vfrac[i],delx,dely,delz,thr);
+        if (EVFLAG) ev_tally_thr(this,i,j,nlocal,NEWTON_PAIR,evdwl,0.0,
+                                 fpair*vfrac[i],delx,dely,delz,thr);
       }
     }
     f[i][0] += fxtmp;
@@ -203,10 +205,8 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
   // each thread works on a fixed chunk of atoms.
   const int idelta = 1 + nlocal/comm->nthreads;
   iifrom = thr->get_tid()*idelta;
-  iito   = iifrom + idelta;
-  if (iito > nlocal)
-    iito = nlocal;
-#else 
+  iito   = ((iifrom + idelta) > nlocal) ? nlocal : (iifrom + idelta);
+#else
   iifrom = 0;
   iito = nlocal;
 #endif
@@ -257,8 +257,8 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
       // scale vfrac[j] if particle j near the horizon
 
       if ((fabs(r0[i][jj] - delta)) <= half_lc)
-        vfrac_scale = (-1.0/(2*half_lc))*(r0[i][jj]) + 
-	  (1.0 + ((delta - half_lc)/(2*half_lc) ) );
+        vfrac_scale = (-1.0/(2*half_lc))*(r0[i][jj]) +
+          (1.0 + ((delta - half_lc)/(2*half_lc) ) );
       else vfrac_scale = 1.0;
 
       stretch = dr / r0[i][jj];
@@ -270,12 +270,12 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
       f[i][1] += dely*fbond;
       f[i][2] += delz*fbond;
 
-      // since I-J is double counted, set newton off & use 1/2 factor and I,I 
+      // since I-J is double counted, set newton off & use 1/2 factor and I,I
 
       if (EFLAG) evdwl = 0.5*rk*dr;
-      if (EVFLAG) 
-	ev_tally_thr(this,i,i,nlocal,0,0.5*evdwl,0.0,
-		     0.5*fbond*vfrac[i],delx,dely,delz,thr);
+      if (EVFLAG)
+        ev_tally_thr(this,i,i,nlocal,0,0.5*evdwl,0.0,
+                     0.5*fbond*vfrac[i],delx,dely,delz,thr);
 
       // find stretch in bond I-J and break if necessary
       // use s0 from previous timestep
@@ -285,9 +285,9 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
       // update s0 for next timestep
 
       if (first)
-         s0_new[i] = s00[itype][jtype] - (alpha[itype][jtype] * stretch);
+        s0_new[i] = s00[itype][jtype] - (alpha[itype][jtype] * stretch);
       else
-         s0_new[i] = MAX(s0_new[i],s00[itype][jtype] - (alpha[itype][jtype] * stretch));
+        s0_new[i] = MAX(s0_new[i],s00[itype][jtype] - (alpha[itype][jtype] * stretch));
 
       first = false;
     }
@@ -296,7 +296,8 @@ void PairPeriPMBOMP::eval(int iifrom, int iito, ThrData * const thr)
   sync_threads();
 
   // store new s0 (in parallel)
-  for (i = iifrom; i < iito; i++) s0[i] = s0_new[i]; 
+  if (iifrom < nlocal)
+    for (i = iifrom; i < iito; i++) s0[i] = s0_new[i];
 }
 
 /* ---------------------------------------------------------------------- */

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -96,8 +96,8 @@ void ComputeCOMMolecule::init()
 void ComputeCOMMolecule::compute_array()
 {
   int i,imol;
-  double xbox,ybox,zbox;
   double massone;
+  double unwrap[3];
 
   invoked_array = update->ntimestep;
 
@@ -108,32 +108,26 @@ void ComputeCOMMolecule::compute_array()
   int *mask = atom->mask;
   int *molecule = atom->molecule;
   int *type = atom->type;
-  int *image = atom->image;
+  tagint *image = atom->image;
   double *mass = atom->mass;
   double *rmass = atom->rmass;
   int nlocal = atom->nlocal;
 
-  double xprd = domain->xprd;
-  double yprd = domain->yprd;
-  double zprd = domain->zprd;
-
   for (int i = 0; i < nlocal; i++)
     if (mask[i] & groupbit) {
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
       if (rmass) massone = rmass[i];
       else massone = mass[type[i]];
       imol = molecule[i];
       if (molmap) imol = molmap[imol-idlo];
       else imol--;
-      com[imol][0] += (x[i][0] + xbox*xprd) * massone;
-      com[imol][1] += (x[i][1] + ybox*yprd) * massone;
-      com[imol][2] += (x[i][2] + zbox*zprd) * massone;
+      domain->unmap(x[i],image[i],unwrap);
+      com[imol][0] += unwrap[0] * massone;
+      com[imol][1] += unwrap[1] * massone;
+      com[imol][2] += unwrap[2] * massone;
     }
 
   MPI_Allreduce(&com[0][0],&comall[0][0],3*nmolecules,
-		MPI_DOUBLE,MPI_SUM,world);
+                MPI_DOUBLE,MPI_SUM,world);
   for (i = 0; i < nmolecules; i++) {
     comall[i][0] /= masstotal[i];
     comall[i][1] /= masstotal[i];

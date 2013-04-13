@@ -5,13 +5,12 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "stdlib.h"
 #include "string.h"
 #include "ctype.h"
@@ -171,11 +170,10 @@ Pair *Force::new_pair(const char *style, const char *suffix, int &sflag)
 }
 
 /* ----------------------------------------------------------------------
-   return ptr to Pair class if matches word or to matching hybrid sub-class
+   return ptr to Pair class if matches word or matches hybrid sub-style
    if exact, then style name must be exact match to word
    if not exact, style name must contain word
-   return NULL if no match
-   return NULL if not exact and multiple hybrid sub-styles match
+   return NULL if no match or multiple sub-styles match
 ------------------------------------------------------------------------- */
 
 Pair *Force::pair_match(const char *word, int exact)
@@ -188,28 +186,24 @@ Pair *Force::pair_match(const char *word, int exact)
   else if (strstr(pair_style,"hybrid/overlay")) {
     PairHybridOverlay *hybrid = (PairHybridOverlay *) pair;
     count = 0;
-    for (int i = 0; i < hybrid->nstyles; i++) {
-      if (exact && strcmp(hybrid->keywords[i],word) == 0)
-	return hybrid->styles[i];
-      else if (!exact && strstr(hybrid->keywords[i],word)) {
-	iwhich = i;
-	count++;
+    for (int i = 0; i < hybrid->nstyles; i++)
+      if ((exact && strcmp(hybrid->keywords[i],word) == 0) ||
+          (!exact && strstr(hybrid->keywords[i],word))) {
+        iwhich = i;
+        count++;
       }
-    }
-    if (!exact && count == 1) return hybrid->styles[iwhich];
+    if (count == 1) return hybrid->styles[iwhich];
 
   } else if (strstr(pair_style,"hybrid")) {
     PairHybrid *hybrid = (PairHybrid *) pair;
     count = 0;
-    for (int i = 0; i < hybrid->nstyles; i++) {
-      if (exact && strcmp(hybrid->keywords[i],word) == 0)
-	return hybrid->styles[i];
-      if (!exact && strstr(hybrid->keywords[i],word)) {
-	iwhich = i;
-	count++;
+    for (int i = 0; i < hybrid->nstyles; i++)
+      if ((exact && strcmp(hybrid->keywords[i],word) == 0) ||
+          (!exact && strstr(hybrid->keywords[i],word))) {
+        iwhich = i;
+        count++;
       }
-    }
-    if (!exact && count == 1) return hybrid->styles[iwhich];
+    if (count == 1) return hybrid->styles[iwhich];
   }
 
   return NULL;
@@ -475,7 +469,7 @@ Improper *Force::new_improper(const char *style, const char *suffix, int &sflag)
 }
 
 /* ----------------------------------------------------------------------
-   new kspace style 
+   new kspace style
 ------------------------------------------------------------------------- */
 
 void Force::create_kspace(int narg, char **arg, const char *suffix)
@@ -550,7 +544,7 @@ KSpace *Force::kspace_match(const char *word, int exact)
 }
 
 /* ----------------------------------------------------------------------
-   set special bond values 
+   set special bond values
 ------------------------------------------------------------------------- */
 
 void Force::set_special(int narg, char **arg)
@@ -634,7 +628,7 @@ void Force::set_special(int narg, char **arg)
 
   for (int i = 1; i <= 3; i++)
     if (special_lj[i] < 0.0 || special_lj[i] > 1.0 ||
-	special_coul[i] < 0.0 || special_coul[i] > 1.0)
+        special_coul[i] < 0.0 || special_coul[i] > 1.0)
       error->all(FLERR,"Illegal special_bonds command");
 
   if (special_extra < 0) error->all(FLERR,"Illegal special_bonds command");
@@ -686,7 +680,7 @@ double Force::numeric(char *str)
     if (str[i] == '-' || str[i] == '+' || str[i] == '.') continue;
     if (str[i] == 'e' || str[i] == 'E') continue;
     error->all(FLERR,"Expected floating point parameter in "
-	       "input script or data file");
+               "input script or data file");
   }
 
   return atof(str);

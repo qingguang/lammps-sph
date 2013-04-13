@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -207,7 +207,7 @@ E: Thermo and fix not computed at compatible times
 Fixes generate values on specific timesteps.  The thermo output
 does not match these timesteps.
 
-E: Could not find thermo custom variable name
+E: Could not find thermo variable name
 
 Self-explanatory.
 
@@ -217,7 +217,19 @@ See the setting for bigint in the src/lmptype.h file.
 
 E: Lost atoms: original %ld current %ld
 
-UNDOCUMENTED
+Lost atoms are checked for each time thermo output is done.  See the
+thermo_modify lost command for options.  Lost atoms usually indicate
+bad dynamics, e.g. atoms have been blown far out of the simulation
+box, or moved futher than one processor's sub-domain away before
+reneighboring.
+
+W: Lost atoms: original %ld current %ld
+
+Lost atoms are checked for each time thermo output is done.  See the
+thermo_modify lost command for options.  Lost atoms usually indicate
+bad dynamics, e.g. atoms have been blown far out of the simulation
+box, or moved futher than one processor's sub-domain away before
+reneighboring.
 
 E: Thermo style does not use temp
 
@@ -315,6 +327,10 @@ E: Thermo fix does not compute array
 Self-explanatory.
 
 E: Thermo fix array is accessed out-of-range
+
+Self-explanatory.
+
+E: Could not find thermo custom variable name
 
 Self-explanatory.
 

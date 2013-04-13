@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -37,7 +37,7 @@ class ComputePairLocal : public Compute {
   int nvalues,dflag,eflag,fflag;
   int ncount;
 
-  int *pstyle;              // style of each requested output 
+  int *pstyle;              // style of each requested output
   int *pindex;              // for pI, index of the output (0 to M-1)
   int singleflag;
 
@@ -75,10 +75,11 @@ Self-explanatory.
 E: Pair style does not support compute pair/local
 
 The pair style does not have a single() function, so it can
-not be invoked by fix bond/swap.
+not be invoked by compute pair/local.
 
-E: Pair style does not have single field requested by compute pair/local
+E: Pair style does not have extra field requested by compute pair/local
 
-UNDOCUMENTED
+The pair style does not support the pN value requested by the compute
+pair/local command.
 
 */

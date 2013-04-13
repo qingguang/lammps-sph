@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -51,8 +51,8 @@ ComputePropertyAtom::ComputePropertyAtom(LAMMPS *lmp, int narg, char **arg) :
       pack_choice[i] = &ComputePropertyAtom::pack_id;
     } else if (strcmp(arg[iarg],"mol") == 0) {
       if (!atom->molecule_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_molecule;
     } else if (strcmp(arg[iarg],"type") == 0) {
       pack_choice[i] = &ComputePropertyAtom::pack_type;
@@ -66,28 +66,28 @@ ComputePropertyAtom::ComputePropertyAtom(LAMMPS *lmp, int narg, char **arg) :
     } else if (strcmp(arg[iarg],"z") == 0) {
       pack_choice[i] = &ComputePropertyAtom::pack_z;
     } else if (strcmp(arg[iarg],"xs") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_xs_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_xs_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_xs;
     } else if (strcmp(arg[iarg],"ys") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_ys_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_ys_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_ys;
     } else if (strcmp(arg[iarg],"zs") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_zs_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_zs_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_zs;
     } else if (strcmp(arg[iarg],"xu") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_xu_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_xu_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_xu;
     } else if (strcmp(arg[iarg],"yu") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_yu_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_yu_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_yu;
     } else if (strcmp(arg[iarg],"zu") == 0) {
-      if (domain->triclinic) 
-	pack_choice[i] = &ComputePropertyAtom::pack_zu_triclinic;
+      if (domain->triclinic)
+        pack_choice[i] = &ComputePropertyAtom::pack_zu_triclinic;
       else pack_choice[i] = &ComputePropertyAtom::pack_zu;
     } else if (strcmp(arg[iarg],"ix") == 0) {
       pack_choice[i] = &ComputePropertyAtom::pack_ix;
@@ -111,218 +111,218 @@ ComputePropertyAtom::ComputePropertyAtom(LAMMPS *lmp, int narg, char **arg) :
 
     } else if (strcmp(arg[iarg],"q") == 0) {
       if (!atom->q_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_q;
     } else if (strcmp(arg[iarg],"mux") == 0) {
       if (!atom->mu_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_mux;
     } else if (strcmp(arg[iarg],"muy") == 0) {
       if (!atom->mu_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_muy;
     } else if (strcmp(arg[iarg],"muz") == 0) {
       if (!atom->mu_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_muz;
     } else if (strcmp(arg[iarg],"mu") == 0) {
       if (!atom->mu_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_mu;
 
     } else if (strcmp(arg[iarg],"radius") == 0) {
       if (!atom->radius_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_radius;
     } else if (strcmp(arg[iarg],"diameter") == 0) {
       if (!atom->radius_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_diameter;
     } else if (strcmp(arg[iarg],"omegax") == 0) {
       if (!atom->omega_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_omegax;
     } else if (strcmp(arg[iarg],"omegay") == 0) {
       if (!atom->omega_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_omegay;
     } else if (strcmp(arg[iarg],"omegaz") == 0) {
       if (!atom->omega_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_omegaz;
     } else if (strcmp(arg[iarg],"angmomx") == 0) {
       if (!atom->angmom_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_angmomx;
     } else if (strcmp(arg[iarg],"angmomy") == 0) {
       if (!atom->angmom_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_angmomy;
     } else if (strcmp(arg[iarg],"angmomz") == 0) {
       if (!atom->angmom_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_angmomz;
 
     } else if (strcmp(arg[iarg],"shapex") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_shapex;
     } else if (strcmp(arg[iarg],"shapey") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_shapey;
     } else if (strcmp(arg[iarg],"shapez") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_shapez;
     } else if (strcmp(arg[iarg],"quatw") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_quatw;
     } else if (strcmp(arg[iarg],"quati") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_quati;
     } else if (strcmp(arg[iarg],"quatj") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_quatj;
     } else if (strcmp(arg[iarg],"quatk") == 0) {
       avec_ellipsoid = (AtomVecEllipsoid *) atom->style_match("ellipsoid");
       if (!avec_ellipsoid) error->all(FLERR,"Compute property/atom for "
-				      "atom property that isn't allocated");
+                                      "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_quatk;
     } else if (strcmp(arg[iarg],"tqx") == 0) {
       if (!atom->torque_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_tqx;
     } else if (strcmp(arg[iarg],"tqy") == 0) {
       if (!atom->torque_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_tqy;
     } else if (strcmp(arg[iarg],"tqz") == 0) {
       if (!atom->torque_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_tqz;
 
     } else if (strcmp(arg[iarg],"spin") == 0) {
       if (!atom->spin_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_spin;
     } else if (strcmp(arg[iarg],"eradius") == 0) {
       if (!atom->eradius_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_eradius;
     } else if (strcmp(arg[iarg],"ervel") == 0) {
       if (!atom->ervel_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_ervel;
     } else if (strcmp(arg[iarg],"erforce") == 0) {
       if (!atom->erforce_flag)
-	error->all(FLERR,"Compute property/atom for "
-		   "atom property that isn't allocated");
+        error->all(FLERR,"Compute property/atom for "
+                   "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_erforce;
 
     } else if (strcmp(arg[iarg],"end1x") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end1x;
     } else if (strcmp(arg[iarg],"end1y") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end1y;
     } else if (strcmp(arg[iarg],"end1z") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end1z;
     } else if (strcmp(arg[iarg],"end2x") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end2x;
     } else if (strcmp(arg[iarg],"end2y") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end2y;
     } else if (strcmp(arg[iarg],"end2z") == 0) {
       avec_line = (AtomVecLine *) atom->style_match("line");
       if (!avec_line) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_end2z;
 
     } else if (strcmp(arg[iarg],"corner1x") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner1x;
     } else if (strcmp(arg[iarg],"corner1y") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner1y;
     } else if (strcmp(arg[iarg],"corner1z") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner1z;
     } else if (strcmp(arg[iarg],"corner2x") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner2x;
     } else if (strcmp(arg[iarg],"corner2y") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner2y;
     } else if (strcmp(arg[iarg],"corner2z") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner2z;
     } else if (strcmp(arg[iarg],"corner3x") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner3x;
     } else if (strcmp(arg[iarg],"corner3y") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner3y;
     } else if (strcmp(arg[iarg],"corner3z") == 0) {
       avec_tri = (AtomVecTri *) atom->style_match("tri");
       if (!avec_tri) error->all(FLERR,"Compute property/atom for "
-				 "atom property that isn't allocated");
+                                 "atom property that isn't allocated");
       pack_choice[i] = &ComputePropertyAtom::pack_corner3z;
 
     } else error->all(FLERR,"Invalid keyword in compute property/atom command");
@@ -572,9 +572,9 @@ void ComputePropertyAtom::pack_xs_triclinic(int n)
   double *h_inv = domain->h_inv;
 
   for (int i = 0; i < nlocal; i++) {
-    if (mask[i] & groupbit) 
-      buf[n] = h_inv[0]*(x[i][0]-boxlo[0]) + 
-	h_inv[5]*(x[i][1]-boxlo[1]) + h_inv[4]*(x[i][2]-boxlo[2]);
+    if (mask[i] & groupbit)
+      buf[n] = h_inv[0]*(x[i][0]-boxlo[0]) +
+        h_inv[5]*(x[i][1]-boxlo[1]) + h_inv[4]*(x[i][2]-boxlo[2]);
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -623,15 +623,15 @@ void ComputePropertyAtom::pack_zs_triclinic(int n)
 void ComputePropertyAtom::pack_xu(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
   double xprd = domain->xprd;
 
   for (int i = 0; i < nlocal; i++) {
-    if (mask[i] & groupbit) 
-      buf[n] = x[i][0] + ((image[i] & 1023) - 512) * xprd;
+    if (mask[i] & groupbit)
+      buf[n] = x[i][0] + ((image[i] & IMGMASK) - IMGMAX) * xprd;
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -642,7 +642,7 @@ void ComputePropertyAtom::pack_xu(int n)
 void ComputePropertyAtom::pack_yu(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -650,7 +650,7 @@ void ComputePropertyAtom::pack_yu(int n)
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit)
-      buf[n] = x[i][1] + ((image[i] >> 10 & 1023) - 512) * yprd;
+      buf[n] = x[i][1] + ((image[i] >> IMGBITS & IMGMASK) - IMGMAX) * yprd;
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -661,7 +661,7 @@ void ComputePropertyAtom::pack_yu(int n)
 void ComputePropertyAtom::pack_zu(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -669,7 +669,7 @@ void ComputePropertyAtom::pack_zu(int n)
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit)
-      buf[n] = x[i][2] + ((image[i] >> 20) - 512) * zprd;
+      buf[n] = x[i][2] + ((image[i] >> IMG2BITS) - IMGMAX) * zprd;
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -680,7 +680,7 @@ void ComputePropertyAtom::pack_zu(int n)
 void ComputePropertyAtom::pack_xu_triclinic(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -689,9 +689,9 @@ void ComputePropertyAtom::pack_xu_triclinic(int n)
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit) {
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
+      xbox = (image[i] & IMGMASK) - IMGMAX;
+      ybox = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+      zbox = (image[i] >> IMG2BITS) - IMGMAX;
       buf[n] = x[i][0] + h[0]*xbox + h[5]*ybox + h[4]*zbox;
     } else buf[n] = 0.0;
     n += nvalues;
@@ -703,7 +703,7 @@ void ComputePropertyAtom::pack_xu_triclinic(int n)
 void ComputePropertyAtom::pack_yu_triclinic(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -712,8 +712,8 @@ void ComputePropertyAtom::pack_yu_triclinic(int n)
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit) {
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
+      ybox = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+      zbox = (image[i] >> IMG2BITS) - IMGMAX;
       buf[n] = x[i][1] + h[1]*ybox + h[3]*zbox;
     } else buf[n] = 0.0;
     n += nvalues;
@@ -725,7 +725,7 @@ void ComputePropertyAtom::pack_yu_triclinic(int n)
 void ComputePropertyAtom::pack_zu_triclinic(int n)
 {
   double **x = atom->x;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
@@ -734,7 +734,7 @@ void ComputePropertyAtom::pack_zu_triclinic(int n)
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit) {
-      zbox = (image[i] >> 20) - 512;
+      zbox = (image[i] >> IMG2BITS) - IMGMAX;
       buf[n] = x[i][2] + h[2]*zbox;
     } else buf[n] = 0.0;
     n += nvalues;
@@ -745,12 +745,12 @@ void ComputePropertyAtom::pack_zu_triclinic(int n)
 
 void ComputePropertyAtom::pack_ix(int n)
 {
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
   for (int i = 0; i < nlocal; i++) {
-    if (mask[i] & groupbit) buf[n] = (image[i] & 1023) - 512;
+    if (mask[i] & groupbit) buf[n] = (image[i] & IMGMASK) - IMGMAX;
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -760,12 +760,12 @@ void ComputePropertyAtom::pack_ix(int n)
 
 void ComputePropertyAtom::pack_iy(int n)
 {
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
   for (int i = 0; i < nlocal; i++) {
-    if (mask[i] & groupbit) buf[n] = (image[i] >> 10 & 1023) - 512;
+    if (mask[i] & groupbit) buf[n] = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
     else buf[n] = 0.0;
     n += nvalues;
   }
@@ -775,12 +775,12 @@ void ComputePropertyAtom::pack_iy(int n)
 
 void ComputePropertyAtom::pack_iz(int n)
 {
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
   for (int i = 0; i < nlocal; i++) {
-    if (mask[i] & groupbit) buf[n] = (image[i] >> 20) - 512;
+    if (mask[i] & groupbit) buf[n] = (image[i] >> IMG2BITS) - IMGMAX;
     else buf[n] = 0.0;
     n += nvalues;
   }

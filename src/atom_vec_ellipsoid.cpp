@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Mike Brown (SNL)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "stdlib.h"
 #include "atom_vec_ellipsoid.h"
 #include "math_extra.h"
@@ -121,7 +120,7 @@ void AtomVecEllipsoid::grow_bonus()
     error->one(FLERR,"Per-processor system is too big");
 
   bonus = (Bonus *) memory->srealloc(bonus,nmax_bonus*sizeof(Bonus),
-				     "atom:bonus");
+                                     "atom:bonus");
 }
 
 /* ----------------------------------------------------------------------
@@ -190,8 +189,8 @@ void AtomVecEllipsoid::clear_bonus()
    this may create or delete entry in bonus data
 ------------------------------------------------------------------------- */
 
-void AtomVecEllipsoid::set_shape(int i, 
-				 double shapex, double shapey, double shapez)
+void AtomVecEllipsoid::set_shape(int i,
+                                 double shapex, double shapey, double shapez)
 {
   if (ellipsoid[i] < 0) {
     if (shapex == 0.0 && shapey == 0.0 && shapez == 0.0) return;
@@ -222,7 +221,7 @@ void AtomVecEllipsoid::set_shape(int i,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecEllipsoid::pack_comm(int n, int *list, double *buf,
-				int pbc_flag, int *pbc)
+                                int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -236,11 +235,11 @@ int AtomVecEllipsoid::pack_comm(int n, int *list, double *buf,
       buf[m++] = x[j][1];
       buf[m++] = x[j][2];
       if (ellipsoid[j] >= 0) {
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   } else {
@@ -259,11 +258,11 @@ int AtomVecEllipsoid::pack_comm(int n, int *list, double *buf,
       buf[m++] = x[j][1] + dy;
       buf[m++] = x[j][2] + dz;
       if (ellipsoid[j] >= 0) {
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   }
@@ -273,7 +272,7 @@ int AtomVecEllipsoid::pack_comm(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecEllipsoid::pack_comm_vel(int n, int *list, double *buf,
-				    int pbc_flag, int *pbc)
+                                    int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -287,11 +286,11 @@ int AtomVecEllipsoid::pack_comm_vel(int n, int *list, double *buf,
       buf[m++] = x[j][1];
       buf[m++] = x[j][2];
       if (ellipsoid[j] >= 0) {
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
       buf[m++] = v[j][0];
       buf[m++] = v[j][1];
@@ -312,52 +311,52 @@ int AtomVecEllipsoid::pack_comm_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (ellipsoid[j] >= 0) {
-	  quat = bonus[ellipsoid[j]].quat;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (ellipsoid[j] >= 0) {
+          quat = bonus[ellipsoid[j]].quat;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (ellipsoid[j] >= 0) {
-	  quat = bonus[ellipsoid[j]].quat;
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (ellipsoid[j] >= 0) {
+          quat = bonus[ellipsoid[j]].quat;
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     }
   }
@@ -531,7 +530,7 @@ int AtomVecEllipsoid::unpack_reverse_hybrid(int n, int *list, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecEllipsoid::pack_border(int n, int *list, double *buf,
-				  int pbc_flag, int *pbc)
+                                  int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -549,16 +548,16 @@ int AtomVecEllipsoid::pack_border(int n, int *list, double *buf,
       buf[m++] = mask[j];
       if (ellipsoid[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	shape = bonus[ellipsoid[j]].shape;
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = shape[0];
-	buf[m++] = shape[1];
-	buf[m++] = shape[2];
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        buf[m++] = 1;
+        shape = bonus[ellipsoid[j]].shape;
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = shape[0];
+        buf[m++] = shape[1];
+        buf[m++] = shape[2];
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   } else {
@@ -581,16 +580,16 @@ int AtomVecEllipsoid::pack_border(int n, int *list, double *buf,
       buf[m++] = mask[j];
       if (ellipsoid[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	shape = bonus[ellipsoid[j]].shape;
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = shape[0];
-	buf[m++] = shape[1];
-	buf[m++] = shape[2];
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        buf[m++] = 1;
+        shape = bonus[ellipsoid[j]].shape;
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = shape[0];
+        buf[m++] = shape[1];
+        buf[m++] = shape[2];
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
     }
   }
@@ -600,7 +599,7 @@ int AtomVecEllipsoid::pack_border(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecEllipsoid::pack_border_vel(int n, int *list, double *buf,
-				      int pbc_flag, int *pbc)
+                                      int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -618,16 +617,16 @@ int AtomVecEllipsoid::pack_border_vel(int n, int *list, double *buf,
       buf[m++] = mask[j];
       if (ellipsoid[j] < 0) buf[m++] = 0;
       else {
-	buf[m++] = 1;
-	shape = bonus[ellipsoid[j]].shape;
-	quat = bonus[ellipsoid[j]].quat;
-	buf[m++] = shape[0];
-	buf[m++] = shape[1];
-	buf[m++] = shape[2];
-	buf[m++] = quat[0];
-	buf[m++] = quat[1];
-	buf[m++] = quat[2];
-	buf[m++] = quat[3];
+        buf[m++] = 1;
+        shape = bonus[ellipsoid[j]].shape;
+        quat = bonus[ellipsoid[j]].quat;
+        buf[m++] = shape[0];
+        buf[m++] = shape[1];
+        buf[m++] = shape[2];
+        buf[m++] = quat[0];
+        buf[m++] = quat[1];
+        buf[m++] = quat[2];
+        buf[m++] = quat[3];
       }
       buf[m++] = v[j][0];
       buf[m++] = v[j][1];
@@ -648,69 +647,69 @@ int AtomVecEllipsoid::pack_border_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	if (ellipsoid[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  quat = bonus[ellipsoid[j]].quat;
-	  buf[m++] = shape[0];
-	  buf[m++] = shape[1];
-	  buf[m++] = shape[2];
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        if (ellipsoid[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          quat = bonus[ellipsoid[j]].quat;
+          buf[m++] = shape[0];
+          buf[m++] = shape[1];
+          buf[m++] = shape[2];
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	if (ellipsoid[j] < 0) buf[m++] = 0;
-	else {
-	  buf[m++] = 1;
-	  shape = bonus[ellipsoid[j]].shape;
-	  quat = bonus[ellipsoid[j]].quat;
-	  buf[m++] = shape[0];
-	  buf[m++] = shape[1];
-	  buf[m++] = shape[2];
-	  buf[m++] = quat[0];
-	  buf[m++] = quat[1];
-	  buf[m++] = quat[2];
-	  buf[m++] = quat[3];
-	}
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
-	buf[m++] = angmom[j][0];
-	buf[m++] = angmom[j][1];
-	buf[m++] = angmom[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        if (ellipsoid[j] < 0) buf[m++] = 0;
+        else {
+          buf[m++] = 1;
+          shape = bonus[ellipsoid[j]].shape;
+          quat = bonus[ellipsoid[j]].quat;
+          buf[m++] = shape[0];
+          buf[m++] = shape[1];
+          buf[m++] = shape[2];
+          buf[m++] = quat[0];
+          buf[m++] = quat[1];
+          buf[m++] = quat[2];
+          buf[m++] = quat[3];
+        }
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
+        buf[m++] = angmom[j][0];
+        buf[m++] = angmom[j][1];
+        buf[m++] = angmom[j][2];
       }
     }
   }
@@ -875,7 +874,7 @@ int AtomVecEllipsoid::pack_exchange(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
 
   buf[m++] = rmass[i];
   buf[m++] = angmom[i][0];
@@ -896,7 +895,7 @@ int AtomVecEllipsoid::pack_exchange(int i, double *buf)
     buf[m++] = quat[2];
     buf[m++] = quat[3];
   }
-  
+
   if (atom->nextra_grow)
     for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->pack_exchange(i,&buf[m]);
@@ -922,7 +921,7 @@ int AtomVecEllipsoid::unpack_exchange(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
 
   rmass[nlocal] = buf[m++];
   angmom[nlocal][0] = buf[m++];
@@ -949,7 +948,7 @@ int AtomVecEllipsoid::unpack_exchange(double *buf)
   if (atom->nextra_grow)
     for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->
-	unpack_exchange(nlocal,&buf[m]);
+        unpack_exchange(nlocal,&buf[m]);
 
   atom->nlocal++;
   return m;
@@ -973,7 +972,7 @@ int AtomVecEllipsoid::size_restart()
   if (atom->nextra_restart)
     for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       for (i = 0; i < nlocal; i++)
-	n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
   return n;
 }
@@ -993,7 +992,7 @@ int AtomVecEllipsoid::pack_restart(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
   buf[m++] = v[i][0];
   buf[m++] = v[i][1];
   buf[m++] = v[i][2];
@@ -1033,7 +1032,7 @@ int AtomVecEllipsoid::unpack_restart(double *buf)
   int nlocal = atom->nlocal;
   if (nlocal == nmax) {
     grow(0);
-    if (atom->nextra_store) 
+    if (atom->nextra_store)
       memory->grow(atom->extra,nmax,atom->nextra_store,"atom:extra");
   }
 
@@ -1044,7 +1043,7 @@ int AtomVecEllipsoid::unpack_restart(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
   v[nlocal][0] = buf[m++];
   v[nlocal][1] = buf[m++];
   v[nlocal][2] = buf[m++];
@@ -1070,7 +1069,7 @@ int AtomVecEllipsoid::unpack_restart(double *buf)
     bonus[nlocal_bonus].ilocal = nlocal;
     ellipsoid[nlocal] = nlocal_bonus++;
   }
-  
+
   double **extra = atom->extra;
   if (atom->nextra_store) {
     int size = static_cast<int> (buf[0]) - m;
@@ -1097,11 +1096,12 @@ void AtomVecEllipsoid::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = (512 << 20) | (512 << 10) | 512;
+  image[nlocal] = ((tagint) IMGMAX << IMG2BITS) |
+    ((tagint) IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
-  
+
   rmass[nlocal] = 1.0;
   angmom[nlocal][0] = 0.0;
   angmom[nlocal][1] = 0.0;
@@ -1116,7 +1116,7 @@ void AtomVecEllipsoid::create_atom(int itype, double *coord)
    initialize other atom quantities
 ------------------------------------------------------------------------- */
 
-void AtomVecEllipsoid::data_atom(double *coord, int imagetmp, char **values)
+void AtomVecEllipsoid::data_atom(double *coord, tagint imagetmp, char **values)
 {
   int nlocal = atom->nlocal;
   if (nlocal == nmax) grow(0);
@@ -1235,7 +1235,7 @@ int AtomVecEllipsoid::data_vel_hybrid(int m, char **values)
 }
 
 /* ----------------------------------------------------------------------
-   return # of bytes of allocated memory 
+   return # of bytes of allocated memory
 ------------------------------------------------------------------------- */
 
 bigint AtomVecEllipsoid::memory_usage()
@@ -1254,7 +1254,7 @@ bigint AtomVecEllipsoid::memory_usage()
   if (atom->memcheck("angmom")) bytes += memory->usage(angmom,nmax,3);
   if (atom->memcheck("torque")) bytes += memory->usage(torque,nmax*comm->nthreads,3);
   if (atom->memcheck("ellipsoid")) bytes += memory->usage(ellipsoid,nmax);
-  
+
   bytes += nmax_bonus*sizeof(Bonus);
 
   return bytes;

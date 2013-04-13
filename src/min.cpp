@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -19,7 +19,6 @@
             JR Shewchuk, http://www-2.cs.cmu.edu/~jrs/jrspapers.html#cg
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "math.h"
 #include "stdlib.h"
 #include "string.h"
@@ -152,6 +151,13 @@ void Min::init()
   rho_flag = 0;
   if (atom->rho_flag) rho_flag = 1;
 
+  // allow pair and Kspace compute() to be turned off via modify flags
+
+  if (force->pair && force->pair->compute_flag) pair_compute_flag = 1;
+  else pair_compute_flag = 0;
+  if (force->kspace && force->kspace->compute_flag) kspace_compute_flag = 1;
+  else kspace_compute_flag = 0;
+
   // orthogonal vs triclinic simulation box
 
   triclinic = domain->triclinic;
@@ -161,11 +167,11 @@ void Min::init()
   neigh_every = neighbor->every;
   neigh_delay = neighbor->delay;
   neigh_dist_check = neighbor->dist_check;
-  
+
   if (neigh_every != 1 || neigh_delay != 0 || neigh_dist_check != 1) {
-    if (comm->me == 0) 
+    if (comm->me == 0)
       error->warning(FLERR,
-		     "Resetting reneighboring criteria during minimization");
+                     "Resetting reneighboring criteria during minimization");
   }
 
   neighbor->every = 1;
@@ -173,10 +179,6 @@ void Min::init()
   neighbor->dist_check = 1;
 
   niter = neval = 0;
-
-  // style-specific initialization
-
-  init_style();
 }
 
 /* ----------------------------------------------------------------------
@@ -186,6 +188,8 @@ void Min::init()
 void Min::setup()
 {
   if (comm->me == 0 && screen) fprintf(screen,"Setting up minimization ...\n");
+
+  update->setupflag = 1;
 
   // setup extra global dof due to fixes
   // cannot be done in init() b/c update init() is before modify init()
@@ -220,6 +224,7 @@ void Min::setup()
   // build neighbor lists
 
   atom->setup();
+  modify->setup_pre_exchange();
   if (triclinic) domain->x2lamda(atom->nlocal);
   domain->pbc();
   domain->reset_box();
@@ -229,6 +234,7 @@ void Min::setup()
   if (atom->sortfreq > 0) atom->sort();
   comm->borders();
   if (triclinic) domain->lamda2x(atom->nlocal+atom->nghost);
+  domain->box_too_small_check();
   neighbor->build();
   neighbor->ncalls = 0;
 
@@ -236,10 +242,10 @@ void Min::setup()
 
   if (nextra_global && searchflag == 0)
     error->all(FLERR,
-	       "Cannot use a damped dynamics min style with fix box/relax");
+               "Cannot use a damped dynamics min style with fix box/relax");
   if (nextra_atom && searchflag == 0)
     error->all(FLERR,
-	       "Cannot use a damped dynamics min style with per-atom DOF");
+               "Cannot use a damped dynamics min style with per-atom DOF");
 
   // atoms may have migrated in comm->exchange()
 
@@ -251,7 +257,8 @@ void Min::setup()
   force_clear();
   modify->setup_pre_force(vflag);
 
-  if (force->pair) force->pair->compute(eflag,vflag);
+  if (pair_compute_flag) force->pair->compute(eflag,vflag);
+  else if (force->pair) force->pair->compute_dummy(eflag,vflag);
 
   if (atom->molecular) {
     if (force->bond) force->bond->compute(eflag,vflag);
@@ -262,7 +269,8 @@ void Min::setup()
 
   if (force->kspace) {
     force->kspace->setup();
-    force->kspace->compute(eflag,vflag);
+    if (kspace_compute_flag) force->kspace->compute(eflag,vflag);
+    else force->kspace->compute_dummy(eflag,vflag);
   }
 
   if (force->newton) comm->reverse_comm();
@@ -274,14 +282,15 @@ void Min::setup()
       requestor[m]->min_xf_get(m);
 
   modify->setup(vflag);
-  output->setup(1);
+  output->setup();
+  update->setupflag = 0;
 
   // stats for Finish to print
 
   ecurrent = pe_compute->compute_scalar();
   if (nextra_global) ecurrent += modify->min_energy(fextra);
   if (output->thermo->normflag) ecurrent /= atom->natoms;
-	
+
   einitial = ecurrent;
   fnorm2_init = sqrt(fnorm_sqr());
   fnorminf_init = fnorm_inf();
@@ -295,11 +304,14 @@ void Min::setup()
 
 void Min::setup_minimal(int flag)
 {
+  update->setupflag = 1;
+
   // setup domain, communication and neighboring
   // acquire ghosts
   // build neighbor lists
 
   if (flag) {
+    modify->setup_pre_exchange();
     if (triclinic) domain->x2lamda(atom->nlocal);
     domain->pbc();
     domain->reset_box();
@@ -308,6 +320,7 @@ void Min::setup_minimal(int flag)
     comm->exchange();
     comm->borders();
     if (triclinic) domain->lamda2x(atom->nlocal+atom->nghost);
+    domain->box_too_small_check();
     neighbor->build();
     neighbor->ncalls = 0;
   }
@@ -322,7 +335,8 @@ void Min::setup_minimal(int flag)
   force_clear();
   modify->setup_pre_force(vflag);
 
-  if (force->pair) force->pair->compute(eflag,vflag);
+  if (pair_compute_flag) force->pair->compute(eflag,vflag);
+  else if (force->pair) force->pair->compute_dummy(eflag,vflag);
 
   if (atom->molecular) {
     if (force->bond) force->bond->compute(eflag,vflag);
@@ -333,7 +347,8 @@ void Min::setup_minimal(int flag)
 
   if (force->kspace) {
     force->kspace->setup();
-    force->kspace->compute(eflag,vflag);
+    if (kspace_compute_flag) force->kspace->compute(eflag,vflag);
+    else force->kspace->compute_dummy(eflag,vflag);
   }
 
   if (force->newton) comm->reverse_comm();
@@ -345,13 +360,14 @@ void Min::setup_minimal(int flag)
       requestor[m]->min_xf_get(m);
 
   modify->setup(vflag);
+  update->setupflag = 0;
 
   // stats for Finish to print
 
   ecurrent = pe_compute->compute_scalar();
   if (nextra_global) ecurrent += modify->min_energy(fextra);
   if (output->thermo->normflag) ecurrent /= atom->natoms;
-	
+
   einitial = ecurrent;
   fnorm2_init = sqrt(fnorm_sqr());
   fnorminf_init = fnorm_inf();
@@ -381,9 +397,15 @@ void Min::run(int n)
 
     if (update->restrict_output == 0) {
       for (int idump = 0; idump < output->ndump; idump++)
-	output->next_dump[idump] = update->ntimestep;
+        output->next_dump[idump] = update->ntimestep;
       output->next_dump_any = update->ntimestep;
-      if (output->restart_every) output->next_restart = update->ntimestep;
+      if (output->restart_flag) {
+        output->next_restart = update->ntimestep;
+        if (output->restart_every_single)
+          output->next_restart_single = update->ntimestep;
+        if (output->restart_every_double)
+          output->next_restart_double = update->ntimestep;
+      }
     }
     output->next_thermo = update->ntimestep;
 
@@ -398,7 +420,7 @@ void Min::run(int n)
 void Min::cleanup()
 {
   // stats for Finish to print
-	
+
   efinal = ecurrent;
   fnorm2_final = sqrt(fnorm_sqr());
   fnorminf_final = fnorm_inf();
@@ -412,6 +434,8 @@ void Min::cleanup()
   // delete fix at end of run, so its atom arrays won't persist
 
   modify->delete_fix("MINIMIZE");
+
+  domain->box_too_small_check();
 }
 
 /* ----------------------------------------------------------------------
@@ -444,8 +468,8 @@ double Min::energy_force(int resetflag)
     }
     timer->stamp();
     comm->exchange();
-    if (atom->sortfreq > 0 && 
-	update->ntimestep >= atom->nextsort) atom->sort();
+    if (atom->sortfreq > 0 &&
+        update->ntimestep >= atom->nextsort) atom->sort();
     comm->borders();
     if (triclinic) domain->lamda2x(atom->nlocal+atom->nghost);
     timer->stamp(TIME_COMM);
@@ -459,7 +483,7 @@ double Min::energy_force(int resetflag)
 
   timer->stamp();
 
-  if (force->pair) {
+  if (pair_compute_flag) {
     force->pair->compute(eflag,vflag);
     timer->stamp(TIME_PAIR);
   }
@@ -472,7 +496,7 @@ double Min::energy_force(int resetflag)
     timer->stamp(TIME_BOND);
   }
 
-  if (force->kspace) {
+  if (kspace_compute_flag) {
     force->kspace->compute(eflag,vflag);
     timer->stamp(TIME_KSPACE);
   }
@@ -553,14 +577,14 @@ int Min::request(Pair *pair, int peratom, double maxvalue)
 {
   int n = nextra_atom + 1;
   xextra_atom = (double **) memory->srealloc(xextra_atom,n*sizeof(double *),
-					     "min:xextra_atom");
+                                             "min:xextra_atom");
   fextra_atom = (double **) memory->srealloc(fextra_atom,n*sizeof(double *),
-					     "min:fextra_atom");
+                                             "min:fextra_atom");
   memory->grow(extra_peratom,n,"min:extra_peratom");
   memory->grow(extra_nlen,n,"min:extra_nlen");
   memory->grow(extra_max,n,"min:extra_max");
   requestor = (Pair **) memory->srealloc(requestor,n*sizeof(Pair *),
-					 "min:requestor");
+                                         "min:requestor");
 
   requestor[nextra_atom] = pair;
   extra_peratom[nextra_atom] = peratom;
@@ -585,6 +609,7 @@ void Min::modify_params(int narg, char **arg)
       if (iarg+2 > narg) error->all(FLERR,"Illegal min_modify command");
       if (strcmp(arg[iarg+1],"backtrack") == 0) linestyle = 0;
       else if (strcmp(arg[iarg+1],"quadratic") == 0) linestyle = 1;
+      else if (strcmp(arg[iarg+1],"forcezero") == 0) linestyle = 2;
       else error->all(FLERR,"Illegal min_modify command");
       iarg += 2;
     } else error->all(FLERR,"Illegal min_modify command");
@@ -699,7 +724,7 @@ double Min::fnorm_sqr()
       fatom = fextra_atom[m];
       n = extra_nlen[m];
       for (i = 0; i < n; i++)
-	local_norm2_sqr += fatom[i]*fatom[i];
+        local_norm2_sqr += fatom[i]*fatom[i];
     }
   }
 
@@ -707,9 +732,9 @@ double Min::fnorm_sqr()
   MPI_Allreduce(&local_norm2_sqr,&norm2_sqr,1,MPI_DOUBLE,MPI_SUM,world);
 
   if (nextra_global)
-    for (i = 0; i < nextra_global; i++) 
+    for (i = 0; i < nextra_global; i++)
       norm2_sqr += fextra[i]*fextra[i];
-  
+
   return norm2_sqr;
 }
 
@@ -730,7 +755,7 @@ double Min::fnorm_inf()
       fatom = fextra_atom[m];
       n = extra_nlen[m];
       for (i = 0; i < n; i++)
-	local_norm_inf = MAX(fabs(fatom[i]),local_norm_inf);
+        local_norm_inf = MAX(fabs(fatom[i]),local_norm_inf);
     }
   }
 
@@ -738,7 +763,7 @@ double Min::fnorm_inf()
   MPI_Allreduce(&local_norm_inf,&norm_inf,1,MPI_DOUBLE,MPI_MAX,world);
 
   if (nextra_global)
-    for (i = 0; i < nextra_global; i++) 
+    for (i = 0; i < nextra_global; i++)
       norm_inf = MAX(fabs(fextra[i]),norm_inf);
 
   return norm_inf;
@@ -751,14 +776,14 @@ double Min::fnorm_inf()
 char *Min::stopstrings(int n)
 {
   const char *strings[] = {"max iterations",
-			   "max force evaluations",
-			   "energy tolerance",
-			   "force tolerance",
-			   "search direction is not downhill",
-			   "linesearch alpha is zero",
-			   "forces are zero",
-			   "quadratic factors are zero",
-			   "trust region too small",
-			   "HFTN minimizer error"};
+                           "max force evaluations",
+                           "energy tolerance",
+                           "force tolerance",
+                           "search direction is not downhill",
+                           "linesearch alpha is zero",
+                           "forces are zero",
+                           "quadratic factors are zero",
+                           "trust region too small",
+                           "HFTN minimizer error"};
   return (char *) strings[n];
 }

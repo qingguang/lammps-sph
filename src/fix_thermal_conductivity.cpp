@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -28,13 +28,14 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 #define BIG 1.0e10
 
 /* ---------------------------------------------------------------------- */
 
 FixThermalConductivity::FixThermalConductivity(LAMMPS *lmp,
-					       int narg, char **arg) :
+                                               int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
   if (narg < 6) error->all(FLERR,"Illegal fix thermal/conductivity command");
@@ -54,7 +55,7 @@ FixThermalConductivity::FixThermalConductivity(LAMMPS *lmp,
   else error->all(FLERR,"Illegal fix thermal/conductivity command");
 
   nbin = atoi(arg[5]);
-  if (nbin % 2 || nbin <= 2) 
+  if (nbin % 2 || nbin <= 2)
     error->all(FLERR,"Illegal fix thermal/conductivity command");
 
   // optional keywords
@@ -65,10 +66,11 @@ FixThermalConductivity::FixThermalConductivity(LAMMPS *lmp,
   while (iarg < narg) {
     if (strcmp(arg[iarg],"swap") == 0) {
       if (iarg+2 > narg)
-	error->all(FLERR,"Illegal fix thermal/conductivity command");
+        error->all(FLERR,"Illegal fix thermal/conductivity command");
       nswap = atoi(arg[iarg+1]);
       if (nswap <= 0)
-	error->all(FLERR,"Fix thermal/conductivity swap value must be positive");
+        error->all(FLERR,
+                   "Fix thermal/conductivity swap value must be positive");
       iarg += 2;
     } else error->all(FLERR,"Illegal fix thermal/conductivity command");
   }
@@ -113,7 +115,8 @@ void FixThermalConductivity::init()
   for (int i = 0; i < modify->nfix; i++) {
     if (modify->fix[i] == this) foundme = 1;
     if (foundme && strcmp(modify->fix[i]->style,"ave/spatial") == 0 && me == 0)
-      error->warning(FLERR,"Fix thermal/conductivity comes before fix ave/spatial");
+      error->warning(FLERR,
+                     "Fix thermal/conductivity comes before fix ave/spatial");
   }
 
   // set bounds of 2 slabs in edim
@@ -183,39 +186,39 @@ void FixThermalConductivity::end_of_step()
       else if (coord >= boxhi && periodicity) coord -= prd;
 
       if (coord >= slablo_lo && coord < slablo_hi) {
-	ke = v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
-	if (rmass) ke *= 0.5*rmass[i];
-	else ke *= 0.5*mass[type[i]];
-	if (nlo < nswap || ke > ke_lo[nswap-1]) {
-	  for (insert = nlo-1; insert >= 0; insert--)
-	    if (ke < ke_lo[insert]) break;
-	  insert++;
-	  for (m = nlo-1; m >= insert; m--) {
-	    ke_lo[m+1] = ke_lo[m];
-	    index_lo[m+1] = index_lo[m];
-	  }
-	  ke_lo[insert] = ke;
-	  index_lo[insert] = i;
-	  if (nlo < nswap) nlo++;
-	}
+        ke = v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
+        if (rmass) ke *= 0.5*rmass[i];
+        else ke *= 0.5*mass[type[i]];
+        if (nlo < nswap || ke > ke_lo[nswap-1]) {
+          for (insert = nlo-1; insert >= 0; insert--)
+            if (ke < ke_lo[insert]) break;
+          insert++;
+          for (m = nlo-1; m >= insert; m--) {
+            ke_lo[m+1] = ke_lo[m];
+            index_lo[m+1] = index_lo[m];
+          }
+          ke_lo[insert] = ke;
+          index_lo[insert] = i;
+          if (nlo < nswap) nlo++;
+        }
       }
 
       if (coord >= slabhi_lo && coord < slabhi_hi) {
-	ke = v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
-	if (rmass) ke *= 0.5*rmass[i];
-	else ke *= 0.5*mass[type[i]];
-	if (nhi < nswap || ke < ke_hi[nswap-1]) {
-	  for (insert = nhi-1; insert >= 0; insert--)
-	    if (ke > ke_hi[insert]) break;
-	  insert++;
-	  for (m = nhi-1; m >= insert; m--) {
-	    ke_hi[m+1] = ke_hi[m];
-	    index_hi[m+1] = index_hi[m];
-	  }
-	  ke_hi[insert] = ke;
-	  index_hi[insert] = i;
-	  if (nhi < nswap) nhi++;
-	}
+        ke = v[i][0]*v[i][0] + v[i][1]*v[i][1] + v[i][2]*v[i][2];
+        if (rmass) ke *= 0.5*rmass[i];
+        else ke *= 0.5*mass[type[i]];
+        if (nhi < nswap || ke < ke_hi[nswap-1]) {
+          for (insert = nhi-1; insert >= 0; insert--)
+            if (ke > ke_hi[insert]) break;
+          insert++;
+          for (m = nhi-1; m >= insert; m--) {
+            ke_hi[m+1] = ke_hi[m];
+            index_hi[m+1] = index_hi[m];
+          }
+          ke_hi[insert] = ke;
+          index_hi[insert] = i;
+          if (nhi < nswap) nhi++;
+        }
       }
     }
 
@@ -239,7 +242,7 @@ void FixThermalConductivity::end_of_step()
     else mine[0].value = BIG;
     if (ihi < nhi) mine[1].value = ke_hi[ihi];
     else mine[1].value = BIG;
-    
+
     MPI_Allreduce(mine,all,2,MPI_DOUBLE_INT,MPI_MINLOC,world);
     if (all[0].value == BIG || all[1].value == BIG) continue;
 
@@ -271,7 +274,7 @@ void FixThermalConductivity::end_of_step()
       eswap -= rbuf[3] * (vcm[0] * (vcm[0] - rbuf[0]) +
                           vcm[1] * (vcm[1] - rbuf[1]) +
                           vcm[2] * (vcm[2] - rbuf[2]));
-      
+
     } else if (me == all[0].proc) {
       j = index_lo[ilo++];
       sbuf[0] = v[j][0];
@@ -280,7 +283,7 @@ void FixThermalConductivity::end_of_step()
       if (rmass) sbuf[3] = rmass[j];
       else sbuf[3] = mass[type[j]];
       MPI_Sendrecv(sbuf,4,MPI_DOUBLE,all[1].proc,0,
-		   rbuf,4,MPI_DOUBLE,all[1].proc,0,world,&status);
+                   rbuf,4,MPI_DOUBLE,all[1].proc,0,world,&status);
       vcm[0] = (sbuf[3]*sbuf[0] + rbuf[3]*rbuf[0]) / (sbuf[3] + rbuf[3]);
       vcm[1] = (sbuf[3]*sbuf[1] + rbuf[3]*rbuf[1]) / (sbuf[3] + rbuf[3]);
       vcm[2] = (sbuf[3]*sbuf[2] + rbuf[3]*rbuf[2]) / (sbuf[3] + rbuf[3]);
@@ -299,7 +302,7 @@ void FixThermalConductivity::end_of_step()
       if (rmass) sbuf[3] = rmass[j];
       else sbuf[3] = mass[type[j]];
       MPI_Sendrecv(sbuf,4,MPI_DOUBLE,all[0].proc,0,
-		   rbuf,4,MPI_DOUBLE,all[0].proc,0,world,&status);
+                   rbuf,4,MPI_DOUBLE,all[0].proc,0,world,&status);
       vcm[0] = (sbuf[3]*sbuf[0] + rbuf[3]*rbuf[0]) / (sbuf[3] + rbuf[3]);
       vcm[1] = (sbuf[3]*sbuf[1] + rbuf[3]*rbuf[1]) / (sbuf[3] + rbuf[3]);
       vcm[2] = (sbuf[3]*sbuf[2] + rbuf[3]*rbuf[2]) / (sbuf[3] + rbuf[3]);

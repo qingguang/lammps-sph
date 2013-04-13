@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -50,11 +50,11 @@ class DumpCFG : public DumpCustom {
 
 E: Dump cfg arguments must start with 'id type xs ys zs' or 'id type xsu ysu zsu'
 
-This is a requirement of the CFG output format. :dd
+This is a requirement of the CFG output format.
 
 E: Dump cfg arguments can not mix xs|ys|zs with xsu|ysu|zsu
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Invalid keyword in dump cfg command
 

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -95,7 +95,7 @@ Self-explanatory.
 
 E: Use of velocity with undefined lattice
 
-If scale = lattice (the default) for the velocity set or velocity ramp
+If units = lattice (the default) for the velocity set or velocity ramp
 command, then a lattice must first be defined via the lattice command.
 
 E: Variable name for velocity set does not exist

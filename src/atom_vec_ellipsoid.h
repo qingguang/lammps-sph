@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -60,7 +60,7 @@ class AtomVecEllipsoid : public AtomVec {
   int pack_restart(int, double *);
   int unpack_restart(double *);
   void create_atom(int, double *);
-  void data_atom(double *, int, char **);
+  void data_atom(double *, tagint, char **);
   int data_atom_hybrid(int, char **);
   void data_vel(int, char **);
   int data_vel_hybrid(int, char **);
@@ -76,7 +76,8 @@ class AtomVecEllipsoid : public AtomVec {
   void set_shape(int, double, double, double);
 
  private:
-  int *tag,*type,*mask,*image;
+  int *tag,*type,*mask;
+  tagint *image;
   double **x,**v,**f;
   double *rmass;
   double **angmom,**torque;
@@ -114,10 +115,10 @@ Density value cannot be <= 0.0.
 
 E: Assigning ellipsoid parameters to non-ellipsoid atom
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Invalid shape in Ellipsoids section of data file
 
-UNDOCUMENTED
+Self-explanatory.
 
 */

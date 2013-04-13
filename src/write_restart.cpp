@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -95,9 +95,11 @@ void WriteRestart::command(int narg, char **arg)
   lmp->init();
 
   // move atoms to new processors before writing file
-  // enforce PBC before in case atoms are outside box
+  // do setup_pre_exchange to force update of per-atom info if needed
+  // enforce PBC in case atoms are outside box
   // call borders() to rebuild atom map since exchange() destroys map
 
+  modify->setup_pre_exchange();
   if (domain->triclinic) domain->x2lamda(atom->nlocal);
   domain->pbc();
   domain->reset_box();
@@ -131,7 +133,7 @@ void WriteRestart::write(char *file)
 
   bigint nblocal = atom->nlocal;
   MPI_Allreduce(&nblocal,&natoms,1,MPI_LMP_BIGINT,MPI_SUM,world);
-  if (natoms != atom->natoms && output->thermo->lostflag == ERROR) 
+  if (natoms != atom->natoms && output->thermo->lostflag == ERROR)
     error->all(FLERR,"Atom count is inconsistent, cannot write restart file");
 
   // check if filename contains "%"
@@ -218,19 +220,19 @@ void WriteRestart::write(char *file)
       if (triclinic) domain->x2lamda(x,x);
 
       if (xperiodic) {
-	if (x[0] < lo[0]) x[0] += period[0];
-	if (x[0] >= hi[0]) x[0] -= period[0];
-	x[0] = MAX(x[0],lo[0]);
+        if (x[0] < lo[0]) x[0] += period[0];
+        if (x[0] >= hi[0]) x[0] -= period[0];
+        x[0] = MAX(x[0],lo[0]);
       }
       if (yperiodic) {
-	if (x[1] < lo[1]) x[1] += period[1];
-	if (x[1] >= hi[1]) x[1] -= period[1];
-	x[1] = MAX(x[1],lo[1]);
+        if (x[1] < lo[1]) x[1] += period[1];
+        if (x[1] >= hi[1]) x[1] -= period[1];
+        x[1] = MAX(x[1],lo[1]);
       }
       if (zperiodic) {
-	if (x[2] < lo[2]) x[2] += period[2];
-	if (x[2] >= hi[2]) x[2] -= period[2];
-	x[2] = MAX(x[2],lo[2]);
+        if (x[2] < lo[2]) x[2] += period[2];
+        if (x[2] >= hi[2]) x[2] -= period[2];
+        x[2] = MAX(x[2],lo[2]);
       }
 
       if (triclinic) domain->lamda2x(x,x);
@@ -252,15 +254,15 @@ void WriteRestart::write(char *file)
 
     if (me == 0) {
       for (int iproc = 0; iproc < nprocs; iproc++) {
-	if (iproc) {
-	  MPI_Irecv(buf,max_size,MPI_DOUBLE,iproc,0,world,&request);
-	  MPI_Send(&tmp,0,MPI_INT,iproc,0,world);
-	  MPI_Wait(&request,&status);
-	  MPI_Get_count(&status,MPI_DOUBLE,&recv_size);
-	} else recv_size = send_size;
-	
-	fwrite(&recv_size,sizeof(int),1,fp);
-	fwrite(buf,sizeof(double),recv_size,fp);
+        if (iproc) {
+          MPI_Irecv(buf,max_size,MPI_DOUBLE,iproc,0,world,&request);
+          MPI_Send(&tmp,0,MPI_INT,iproc,0,world);
+          MPI_Wait(&request,&status);
+          MPI_Get_count(&status,MPI_DOUBLE,&recv_size);
+        } else recv_size = send_size;
+
+        fwrite(&recv_size,sizeof(int),1,fp);
+        fwrite(buf,sizeof(double),recv_size,fp);
       }
       fclose(fp);
 
@@ -288,12 +290,12 @@ void WriteRestart::write(char *file)
     fwrite(buf,sizeof(double),send_size,fp);
     fclose(fp);
   }
-    
+
   memory->destroy(buf);
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 writes out problem description 
+   proc 0 writes out problem description
 ------------------------------------------------------------------------- */
 
 void WriteRestart::header()
@@ -452,7 +454,7 @@ void WriteRestart::force_fields()
 }
 
 /* ----------------------------------------------------------------------
-   write a flag and an int into restart file 
+   write a flag and an int into restart file
 ------------------------------------------------------------------------- */
 
 void WriteRestart::write_int(int flag, int value)
@@ -462,7 +464,7 @@ void WriteRestart::write_int(int flag, int value)
 }
 
 /* ----------------------------------------------------------------------
-   write a flag and a double into restart file 
+   write a flag and a double into restart file
 ------------------------------------------------------------------------- */
 
 void WriteRestart::write_double(int flag, double value)
@@ -472,7 +474,7 @@ void WriteRestart::write_double(int flag, double value)
 }
 
 /* ----------------------------------------------------------------------
-   write a flag and a char str into restart file 
+   write a flag and a char str into restart file
 ------------------------------------------------------------------------- */
 
 void WriteRestart::write_char(int flag, char *value)
@@ -484,7 +486,7 @@ void WriteRestart::write_char(int flag, char *value)
 }
 
 /* ----------------------------------------------------------------------
-   write a flag and a bigint into restart file 
+   write a flag and a bigint into restart file
 ------------------------------------------------------------------------- */
 
 void WriteRestart::write_bigint(int flag, bigint value)
@@ -492,4 +494,3 @@ void WriteRestart::write_bigint(int flag, bigint value)
   fwrite(&flag,sizeof(int),1,fp);
   fwrite(&value,sizeof(bigint),1,fp);
 }
-

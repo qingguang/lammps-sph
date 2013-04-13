@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -44,7 +44,8 @@ class Atom : protected Pointers {
   // per-atom arrays
   // customize by adding new array
 
-  int *tag,*type,*mask,*image;
+  int *tag,*type,*mask;
+  tagint *image;
   double **x,**v,**f;
 
   int *molecule;
@@ -57,7 +58,7 @@ class Atom : protected Pointers {
   double *eradius,*ervel,*erforce,*ervelforce;
   double *cs,*csforce,*vforce;
   int *etag;
-  double *rho, *drho;
+  double *rho, **colorgradient, *drho;
   double *e, *de;
   double **vest;
   double *cv;
@@ -82,6 +83,9 @@ class Atom : protected Pointers {
   int **improper_type;
   int **improper_atom1,**improper_atom2,**improper_atom3,**improper_atom4;
 
+  unsigned int datamask;
+  unsigned int datamask_ext;
+
   // atom style and per-atom array existence flags
   // customize by adding new flag
 
@@ -92,9 +96,9 @@ class Atom : protected Pointers {
   int rmass_flag,radius_flag,omega_flag,torque_flag,angmom_flag;
   int vfrac_flag,spin_flag,eradius_flag,ervel_flag,erforce_flag;
   int cs_flag,csforce_flag,vforce_flag,ervelforce_flag,etag_flag;
-  int rho_flag,e_flag,cv_flag,vest_flag;
+  int rho_flag,colorgradient_flag,e_flag,cv_flag,vest_flag;
 
-  // extra peratom info in restart file destined for fix & diag 
+  // extra peratom info in restart file destined for fix & diag
 
   double **extra;
 
@@ -112,11 +116,16 @@ class Atom : protected Pointers {
 
   int map_style;                  // default or user-specified style of map
                                   // 0 = none, 1 = array, 2 = hash
+  int map_tag_max;                // max atom ID that map() is setup for
 
   // spatial sorting of atoms
 
   int sortfreq;             // sort atoms every this many steps, 0 = off
   bigint nextsort;          // next timestep to sort on
+
+  // indices of atoms with same ID
+
+  int *sametag;      // sametag[I] = next atom with same ID, -1 if no more
 
   // functions
 
@@ -173,7 +182,7 @@ class Atom : protected Pointers {
 
   // functions for global to local ID mapping
   // map lookup function inlined for efficiency
-  
+
   inline int map(int global) {
     if (map_style == 1) return map_array[global];
     else return map_find_hash(global);
@@ -190,8 +199,8 @@ class Atom : protected Pointers {
 
   // global to local ID mapping
 
-  int map_tag_max;
-  int *map_array;
+  int *map_array;       // direct map of length map_tag_max + 1
+  int smax;             // max size of sametag
 
   struct HashElem {
     int global;                   // key to search on = global ID
@@ -204,8 +213,6 @@ class Atom : protected Pointers {
   int map_nbucket;                // # of hash buckets
   int *map_bucket;                // ptr to 1st entry in each bucket
   HashElem *map_hash;             // hash table
-  int *primes;                    // table of prime #s for hashing
-  int nprimes;                    // # of primes
 
   // spatial sorting of atoms
 
@@ -224,6 +231,7 @@ class Atom : protected Pointers {
   char *memstr;                   // string of array names already counted
 
   void setup_sort_bins();
+  int next_prime(int);
 };
 
 }
@@ -255,11 +263,6 @@ E: Atom_modify sort and first options cannot be used together
 
 Self-explanatory.
 
-E: Cannot create an atom map unless atoms have IDs
-
-The simulation requires a mapping from global atom IDs to local atoms,
-but the atoms that have been defined have no IDs.
-
 E: Incorrect atom format in data file
 
 Number of values per atom line in the data file is not consistent with
@@ -277,11 +280,13 @@ atoms.
 
 E: Incorrect bonus data format in data file
 
-UNDOCUMENTED
+See the read_data doc page for a description of how various kinds of
+bonus data must be formatted for certain atom styles.
 
 E: Invalid atom ID in Bonus section of data file
 
-UNDOCUMENTED
+Atom IDs must be positive integers and within range of defined
+atoms.
 
 E: Invalid atom ID in Bonds section of data file
 

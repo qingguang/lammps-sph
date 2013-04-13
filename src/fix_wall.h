@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -36,15 +36,20 @@ class FixWall : public Fix {
   virtual void precompute(int) = 0;
   virtual void wall_particle(int, int, double) = 0;
 
- protected:
   int nwall;
-  int wallwhich[6],wallstyle[6];
-  double coord0[6],epsilon[6],sigma[6],cutoff[6];
-  char *varstr[6];
+  int wallwhich[6];
+  double coord0[6];
+  int varflag;
+  int wallstyle[6];
   int varindex[6];
-  int eflag,varflag;
+  char *varstr[6];
+
+
+ protected:
+  double epsilon[6],sigma[6],cutoff[6];
   double ewall[7],ewall_all[7];
   double xscale,yscale,zscale;
+  int eflag;
   int nlevels_respa;
   double dt;
   int fldflag;

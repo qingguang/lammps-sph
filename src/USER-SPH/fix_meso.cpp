@@ -10,7 +10,6 @@
 
  See the README file in the top-level LAMMPS directory.
  ------------------------------------------------------------------------- */
-
 #include "stdio.h"
 #include "string.h"
 #include "fix_meso.h"
@@ -31,6 +30,7 @@
 #include "pair.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -164,4 +164,3 @@ void FixMeso::reset_dt() {
   dtv = update->dt;
   dtf = 0.5 * update->dt * force->ftm2v;
 }
-

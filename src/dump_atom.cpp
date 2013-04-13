@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -59,17 +59,7 @@ void DumpAtom::init_style()
 
   // setup boundary string
 
-  int m = 0;
-  for (int idim = 0; idim < 3; idim++) {
-    for (int iside = 0; iside < 2; iside++) {
-      if (domain->boundary[idim][iside] == 0) boundstr[m++] = 'p';
-      else if (domain->boundary[idim][iside] == 1) boundstr[m++] = 'f';
-      else if (domain->boundary[idim][iside] == 2) boundstr[m++] = 's';
-      else if (domain->boundary[idim][iside] == 3) boundstr[m++] = 'm';
-    }
-    boundstr[m++] = ' ';
-  }
-  boundstr[8] = '\0';
+  domain->boundary_string(boundstr);
 
   // setup column string
 
@@ -141,21 +131,6 @@ void DumpAtom::write_header(bigint ndump)
 {
   if (multiproc) (this->*header_choice)(ndump);
   else if (me == 0) (this->*header_choice)(ndump);
-}
-
-/* ---------------------------------------------------------------------- */
-
-int DumpAtom::count()
-{
-  if (igroup == 0) return atom->nlocal;
-
-  int *mask = atom->mask;
-  int nlocal = atom->nlocal;
-
-  int m = 0;
-  for (int i = 0; i < nlocal; i++)
-    if (mask[i] & groupbit) m++;
-  return m;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -255,7 +230,7 @@ void DumpAtom::pack_scale_image(int *ids)
 
   int *tag = atom->tag;
   int *type = atom->type;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   double **x = atom->x;
   int nlocal = atom->nlocal;
@@ -272,9 +247,9 @@ void DumpAtom::pack_scale_image(int *ids)
       buf[m++] = (x[i][0] - boxxlo) * invxprd;
       buf[m++] = (x[i][1] - boxylo) * invyprd;
       buf[m++] = (x[i][2] - boxzlo) * invzprd;
-      buf[m++] = (image[i] & 1023) - 512;
-      buf[m++] = (image[i] >> 10 & 1023) - 512;
-      buf[m++] = (image[i] >> 20) - 512;
+      buf[m++] = (image[i] & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMG2BITS) - IMGMAX;
       if (ids) ids[n++] = tag[i];
     }
 }
@@ -294,7 +269,7 @@ void DumpAtom::pack_scale_noimage(int *ids)
   double invxprd = 1.0/domain->xprd;
   double invyprd = 1.0/domain->yprd;
   double invzprd = 1.0/domain->zprd;
-  
+
   m = n = 0;
   for (int i = 0; i < nlocal; i++)
     if (mask[i] & groupbit) {
@@ -315,7 +290,7 @@ void DumpAtom::pack_scale_image_triclinic(int *ids)
 
   int *tag = atom->tag;
   int *type = atom->type;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   double **x = atom->x;
   int nlocal = atom->nlocal;
@@ -331,9 +306,9 @@ void DumpAtom::pack_scale_image_triclinic(int *ids)
       buf[m++] = lamda[0];
       buf[m++] = lamda[1];
       buf[m++] = lamda[2];
-      buf[m++] = (image[i] & 1023) - 512;
-      buf[m++] = (image[i] >> 10 & 1023) - 512;
-      buf[m++] = (image[i] >> 20) - 512;
+      buf[m++] = (image[i] & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMG2BITS) - IMGMAX;
       if (ids) ids[n++] = tag[i];
     }
 }
@@ -351,7 +326,7 @@ void DumpAtom::pack_scale_noimage_triclinic(int *ids)
   int nlocal = atom->nlocal;
 
   double lamda[3];
-  
+
   m = n = 0;
   for (int i = 0; i < nlocal; i++)
     if (mask[i] & groupbit) {
@@ -373,7 +348,7 @@ void DumpAtom::pack_noscale_image(int *ids)
 
   int *tag = atom->tag;
   int *type = atom->type;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *mask = atom->mask;
   double **x = atom->x;
   int nlocal = atom->nlocal;
@@ -386,9 +361,9 @@ void DumpAtom::pack_noscale_image(int *ids)
       buf[m++] = x[i][0];
       buf[m++] = x[i][1];
       buf[m++] = x[i][2];
-      buf[m++] = (image[i] & 1023) - 512;
-      buf[m++] = (image[i] >> 10 & 1023) - 512;
-      buf[m++] = (image[i] >> 20) - 512;
+      buf[m++] = (image[i] & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+      buf[m++] = (image[i] >> IMG2BITS) - IMGMAX;
       if (ids) ids[n++] = tag[i];
     }
 }
@@ -433,9 +408,9 @@ void DumpAtom::write_image(int n, double *mybuf)
   int m = 0;
   for (int i = 0; i < n; i++) {
     fprintf(fp,format,
-	    static_cast<int> (mybuf[m]), static_cast<int> (mybuf[m+1]),
-	    mybuf[m+2],mybuf[m+3],mybuf[m+4], static_cast<int> (mybuf[m+5]),
-	    static_cast<int> (mybuf[m+6]), static_cast<int> (mybuf[m+7]));
+            static_cast<int> (mybuf[m]), static_cast<int> (mybuf[m+1]),
+            mybuf[m+2],mybuf[m+3],mybuf[m+4], static_cast<int> (mybuf[m+5]),
+            static_cast<int> (mybuf[m+6]), static_cast<int> (mybuf[m+7]));
     m += size_one;
   }
 }
@@ -447,8 +422,8 @@ void DumpAtom::write_noimage(int n, double *mybuf)
   int m = 0;
   for (int i = 0; i < n; i++) {
     fprintf(fp,format,
-	    static_cast<int> (mybuf[m]), static_cast<int> (mybuf[m+1]),
-	    mybuf[m+2],mybuf[m+3],mybuf[m+4]);
+            static_cast<int> (mybuf[m]), static_cast<int> (mybuf[m+1]),
+            mybuf[m+2],mybuf[m+3],mybuf[m+4]);
     m += size_one;
   }
 }

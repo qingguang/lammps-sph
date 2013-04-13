@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -62,7 +62,7 @@ class AtomVecTri : public AtomVec {
   int pack_restart(int, double *);
   int unpack_restart(double *);
   void create_atom(int, double *);
-  void data_atom(double *, int, char **);
+  void data_atom(double *, tagint, char **);
   int data_atom_hybrid(int, char **);
   void data_vel(int, char **);
   int data_vel_hybrid(int, char **);
@@ -78,7 +78,8 @@ class AtomVecTri : public AtomVec {
   void set_equilateral(int, double);
 
  private:
-  int *tag,*type,*mask,*image;
+  int *tag,*type,*mask;
+  tagint *image;
   double **x,**v,**f;
   int *molecule;
   double *rmass;
@@ -100,7 +101,7 @@ class AtomVecTri : public AtomVec {
 
 E: Atom_style tri can only be used in 3d simulations
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Per-processor system is too big
 
@@ -121,18 +122,20 @@ Density value cannot be <= 0.0.
 
 E: Assigning tri parameters to non-tri atom
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Invalid shape in Triangles section of data file
 
-UNDOCUMENTED
+Two or more of the triangle corners are duplicate points.
 
 E: Inconsistent triangle in data file
 
-UNDOCUMENTED
+The centroid of the triangle as defined by the corner points is not
+the atom coordinate.
 
 E: Insufficient Jacobi rotations for triangle
 
-UNDOCUMENTED
+The calculation of the intertia tensor of the triangle failed.  This
+should not happen if it is a reasonably shaped triangle.
 
 */

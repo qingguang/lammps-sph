@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -16,10 +16,12 @@
 #include "fix.h"
 #include "atom.h"
 #include "group.h"
+#include "atom_masks.h"
 #include "memory.h"
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -68,27 +70,8 @@ Fix::Fix(LAMMPS *lmp, int narg, char **arg) : Pointers(lmp)
   maxvatom = 0;
   vatom = NULL;
 
-  // mask settings - same as in modify.cpp
-
-  INITIAL_INTEGRATE = 1;
-  POST_INTEGRATE = 2;
-  PRE_EXCHANGE = 4;
-  PRE_NEIGHBOR = 8;
-  PRE_FORCE = 16;
-  POST_FORCE = 32;
-  FINAL_INTEGRATE = 64;
-  END_OF_STEP = 128;
-  THERMO_ENERGY = 256;
-  INITIAL_INTEGRATE_RESPA = 512;
-  POST_INTEGRATE_RESPA = 1024;
-  PRE_FORCE_RESPA = 2048;
-  POST_FORCE_RESPA = 4096;
-  FINAL_INTEGRATE_RESPA = 8192;
-  MIN_PRE_EXCHANGE = 16384;
-  MIN_PRE_FORCE = 32768;
-  MIN_POST_FORCE = 65536;
-  MIN_ENERGY = 131072;
-  POST_RUN = 262144;
+  datamask = ALL_MASK;
+  datamask_ext = ALL_MASK;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -140,11 +123,11 @@ void Fix::v_setup(int vflag)
   vflag_atom = vflag / 4;
 
   // reallocate per-atom array if necessary
-  
+
   if (vflag_atom && atom->nlocal > maxvatom) {
     maxvatom = atom->nmax;
     memory->destroy(vatom);
-    memory->create(vatom,maxvatom,6,"bond:vatom");
+    memory->create(vatom,maxvatom,6,"fix:vatom");
   }
 
   // zero accumulators

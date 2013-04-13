@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -33,6 +33,7 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 #define CHUNK 1000
 #define MAXLINE 256
@@ -46,7 +47,7 @@ FixTMD::FixTMD(LAMMPS *lmp, int narg, char **arg) :
 
   rho_stop = atof(arg[3]);
   nfileevery = atoi(arg[5]);
-  if (rho_stop < 0 || nfileevery < 0) 
+  if (rho_stop < 0 || nfileevery < 0)
     error->all(FLERR,"Illegal fix tmd command");
   if (nfileevery && narg != 7) error->all(FLERR,"Illegal fix tmd command");
 
@@ -62,7 +63,7 @@ FixTMD::FixTMD(LAMMPS *lmp, int narg, char **arg) :
 
   // make sure an atom map exists before reading in target coordinates
 
-  if (atom->map_style == 0) 
+  if (atom->map_style == 0)
     error->all(FLERR,"Cannot use fix TMD unless atom map exists");
 
   // read from arg[4] and store coordinates of final target in xf
@@ -76,12 +77,12 @@ FixTMD::FixTMD(LAMMPS *lmp, int narg, char **arg) :
     if (me == 0) {
       fp = fopen(arg[6],"w");
       if (fp == NULL) {
-	char str[128];
-	sprintf(str,"Cannot open fix tmd file %s",arg[6]);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,"Cannot open fix tmd file %s",arg[6]);
+        error->one(FLERR,str);
       }
       fprintf(fp,"%s %s\n","# Step rho_target rho_old gamma_back",
-	      "gamma_forward lambda work_lambda work_analytical");
+              "gamma_forward lambda work_lambda work_analytical");
     }
   }
 
@@ -92,31 +93,22 @@ FixTMD::FixTMD(LAMMPS *lmp, int narg, char **arg) :
 
   int *mask = atom->mask;
   int *type = atom->type;
-  int *image = atom->image;
+  tagint *image = atom->image;
   double **x = atom->x;
   double *mass = atom->mass;
   int nlocal = atom->nlocal;
 
-  double xprd = domain->xprd;
-  double yprd = domain->yprd;
-  double zprd = domain->zprd;
-
   double dx,dy,dz;
-  int xbox,ybox,zbox;
+
   rho_start = 0.0;
 
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit) {
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
-      dx = x[i][0] + xbox*xprd - xf[i][0];
-      dy = x[i][1] + ybox*yprd - xf[i][1];
-      dz = x[i][2] + zbox*zprd - xf[i][2];
+      domain->unmap(x[i],image[i],xold[i]);
+      dx = xold[i][0] - xf[i][0];
+      dy = xold[i][1] - xf[i][1];
+      dz = xold[i][2] - xf[i][2];
       rho_start += mass[type[i]]*(dx*dx + dy*dy + dz*dz);
-      xold[i][0] = x[i][0] + xbox*xprd;
-      xold[i][1] = x[i][1] + ybox*yprd;
-      xold[i][2] = x[i][2] + zbox*zprd;
     } else xold[i][0] = xold[i][1] = xold[i][2] = 0.0;
   }
 
@@ -189,19 +181,16 @@ void FixTMD::initial_integrate(int vflag)
   double dxold,dyold,dzold,xback,yback,zback;
   double gamma_forward,gamma_back,gamma_max,lambda;
   double kt,fr,kttotal,frtotal,dtfm;
+  double unwrap[3];
 
-  double xprd = domain->xprd;
-  double yprd = domain->yprd;
-  double zprd = domain->zprd;
   double **x = atom->x;
   double **v = atom->v;
   double **f = atom->f;
   double *mass = atom->mass;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int *type = atom->type;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
-  int xbox,ybox,zbox;
 
   double delta = update->ntimestep - update->beginstep;
   delta /= update->endstep - update->beginstep;
@@ -215,12 +204,10 @@ void FixTMD::initial_integrate(int vflag)
       dxold = xold[i][0] - xf[i][0];
       dyold = xold[i][1] - xf[i][1];
       dzold = xold[i][2] - xf[i][2];
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
-      dx = x[i][0] + xbox*xprd - xf[i][0];
-      dy = x[i][1] + ybox*yprd - xf[i][1];
-      dz = x[i][2] + zbox*zprd - xf[i][2];
+      domain->unmap(x[i],image[i],unwrap);
+      dx = unwrap[0] - xf[i][0];
+      dy = unwrap[1] - xf[i][1];
+      dz = unwrap[2] - xf[i][2];
       a += mass[type[i]]*(dxold*dxold + dyold*dyold + dzold*dzold);
       b += mass[type[i]]*(dx   *dxold + dy   *dyold + dz   *dzold);
       e += mass[type[i]]*(dx   *dx    + dy   *dy    + dz   *dz);
@@ -235,7 +222,7 @@ void FixTMD::initial_integrate(int vflag)
   b = 2.0*abetotal[1]/masstotal;
   e = abetotal[2]/masstotal;
   c = e - rho_old*rho_old;
-  d = b*b - 4*a*c;  
+  d = b*b - 4*a*c;
 
   if (d < 0) d = 0;
   if (b >= 0) gamma_max = (-b - sqrt(d))/(2*a);
@@ -244,7 +231,7 @@ void FixTMD::initial_integrate(int vflag)
   if (a == 0.0) gamma_back = 0;
 
   c = e - rho_target*rho_target;
-  d = b*b - 4*a*c;  
+  d = b*b - 4*a*c;
   if (d < 0) d = 0;
   if (b >= 0) gamma_max = (-b - sqrt(d))/(2*a);
   else        gamma_max = (-b + sqrt(d))/(2*a);
@@ -257,12 +244,10 @@ void FixTMD::initial_integrate(int vflag)
       dxold = xold[i][0] - xf[i][0];
       dyold = xold[i][1] - xf[i][1];
       dzold = xold[i][2] - xf[i][2];
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
-      xback = x[i][0] + xbox*xprd + gamma_back*dxold;
-      yback = x[i][1] + ybox*yprd + gamma_back*dyold;
-      zback = x[i][2] + zbox*zprd + gamma_back*dzold;
+      domain->unmap(x[i],image[i],unwrap);
+      xback = unwrap[0] + gamma_back*dxold;
+      yback = unwrap[1] + gamma_back*dyold;
+      zback = unwrap[2] + gamma_back*dzold;
       dxkt = xback - xold[i][0];
       dykt = yback - xold[i][1];
       dzkt = zback - xold[i][2];
@@ -279,16 +264,16 @@ void FixTMD::initial_integrate(int vflag)
 
   // stat write of mean constraint force based on previous time step constraint
 
-  if (nfileevery && me == 0) {   
-    work_analytical += 
+  if (nfileevery && me == 0) {
+    work_analytical +=
       (-frtotal - kttotal/dtv/dtf)*(rho_target - rho_old)/rho_old;
     lambda = gamma_back*rho_old*masstotal/dtv/dtf;
     work_lambda += lambda*(rho_target - rho_old);
-    if (!(update->ntimestep % nfileevery) && 
-	(previous_stat != update->ntimestep)) {
+    if (!(update->ntimestep % nfileevery) &&
+        (previous_stat != update->ntimestep)) {
       fprintf(fp,
-	      BIGINT_FORMAT " %g %g %g %g %g %g %g\n",
-	      update->ntimestep,rho_target,rho_old,
+              BIGINT_FORMAT " %g %g %g %g %g %g %g\n",
+              update->ntimestep,rho_target,rho_old,
               gamma_back,gamma_forward,lambda,work_lambda,work_analytical);
       fflush(fp);
       previous_stat = update->ntimestep;
@@ -313,12 +298,7 @@ void FixTMD::initial_integrate(int vflag)
       x[i][2] += gamma_forward*dzold;
       v[i][2] += gamma_forward*dzold/dtv;
       f[i][2] += gamma_forward*dzold/dtv/dtfm;
-      xbox = (image[i] & 1023) - 512;
-      ybox = (image[i] >> 10 & 1023) - 512;
-      zbox = (image[i] >> 20) - 512;
-      xold[i][0] = x[i][0] + xbox*xprd;
-      xold[i][1] = x[i][1] + ybox*yprd;
-      xold[i][2] = x[i][2] + zbox*zprd;
+      domain->unmap(x[i],image[i],xold[i]);
     }
   }
 }
@@ -427,9 +407,9 @@ void FixTMD::readfile(char *file)
     if (me == 0) {
       m = 0;
       for (nlines = 0; nlines < CHUNK; nlines++) {
-	ptr = fgets(&buffer[m],MAXLINE,fp);
-	if (ptr == NULL) break;
-	m += strlen(&buffer[m]);
+        ptr = fgets(&buffer[m],MAXLINE,fp);
+        if (ptr == NULL) break;
+        m += strlen(&buffer[m]);
       }
       if (ptr == NULL) eof = 1;
       buffer[m++] = '\n';
@@ -446,54 +426,54 @@ void FixTMD::readfile(char *file)
       *next = '\0';
 
       if (firstline) {
-	if (strstr(bufptr,"xlo xhi")) {
-	  double lo,hi;
-	  sscanf(bufptr,"%lg %lg",&lo,&hi);
-	  xprd = hi - lo;
-	  bufptr = next + 1;
-	  continue;
-	} else if (strstr(bufptr,"ylo yhi")) {
-	  double lo,hi;
-	  sscanf(bufptr,"%lg %lg",&lo,&hi);
-	  yprd = hi - lo;
-	  bufptr = next + 1;
-	  continue;
-	} else if (strstr(bufptr,"zlo zhi")) {
-	  double lo,hi;
-	  sscanf(bufptr,"%lg %lg",&lo,&hi);
-	  zprd = hi - lo;
-	  bufptr = next + 1;
-	  continue;
-	} else if (atom->count_words(bufptr) == 4) {
-	  if (xprd >= 0.0 || yprd >= 0.0 || zprd >= 0.0) 
-	    error->all(FLERR,"Incorrect format in TMD target file");
-	  imageflag = 0;
-	  firstline = 0;
-	} else if (atom->count_words(bufptr) == 7) {
-	  if (xprd < 0.0 || yprd < 0.0 || zprd < 0.0) 
-	    error->all(FLERR,"Incorrect format in TMD target file");
-	  imageflag = 1;
-	  firstline = 0;
-	} else error->all(FLERR,"Incorrect format in TMD target file");
+        if (strstr(bufptr,"xlo xhi")) {
+          double lo,hi;
+          sscanf(bufptr,"%lg %lg",&lo,&hi);
+          xprd = hi - lo;
+          bufptr = next + 1;
+          continue;
+        } else if (strstr(bufptr,"ylo yhi")) {
+          double lo,hi;
+          sscanf(bufptr,"%lg %lg",&lo,&hi);
+          yprd = hi - lo;
+          bufptr = next + 1;
+          continue;
+        } else if (strstr(bufptr,"zlo zhi")) {
+          double lo,hi;
+          sscanf(bufptr,"%lg %lg",&lo,&hi);
+          zprd = hi - lo;
+          bufptr = next + 1;
+          continue;
+        } else if (atom->count_words(bufptr) == 4) {
+          if (xprd >= 0.0 || yprd >= 0.0 || zprd >= 0.0)
+            error->all(FLERR,"Incorrect format in TMD target file");
+          imageflag = 0;
+          firstline = 0;
+        } else if (atom->count_words(bufptr) == 7) {
+          if (xprd < 0.0 || yprd < 0.0 || zprd < 0.0)
+            error->all(FLERR,"Incorrect format in TMD target file");
+          imageflag = 1;
+          firstline = 0;
+        } else error->all(FLERR,"Incorrect format in TMD target file");
       }
 
       if (imageflag)
-	sscanf(bufptr,"%d %lg %lg %lg %d %d %d",&tag,&x,&y,&z,&ix,&iy,&iz);
+        sscanf(bufptr,"%d %lg %lg %lg %d %d %d",&tag,&x,&y,&z,&ix,&iy,&iz);
       else
-	sscanf(bufptr,"%d %lg %lg %lg",&tag,&x,&y,&z);
+        sscanf(bufptr,"%d %lg %lg %lg",&tag,&x,&y,&z);
 
       m = atom->map(tag);
       if (m >= 0 && m < nlocal && mask[m] & groupbit) {
-	if (imageflag) {
-	  xf[m][0] = x + ix*xprd;
-	  xf[m][1] = y + iy*yprd;
-	  xf[m][2] = z + iz*zprd;
-	} else {
-	  xf[m][0] = x;
-	  xf[m][1] = y;
-	  xf[m][2] = z;
-	}
-	ncount++;
+        if (imageflag) {
+          xf[m][0] = x + ix*xprd;
+          xf[m][1] = y + iy*yprd;
+          xf[m][2] = z + iz*zprd;
+        } else {
+          xf[m][0] = x;
+          xf[m][1] = y;
+          xf[m][2] = z;
+        }
+        ncount++;
       }
 
       bufptr = next + 1;

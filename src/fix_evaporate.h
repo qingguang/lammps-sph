@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -70,7 +70,8 @@ a list to enable the atom_modify first command.
 
 W: Fix evaporate may delete atom with non-zero molecule ID
 
-UNDOCUMENTED
+This is probably an error, since you should not delete only one atom
+of a molecule.
 
 E: Fix evaporate molecule requires atom attribute molecule
 

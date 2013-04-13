@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -32,8 +32,6 @@ class Modify : protected Pointers {
   int restart_pbc_any;       // 1 if any fix sets restart_pbc
   int nfix_restart_global;   // stored fix global info from restart file
   int nfix_restart_peratom;  // stored fix peratom info from restart file
-
-  int allow_early_fix;       // 1 if allow fix creation at start of script
 
   class Fix **fix;           // list of fixes
   int *fmask;                // bit mask for when each fix is applied
@@ -66,7 +64,6 @@ class Modify : protected Pointers {
   void post_force_respa(int, int, int);
   void final_integrate_respa(int, int);
 
-  void setup_min_pre_force(int);
   void min_pre_exchange();
   void min_pre_force(int);
   void min_post_force(int);
@@ -90,6 +87,7 @@ class Modify : protected Pointers {
   void modify_compute(int, char **);
   void delete_compute(const char *);
   int find_compute(const char *);
+
   void clearstep_compute();
   void addstep_compute(bigint);
   void addstep_compute_all(bigint);
@@ -147,16 +145,16 @@ This is probably an error since you typically do not want to
 advance the positions or velocities of an atom more than once
 per timestep.
 
-E: Fix command before simulation box is defined
-
-The fix command cannot be used before a read_data, read_restart, or
-create_box command.
-
 E: Illegal ... command
 
 Self-explanatory.  Check the input script syntax and compare to the
 documentation for the command.  You can use -echo screen as a
 command-line option when running LAMMPS to see the offending line.
+
+E: Fix command before simulation box is defined
+
+The fix command cannot be used before a read_data, read_restart, or
+create_box command.
 
 E: Could not find fix group ID
 

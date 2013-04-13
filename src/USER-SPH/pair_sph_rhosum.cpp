@@ -81,10 +81,9 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
   double **x = atom->x;
   double *rho = atom->rho;
   int *type = atom->type;
-  double *mass = atom->mass;
+  double *rmass = atom->rmass;
 
   // check consistency of pair coefficients
-
   if (first) {
     for (i = 1; i <= atom->ntypes; i++) {
       for (j = 1; i <= atom->ntypes; i++) {
@@ -117,7 +116,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
         itype = type[i];
-        imass = mass[itype];
+        imass = rmass[i];
 
         h = cut[itype][itype];
         if (domain->dimension == 3) {
@@ -187,7 +186,7 @@ void PairSPHRhoSum::compute(int eflag, int vflag) {
               //wf = 1.5915494309189533576e0 * wf * ihsq;
             }
 
-            rho[i] += mass[jtype] * wf;
+            rho[i] += rmass[j] * wf;
           }
 
         } // jj loop
@@ -307,4 +306,3 @@ void PairSPHRhoSum::unpack_comm(int n, int first, double *buf) {
   for (i = first; i < last; i++)
     rho[i] = buf[m++];
 }
-

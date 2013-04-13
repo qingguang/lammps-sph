@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -46,8 +46,9 @@ class Input : protected Pointers {
 
   FILE **infiles;              // list of open input files
 
-  void parse();                // parse an input text line
-  int execute_command();       // execute a single command
+  void parse();                      // parse an input text line
+  char *nextword(char *, char **);   // find next word in string, with quotes
+  int execute_command();             // execute a single command
 
   void clear();                // input script commands
   void echo();
@@ -59,6 +60,7 @@ class Input : protected Pointers {
   void next_command();
   void partition();
   void print();
+  void quit();
   void shell();
   void variable_command();
 
@@ -69,6 +71,7 @@ class Input : protected Pointers {
   void bond_coeff();
   void bond_style();
   void boundary();
+  void box();
   void communicate();
   void compute();
   void compute_modify();
@@ -145,6 +148,10 @@ E: Unbalanced quotes in input line
 
 No matching end double quote was found following a leading double
 quote.
+
+E: Input line quote not followed by whitespace
+
+An end quote must be followed by whitespace.
 
 E: Invalid variable name
 
@@ -278,11 +285,13 @@ after a read_data, read_restart, or create_box command.
 
 E: Package command after simulation box is defined
 
-UNDOCUMENTED
+The package command cannot be used afer a read_data, read_restart, or
+create_box command.
 
 E: Package cuda command without USER-CUDA installed
 
-UNDOCUMENTED
+The USER-CUDA package must be installed via "make yes-user-cuda"
+before LAMMPS is built.
 
 E: Pair_coeff command before simulation box is defined
 

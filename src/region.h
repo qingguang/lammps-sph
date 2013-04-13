@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -37,7 +37,7 @@ class Region : protected Pointers {
   };
   Contact *contact;           // list of contacts
   int cmax;                   // max # of contacts possible with region
- 
+
   Region(class LAMMPS *, int, char **);
   virtual ~Region();
   void init();
@@ -97,7 +97,7 @@ The sub-regions can be dynamic, but not the combined region.
 
 E: Use of region with undefined lattice
 
-If scale = lattice (the default) for the region command, then a
+If units = lattice (the default) for the region command, then a
 lattice must first be defined via the lattice command.
 
 E: Region cannot have 0 length rotation vector

@@ -1,11 +1,11 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -34,8 +34,11 @@ class Force : protected Pointers {
   double qqrd2e;                     // q^2/r to energy w/ dielectric constant
   double e_mass;                     // electron mass
   double hhmrr2e;                    // conversion of (hbar)^2/(mr^2) to energy
-  double mvh2r;                      // conversion of mv/hbar to distance 
+  double mvh2r;                      // conversion of mv/hbar to distance
                                      // hbar = h/(2*pi)
+  double angstrom;                   // 1 angstrom in native units
+  double femtosecond;                // 1 femtosecond in native units
+  double qelectron;                  // 1 electron charge abs() in native units
 
   int newton,newton_pair,newton_bond;   // Newton's 3rd law settings
 
@@ -75,7 +78,7 @@ class Force : protected Pointers {
 
   void create_bond(const char *, const char *suffix = NULL);
   class Bond *new_bond(const char *, const char *, int &);
-  class Bond *bond_match(const char *); 
+  class Bond *bond_match(const char *);
 
   void create_angle(const char *, const char *suffix = NULL);
   class Angle *new_angle(const char *, const char *, int &);
@@ -135,7 +138,9 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Numeric index is out of bounds
 
-UNDOCUMENTED
+A command with an argument that specifies an integer or range of
+integers is using a value that is less than 1 or greater than the
+maximum allowed limit.
 
 E: Expected floating point parameter in input script or data file
 

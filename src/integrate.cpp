@@ -5,16 +5,18 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "stdlib.h"
 #include "integrate.h"
 #include "update.h"
+#include "force.h"
+#include "pair.h"
+#include "kspace.h"
 #include "modify.h"
 #include "compute.h"
 
@@ -37,6 +39,18 @@ Integrate::~Integrate()
   delete [] elist_atom;
   delete [] vlist_global;
   delete [] vlist_atom;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Integrate::init()
+{
+  // allow pair and Kspace compute() to be turned off via modify flags
+
+  if (force->pair && force->pair->compute_flag) pair_compute_flag = 1;
+  else pair_compute_flag = 0;
+  if (force->kspace && force->kspace->compute_flag) kspace_compute_flag = 1;
+  else kspace_compute_flag = 0;
 }
 
 /* ----------------------------------------------------------------------

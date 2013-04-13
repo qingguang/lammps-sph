@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -37,8 +37,10 @@ class FixDeform : public Fix {
   void end_of_step();
 
  private:
-  int triclinic,scaleflag,flip;
+  int triclinic,scaleflag,flipflag;
+  int flip,flipxy,flipxz,flipyz;
   double *h_rate,*h_ratelo;
+  int varflag;                     // 1 if VARIABLE option is used, 0 if not
   int kspace_flag;                 // 1 if KSpace invoked, 0 if not
   int nrigid;                      // number of rigid fixes
   int *rfix;                       // indices of rigid fixes
@@ -58,6 +60,8 @@ class FixDeform : public Fix {
     double tilt_min,tilt_max;
     double vol_initial,vol_start;
     int fixed,dynamic1,dynamic2;
+    char *hstr,*hratestr;
+    int hvar,hratevar;
   };
   Set *set;
 
@@ -82,16 +86,15 @@ E: Fix deform tilt factors require triclinic box
 Cannot deform the tilt factors of a simulation box unless it
 is a triclinic (non-orthogonal) box.
 
-E: Cannot use fix deform on a non-periodic boundary
+E: Cannot use fix deform on a shrink-wrapped boundary
 
-When specifying a change is a box dimension, the dimension must be
-periodic.
+The x, y, z options cannot be applied to shrink-wrapped
+dimensions.
 
-E: Cannot use fix deform on a 2nd non-periodic boundary
+E: Cannot use fix deform tilt on a shrink-wrapped 2nd dim
 
-When specifying a tilt factor change, the 2nd of the two dimensions
-must be periodic.  E.g. if the xy tilt is specified, then the y
-dimension must be periodic.
+This is because the shrink-wrapping will change the value
+of the strain implied by the tilt factor.
 
 E: Use of fix deform with undefined lattice
 
@@ -105,6 +108,14 @@ E: More than one fix deform
 
 Only one fix deform can be defined at a time.
 
+E: Variable name for fix deform does not exist
+
+Self-explantory.
+
+E: Variable for fix deform is invalid style
+
+The variable must be an equal-style variable.
+
 E: Final box dimension due to fix deform is < 0.0
 
 Self-explanatory.
@@ -113,7 +124,13 @@ E: Cannot use fix deform trate on a box with zero tilt
 
 The trate style alters the current strain.
 
-E: Fix deform is changing yz by too much with changing xy
+E: Fix deform cannot use yz variable with xy
+
+The yz setting cannot be a variable if xy deformation is also
+specified.  This is because LAMMPS cannot determine if the yz setting
+will induce a box flip which would be invalid if xy is also changing.
+
+E: Fix deform is changing yz too much with xy
 
 When both yz and xy are changing, it induces changes in xz if the
 box must flip from one tilt extreme to another.  Thus it is not

@@ -5,13 +5,12 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "stdio.h"
 #include "string.h"
 #include "modify.h"
@@ -28,32 +27,11 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 #define DELTA 4
-
-// mask settings - same as in fix.cpp
-
-#define INITIAL_INTEGRATE   1
-#define POST_INTEGRATE      2
-#define PRE_EXCHANGE        4
-#define PRE_NEIGHBOR        8
-#define PRE_FORCE          16
-#define POST_FORCE         32
-#define FINAL_INTEGRATE    64
-#define END_OF_STEP       128
-#define THERMO_ENERGY     256
-#define INITIAL_INTEGRATE_RESPA   512
-#define POST_INTEGRATE_RESPA     1024
-#define PRE_FORCE_RESPA          2048
-#define POST_FORCE_RESPA         4096
-#define FINAL_INTEGRATE_RESPA    8192
-#define MIN_PRE_EXCHANGE        16384
-#define MIN_PRE_FORCE           32768
-#define MIN_POST_FORCE          65536
-#define MIN_ENERGY             131072
-#define POST_RUN               262144
-
 #define BIG 1.0e20
+#define NEXCEPT 3       // change when add to exceptions in add_fix()
 
 /* ---------------------------------------------------------------------- */
 
@@ -78,7 +56,7 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
   list_initial_integrate_respa = list_post_integrate_respa = NULL;
   list_pre_force_respa = list_post_force_respa = NULL;
   list_final_integrate_respa = NULL;
-  list_min_pre_exchange = list_min_pre_force = 
+  list_min_pre_exchange = list_min_pre_force =
   list_min_post_force = list_min_energy = NULL;
 
   end_of_step_every = NULL;
@@ -90,8 +68,6 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
   nfix_restart_peratom = 0;
   id_restart_peratom = style_restart_peratom = NULL;
   index_restart_peratom = NULL;
-
-  allow_early_fix = 0;
 
   ncompute = maxcompute = 0;
   compute = NULL;
@@ -163,15 +139,15 @@ void Modify::init()
   list_init_thermo_energy(THERMO_ENERGY,n_thermo_energy,list_thermo_energy);
 
   list_init(INITIAL_INTEGRATE_RESPA,
-	    n_initial_integrate_respa,list_initial_integrate_respa);
+            n_initial_integrate_respa,list_initial_integrate_respa);
   list_init(POST_INTEGRATE_RESPA,
-	    n_post_integrate_respa,list_post_integrate_respa);
+            n_post_integrate_respa,list_post_integrate_respa);
   list_init(POST_FORCE_RESPA,
-	    n_post_force_respa,list_post_force_respa);
+            n_post_force_respa,list_post_force_respa);
   list_init(PRE_FORCE_RESPA,
-	    n_pre_force_respa,list_pre_force_respa);
+            n_pre_force_respa,list_pre_force_respa);
   list_init(FINAL_INTEGRATE_RESPA,
-	    n_final_integrate_respa,list_final_integrate_respa);
+            n_final_integrate_respa,list_final_integrate_respa);
 
   list_init(MIN_PRE_EXCHANGE,n_min_pre_exchange,list_min_pre_exchange);
   list_init(MIN_PRE_FORCE,n_min_pre_force,list_min_pre_force);
@@ -237,11 +213,13 @@ void Modify::init()
   int checkall;
   MPI_Allreduce(&check,&checkall,1,MPI_INT,MPI_SUM,world);
   if (comm->me == 0 && checkall)
-    error->warning(FLERR,"One or more atoms are time integrated more than once");
+    error->warning(FLERR,
+                   "One or more atoms are time integrated more than once");
 }
 
 /* ----------------------------------------------------------------------
    setup for run, calls setup() of all fixes
+   called from Verlet, RESPA, Min
 ------------------------------------------------------------------------- */
 
 void Modify::setup(int vflag)
@@ -254,16 +232,22 @@ void Modify::setup(int vflag)
 
 /* ----------------------------------------------------------------------
    setup pre_exchange call, only for fixes that define pre_exchange
+   called from Verlet, RESPA, Min, and WriteRestart with whichflag = 0
 ------------------------------------------------------------------------- */
 
 void Modify::setup_pre_exchange()
 {
-  for (int i = 0; i < n_pre_exchange; i++)
-    fix[list_pre_exchange[i]]->setup_pre_exchange();
+  if (update->whichflag <= 1)
+    for (int i = 0; i < n_pre_exchange; i++)
+      fix[list_pre_exchange[i]]->setup_pre_exchange();
+  else if (update->whichflag == 2)
+    for (int i = 0; i < n_min_pre_exchange; i++)
+      fix[list_min_pre_exchange[i]]->min_setup_pre_exchange();
 }
 
 /* ----------------------------------------------------------------------
    setup pre_force call, only for fixes that define pre_force
+   called from Verlet, RESPA, Min
 ------------------------------------------------------------------------- */
 
 void Modify::setup_pre_force(int vflag)
@@ -591,9 +575,23 @@ int Modify::min_reset_ref()
 
 void Modify::add_fix(int narg, char **arg, char *suffix)
 {
-  if (domain->box_exist == 0 && allow_early_fix == 0) 
-    error->all(FLERR,"Fix command before simulation box is defined");
+  const char *exceptions[NEXCEPT] = {"GPU","OMP","cmap"};
+
   if (narg < 3) error->all(FLERR,"Illegal fix command");
+
+  // cannot define fix before box exists unless style is in exception list
+  // don't like this way of checking for exceptions by adding fixes to list,
+  //   but can't think of better way
+  // too late if instantiate fix, then check flag set in fix constructor,
+  // since some fixes access domain settings in their constructor
+
+  if (domain->box_exist == 0) {
+    int m;
+    for (m = 0; m < NEXCEPT; m++)
+      if (strcmp(arg[2],exceptions[m]) == 0) break;
+    if (m == NEXCEPT)
+      error->all(FLERR,"Fix command before simulation box is defined");
+  }
 
   // check group ID
 
@@ -678,13 +676,13 @@ void Modify::add_fix(int narg, char **arg, char *suffix)
 
   for (int i = 0; i < nfix_restart_global; i++)
     if (strcmp(id_restart_global[i],fix[ifix]->id) == 0 &&
-	strcmp(style_restart_global[i],fix[ifix]->style) == 0) {
+        strcmp(style_restart_global[i],fix[ifix]->style) == 0) {
       fix[ifix]->restart(state_restart_global[i]);
       if (comm->me == 0) {
-	char *str = (char *) ("Resetting global state of Fix %s Style %s "
-			      "from restart file info\n");
-	if (screen) fprintf(screen,str,fix[ifix]->id,fix[ifix]->style);
-	if (logfile) fprintf(logfile,str,fix[ifix]->id,fix[ifix]->style);
+        char *str = (char *) ("Resetting global state of Fix %s Style %s "
+                              "from restart file info\n");
+        if (screen) fprintf(screen,str,fix[ifix]->id,fix[ifix]->style);
+        if (logfile) fprintf(logfile,str,fix[ifix]->id,fix[ifix]->style);
       }
     }
 
@@ -693,14 +691,14 @@ void Modify::add_fix(int narg, char **arg, char *suffix)
 
   for (int i = 0; i < nfix_restart_peratom; i++)
     if (strcmp(id_restart_peratom[i],fix[ifix]->id) == 0 &&
-	strcmp(style_restart_peratom[i],fix[ifix]->style) == 0) {
+        strcmp(style_restart_peratom[i],fix[ifix]->style) == 0) {
       for (int j = 0; j < atom->nlocal; j++)
-	fix[ifix]->unpack_restart(j,index_restart_peratom[i]);
+        fix[ifix]->unpack_restart(j,index_restart_peratom[i]);
       if (comm->me == 0) {
-	char *str = (char *) ("Resetting per-atom state of Fix %s Style %s "
-		     "from restart file info\n");
-	if (screen) fprintf(screen,str,fix[ifix]->id,fix[ifix]->style);
-	if (logfile) fprintf(logfile,str,fix[ifix]->id,fix[ifix]->style);
+        char *str = (char *) ("Resetting per-atom state of Fix %s Style %s "
+                     "from restart file info\n");
+        if (screen) fprintf(screen,str,fix[ifix]->id,fix[ifix]->style);
+        if (logfile) fprintf(logfile,str,fix[ifix]->id,fix[ifix]->style);
       }
     }
 }
@@ -719,7 +717,7 @@ void Modify::modify_fix(int narg, char **arg)
   for (ifix = 0; ifix < nfix; ifix++)
     if (strcmp(arg[0],fix[ifix]->id) == 0) break;
   if (ifix == nfix) error->all(FLERR,"Could not find fix_modify ID");
-  
+
   fix[ifix]->modify_params(narg-1,&arg[1]);
 }
 
@@ -831,7 +829,7 @@ void Modify::modify_compute(int narg, char **arg)
   for (icompute = 0; icompute < ncompute; icompute++)
     if (strcmp(arg[0],compute[icompute]->id) == 0) break;
   if (icompute == ncompute) error->all(FLERR,"Could not find compute_modify ID");
-  
+
   compute[icompute]->modify_params(narg-1,&arg[1]);
 }
 
@@ -915,7 +913,7 @@ void Modify::write_restart(FILE *fp)
   int me = comm->me;
 
   int count = 0;
-  for (int i = 0; i < nfix; i++) 
+  for (int i = 0; i < nfix; i++)
     if (fix[i]->restart_global) count++;
 
   if (me == 0) fwrite(&count,sizeof(int),1,fp);
@@ -924,18 +922,18 @@ void Modify::write_restart(FILE *fp)
   for (int i = 0; i < nfix; i++)
     if (fix[i]->restart_global) {
       if (me == 0) {
-	n = strlen(fix[i]->id) + 1;
-	fwrite(&n,sizeof(int),1,fp);
-	fwrite(fix[i]->id,sizeof(char),n,fp);
-	n = strlen(fix[i]->style) + 1;
-	fwrite(&n,sizeof(int),1,fp);
-	fwrite(fix[i]->style,sizeof(char),n,fp);
+        n = strlen(fix[i]->id) + 1;
+        fwrite(&n,sizeof(int),1,fp);
+        fwrite(fix[i]->id,sizeof(char),n,fp);
+        n = strlen(fix[i]->style) + 1;
+        fwrite(&n,sizeof(int),1,fp);
+        fwrite(fix[i]->style,sizeof(char),n,fp);
       }
       fix[i]->write_restart(fp);
     }
 
   count = 0;
-  for (int i = 0; i < nfix; i++) 
+  for (int i = 0; i < nfix; i++)
     if (fix[i]->restart_peratom) count++;
 
   if (me == 0) fwrite(&count,sizeof(int),1,fp);
@@ -943,14 +941,14 @@ void Modify::write_restart(FILE *fp)
   for (int i = 0; i < nfix; i++)
     if (fix[i]->restart_peratom) {
       if (me == 0) {
-	n = strlen(fix[i]->id) + 1;
-	fwrite(&n,sizeof(int),1,fp);
-	fwrite(fix[i]->id,sizeof(char),n,fp);
-	n = strlen(fix[i]->style) + 1;
-	fwrite(&n,sizeof(int),1,fp);
-	fwrite(fix[i]->style,sizeof(char),n,fp);
-	n = fix[i]->maxsize_restart();
-	fwrite(&n,sizeof(int),1,fp);
+        n = strlen(fix[i]->id) + 1;
+        fwrite(&n,sizeof(int),1,fp);
+        fwrite(fix[i]->id,sizeof(char),n,fp);
+        n = strlen(fix[i]->style) + 1;
+        fwrite(&n,sizeof(int),1,fp);
+        fwrite(fix[i]->style,sizeof(char),n,fp);
+        n = fix[i]->maxsize_restart();
+        fwrite(&n,sizeof(int),1,fp);
       }
     }
 }
@@ -1158,9 +1156,9 @@ void Modify::list_init_compute()
 bigint Modify::memory_usage()
 {
   bigint bytes = 0;
-  for (int i = 0; i < nfix; i++) 
+  for (int i = 0; i < nfix; i++)
     bytes += static_cast<bigint> (fix[i]->memory_usage());
-  for (int i = 0; i < ncompute; i++) 
+  for (int i = 0; i < ncompute; i++)
     bytes += static_cast<bigint> (compute[i]->memory_usage());
   return bytes;
 }

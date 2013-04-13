@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -142,12 +142,24 @@ class Image : protected Pointers {
   }
 
   inline double distance(double* a, double* b) {
-    return sqrt((a[0] - b[0]) * (a[0] - b[0]) + 
-		(a[1] - b[1]) * (a[1] - b[1]) + 
-		(a[2] - b[2]) * (a[2] - b[2]));
+    return sqrt((a[0] - b[0]) * (a[0] - b[0]) +
+                (a[1] - b[1]) * (a[1] - b[1]) +
+                (a[2] - b[2]) * (a[2] - b[2]));
   }
 };
 
 }
 
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Invalid image up vector
+
+Up vector cannot be (0,0,0).
+
+E: Invalid image color range
+
+The lo value in the range is larger than the hi value.
+
+*/

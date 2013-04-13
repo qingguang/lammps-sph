@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -20,7 +20,7 @@ namespace LAMMPS_NS {
 
 class Lattice : protected Pointers {
  public:
-  int style;                           // enum list of NONE,SC,FCC,etc
+  int style;                           // NONE,SC,FCC,etc
   double xlattice,ylattice,zlattice;   // lattice scale factors in 3 dims
   double a1[3],a2[3],a3[3];            // edge vectors of unit cell
   int nbasis;                          // # of basis atoms in unit cell
@@ -32,7 +32,7 @@ class Lattice : protected Pointers {
   void lattice2box(double &, double &, double &);
   void box2lattice(double &, double &, double &);
   void bbox(int, double, double, double,
-	    double &, double &, double &, double &, double &, double &);
+            double &, double &, double &, double &, double &, double &);
 
 private:
   double scale;

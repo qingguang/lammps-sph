@@ -5,23 +5,29 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "neighbor.h"
 #include "atom.h"
 #include "force.h"
 #include "update.h"
+#include "domain.h"
 #include "memory.h"
 #include "error.h"
 
 using namespace LAMMPS_NS;
 
 #define BONDDELTA 10000
+
+// bondlist, anglelist, dihedrallist, improperlist
+//   no longer store atom->map() of the bond partners
+// instead store domain->closest_image() of the bond partners of atom I
+// this enables distances between list atoms to be calculated
+//   w/out invoking domain->minimium_image(), e.g. in bond->compute()
 
 /* ---------------------------------------------------------------------- */
 
@@ -42,23 +48,26 @@ void Neighbor::bond_all()
     for (m = 0; m < num_bond[i]; m++) {
       atom1 = atom->map(bond_atom[i][m]);
       if (atom1 == -1) {
-	char str[128];
-	sprintf(str,
-		"Bond atoms %d %d missing on proc %d at step " BIGINT_FORMAT,
-		tag[i],bond_atom[i][m],me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Bond atoms %d %d missing on proc %d at step " BIGINT_FORMAT,
+                tag[i],bond_atom[i][m],me,update->ntimestep);
+        error->one(FLERR,str);
       }
+      atom1 = domain->closest_image(i,atom1);
       if (newton_bond || i < atom1) {
-	if (nbondlist == maxbond) {
-	  maxbond += BONDDELTA;
-	  memory->grow(bondlist,maxbond,3,"neighbor:bondlist");
-	}
-	bondlist[nbondlist][0] = i;
-	bondlist[nbondlist][1] = atom1;
-	bondlist[nbondlist][2] = bond_type[i][m];
-	nbondlist++;
+        if (nbondlist == maxbond) {
+          maxbond += BONDDELTA;
+          memory->grow(bondlist,maxbond,3,"neighbor:bondlist");
+        }
+        bondlist[nbondlist][0] = i;
+        bondlist[nbondlist][1] = atom1;
+        bondlist[nbondlist][2] = bond_type[i][m];
+        nbondlist++;
       }
     }
+
+  if (cluster_check) bond_check();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -81,23 +90,51 @@ void Neighbor::bond_partial()
       if (bond_type[i][m] <= 0) continue;
       atom1 = atom->map(bond_atom[i][m]);
       if (atom1 == -1) {
-	char str[128];
-	sprintf(str,
-		"Bond atoms %d %d missing on proc %d at step " BIGINT_FORMAT,
-		tag[i],bond_atom[i][m],me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Bond atoms %d %d missing on proc %d at step " BIGINT_FORMAT,
+                tag[i],bond_atom[i][m],me,update->ntimestep);
+        error->one(FLERR,str);
       }
+      atom1 = domain->closest_image(i,atom1);
       if (newton_bond || i < atom1) {
-	if (nbondlist == maxbond) {
-	  maxbond += BONDDELTA;
-	  memory->grow(bondlist,maxbond,3,"neighbor:bondlist");
-	}
-	bondlist[nbondlist][0] = i;
-	bondlist[nbondlist][1] = atom1;
-	bondlist[nbondlist][2] = bond_type[i][m];
-	nbondlist++;
+        if (nbondlist == maxbond) {
+          maxbond += BONDDELTA;
+          memory->grow(bondlist,maxbond,3,"neighbor:bondlist");
+        }
+        bondlist[nbondlist][0] = i;
+        bondlist[nbondlist][1] = atom1;
+        bondlist[nbondlist][2] = bond_type[i][m];
+        nbondlist++;
       }
     }
+
+  if (cluster_check) bond_check();
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Neighbor::bond_check()
+{
+  int i,j;
+  double dx,dy,dz,dxstart,dystart,dzstart;
+  
+  double **x = atom->x;
+  int flag = 0;
+
+  for (int m = 0; m < nbondlist; m++) {
+    i = bondlist[m][0];
+    j = bondlist[m][1];
+    dxstart = dx = x[i][0] - x[j][0];
+    dystart = dy = x[i][1] - x[j][1];
+    dzstart = dz = x[i][2] - x[j][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+  }
+
+  int flag_all;
+  MPI_Allreduce(&flag,&flag_all,1,MPI_INT,MPI_SUM,world);
+  if (flag_all) error->all(FLERR,"Bond extent > half of periodic box length");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -122,26 +159,31 @@ void Neighbor::angle_all()
       atom2 = atom->map(angle_atom2[i][m]);
       atom3 = atom->map(angle_atom3[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1) {
-	char str[128];
-	sprintf(str,
-		"Angle atoms %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		angle_atom1[i][m],angle_atom2[i][m],angle_atom3[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Angle atoms %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                angle_atom1[i][m],angle_atom2[i][m],angle_atom3[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
       if (newton_bond || (i <= atom1 && i <= atom2 && i <= atom3)) {
-	if (nanglelist == maxangle) {
-	  maxangle += BONDDELTA;
-	  memory->grow(anglelist,maxangle,4,"neighbor:anglelist");
-	}
-	anglelist[nanglelist][0] = atom1;
-	anglelist[nanglelist][1] = atom2;
-	anglelist[nanglelist][2] = atom3;
-	anglelist[nanglelist][3] = angle_type[i][m];
-	nanglelist++;
+        if (nanglelist == maxangle) {
+          maxangle += BONDDELTA;
+          memory->grow(anglelist,maxangle,4,"neighbor:anglelist");
+        }
+        anglelist[nanglelist][0] = atom1;
+        anglelist[nanglelist][1] = atom2;
+        anglelist[nanglelist][2] = atom3;
+        anglelist[nanglelist][3] = angle_type[i][m];
+        nanglelist++;
       }
     }
+
+  if (cluster_check) angle_check();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -167,26 +209,62 @@ void Neighbor::angle_partial()
       atom2 = atom->map(angle_atom2[i][m]);
       atom3 = atom->map(angle_atom3[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1) {
-	char str[128];
-	sprintf(str,
-		"Angle atoms %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		angle_atom1[i][m],angle_atom2[i][m],angle_atom3[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Angle atoms %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                angle_atom1[i][m],angle_atom2[i][m],angle_atom3[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
       if (newton_bond || (i <= atom1 && i <= atom2 && i <= atom3)) {
-	if (nanglelist == maxangle) {
-	  maxangle += BONDDELTA;
-	  memory->grow(anglelist,maxangle,4,"neighbor:anglelist");
-	}
-	anglelist[nanglelist][0] = atom1;
-	anglelist[nanglelist][1] = atom2;
-	anglelist[nanglelist][2] = atom3;
-	anglelist[nanglelist][3] = angle_type[i][m];
-	nanglelist++;
+        if (nanglelist == maxangle) {
+          maxangle += BONDDELTA;
+          memory->grow(anglelist,maxangle,4,"neighbor:anglelist");
+        }
+        anglelist[nanglelist][0] = atom1;
+        anglelist[nanglelist][1] = atom2;
+        anglelist[nanglelist][2] = atom3;
+        anglelist[nanglelist][3] = angle_type[i][m];
+        nanglelist++;
       }
     }
+
+  if (cluster_check) angle_check();
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Neighbor::angle_check()
+{
+  int i,j,k;
+  double dx,dy,dz,dxstart,dystart,dzstart;
+  
+  double **x = atom->x;
+  int flag = 0;
+
+  for (int m = 0; m < nbondlist; m++) {
+    i = anglelist[m][0];
+    j = anglelist[m][1];
+    k = anglelist[m][1];
+    dxstart = dx = x[i][0] - x[j][0];
+    dystart = dy = x[i][1] - x[j][1];
+    dzstart = dz = x[i][2] - x[j][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+    dxstart = dx = x[i][0] - x[k][0];
+    dystart = dy = x[i][1] - x[k][1];
+    dzstart = dz = x[i][2] - x[k][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+  }
+
+  int flag_all;
+  MPI_Allreduce(&flag,&flag_all,1,MPI_INT,MPI_SUM,world);
+  if (flag_all) error->all(FLERR,"Angle extent > half of periodic box length");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -213,29 +291,35 @@ void Neighbor::dihedral_all()
       atom3 = atom->map(dihedral_atom3[i][m]);
       atom4 = atom->map(dihedral_atom4[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1 || atom4 == -1) {
-	char str[128];
-	sprintf(str,
-		"Dihedral atoms %d %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		dihedral_atom1[i][m],dihedral_atom2[i][m],
-		dihedral_atom3[i][m],dihedral_atom4[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Dihedral atoms %d %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                dihedral_atom1[i][m],dihedral_atom2[i][m],
+                dihedral_atom3[i][m],dihedral_atom4[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
-      if (newton_bond || 
-	  (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
-	if (ndihedrallist == maxdihedral) {
-	  maxdihedral += BONDDELTA;
-	  memory->grow(dihedrallist,maxdihedral,5,"neighbor:dihedrallist");
-	}
-	dihedrallist[ndihedrallist][0] = atom1;
-	dihedrallist[ndihedrallist][1] = atom2;
-	dihedrallist[ndihedrallist][2] = atom3;
-	dihedrallist[ndihedrallist][3] = atom4;
-	dihedrallist[ndihedrallist][4] = dihedral_type[i][m];
-	ndihedrallist++;
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
+      atom4 = domain->closest_image(i,atom4);
+      if (newton_bond ||
+          (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
+        if (ndihedrallist == maxdihedral) {
+          maxdihedral += BONDDELTA;
+          memory->grow(dihedrallist,maxdihedral,5,"neighbor:dihedrallist");
+        }
+        dihedrallist[ndihedrallist][0] = atom1;
+        dihedrallist[ndihedrallist][1] = atom2;
+        dihedrallist[ndihedrallist][2] = atom3;
+        dihedrallist[ndihedrallist][3] = atom4;
+        dihedrallist[ndihedrallist][4] = dihedral_type[i][m];
+        ndihedrallist++;
       }
     }
+
+  if (cluster_check) dihedral_check(dihedrallist);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -263,29 +347,73 @@ void Neighbor::dihedral_partial()
       atom3 = atom->map(dihedral_atom3[i][m]);
       atom4 = atom->map(dihedral_atom4[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1 || atom4 == -1) {
-	char str[128];
-	sprintf(str,
-		"Dihedral atoms %d %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		dihedral_atom1[i][m],dihedral_atom2[i][m],
-		dihedral_atom3[i][m],dihedral_atom4[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Dihedral atoms %d %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                dihedral_atom1[i][m],dihedral_atom2[i][m],
+                dihedral_atom3[i][m],dihedral_atom4[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
-      if (newton_bond || 
-	  (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
-	if (ndihedrallist == maxdihedral) {
-	  maxdihedral += BONDDELTA;
-	  memory->grow(dihedrallist,maxdihedral,5,"neighbor:dihedrallist");
-	}
-	dihedrallist[ndihedrallist][0] = atom1;
-	dihedrallist[ndihedrallist][1] = atom2;
-	dihedrallist[ndihedrallist][2] = atom3;
-	dihedrallist[ndihedrallist][3] = atom4;
-	dihedrallist[ndihedrallist][4] = dihedral_type[i][m];
-	ndihedrallist++;
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
+      atom4 = domain->closest_image(i,atom4);
+      if (newton_bond ||
+          (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
+        if (ndihedrallist == maxdihedral) {
+          maxdihedral += BONDDELTA;
+          memory->grow(dihedrallist,maxdihedral,5,"neighbor:dihedrallist");
+        }
+        dihedrallist[ndihedrallist][0] = atom1;
+        dihedrallist[ndihedrallist][1] = atom2;
+        dihedrallist[ndihedrallist][2] = atom3;
+        dihedrallist[ndihedrallist][3] = atom4;
+        dihedrallist[ndihedrallist][4] = dihedral_type[i][m];
+        ndihedrallist++;
       }
     }
+
+  if (cluster_check) dihedral_check(dihedrallist);
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Neighbor::dihedral_check(int **list)
+{
+  int i,j,k,l;
+  double dx,dy,dz,dxstart,dystart,dzstart;
+  
+  double **x = atom->x;
+  int flag = 0;
+
+  for (int m = 0; m < nbondlist; m++) {
+    i = list[m][0];
+    j = list[m][1];
+    k = list[m][1];
+    l = list[m][1];
+    dxstart = dx = x[i][0] - x[j][0];
+    dystart = dy = x[i][1] - x[j][1];
+    dzstart = dz = x[i][2] - x[j][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+    dxstart = dx = x[i][0] - x[k][0];
+    dystart = dy = x[i][1] - x[k][1];
+    dzstart = dz = x[i][2] - x[k][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+    dxstart = dx = x[i][0] - x[l][0];
+    dystart = dy = x[i][1] - x[l][1];
+    dzstart = dz = x[i][2] - x[l][2];
+    domain->minimum_image(dx,dy,dz);
+    if (dx != dxstart || dy != dystart || dz != dzstart) flag = 1;
+  }
+
+  int flag_all;
+  MPI_Allreduce(&flag,&flag_all,1,MPI_INT,MPI_SUM,world);
+  if (flag_all) 
+    error->all(FLERR,"Dihedral/improper extent > half of periodic box length");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -312,29 +440,35 @@ void Neighbor::improper_all()
       atom3 = atom->map(improper_atom3[i][m]);
       atom4 = atom->map(improper_atom4[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1 || atom4 == -1) {
-	char str[128];
-	sprintf(str,
-		"Improper atoms %d %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		improper_atom1[i][m],improper_atom2[i][m],
-		improper_atom3[i][m],improper_atom4[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Improper atoms %d %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                improper_atom1[i][m],improper_atom2[i][m],
+                improper_atom3[i][m],improper_atom4[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
-      if (newton_bond || 
-	  (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
-	if (nimproperlist == maximproper) {
-	  maximproper += BONDDELTA;
-	  memory->grow(improperlist,maximproper,5,"neighbor:improperlist");
-	}
-	improperlist[nimproperlist][0] = atom1;
-	improperlist[nimproperlist][1] = atom2;
-	improperlist[nimproperlist][2] = atom3;
-	improperlist[nimproperlist][3] = atom4;
-	improperlist[nimproperlist][4] = improper_type[i][m];
-	nimproperlist++;
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
+      atom4 = domain-> closest_image(i,atom4);
+      if (newton_bond ||
+          (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
+        if (nimproperlist == maximproper) {
+          maximproper += BONDDELTA;
+          memory->grow(improperlist,maximproper,5,"neighbor:improperlist");
+        }
+        improperlist[nimproperlist][0] = atom1;
+        improperlist[nimproperlist][1] = atom2;
+        improperlist[nimproperlist][2] = atom3;
+        improperlist[nimproperlist][3] = atom4;
+        improperlist[nimproperlist][4] = improper_type[i][m];
+        nimproperlist++;
       }
     }
+
+  if (cluster_check) dihedral_check(improperlist);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -362,27 +496,33 @@ void Neighbor::improper_partial()
       atom3 = atom->map(improper_atom3[i][m]);
       atom4 = atom->map(improper_atom4[i][m]);
       if (atom1 == -1 || atom2 == -1 || atom3 == -1 || atom4 == -1) {
-	char str[128];
-	sprintf(str,
-		"Improper atoms %d %d %d %d missing on proc %d at step " 
-		BIGINT_FORMAT,
-		improper_atom1[i][m],improper_atom2[i][m],
-		improper_atom3[i][m],improper_atom4[i][m],
-		me,update->ntimestep);
-	error->one(FLERR,str);
+        char str[128];
+        sprintf(str,
+                "Improper atoms %d %d %d %d missing on proc %d at step "
+                BIGINT_FORMAT,
+                improper_atom1[i][m],improper_atom2[i][m],
+                improper_atom3[i][m],improper_atom4[i][m],
+                me,update->ntimestep);
+        error->one(FLERR,str);
       }
-      if (newton_bond || 
-	  (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
-	if (nimproperlist == maximproper) {
-	  maximproper += BONDDELTA;
-	  memory->grow(improperlist,maximproper,5,"neighbor:improperlist");
-	}
-	improperlist[nimproperlist][0] = atom1;
-	improperlist[nimproperlist][1] = atom2;
-	improperlist[nimproperlist][2] = atom3;
-	improperlist[nimproperlist][3] = atom4;
-	improperlist[nimproperlist][4] = improper_type[i][m];
-	nimproperlist++;
+      atom1 = domain->closest_image(i,atom1);
+      atom2 = domain->closest_image(i,atom2);
+      atom3 = domain->closest_image(i,atom3);
+      atom4 = domain->closest_image(i,atom4);
+      if (newton_bond ||
+          (i <= atom1 && i <= atom2 && i <= atom3 && i <= atom4)) {
+        if (nimproperlist == maximproper) {
+          maximproper += BONDDELTA;
+          memory->grow(improperlist,maximproper,5,"neighbor:improperlist");
+        }
+        improperlist[nimproperlist][0] = atom1;
+        improperlist[nimproperlist][1] = atom2;
+        improperlist[nimproperlist][2] = atom3;
+        improperlist[nimproperlist][3] = atom4;
+        improperlist[nimproperlist][4] = improper_type[i][m];
+        nimproperlist++;
       }
     }
+
+  if (cluster_check) dihedral_check(improperlist);
 }

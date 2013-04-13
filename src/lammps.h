@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -69,7 +69,7 @@ the command you are using to launch LAMMPS.
 
 E: Cannot use -reorder after -partition
 
-UNDOCUMENTED
+Self-explanatory.  See doc page discussion of command-line switches.
 
 E: Processor partitions are inconsistent
 
@@ -83,11 +83,11 @@ The -in command-line option must be used to specify a file.
 
 E: Can only use -pscreen with multiple partitions
 
-UNDOCUMENTED
+Self-explanatory.  See doc page discussion of command-line switches.
 
 E: Can only use -plog with multiple partitions
 
-UNDOCUMENTED
+Self-explanatory.  See doc page discussion of command-line switches.
 
 E: Cannot open universe screen file
 
@@ -143,14 +143,15 @@ The size of the MPI datatype does not match the size of a bigint.
 
 E: Small, tag, big integers are not sized correctly
 
-UNDOCUMENTED
+See description of these 3 data types in src/lmptype.h.
 
 E: 64-bit atom IDs are not yet supported
 
-UNDOCUMENTED
+See description of this data type in src/lmptype.h.
 
 E: Cannot use -cuda on without USER-CUDA installed
 
-UNDOCUMENTED
+The USER-CUDA package must be installed via "make yes-user-cuda"
+before LAMMPS is built.
 
 */

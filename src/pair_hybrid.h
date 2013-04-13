@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -27,9 +27,10 @@ namespace LAMMPS_NS {
 
 class PairHybrid : public Pair {
  public:
-  int nstyles;                  // # of different sub-styles
+  int nstyles;                  // # of sub-styles
   Pair **styles;                // list of Pair style classes
   char **keywords;              // style name of each Pair style
+  int *multiple;                // 0 if style used once, else Mth instance
 
   PairHybrid(class LAMMPS *);
   virtual ~PairHybrid();
@@ -56,8 +57,13 @@ class PairHybrid : public Pair {
   int **nmap;                   // # of sub-styles itype,jtype points to
   int ***map;                   // list of sub-styles itype,jtype points to
 
+  char **allstyles;
+  int nallstyles;
+
   void allocate();
   virtual void modify_requests();
+  void build_styles();
+  int known_style(char *);
 };
 
 }
@@ -72,11 +78,6 @@ E: Illegal ... command
 Self-explanatory.  Check the input script syntax and compare to the
 documentation for the command.  You can use -echo screen as a
 command-line option when running LAMMPS to see the offending line.
-
-E: Pair style hybrid cannot use same pair style twice
-
-The sub-style arguments of pair_style hybrid cannot be duplicated.
-Check the input script.
 
 E: Pair style hybrid cannot have hybrid as an argument
 

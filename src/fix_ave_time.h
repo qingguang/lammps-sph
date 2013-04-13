@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -36,6 +36,7 @@ class FixAveTime : public Fix {
   double compute_scalar();
   double compute_vector(int);
   double compute_array(int,int);
+  void reset_timestep(bigint);
 
  private:
   int me,nvalues;
@@ -47,9 +48,10 @@ class FixAveTime : public Fix {
   int nrows;
 
   int ave,nwindow,nsum,startstep,mode;
-  int noff;
+  int noff,overwrite;
   int *offlist;
   char *title1,*title2,*title3;
+  long filepos;
 
   int norm,iwindow,window_limit;
   double *vector;
@@ -94,13 +96,11 @@ Self-explantory.
 
 E: Fix ave/time compute does not calculate a scalar
 
-Only computes that calculate a scalar or vector quantity (not a
-per-atom quantity) can be used with fix ave/time.
+Self-explantory.
 
 E: Fix ave/time compute does not calculate a vector
 
-Only computes that calculate a scalar or vector quantity (not a
-per-atom quantity) can be used with fix ave/time.
+Self-explantory.
 
 E: Fix ave/time compute vector is accessed out-of-range
 
@@ -112,15 +112,15 @@ Self-explanatory.
 
 E: Fix ave/time compute array is accessed out-of-range
 
-Self-explanatory.
+An index for the array is out of bounds.
 
 E: Fix ave/time fix does not calculate a scalar
 
-A fix used by fix ave/time must generate global values.
+Self-explanatory.
 
 E: Fix ave/time fix does not calculate a vector
 
-A fix used by fix ave/time must generate global values.
+Self-explanatory.
 
 E: Fix ave/time fix vector is accessed out-of-range
 
@@ -137,7 +137,7 @@ Self-explanatory.
 
 E: Fix ave/time fix array is accessed out-of-range
 
-Self-explanatory.
+An index for the array is out of bounds.
 
 E: Variable name for fix ave/time does not exist
 
@@ -145,7 +145,7 @@ Self-explanatory.
 
 E: Fix ave/time variable is not equal-style variable
 
-A variable used by fix ave/time must generate a global value.
+Self-explanatory.
 
 E: Fix ave/time cannot use variable with vector mode
 
@@ -165,5 +165,10 @@ E: Cannot open fix ave/time file %s
 
 The specified file cannot be opened.  Check that the path and name are
 correct.
+
+E: Fix ave/time missed timestep
+
+You cannot reset the timestep to a value beyond where the fix
+expects to next perform averaging.
 
 */

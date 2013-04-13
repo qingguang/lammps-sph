@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -30,7 +30,7 @@ class Min : protected Pointers {
 
   Min(class LAMMPS *);
   virtual ~Min();
-  void init();
+  virtual void init();
   void setup();
   void setup_minimal(int);
   void run(int);
@@ -52,7 +52,7 @@ class Min : protected Pointers {
   int external_force_clear;   // clear forces locally or externally
 
   double dmax;                // max dist to move any atom in one step
-  int linestyle;              // 0 = backtrack, 1 = quadratic
+  int linestyle;              // 0 = backtrack, 1 = quadratic, 2 = forcezero
 
   int nelist_global,nelist_atom;    // # of PE,virial computes to check
   int nvlist_global,nvlist_atom;
@@ -65,6 +65,9 @@ class Min : protected Pointers {
   int pairflag;
   int torqueflag,erforceflag;
   int e_flag,rho_flag;
+
+  int pair_compute_flag;            // 0 if pair->compute is skipped
+  int kspace_compute_flag;          // 0 if kspace->compute is skipped
 
   int narray;                       // # of arrays stored by fix_minimize
   class FixMinimize *fix_minimize;  // fix that stores auxiliary data

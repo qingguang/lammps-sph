@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -39,6 +39,7 @@ class FixAveAtom : public Fix {
   void copy_arrays(int, int);
   int pack_exchange(int, double *);
   int unpack_exchange(int, double *);
+  void reset_timestep(bigint);
 
  private:
   int nvalues;
@@ -116,5 +117,10 @@ Self-explanatory.
 E: Fix ave/atom variable is not atom-style variable
 
 A variable used by fix ave/atom must generate per-atom values.
+
+E: Fix ave/atom missed timestep
+
+You cannot reset the timestep to a value beyond where the fix
+expects to next perform averaging.
 
 */

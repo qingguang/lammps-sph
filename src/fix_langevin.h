@@ -1,11 +1,11 @@
-/* ----------------------------------------------------------------------
+/* -*- c++ -*- ----------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
    http://lammps.sandia.gov, Sandia National Laboratories
    Steve Plimpton, sjplimp@sandia.gov
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -39,10 +39,11 @@ class FixLangevin : public Fix {
   int modify_param(int, char **);
   virtual double compute_scalar();
   double memory_usage();
+  virtual void *extract(const char *, int &);
 
  protected:
   int which,tally,zeroflag,oflag,aflag;
-  double t_start,t_stop,t_period;
+  double t_start,t_stop,t_period,t_target;
   double *gfactor1,*gfactor2,*ratio;
   double energy,energy_onestep;
   double tsqrt;
@@ -86,39 +87,36 @@ The time window for temperature relaxation must be > 0
 
 E: Fix langevin angmom requires atom style ellipsoid
 
-UNDOCUMENTED
+Self-explanatory.
 
-E: Fix langevin omega require atom style sphere
+E: Fix langevin omega requires atom style sphere
 
-UNDOCUMENTED
-
-E: Fix langevin angmom require atom style ellipsoid
-
-UNDOCUMENTED
+Self-explanatory.
 
 E: Variable name for fix langevin does not exist
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Variable for fix langevin is invalid style
 
-UNDOCUMENTED
+It must be an equal-style variable.
 
 E: Fix langevin omega requires extended particles
 
-UNDOCUMENTED
+One of the particles has radius 0.0.
 
 E: Fix langevin angmom requires extended particles
 
-UNDOCUMENTED
+This fix option cannot be used with point paritlces.
 
 E: Fix langevin variable returned negative temperature
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Cannot zero Langevin force of 0 atoms
 
-UNDOCUMENTED
+The group has zero atoms, so you cannot request its force
+be zeroed.
 
 E: Could not find fix_modify temperature ID
 

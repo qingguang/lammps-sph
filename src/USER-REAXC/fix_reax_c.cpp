@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -28,6 +28,7 @@
 #include "memory.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 #define MAX_REAX_BONDS      30
 #define MIN_REAX_BONDS      15
@@ -35,17 +36,17 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-FixReaxC::FixReaxC(LAMMPS *lmp,int narg, char **arg) : 
+FixReaxC::FixReaxC(LAMMPS *lmp,int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
   // perform initial allocation of atom-based arrays
   // register with atom class
-  
+
   num_bonds = NULL;
   num_hbonds = NULL;
   grow_arrays(atom->nmax);
   atom->add_callback(0);
-  
+
   // initialize arrays to MIN so atom migration is OK the 1st time
 
   int nlocal = atom->nlocal;
@@ -135,7 +136,7 @@ int FixReaxC::unpack_exchange(int nlocal, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int FixReaxC::pack_comm(int n, int *list, double *buf,
-			 int pbc_flag, int *pbc)
+                         int pbc_flag, int *pbc)
 {
   int i,j,m;
 

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -38,8 +38,9 @@ class Neighbor : protected Pointers {
   double cutneighmax;              // max neighbor cutoff for all type pairs
   double *cuttype;                 // for each type, max neigh cut w/ others
 
-  int ncalls;                      // # of times build has been called
-  int ndanger;                     // # of dangerous builds
+  bigint ncalls;                   // # of times build has been called
+  bigint ndanger;                  // # of dangerous builds
+  bigint lastcall;                 // timestep of last neighbor::build() call
 
   int nrequest;                    // requests for pairwise neighbor lists
   class NeighRequest **requests;   // from Pair, Fix, Compute, Command classes
@@ -49,7 +50,7 @@ class Neighbor : protected Pointers {
   int old_nrequest;                // re-creation of pairwise neighbor lists
   int old_triclinic;
   class NeighRequest **old_requests;
-  
+
   int nlist;                       // pairwise neighbor lists
   class NeighList **lists;
 
@@ -70,13 +71,14 @@ class Neighbor : protected Pointers {
   int decide();                     // decide whether to build or not
   virtual int check_distance();     // check max distance moved since last build
   void setup_bins();                // setup bins based on box and cutoff
-  virtual void build();             // create all neighbor lists (pair,bond)
+  virtual void build(int topoflag=1);  // create all neighbor lists (pair,bond)
+  virtual void build_topology();    // create all topology neighbor lists
   void build_one(int);              // create a single neighbor list
   void set(int, char **);           // set neighbor style and skin distance
   void modify_params(int, char**);  // modify parameters that control builds
   bigint memory_usage();
   int exclude_setting();
-  
+
  protected:
   int me,nprocs;
 
@@ -95,6 +97,7 @@ class Neighbor : protected Pointers {
   double *cuttypesq;               // cuttype squared
 
   double triggersq;                // trigger = build when atom moves this dist
+  int cluster_check;               // 1 if check bond/angle/etc satisfies minimg
 
   double **xhold;                      // atom coords at last neighbor build
   int maxhold;                         // size of xhold array
@@ -129,7 +132,7 @@ class Neighbor : protected Pointers {
   double (*corners)[3];            // ptr to 8 corners of triclinic box
 
   double inner[2],middle[2];       // rRESPA cutoffs for extra lists
-  double cut_inner_sq;		   // outer cutoff for inner neighbor list
+  double cut_inner_sq;                   // outer cutoff for inner neighbor list
   double cut_middle_sq;            // outer cutoff for middle neighbor list
   double cut_middle_inside_sq;     // inner cutoff for middle neighbor list
 
@@ -165,8 +168,8 @@ class Neighbor : protected Pointers {
   int coord2bin(double *);              // mapping atom coord to a bin
   int coord2bin(double *, int &, int &, int&); // ditto
 
-  int exclusion(int, int, int, 
-		int, int *, int *) const;  // test for pair exclusion
+  int exclusion(int, int, int,
+                int, int *, int *) const;  // test for pair exclusion
 
   virtual void choose_build(int, class NeighRequest *);
   void choose_stencil(int, class NeighRequest *);
@@ -177,9 +180,11 @@ class Neighbor : protected Pointers {
   PairPtr *pair_build;
 
   void half_nsq_no_newton(class NeighList *);
+  void half_nsq_no_newton_ghost(class NeighList *);
   void half_nsq_newton(class NeighList *);
 
   void half_bin_no_newton(class NeighList *);
+  void half_bin_no_newton_ghost(class NeighList *);
   void half_bin_newton(class NeighList *);
   void half_bin_newton_tri(class NeighList *);
 
@@ -222,7 +227,9 @@ class Neighbor : protected Pointers {
   StencilPtr *stencil_create;
 
   void stencil_half_bin_2d_no_newton(class NeighList *, int, int, int);
+  void stencil_half_ghost_bin_2d_no_newton(class NeighList *, int, int, int);
   void stencil_half_bin_3d_no_newton(class NeighList *, int, int, int);
+  void stencil_half_ghost_bin_3d_no_newton(class NeighList *, int, int, int);
   void stencil_half_bin_2d_newton(class NeighList *, int, int, int);
   void stencil_half_bin_3d_newton(class NeighList *, int, int, int);
   void stencil_half_bin_2d_newton_tri(class NeighList *, int, int, int);
@@ -249,14 +256,17 @@ class Neighbor : protected Pointers {
   BondPtr bond_build;                 // ptr to bond list functions
   void bond_all();                    // bond list with all bonds
   void bond_partial();                // exclude certain bonds
+  void bond_check();
 
   BondPtr angle_build;                // ptr to angle list functions
   void angle_all();                   // angle list with all angles
   void angle_partial();               // exclude certain angles
+  void angle_check();
 
   BondPtr dihedral_build;             // ptr to dihedral list functions
   void dihedral_all();                // dihedral list with all dihedrals
   void dihedral_partial();            // exclude certain dihedrals
+  void dihedral_check(int **);
 
   BondPtr improper_build;             // ptr to improper list functions
   void improper_all();                // improper list with all impropers
@@ -269,27 +279,27 @@ class Neighbor : protected Pointers {
   // if it is and special flag is 2 (otherwise), return 1,2,3
   //   for which level of neighbor it is (and which coeff it maps to)
 
-  inline int find_special(const int *list, const int *nspecial, 
-			  const int tag) const {
+  inline int find_special(const int *list, const int *nspecial,
+                          const int tag) const {
     const int n1 = nspecial[0];
     const int n2 = nspecial[1];
     const int n3 = nspecial[2];
 
     for (int i = 0; i < n3; i++) {
       if (list[i] == tag) {
-	if (i < n1) {
-	  if (special_flag[1] == 0) return -1;
-	  else if (special_flag[1] == 1) return 0;
-	  else return 1;
-	} else if (i < n2) {
-	  if (special_flag[2] == 0) return -1;
-	  else if (special_flag[2] == 1) return 0;
-	  else return 2;
-	} else {
-	  if (special_flag[3] == 0) return -1;
-	  else if (special_flag[3] == 1) return 0;
-	  else return 3;
-	}
+        if (i < n1) {
+          if (special_flag[1] == 0) return -1;
+          else if (special_flag[1] == 1) return 0;
+          else return 1;
+        } else if (i < n2) {
+          if (special_flag[2] == 0) return -1;
+          else if (special_flag[2] == 1) return 0;
+          else return 2;
+        } else {
+          if (special_flag[3] == 0) return -1;
+          else if (special_flag[3] == 1) return 0;
+          else return 3;
+        }
       }
     }
     return 0;
@@ -332,13 +342,11 @@ E: Neighbor multi not yet enabled for rRESPA
 
 Self-explanatory.
 
-E: Neighbors of ghost atoms only allowed for full neighbor lists
-
-This is a current restriction within LAMMPS.
-
 E: Too many local+ghost atoms for neighbor list
 
-UNDOCUMENTED
+The number of nlocal + nghost atoms on a processor
+is limited by the size of a 32-bit integer with 2 bits
+removed for masking 1-2, 1-3, 1-4 neighbors.
 
 W: Building an occasional neighobr list when atoms may have moved too far
 

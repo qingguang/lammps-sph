@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -20,6 +20,7 @@
 #include "error.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
@@ -93,8 +94,8 @@ void FixEnforce2D::post_force(int vflag)
     double **omega = atom->omega;
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	omega[i][0] = 0.0;
-	omega[i][1] = 0.0;
+        omega[i][0] = 0.0;
+        omega[i][1] = 0.0;
       }
   }
 
@@ -102,8 +103,8 @@ void FixEnforce2D::post_force(int vflag)
     double **angmom = atom->angmom;
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	angmom[i][0] = 0.0;
-	angmom[i][1] = 0.0;
+        angmom[i][0] = 0.0;
+        angmom[i][1] = 0.0;
       }
   }
 
@@ -111,8 +112,8 @@ void FixEnforce2D::post_force(int vflag)
     double **torque = atom->torque;
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	torque[i][0] = 0.0;
-	torque[i][1] = 0.0;
+        torque[i][0] = 0.0;
+        torque[i][1] = 0.0;
       }
   }
 }

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -23,6 +23,7 @@
 #include "angle.h"
 #include "dihedral.h"
 #include "improper.h"
+#include "kspace.h"
 #include "modify.h"
 #include "fix.h"
 #include "memory.h"
@@ -32,7 +33,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-ComputeStressAtom::ComputeStressAtom(LAMMPS *lmp, int narg, char **arg) : 
+ComputeStressAtom::ComputeStressAtom(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg)
 {
   if (narg < 3) error->all(FLERR,"Illegal compute stress/atom command");
@@ -47,11 +48,13 @@ ComputeStressAtom::ComputeStressAtom(LAMMPS *lmp, int narg, char **arg) :
     keflag = 1;
     pairflag = 1;
     bondflag = angleflag = dihedralflag = improperflag = 1;
+    kspaceflag = 1;
     fixflag = 1;
   } else {
     keflag = 0;
     pairflag = 0;
     bondflag = angleflag = dihedralflag = improperflag = 0;
+    kspaceflag = 0;
     fixflag = 0;
     int iarg = 3;
     while (iarg < narg) {
@@ -61,11 +64,12 @@ ComputeStressAtom::ComputeStressAtom(LAMMPS *lmp, int narg, char **arg) :
       else if (strcmp(arg[iarg],"angle") == 0) angleflag = 1;
       else if (strcmp(arg[iarg],"dihedral") == 0) dihedralflag = 1;
       else if (strcmp(arg[iarg],"improper") == 0) improperflag = 1;
+      else if (strcmp(arg[iarg],"kspace") == 0) kspaceflag = 1;
       else if (strcmp(arg[iarg],"fix") == 0) fixflag = 1;
       else if (strcmp(arg[iarg],"virial") == 0) {
-	pairflag = 1;
-	bondflag = angleflag = dihedralflag = improperflag = 1;
-	fixflag = 1;
+        pairflag = 1;
+        bondflag = angleflag = dihedralflag = improperflag = 1;
+        kspaceflag = fixflag = 1;
       } else error->all(FLERR,"Illegal compute stress/atom command");
       iarg++;
     }
@@ -128,52 +132,66 @@ void ComputeStressAtom::compute_peratom()
     double **vatom = force->pair->vatom;
     for (i = 0; i < npair; i++)
       for (j = 0; j < 6; j++)
-	stress[i][j] += vatom[i][j];
+        stress[i][j] += vatom[i][j];
   }
 
   if (bondflag && force->bond) {
     double **vatom = force->bond->vatom;
     for (i = 0; i < nbond; i++)
       for (j = 0; j < 6; j++)
-	stress[i][j] += vatom[i][j];
+        stress[i][j] += vatom[i][j];
   }
 
   if (angleflag && force->angle) {
     double **vatom = force->angle->vatom;
     for (i = 0; i < nbond; i++)
       for (j = 0; j < 6; j++)
-	stress[i][j] += vatom[i][j];
+        stress[i][j] += vatom[i][j];
   }
 
   if (dihedralflag && force->dihedral) {
     double **vatom = force->dihedral->vatom;
     for (i = 0; i < nbond; i++)
       for (j = 0; j < 6; j++)
-	stress[i][j] += vatom[i][j];
+        stress[i][j] += vatom[i][j];
   }
 
   if (improperflag && force->improper) {
     double **vatom = force->improper->vatom;
     for (i = 0; i < nbond; i++)
       for (j = 0; j < 6; j++)
-	stress[i][j] += vatom[i][j];
+        stress[i][j] += vatom[i][j];
   }
 
   // add in per-atom contributions from relevant fixes
+  // skip if vatom = NULL
+  // possible during setup phase if fix has not initialized its vatom yet
+  // e.g. fix ave/spatial defined before fix shake,
+  //   and fix ave/spatial uses a per-atom stress from this compute as input
 
   if (fixflag) {
     for (int ifix = 0; ifix < modify->nfix; ifix++)
       if (modify->fix[ifix]->virial_flag) {
-	double **vatom = modify->fix[ifix]->vatom;
-	for (i = 0; i < nlocal; i++)
-	  for (j = 0; j < 6; j++)
-	    stress[i][j] += vatom[i][j];
+        double **vatom = modify->fix[ifix]->vatom;
+        if (vatom)
+          for (i = 0; i < nlocal; i++)
+            for (j = 0; j < 6; j++)
+              stress[i][j] += vatom[i][j];
       }
   }
 
   // communicate ghost atom virials between neighbor procs
 
   if (force->newton) comm->reverse_comm_compute(this);
+
+  // KSpace contribution is already per local atom
+
+  if (kspaceflag && force->kspace) {
+    double **vatom = force->kspace->vatom;
+    for (i = 0; i < nlocal; i++)
+      for (j = 0; j < 6; j++)
+        stress[i][j] += vatom[i][j];
+  }
 
   // zero virial of atoms not in group
   // only do this after comm since ghost contributions must be included
@@ -202,27 +220,27 @@ void ComputeStressAtom::compute_peratom()
 
     if (rmass) {
       for (i = 0; i < nlocal; i++)
-	if (mask[i] & groupbit) {
-	  onemass = mvv2e * rmass[i];
-	  stress[i][0] += onemass*v[i][0]*v[i][0];
-	  stress[i][1] += onemass*v[i][1]*v[i][1];
-	  stress[i][2] += onemass*v[i][2]*v[i][2];
-	  stress[i][3] += onemass*v[i][0]*v[i][1];
-	  stress[i][4] += onemass*v[i][0]*v[i][2];
-	  stress[i][5] += onemass*v[i][1]*v[i][2];
-	}
+        if (mask[i] & groupbit) {
+          onemass = mvv2e * rmass[i];
+          stress[i][0] += onemass*v[i][0]*v[i][0];
+          stress[i][1] += onemass*v[i][1]*v[i][1];
+          stress[i][2] += onemass*v[i][2]*v[i][2];
+          stress[i][3] += onemass*v[i][0]*v[i][1];
+          stress[i][4] += onemass*v[i][0]*v[i][2];
+          stress[i][5] += onemass*v[i][1]*v[i][2];
+        }
 
     } else {
       for (i = 0; i < nlocal; i++)
-	if (mask[i] & groupbit) {
-	  onemass = mvv2e * mass[type[i]];
-	  stress[i][0] += onemass*v[i][0]*v[i][0];
-	  stress[i][1] += onemass*v[i][1]*v[i][1];
-	  stress[i][2] += onemass*v[i][2]*v[i][2];
-	  stress[i][3] += onemass*v[i][0]*v[i][1];
-	  stress[i][4] += onemass*v[i][0]*v[i][2];
-	  stress[i][5] += onemass*v[i][1]*v[i][2];
-	}
+        if (mask[i] & groupbit) {
+          onemass = mvv2e * mass[type[i]];
+          stress[i][0] += onemass*v[i][0]*v[i][0];
+          stress[i][1] += onemass*v[i][1]*v[i][1];
+          stress[i][2] += onemass*v[i][2]*v[i][2];
+          stress[i][3] += onemass*v[i][0]*v[i][1];
+          stress[i][4] += onemass*v[i][0]*v[i][2];
+          stress[i][5] += onemass*v[i][1]*v[i][2];
+        }
     }
   }
 

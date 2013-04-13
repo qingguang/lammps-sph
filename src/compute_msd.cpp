@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -133,14 +133,14 @@ void ComputeMSD::compute_vector()
 
   double **x = atom->x;
   int *mask = atom->mask;
-  int *image = atom->image;
+  tagint *image = atom->image;
   int nlocal = atom->nlocal;
 
   double *h = domain->h;
   double xprd = domain->xprd;
   double yprd = domain->yprd;
   double zprd = domain->zprd;
-  
+
   double dx,dy,dz;
   int xbox,ybox,zbox;
 
@@ -150,32 +150,32 @@ void ComputeMSD::compute_vector()
   if (domain->triclinic == 0) {
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	xbox = (image[i] & 1023) - 512;
-	ybox = (image[i] >> 10 & 1023) - 512;
-	zbox = (image[i] >> 20) - 512;
-	dx = x[i][0] + xbox*xprd - cm[0] - xoriginal[i][0];
-	dy = x[i][1] + ybox*yprd - cm[1] - xoriginal[i][1];
-	dz = x[i][2] + zbox*zprd - cm[2] - xoriginal[i][2];
-	msd[0] += dx*dx;
-	msd[1] += dy*dy;
-	msd[2] += dz*dz;
-	msd[3] += dx*dx + dy*dy + dz*dz;
+        xbox = (image[i] & IMGMASK) - IMGMAX;
+        ybox = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+        zbox = (image[i] >> IMG2BITS) - IMGMAX;
+        dx = x[i][0] + xbox*xprd - cm[0] - xoriginal[i][0];
+        dy = x[i][1] + ybox*yprd - cm[1] - xoriginal[i][1];
+        dz = x[i][2] + zbox*zprd - cm[2] - xoriginal[i][2];
+        msd[0] += dx*dx;
+        msd[1] += dy*dy;
+        msd[2] += dz*dz;
+        msd[3] += dx*dx + dy*dy + dz*dz;
       }
 
   } else {
     for (int i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) {
-	xbox = (image[i] & 1023) - 512;
-	ybox = (image[i] >> 10 & 1023) - 512;
-	zbox = (image[i] >> 20) - 512;
-	dx = x[i][0] + h[0]*xbox + h[5]*ybox + h[4]*zbox - 
-	  cm[0] - xoriginal[i][0];
-	dy = x[i][1] + h[1]*ybox + h[3]*zbox - cm[1] - xoriginal[i][1];
-	dz = x[i][2] + h[2]*zbox - cm[2] - xoriginal[i][2];
-	msd[0] += dx*dx;
-	msd[1] += dy*dy;
-	msd[2] += dz*dz;
-	msd[3] += dx*dx + dy*dy + dz*dz;
+        xbox = (image[i] & IMGMASK) - IMGMAX;
+        ybox = (image[i] >> IMGBITS & IMGMASK) - IMGMAX;
+        zbox = (image[i] >> IMG2BITS) - IMGMAX;
+        dx = x[i][0] + h[0]*xbox + h[5]*ybox + h[4]*zbox -
+          cm[0] - xoriginal[i][0];
+        dy = x[i][1] + h[1]*ybox + h[3]*zbox - cm[1] - xoriginal[i][1];
+        dz = x[i][2] + h[2]*zbox - cm[2] - xoriginal[i][2];
+        msd[0] += dx*dx;
+        msd[1] += dy*dy;
+        msd[2] += dz*dz;
+        msd[3] += dx*dx + dy*dy + dz*dz;
       }
   }
 

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -34,6 +34,7 @@ class FixAveCorrelate : public Fix {
   void setup(int);
   void end_of_step();
   double compute_array(int,int);
+  void reset_timestep(bigint);
 
  private:
   int me,nvalues;
@@ -43,9 +44,10 @@ class FixAveCorrelate : public Fix {
   char **ids;
   FILE *fp;
 
-  int type,ave,startstep;
+  int type,ave,startstep,overwrite;
   double prefactor;
   char *title1,*title2,*title3;
+  long filepos;
 
   int firstindex;      // index in values ring of earliest time sample
   int lastindex;       // index in values ring of latest time sample
@@ -57,7 +59,7 @@ class FixAveCorrelate : public Fix {
 
   int *save_count;     // saved values at Nfreq for output via compute_array()
   double **save_corr;
-    
+
   void accumulate();
   bigint nextvalid();
 };
@@ -86,15 +88,15 @@ Self-explanatory.
 
 E: Fix ave/correlate compute does not calculate a scalar
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix ave/correlate compute does not calculate a vector
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix ave/correlate compute vector is accessed out-of-range
 
-UNDOCUMENTED
+The index for the vector is out of bounds.
 
 E: Fix ID for fix ave/correlate does not exist
 
@@ -102,15 +104,15 @@ Self-explanatory.
 
 E: Fix ave/correlate fix does not calculate a scalar
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix ave/correlate fix does not calculate a vector
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Fix ave/correlate fix vector is accessed out-of-range
 
-UNDOCUMENTED
+The index for the vector is out of bounds.
 
 E: Fix for fix ave/correlate not computed at compatible time
 
@@ -123,6 +125,11 @@ Self-explanatory.
 
 E: Fix ave/correlate variable is not equal-style variable
 
-UNDOCUMENTED
+Self-explanatory.
+
+E: Fix ave/correlate missed timestep
+
+You cannot reset the timestep to a value beyond where the fix
+expects to next perform averaging.
 
 */
