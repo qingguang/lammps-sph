@@ -17,14 +17,14 @@ Nbeads=16
 Nsolvent=16
 nx=512
 Force=0.75
-etas=3e-4
-etap=3e-4
+etas=3e-3
+etap=3e-3
 H0=0.01
 R0=4
 Delta=1
 c=10
 # use restart file 0: no, 1: yes
-restart=1
+restart=0
 restart_file=initial/nb16ns16H0.01R04.dat
 
 dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
