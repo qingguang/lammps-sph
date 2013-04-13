@@ -409,13 +409,10 @@ int AtomVecMeso::pack_comm_vel(int n, int *list, double *buf, int pbc_flag,
 		    buf[m++] = v[j][1];
 		    buf[m++] = v[j][2];
 		    buf[m++] = rho[j];
-<<<<<<< HEAD
-=======
 		    buf[m++] = colorgradient[j][0];
 		    buf[m++] = colorgradient[j][1];
 		    buf[m++] = colorgradient[j][2];
 		    buf[m++] = rmass[j];
->>>>>>> origin/surface_tension_clean
 		    buf[m++] = e[j];
 		    buf[m++] = vest[j][0];
 		    buf[m++] = vest[j][1];
