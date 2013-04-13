@@ -1,0 +1,27 @@
+pair_coeff         ${s_type} ${s_type}    sdpd ${sdpd_rho_solvent} ${local_c} ${local_eta_s} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         ${s_type} ${p_type}    sdpd ${sdpd_rho_solvent} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         ${s_type} ${d_type}    sdpd ${sdpd_rho_solvent} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         ${p_type} ${p_type}    sdpd ${sdpd_rho_polymer} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         ${p_type} ${d_type}    sdpd ${sdpd_rho_polymer} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+pair_coeff         ${d_type} ${d_type}    sdpd ${sdpd_rho_polymer} ${local_c} ${local_eta_p} ${h} ${local_temp} ${sdpd_background}
+
+pair_coeff         ${s_type} ${s_type} sph/colorgradient ${h} 0
+pair_coeff         ${s_type} ${p_type} sph/colorgradient ${h} 0
+pair_coeff         ${s_type} ${d_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${p_type} ${p_type} sph/colorgradient ${h} 0
+pair_coeff         ${p_type} ${d_type} sph/colorgradient ${h} ${alpha}
+pair_coeff         ${d_type} ${d_type} sph/colorgradient ${h} 0
+
+pair_coeff         * * sph/surfacetension ${h}
+
+bond_style fene/expand
+bond_coeff 1 ${local_H} ${local_r0} 0 0 ${delta}
+
+# set this parametres befor including this file
+variable           local_c delete
+variable           local_eta_s delete
+variable           local_eta_p delete
+variable           local_temp  delete
+
+variable           local_H delete
+variable           local_r0 delete

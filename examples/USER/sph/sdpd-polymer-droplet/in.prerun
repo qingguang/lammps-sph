@@ -1,0 +1,19 @@
+variable           local_c equal ${prerun_c}
+variable           local_eta_s equal ${prerun_eta_s}
+variable           local_eta_p equal ${prerun_eta_p}
+variable           local_temp  equal ${prerun_temp}
+variable           local_H     equal ${prerun_H}
+variable           local_r0     equal ${prerun_r0}
+include            in.pair_and_bond
+
+thermo             1000
+
+variable           eta_p equal ${prerun_eta_p}
+variable           eta_s equal ${prerun_eta_s}
+variable           sound_speed equal ${prerun_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
+
+if "${restart}==0" then & 
+"run                ${Nprerun} every 10000 'velocity all zero linear'"

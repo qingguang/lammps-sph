@@ -1,0 +1,35 @@
+compute bstress all stress/atom bond
+compute astress all stress/atom
+compute substress all stress/atom pair
+
+compute bxxav all reduce ave c_bstress[1]
+compute byyav all reduce ave c_bstress[2]
+compute bxyav all reduce ave c_bstress[4]
+
+variable       vbxxav equal c_bxxav
+variable       vbyyav equal c_byyav
+variable       vbxyav equal c_bxyav
+fix            print_avstress all print 1000 "${vbxxav} ${vbyyav} ${vbxyav}" file ${dname}/avstress.dat screen no
+
+
+# Stress compontens xx, yy, zz, xy, xz, yz. 
+# center line
+variable           x1 equal ${Lx}/2-2*${dx}
+variable           x2 equal ${Lx}/2+2*${dx}
+region             rcenter block ${x1} ${x2} 0 ${Ly} EDGE EDGE units box
+fix bxx_ave all ave/spatial 1 ${Nfreq} ${Nfreq} &
+    y center 0.01 c_bstress[1] region rcenter file ${dname}/bond_stress.xx.av ave running units reduced
+fix byy_ave all ave/spatial 1 ${Nfreq} ${Nfreq} &
+    y center 0.01 c_bstress[2] region rcenter file ${dname}/bond_stress.yy.av ave running units reduced
+variable           x1 delete
+variable           x2 delete
+
+variable           y1 equal ${Ly}/2-5*${dx}
+variable           y2 equal ${Ly}/2+5*${dx}
+region             rycenter block 0 ${Lx} ${y1} ${y2} EDGE EDGE units box
+fix bxx_ave_2 all ave/spatial 1 ${Nfreq} ${Nfreq} &
+    x center 0.01 c_bstress[1] region rycenter file ${dname}/bond_stress_2.xx.av ave running units reduced
+fix byy_ave_2 all ave/spatial 1 ${Nfreq} ${Nfreq} &
+    x center 0.01 c_bstress[2] region rycenter file ${dname}/bond_stress_2.yy.av ave running units reduced
+variable           y1 delete
+variable           y2 delete
