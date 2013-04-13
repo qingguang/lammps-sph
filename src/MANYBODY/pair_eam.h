@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -41,7 +41,7 @@ class PairEAM : public Pair {
 
   // potentials in spline form used for force computation
 
-  double dr,rdr,drho,rdrho;
+  double dr,rdr,drho,rdrho,rhomax;
   double ***rhor_spline,***frho_spline,***z2r_spline;
 
   PairEAM(class LAMMPS *);
@@ -53,8 +53,8 @@ class PairEAM : public Pair {
   double init_one(int, int);
   double single(int, int, int, int, double, double, double, double &);
 
-  int pack_comm(int, int *, double *, int, int *);
-  void unpack_comm(int, int, double *);
+  virtual int pack_comm(int, int *, double *, int, int *);
+  virtual void unpack_comm(int, int, double *);
   int pack_reverse_comm(int, int, double *);
   void unpack_reverse_comm(int, int *, double *);
   double memory_usage();

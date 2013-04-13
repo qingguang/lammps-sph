@@ -13,12 +13,15 @@ OBJ = 	$(SRC:.cpp=.o)
 
 # Package variables
 
-PACKAGE = asphere class2 colloid dipole fld gpu granular \
+PACKAGE = asphere class2 colloid dipole fld gpu granular kim \
 	  kspace manybody mc meam molecule opt peri poems reax replica \
-	  shock srd xtc
+	  rigid shock srd xtc
 
-PACKUSER = user-misc user-atc user-awpmd user-cg-cmm \
-	   user-cuda user-eff user-ewaldn user-omp user-reaxc user-sph
+PACKUSER = user-misc user-atc user-awpmd user-cg-cmm user-colvars \
+	   user-cuda user-eff user-omp user-molfile user-reaxc user-sph
+
+PACKLIB = gpu kim meam poems reax user-atc user-awpmd user-colvars \
+	  user-cuda user-molfile
 
 PACKALL = $(PACKAGE) $(PACKUSER)
 
@@ -34,9 +37,15 @@ help:
 	@echo ''
 	@echo 'make clean-all           delete all object files'
 	@echo 'make clean-machine       delete object files for one machine'
-	@echo 'make tar                 lmp_src.tar.gz of src dir and packages'
-	@echo 'make makelib             update Makefile.lib for library build'
-	@echo 'make makelist            update Makefile.list used by old makes'
+	@echo 'make tar                 create lmp_src.tar.gz of src dir and packages'
+	@echo 'make makelib             create Makefile.lib for static library build'
+	@echo 'make makeshlib           create Makefile.shlib for shared library build'
+	@echo 'make makelist            create Makefile.list used by old makes'
+	@echo 'make -f Makefile.lib machine      build LAMMPS as static library for machine'
+	@echo 'make -f Makefile.shlib machine    build LAMMPS as shared library for machine'
+	@echo 'make -f Makefile.list machine     build LAMMPS from explicit list of files'
+	@echo 'make stubs               build dummy MPI library in STUBS'
+	@echo 'make install-python      install LAMMPS wrapper in Python'
 	@echo ''
 	@echo 'make package             list available packages'
 	@echo 'make package-status      status of all packages'
@@ -48,6 +57,7 @@ help:
 	@echo 'make no-standard         remove all standard packages'
 	@echo 'make yes-user            install all user packages'
 	@echo 'make no-user             remove all user packages'
+	@echo 'make no-lib              remove all packages with external libs'
 	@echo ''
 	@echo 'make package-update      replace src files with package files'
 	@echo 'make package-overwrite   replace package files with src files'
@@ -73,7 +83,7 @@ help:
 	  then cp Makefile.package.settings.empty Makefile.package.settings; fi
 	@cp Makefile.package Makefile.package.settings Obj_$@
 	@cd Obj_$@; \
-	$(MAKE) $(MFLAGS) "OBJ = $(OBJ)" "INC = $(INC)" \
+	$(MAKE) $(MFLAGS) "OBJ = $(OBJ)" "INC = $(INC)" "SHFLAGS =" \
 	  "EXE = ../$(EXE)" ../$(EXE)
 	@if [ -d Obj_$@ ]; then cd Obj_$@; rm -f $(SRC) $(INC) Makefile*; fi
 
@@ -100,20 +110,29 @@ tar:
 	@cd STUBS; make
 	@echo "Created $(ROOT)_src.tar.gz"
 
-# Make MPI STUBS lib
+# Make MPI STUBS library
 
 stubs:
 	@cd STUBS; make clean; make
 
-# Update Makefile.lib and Makefile.list
+# Create Makefile.lib, Makefile.shlib, and Makefile.list
 
 makelib:
 	@$(SHELL) Make.sh style
 	@$(SHELL) Make.sh Makefile.lib
 
+makeshlib:
+	@$(SHELL) Make.sh style
+	@$(SHELL) Make.sh Makefile.shlib
+
 makelist:
 	@$(SHELL) Make.sh style
 	@$(SHELL) Make.sh Makefile.list
+
+# install LAMMPS shared lib and Python wrapper for Python usage
+
+install-python:
+	@python ../python/install.py
 
 # Package management
 
@@ -132,6 +151,7 @@ package:
 	@echo 'make no-standard         remove all standard packages'
 	@echo 'make yes-user            install all user packages'
 	@echo 'make no-user             remove all user packages'
+	@echo 'make no-lib              remove all packages with external libs'
 	@echo ''
 	@echo 'make package-update      replace src files with package files'
 	@echo 'make package-overwrite   replace package files with src files'
@@ -154,6 +174,9 @@ yes-user:
 
 no-user:
 	@for p in $(PACKUSER); do $(MAKE) no-$$p; done
+
+no-lib:
+	@for p in $(PACKLIB); do $(MAKE) no-$$p; done
 
 yes-%:
 	@if [ ! -e Makefile.package ]; \

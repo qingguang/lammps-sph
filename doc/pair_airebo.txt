@@ -86,6 +86,8 @@ would be 10.2 Angstroms.
 The E_TORSION term is an explicit 4-body potential that describes
 various dihedral angle preferences in hydrocarbon configurations.
 
+:line
+
 Only a single pair_coeff command is used with the {airebo} or {rebo}
 style which specifies an AIREBO potential file with parameters for C
 and H.  Note that the {rebo} style in LAMMPS uses the same
@@ -132,7 +134,7 @@ section for more info.
 
 You can specify the accelerated styles explicitly in your input script
 by including their suffix, or you can use the "-suffix command-line
-switch"_Section_start.html#start_6 when you invoke LAMMPS, or you can
+switch"_Section_start.html#start_7 when you invoke LAMMPS, or you can
 use the "suffix"_suffix.html command in your input script.
 
 See "Section_accelerate"_Section_accelerate.html of the manual for

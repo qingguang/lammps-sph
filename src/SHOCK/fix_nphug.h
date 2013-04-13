@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -33,7 +33,7 @@ class FixNPHug : public FixNH {
   int modify_param(int, char **);
   int pack_restart_data(double *); // pack restart data
   void restart(char *);
- 
+
  private:
   class Compute *pe;               // PE compute pointer
 
@@ -62,21 +62,31 @@ class FixNPHug : public FixNH {
 
 /* ERROR/WARNING messages:
 
-E: Invalid argument for fix nphug
+E: Pstart and Pstop must have the same value
 
-UNDOCUMENTED
+Self-explanatory.
+
+E: Specified target stress must be uniaxial or hydrostatic
+
+Self-explanatory.
+
+E: For triclinic deformation, specified target stress must be hydrostatic
+
+Triclinic pressure control is allowed using the tri keyword, but
+non-hydrostatic pressure control can not be used in this case.
 
 E: Temperature control must be used with fix nphug
 
-UNDOCUMENTED
+The temp keyword must be provided.
 
 E: Pressure control must be used with fix nphug
 
-UNDOCUMENTED
+A pressure control keyword (iso, aniso, tri, x, y, or z) must be
+provided.
 
 E: Potential energy ID for fix nvt/nph/npt does not exist
 
-UNDOCUMENTED
+A compute for potential energy must be defined.
 
 E: Illegal ... command
 

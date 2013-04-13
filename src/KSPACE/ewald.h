@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -33,10 +33,12 @@ class Ewald : public KSpace {
   virtual void compute(int, int);
   double memory_usage();
 
+  void compute_group_group(int, int, int);
+
  protected:
-  double precision;
+  int kxmax,kymax,kzmax;
   int kcount,kmax,kmax3d,kmax_created;
-  double gsqmx,qsum,qsqsum,volume;
+  double gsqmx,qsum,qsqsum,q2,volume;
   int nmax;
 
   double unitk[3];
@@ -47,11 +49,23 @@ class Ewald : public KSpace {
   double *sfacrl,*sfacim,*sfacrl_all,*sfacim_all;
   double ***cs,***sn;
 
+  // group-group interactions
+
+  int group_allocate_flag;
+  double *sfacrl_A,*sfacim_A,*sfacrl_A_all,*sfacim_A_all;
+  double *sfacrl_B,*sfacim_B,*sfacrl_B_all,*sfacim_B_all;
+
+  double rms(int, double, bigint, double);
   virtual void eik_dot_r();
   void coeffs();
   virtual void allocate();
   void deallocate();
-  void slabcorr(int);
+  void slabcorr();
+
+  // group-group interactions
+
+  void allocate_groups();
+  void deallocate_groups();
 };
 
 }
@@ -104,5 +118,13 @@ W: System is not charge neutral, net charge = %g
 
 The total charge on all atoms on the system is not 0.0, which
 is not valid for Ewald or PPPM.
+
+E: KSpace accuracy must be > 0
+
+The kspace accuracy designated in the input must be greater than zero.
+
+E: Cannot (yet) use Kspace slab correction with compute group/group
+
+This option is not yet supported.
 
 */

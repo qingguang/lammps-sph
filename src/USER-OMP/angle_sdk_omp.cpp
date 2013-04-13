@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_sdk_omp.h"
 #include "atom.h"
 #include "neighbor.h"
@@ -28,11 +27,20 @@
 
 #include "lj_sdk_common.h"
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 using namespace LJSDKParms;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleSDKOMP::AngleSDKOMP(class LAMMPS *lmp)
+  : AngleSDK(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -59,11 +67,11 @@ void AngleSDKOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -99,7 +107,6 @@ void AngleSDKOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -109,7 +116,6 @@ void AngleSDKOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -118,62 +124,60 @@ void AngleSDKOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     c = delx1*delx2 + dely1*dely2 + delz1*delz2;
     c /= r1*r2;
-        
+
     if (c > 1.0) c = 1.0;
     if (c < -1.0) c = -1.0;
-        
+
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
     s = 1.0/s;
 
-    // 1-3 LJ interaction. 
+    // 1-3 LJ interaction.
     // we only want to use the repulsive part,
     // and it can be scaled (or off).
     // so this has to be done here and not in the
     // general non-bonded code.
 
+    f13 = e13 = delx3 = dely3 = delz3 = 0.0;
+
     if (repflag) {
-      
+
       delx3 = x[i1][0] - x[i3][0];
       dely3 = x[i1][1] - x[i3][1];
       delz3 = x[i1][2] - x[i3][2];
-      domain->minimum_image(delx3,dely3,delz3);
       rsq3 = delx3*delx3 + dely3*dely3 + delz3*delz3;
 
       const int type1 = atom->type[i1];
       const int type3 = atom->type[i3];
-      
-      f13=0.0;
-      e13=0.0;
-    
+
       if (rsq3 < rminsq[type1][type3]) {
-	const int ljt = lj_type[type1][type3];
-	const double r2inv = 1.0/rsq3;
+        const int ljt = lj_type[type1][type3];
+        const double r2inv = 1.0/rsq3;
 
-	if (ljt == LJ12_4) {
-	  const double r4inv=r2inv*r2inv;
+        if (ljt == LJ12_4) {
+          const double r4inv=r2inv*r2inv;
 
-	  f13 = r4inv*(lj1[type1][type3]*r4inv*r4inv - lj2[type1][type3]);
-	  if (EFLAG) e13 = r4inv*(lj3[type1][type3]*r4inv*r4inv - lj4[type1][type3]);
-	  
-	} else if (ljt == LJ9_6) {
-	  const double r3inv = r2inv*sqrt(r2inv);
-	  const double r6inv = r3inv*r3inv;
+          f13 = r4inv*(lj1[type1][type3]*r4inv*r4inv - lj2[type1][type3]);
+          if (EFLAG) e13 = r4inv*(lj3[type1][type3]*r4inv*r4inv - lj4[type1][type3]);
 
-	  f13 = r6inv*(lj1[type1][type3]*r3inv - lj2[type1][type3]);
-	  if (EFLAG) e13 = r6inv*(lj3[type1][type3]*r3inv - lj4[type1][type3]);
+        } else if (ljt == LJ9_6) {
+          const double r3inv = r2inv*sqrt(r2inv);
+          const double r6inv = r3inv*r3inv;
 
-	} else if (ljt == LJ12_6) {
-	  const double r6inv = r2inv*r2inv*r2inv;
+          f13 = r6inv*(lj1[type1][type3]*r3inv - lj2[type1][type3]);
+          if (EFLAG) e13 = r6inv*(lj3[type1][type3]*r3inv - lj4[type1][type3]);
 
-	  f13 = r6inv*(lj1[type1][type3]*r6inv - lj2[type1][type3]);
-	  if (EFLAG) e13 = r6inv*(lj3[type1][type3]*r6inv - lj4[type1][type3]);
-	}
+        } else if (ljt == LJ12_6) {
+          const double r6inv = r2inv*r2inv*r2inv;
 
-	// make sure energy is 0.0 at the cutoff.
-	if (EFLAG) e13 -= emin[type1][type3];
+          f13 = r6inv*(lj1[type1][type3]*r6inv - lj2[type1][type3]);
+          if (EFLAG) e13 = r6inv*(lj3[type1][type3]*r6inv - lj4[type1][type3]);
+        }
 
-	f13 *= r2inv;
+        // make sure energy is 0.0 at the cutoff.
+        if (EFLAG) e13 -= emin[type1][type3];
+
+        f13 *= r2inv;
       }
     }
 
@@ -216,10 +220,11 @@ void AngleSDKOMP::eval(int nfrom, int nto, ThrData * const thr)
       f[i3][2] += f3[2] - f13*delz3;
     }
 
-    if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
-    if (EVFLAG) ev_tally13_thr(this,i1,i3,nlocal,NEWTON_BOND,
-			       e13,f13,delx3,dely3,delz3,thr);
-
+    if (EVFLAG) {
+      ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
+                   delx1,dely1,delz1,delx2,dely2,delz2,thr);
+      if (repflag) ev_tally13_thr(this,i1,i3,nlocal,NEWTON_BOND,
+                                  e13,f13,delx3,dely3,delz3,thr);
+    }
   }
 }

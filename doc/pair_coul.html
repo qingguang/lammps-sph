@@ -17,6 +17,10 @@
 </H3>
 <H3>pair_style coul/debye/omp command 
 </H3>
+<H3>pair_style coul/dsf command 
+</H3>
+<H3>pair_style coul/dsf/gpu command 
+</H3>
 <H3>pair_style coul/long command 
 </H3>
 <H3>pair_style coul/long/omp command 
@@ -31,9 +35,10 @@
 </P>
 <PRE>pair_style coul/cut cutoff
 pair_style coul/debye kappa cutoff
+pair_style coul/dsf alpha cutoff
 pair_style coul/long cutoff
 pair_style coul/long/gpu cutoff 
-pair_sytle coul/wolf alpha cutoff 
+pair_style coul/wolf alpha cutoff 
 </PRE>
 <UL><LI>cutoff = global cutoff for Coulombic interactions
 <LI>kappa = Debye length (inverse distance units) 
@@ -49,12 +54,15 @@ pair_coeff 2 2 3.5
 pair_coeff * *
 pair_coeff 2 2 3.5 
 </PRE>
+<PRE>pair_style coul/dsf 0.05 10.0
+pair_coeff * * 
+</PRE>
 <PRE>pair_style coul/long 10.0
 pair_coeff * * 
 </PRE>
-<P>pair_style coul/wolf 0.2 9.0
-pair_coeff * *
-</P>
+<PRE>pair_style coul/wolf 0.2 9.0
+pair_coeff * * 
+</PRE>
 <P><B>Description:</B>
 </P>
 <P>The <I>coul/cut</I> style computes the standard Coulombic interaction
@@ -74,6 +82,17 @@ Coulombic term, given by
 </CENTER>
 <P>where kappa is the Debye length.  This potential is another way to
 mimic the screening effect of a polar solvent.
+</P>
+<P>Style <I>coul/dsf</I> computes Coulombic interactions via the damped 
+shifted force model described in <A HREF = "#Fennell">Fennell</A>, given by:
+</P>
+<CENTER><IMG SRC = "Eqs/pair_coul_dsf.jpg">
+</CENTER>
+<P>where <I>alpha</I> is the damping parameter and erfc() is the
+complementary error-function. The potential corrects issues in the
+Wolf model (described below) to provide consistent forces and energies
+(the Wolf potential is not differentiable at the cutoff) and smooth
+decay to zero.
 </P>
 <P>Style <I>coul/wolf</I> computes Coulombic interactions via the Wolf
 summation method, described in <A HREF = "#Wolf">Wolf</A>, given by:
@@ -138,7 +157,7 @@ those packages.  See the <A HREF = "Section_start.html#start_3">Making LAMMPS</A
 section for more info.
 </P>
 <P>You can specify the accelerated styles explicitly in your input script
-by including their suffix, or you can use the <A HREF = "Section_start.html#start_6">-suffix command-line
+by including their suffix, or you can use the <A HREF = "Section_start.html#start_7">-suffix command-line
 switch</A> when you invoke LAMMPS, or you can
 use the <A HREF = "suffix.html">suffix</A> command in your input script.
 </P>
@@ -194,5 +213,10 @@ hybrid/overlay</A>
 
 <P><B>(Wolf)</B> D. Wolf, P. Keblinski, S. R. Phillpot, J. Eggebrecht, J Chem
 Phys, 110, 8254 (1999).
+</P>
+<A NAME = "Fennell"></A>
+
+<P><B>(Fennell)</B> C. J. Fennell, J. D. Gezelter, J Chem Phys, 124, 
+234104 (2006).
 </P>
 </HTML>

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -48,12 +48,13 @@ class AtomVecBond : public AtomVec {
   int pack_restart(int, double *);
   int unpack_restart(double *);
   void create_atom(int, double *);
-  void data_atom(double *, int, char **);
+  void data_atom(double *, tagint, char **);
   int data_atom_hybrid(int, char **);
   bigint memory_usage();
 
  private:
-  int *tag,*type,*mask,*image;
+  int *tag,*type,*mask;
+  tagint *image;
   double **x,**v,**f;
   int *molecule;
   int **nspecial,**special;

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -44,28 +44,34 @@ class FixGCMC : public Fix {
  private:
   int ntype,nevery,seed;
   int ncycles,nexchanges,nmcmoves;
-  int ngas;           // # of gas molecules (or atoms) on all procs 
-  int ngas_local;     // # of gas molecules (or atoms) on this proc 
+  int ngas;           // # of gas molecules (or atoms) on all procs
+  int ngas_local;     // # of gas molecules (or atoms) on this proc
   int ngas_before;    // # of gas molecules (or atoms) on procs < this proc
-  int molflag;        // 0 = atomic, 1 = molecular system                                                
-  double nmove_attempts;   
-  double nmove_successes;  
-  double ndel_attempts;    
-  double ndel_successes;   
-  double ninsert_attempts; 
+  int molflag;        // 0 = atomic, 1 = molecular system
+  int regionflag;     // 0 = anywhere, 1 = specific region
+  int iregion;        // exchange/move region
+  char *idregion;     // exchange/move region id
+
+  double nmove_attempts;
+  double nmove_successes;
+  double ndel_attempts;
+  double ndel_successes;
+  double ninsert_attempts;
   double ninsert_successes;
-  
+
   int nmax;
+  int max_region_attempts;
   double reservoir_temperature;
   double chemical_potential;
   double displace;
   double beta,zz,sigma,volume;
   double xlo,xhi,ylo,yhi,zlo,zhi;
+  double region_xlo,region_xhi,region_ylo,region_yhi,region_zlo,region_zhi;
   double *sublo,*subhi;
-  int *local_gas_list;                           
+  int *local_gas_list;
   double **cutsq;
   class Pair *pair;
- 
+
   class RanPark *random_equal;
   class RanPark *random_unequal;
 
@@ -87,26 +93,48 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Invalid atom type in fix GCMC command
 
-UNDOCUMENTED
+The atom type specified in the GCMC command does not exist.
 
 E: Cannot do GCMC on atoms in atom_modify first group
 
-UNDOCUMENTED
+This is a restriction due to the way atoms are organized in a list to
+enable the atom_modify first command.
 
 W: Fix GCMC may delete atom with non-zero molecule ID
 
-UNDOCUMENTED
+This is probably an error, since you should not delete only one atom
+of a molecule. The GCMC molecule exchange feature does not yet work.
 
 E: Fix GCMC molecule command requires atom attribute molecule
 
-UNDOCUMENTED
+Should not choose the GCMC molecule feature if no molecules are being
+simulated. The general molecule flag is off, but GCMC's molecule flag
+is on.
 
 E: Fix GCMC molecule feature does not yet work
 
-UNDOCUMENTED
+Fix GCMC cannot (yet) be used to exchange molecules, only atoms.
 
 E: Fix GCMC incompatible with given pair_style
 
-UNDOCUMENTED
+Some pair_styles do not provide single-atom energies, which are needed
+by fix GCMC.
+
+E: Fix GCMC region does not support a bounding box
+
+Not all regions represent bounded volumes.  You cannot use
+such a region with the fix GCMC command.
+
+E: Fix GCMC region cannot be dynamic
+
+Only static regions can be used with fix GCMC.
+
+E: Deposition region extends outside simulation box
+
+Self-explanatory.
+
+E: Region ID for fix GCMC does not exist
+
+Self-explanatory.
 
 */

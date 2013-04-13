@@ -25,7 +25,7 @@
 
 <PRE>parameter = <I>x</I> or <I>y</I> or <I>z</I> or <I>xy</I> or <I>xz</I> or <I>yz</I>
   <I>x</I>, <I>y</I>, <I>z</I> args = style value(s)
-    style = <I>final</I> or <I>delta</I> or <I>scale</I> or <I>vel</I> or <I>erate</I> or <I>trate</I> or <I>volume</I> or <I>wiggle</I>
+    style = <I>final</I> or <I>delta</I> or <I>scale</I> or <I>vel</I> or <I>erate</I> or <I>trate</I> or <I>volume</I> or <I>wiggle</I> or <I>variable</I>
       <I>final</I> values = lo hi
         lo hi = box boundaries at end of run (distance units)
       <I>delta</I> values = dlo dhi
@@ -40,9 +40,12 @@
       <I>trate</I> value = R
         R = true strain rate (1/time units)
       <I>volume</I> value = none = adjust this dim to preserve volume of system
-      <I>wiggle</I> value = A Tp
+      <I>wiggle</I> values = A Tp
         A = amplitude of oscillation (distance units)
 	Tp = period of oscillation (time units)
+      <I>variable</I> values = v_name1 v_name2
+        v_name1 = variable with name1 for box length change as function of time
+	v_name2 = variable with name2 for change rate as function of time
   <I>xy</I>, <I>xz</I>, <I>yz</I> args = style value
     style = <I>final</I> or <I>delta</I> or <I>vel</I> or <I>erate</I> or <I>trate</I> or <I>wiggle</I>
       <I>final</I> value = tilt
@@ -56,18 +59,23 @@
         R = engineering shear strain rate (1/time units)
       <I>trate</I> value = R
         R = true shear strain rate (1/time units)
-      <I>wiggle</I> value = A Tp
+      <I>wiggle</I> values = A Tp
         A = amplitude of oscillation (distance units)
-	Tp = period of oscillation (time units) 
+	Tp = period of oscillation (time units)
+      <I>variable</I> values = v_name1 v_name2
+        v_name1 = variable with name1 for tilt change as function of time
+	v_name2 = variable with name2 for change rate as function of time 
 </PRE>
 <LI>zero or more keyword/value pairs may be appended 
 
-<LI>keyword = <I>remap</I> or <I>units</I> 
+<LI>keyword = <I>remap</I> or <I>flip</I> or <I>units</I> 
 
 <PRE>  <I>remap</I> value = <I>x</I> or <I>v</I> or <I>none</I>
     x = remap coords of atoms in group into deforming box
     v = remap velocities of all atoms when they cross periodic boundaries
     none = no remapping of x or v
+  <I>flip</I> value = <I>yes</I> or <I>no</I>
+    allow or disallow box flips when it becomes highly skewed
   <I>units</I> value = <I>lattice</I> or <I>box</I>
     lattice = distances are defined in lattice units
     box = distances are defined in simulation box units 
@@ -93,13 +101,12 @@ continuously strained system.  See the <A HREF = "fix_nvt_sllod.html">fix
 nvt/sllod</A> and <A HREF = "compute_temp_deform.html">compute
 temp/deform</A> commands for more details.
 </P>
-<P>Any parameter varied by this command must refer to a periodic
-dimension - see the <A HREF = "boundary.html">boundary</A> command.  For parameters
-<I>xy</I>, <I>xz</I>, and <I>yz</I>, the 2nd dimension must be periodic, e.g. <I>y</I> for
-<I>xy</I>.  Dimensions not varied by this command can be periodic or
-non-periodic.  Dimensions corresponding to unspecified parameters can
-also be controlled by a <A HREF = "fix_nh.html">fix npt</A> or <A HREF = "fix_nh.html">fix nph</A>
-command.
+<P>For the <I>x</I>, <I>y</I>, <I>z</I> parameters, the associated dimension cannot be
+shrink-wrapped.  For the <I>xy</I>, <I>yz</I>, <I>xz</I> parameters, the associated
+2nd dimension cannot be shrink-wrapped.  Dimensions not varied by this
+command can be periodic or non-periodic.  Dimensions corresponding to
+unspecified parameters can also be controlled by a <A HREF = "fix_nh.html">fix
+npt</A> or <A HREF = "fix_nh.html">fix nph</A> command.
 </P>
 <P>The size and shape of the simulation box at the beginning of the
 simulation run were either specified by the
@@ -244,8 +251,40 @@ negative then the box initially contracts, then expands, etc.  The
 amplitude can be in lattice or box distance units.  See the discussion
 of the units keyword below.
 </P>
-<P>For the <I>scale</I>, <I>vel</I>, <I>erate</I>, <I>trate</I>, <I>volume</I>, and <I>wiggle</I>
-styles, the box length is expanded or compressed around its mid point.
+<P>The <I>variable</I> style changes the specified box length dimension by
+evaluating a variable, which presumably is a function of time.  The
+variable with <I>name1</I> must be an <A HREF = "variable.html">equal-style variable</A>
+and should calculate a change in box length in units of distance.
+Note that this distance is in box units, not lattice units; see the
+discussion of the <I>units</I> keyword below.  The formula associated with
+variable <I>name1</I> can reference the current timestep.  Note that it
+should return the "change" in box length, not the absolute box length.
+This means it should evaluate to 0.0 when invoked on the initial
+timestep of the run following the definition of fix deform.  It should
+evaluate to a value > 0.0 to dilate the box at future times, or a
+value < 0.0 to compress the box.
+</P>
+<P>The variable <I>name2</I> must also be an <A HREF = "variable.html">equal-style
+variable</A> and should calculate the rate of box length
+change, in units of distance/time, i.e. the time-derivative of the
+<I>name1</I> variable.  This quantity is used internally by LAMMPS to reset
+atom velocities when they cross periodic boundaries.  It is computed
+internally for the other styles, but you must provide it when using an
+arbitrary variable.
+</P>
+<P>Here is an example of using the <I>variable</I> style to perform the same
+box deformation as the <I>wiggle</I> style formula listed above, where we
+assume that the current timestep = 0.
+</P>
+<PRE>variable A equal 5.0
+variable Tp equal 10.0
+variable displace equal "v_A * sin(2*PI * step*dt/v_Tp)"
+variable rate equal "2*PI*v_A/v_Tp * cos(2*PI * step*dt/v_Tp)"
+fix 2 all deform 1 x variable v_displace v_rate remap v 
+</PRE>
+<P>For the <I>scale</I>, <I>vel</I>, <I>erate</I>, <I>trate</I>, <I>volume</I>, <I>wiggle</I>, and
+<I>variable</I> styles, the box length is expanded or compressed around its
+mid point.
 </P>
 <HR>
 
@@ -288,17 +327,19 @@ direction for xy deformation) from the unstrained orientation.
 </P>
 <P>The tilt factor T as a function of time will change as
 </P>
-<PRE>T(t) = T0 + erate*dt 
+<PRE>T(t) = T0 + L0*erate*dt 
 </PRE>
-<P>where T0 is the initial tilt factor and dt is the elapsed time (in
-time units).  Thus if <I>erate</I> R is specified as 0.1 and time units are
-picoseconds, this means the shear strain will increase by 0.1 every
-picosecond.  I.e. if the xy shear strain was initially 0.0, then
-strain after 1 psec = 0.1, strain after 2 psec = 0.2, etc.  Thus the
-tilt factor would be 0.0 at time 0, 0.1*ybox at 1 psec, 0.2*ybox at 2
-psec, etc, where ybox is the original y box length.  R = 1 or 2 means
-the tilt factor will increase by 1 or 2 every picosecond.  R = -0.01
-means a decrease in shear strain by 0.01 every picosecond.
+<P>where T0 is the initial tilt factor, L0 is the original length of the
+box perpendicular to the shear direction (e.g. y box length for xy
+deformation), and dt is the elapsed time (in time units).  Thus if
+<I>erate</I> R is specified as 0.1 and time units are picoseconds, this
+means the shear strain will increase by 0.1 every picosecond.  I.e. if
+the xy shear strain was initially 0.0, then strain after 1 psec = 0.1,
+strain after 2 psec = 0.2, etc.  Thus the tilt factor would be 0.0 at
+time 0, 0.1*ybox at 1 psec, 0.2*ybox at 2 psec, etc, where ybox is the
+original y box length.  R = 1 or 2 means the tilt factor will increase
+by 1 or 2 every picosecond.  R = -0.01 means a decrease in shear
+strain by 0.01 every picosecond.
 </P>
 <P>The <I>trate</I> style changes a tilt factor at a "constant true shear
 strain rate".  Note that this is not an "engineering shear strain
@@ -350,10 +391,44 @@ becomes more negative, then more positive, etc.  The amplitude can be
 in lattice or box distance units.  See the discussion of the units
 keyword below.
 </P>
-<P>All of these styles change the xy, xz, yz tilt factors during a
+<P>The <I>variable</I> style changes the specified tilt factor by evaluating a
+variable, which presumably is a function of time.  The variable with
+<I>name1</I> must be an <A HREF = "variable.html">equal-style variable</A> and should
+calculate a change in tilt in units of distance.  Note that this
+distance is in box units, not lattice units; see the discussion of the
+<I>units</I> keyword below.  The formula associated with variable <I>name1</I>
+can reference the current timestep.  Note that it should return the
+"change" in tilt factor, not the absolute tilt factor.  This means it
+should evaluate to 0.0 when invoked on the initial timestep of the run
+following the definition of fix deform.
+</P>
+<P>The variable <I>name2</I> must also be an <A HREF = "variable.html">equal-style
+variable</A> and should calculate the rate of tilt change,
+in units of distance/time, i.e. the time-derivative of the <I>name1</I>
+variable.  This quantity is used internally by LAMMPS to reset atom
+velocities when they cross periodic boundaries.  It is computed
+internally for the other styles, but you must provide it when using an
+arbitrary variable.
+</P>
+<P>Here is an example of using the <I>variable</I> style to perform the same
+box deformation as the <I>wiggle</I> style formula listed above, where we
+assume that the current timestep = 0.
+</P>
+<PRE>variable A equal 5.0
+variable Tp equal 10.0
+variable displace equal "v_A * sin(2*PI * step*dt/v_Tp)"
+variable rate equal "2*PI*v_A/v_Tp * cos(2*PI * step*dt/v_Tp)"
+fix 2 all deform 1 xy variable v_displace v_rate remap v 
+</PRE>
+<HR>
+
+<P>All of the tilt styles change the xy, xz, yz tilt factors during a
 simulation.  In LAMMPS, tilt factors (xy,xz,yz) for triclinic boxes
-are always bounded by half the distance of the parallel box length.
-For example, if xlo = 2 and xhi = 12, then the x box length is 10 and
+are normally bounded by half the distance of the parallel box length.
+See the discussion of the <I>flip</I> keyword below, to allow this bound to
+be exceeded, if desired.
+</P>
+<P>For example, if xlo = 2 and xhi = 12, then the x box length is 10 and
 the xy tilt factor must be between -5 and 5.  Similarly, both xz and
 yz must be between -(xhi-xlo)/2 and +(yhi-ylo)/2.  Note that this is
 not a limitation, since if the maximum tilt factor is 5 (as in this
@@ -364,16 +439,23 @@ example), then configurations with tilt = ..., -15, -5, 5, 15, 25,
 applied via the <I>xy</I>, <I>xz</I>, or <I>yz</I> parameters, the following
 algorithm is used.  If <I>prd</I> is the associated parallel box length (10
 in the example above), then if the tilt factor exceeds the accepted
-range of -5 to 5 during the simulation, then the box is re-shaped to
-the other limit (an equivalent box) and the simulation continues.
-Thus for this example, if the initial xy tilt factor was 0.0 and "xy
-final 100.0" was specified, then during the simulation the xy tilt
-factor would increase from 0.0 to 5.0, the box would be re-shaped so
-that the tilt factor becomes -5.0, the tilt factor would increase from
--5.0 to 5.0, the box would be re-shaped again, etc.  The re-shaping
-would occur 10 times and the final tilt factor at the end of the
-simulation would be 0.0.  During each re-shaping event, atoms are
-remapped into the new box in the appropriate manner.
+range of -5 to 5 during the simulation, then the box is flipped to the
+other limit (an equivalent box) and the simulation continues.  Thus
+for this example, if the initial xy tilt factor was 0.0 and "xy final
+100.0" was specified, then during the simulation the xy tilt factor
+would increase from 0.0 to 5.0, the box would be flipped so that the
+tilt factor becomes -5.0, the tilt factor would increase from -5.0 to
+5.0, the box would be flipped again, etc.  The flip occurs 10 times
+and the final tilt factor at the end of the simulation would be 0.0.
+During each flip event, atoms are remapped into the new box in the
+appropriate manner.
+</P>
+<P>The one exception to this rule is if the 1st dimension in the tilt
+factor (x for xy) is non-periodic.  In that case, the limits on the
+tilt factor are not enforced, since flipping the box in that dimension
+does not change the atom positions due to non-periodicity.  In this
+mode, if you tilt the system to extreme angles, the simulation will
+simply become inefficient due to the highly skewed simulation box.
 </P>
 <HR>
 
@@ -422,6 +504,17 @@ rigid particles, you can either thermostat them independently or
 include a background fluid and thermostat the fluid via <A HREF = "fix_nvt_sllod.html">fix
 nvt/sllod</A>.
 </P>
+<P>The <I>flip</I> keyword allows the tilt factors for a triclinic box to
+exceed half the distance of the parallel box length, as discussed
+above.  If the <I>flip</I> value is set to <I>yes</I>, the bound is enforced by
+flipping the box when it is exceeded.  If the <I>flip</I> value is set to
+<I>no</I>, the tilt will continue to change without flipping.  Note that if
+you apply large deformations, this means the box shape can tilt
+dramatically LAMMPS will run less efficiently, due to the large volume
+of communication needed to acquire ghost atoms around a processor's
+irregular-shaped sub-domain.  For extreme values of tilt, LAMMPS may
+also lose atoms and generate an error.
+</P>
 <P>The <I>units</I> keyword determines the meaning of the distance units used
 to define various arguments.  A <I>box</I> value selects standard distance
 units as defined by the <A HREF = "units.html">units</A> command, e.g. Angstroms for
@@ -429,7 +522,10 @@ units = real or metal.  A <I>lattice</I> value means the distance units are
 in lattice spacings.  The <A HREF = "lattice.html">lattice</A> command must have
 been previously used to define the lattice spacing.  Note that the
 units choice also affects the <I>vel</I> style parameters since it is
-defined in terms of distance/time.
+defined in terms of distance/time.  Also note that the units keyword
+does not affect the <I>variable</I> style.  You should use the <I>xlat</I>,
+<I>ylat</I>, <I>zlat</I> keywords of the <A HREF = "thermo_style.html">thermo_style</A>
+command if you want to include lattice spacings in a variable formula.
 </P>
 <P><B>Restart, fix_modify, output, run start/stop, minimize info:</B>
 </P>
@@ -447,14 +543,18 @@ and <I>stop</I> keywords of the <A HREF = "run.html">run</A> command.  See the
 </P>
 <P><B>Restrictions:</B>
 </P>
-<P>Any box dimension varied by this fix must be periodic.
+<P>You cannot apply x, y, or z deformations to a dimension that is
+shrink-wrapped via the <A HREF = "boundary.html">boundary</A> comamnd.
+</P>
+<P>You cannot apply xy, yz, or xz deformations to a 2nd dimension (y in
+xy) that is shrink-wrapped via the <A HREF = "boundary.html">boundary</A> comamnd.
 </P>
 <P><B>Related commands:</B>
 </P>
-<P><A HREF = "displace_box.html">displace_box</A>
+<P><A HREF = "change_box.html">change_box</A>
 </P>
 <P><B>Default:</B>
 </P>
-<P>The option defaults are remap = x and units = lattice.
+<P>The option defaults are remap = x, flip = yes, and units = lattice.
 </P>
 </HTML>

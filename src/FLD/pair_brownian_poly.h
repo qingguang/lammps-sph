@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -28,7 +28,7 @@ class PairBrownianPoly : public PairBrownian {
  public:
   PairBrownianPoly(class LAMMPS *);
   ~PairBrownianPoly() {}
-  void compute(int, int); 
+  void compute(int, int);
   double init_one(int, int);
   void init_style();
 };
@@ -42,14 +42,14 @@ class PairBrownianPoly : public PairBrownian {
 
 E: Pair brownian/poly requires newton pair off
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Pair brownian/poly requires atom style sphere
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Pair brownian/poly requires extended particles
 
-UNDOCUMENTED
+One of the particles has radius 0.0.
 
 */

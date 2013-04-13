@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_class2_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,10 +26,19 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleClass2OMP::AngleClass2OMP(class LAMMPS *lmp)
+  : AngleClass2(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +65,11 @@ void AngleClass2OMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -99,7 +107,6 @@ void AngleClass2OMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -109,7 +116,6 @@ void AngleClass2OMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -118,10 +124,10 @@ void AngleClass2OMP::eval(int nfrom, int nto, ThrData * const thr)
 
     c = delx1*delx2 + dely1*dely2 + delz1*delz2;
     c /= r1*r2;
-        
+
     if (c > 1.0) c = 1.0;
     if (c < -1.0) c = -1.0;
-        
+
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
     s = 1.0/s;
@@ -133,7 +139,7 @@ void AngleClass2OMP::eval(int nfrom, int nto, ThrData * const thr)
     dtheta3 = dtheta2*dtheta;
     dtheta4 = dtheta3*dtheta;
 
-    de_angle = 2.0*k2[type]*dtheta + 3.0*k3[type]*dtheta2 + 
+    de_angle = 2.0*k2[type]*dtheta + 3.0*k3[type]*dtheta2 +
       4.0*k4[type]*dtheta3;
 
     a = -de_angle*s;
@@ -229,6 +235,6 @@ void AngleClass2OMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
+                             delx1,dely1,delz1,delx2,dely2,delz2,thr);
   }
 }

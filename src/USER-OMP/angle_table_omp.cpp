@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_table_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,10 +26,19 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleTableOMP::AngleTableOMP(class LAMMPS *lmp)
+  : AngleTable(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +65,11 @@ void AngleTableOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -97,7 +105,6 @@ void AngleTableOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -107,7 +114,6 @@ void AngleTableOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -116,10 +122,10 @@ void AngleTableOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     c = delx1*delx2 + dely1*dely2 + delz1*delz2;
     c /= r1*r2;
-        
+
     if (c > 1.0) c = 1.0;
     if (c < -1.0) c = -1.0;
-        
+
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
     s = 1.0/s;
@@ -128,10 +134,10 @@ void AngleTableOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     theta = acos(c);
     uf_lookup(type,theta,u,mdu);
-    
+
     if (EFLAG) eangle = u;
 
-    a = mdu * s;               
+    a = mdu * s;
     a11 = a*c / rsq1;
     a12 = -a / (r1*r2);
     a22 = a*c / rsq2;
@@ -164,6 +170,6 @@ void AngleTableOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
+                             delx1,dely1,delz1,delx2,dely2,delz2,thr);
   }
 }

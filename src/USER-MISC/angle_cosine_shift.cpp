@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -78,7 +78,6 @@ void AngleCosineShift::compute(int eflag, int vflag)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -88,7 +87,6 @@ void AngleCosineShift::compute(int eflag, int vflag)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -102,12 +100,12 @@ void AngleCosineShift::compute(int eflag, int vflag)
     // C= sine of angle
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
-    
-    // force & energy
-    if (eflag) eangle = -k[type]-kcos*c-ksin*s;  
 
+    // force & energy
     kcos=kcost[type];
     ksin=ksint[type];
+    if (eflag) eangle = -k[type]-kcos*c-ksin*s;
+
     cps = c/s;          // NOTE absorbed one c
 
     a11 = (-kcos +ksin*cps )*c/ rsq1;
@@ -142,7 +140,7 @@ void AngleCosineShift::compute(int eflag, int vflag)
     }
 
     if (evflag) ev_tally(i1,i2,i3,nlocal,newton_bond,eangle,f1,f3,
-			 delx1,dely1,delz1,delx2,dely2,delz2);
+                         delx1,dely1,delz1,delx2,dely2,delz2);
   }
 }
 
@@ -158,7 +156,7 @@ void AngleCosineShift::allocate()
   memory->create(kcost  ,n+1,"Angle:kcost");
   memory->create(theta  ,n+1,"Angle:theta");
   memory->create(setflag,n+1, "Angle:setflag");
-  
+
   for (int i = 1; i <= n; i++) setflag[i] = 0;
 }
 
@@ -201,7 +199,7 @@ double AngleCosineShift::equilibrium_angle(int i)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 writes out coeffs to restart file 
+   proc 0 writes out coeffs to restart file
 ------------------------------------------------------------------------- */
 
 void AngleCosineShift::write_restart(FILE *fp)
@@ -213,14 +211,14 @@ void AngleCosineShift::write_restart(FILE *fp)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 reads coeffs from restart file, bcasts them 
+   proc 0 reads coeffs from restart file, bcasts them
 ------------------------------------------------------------------------- */
 
 void AngleCosineShift::read_restart(FILE *fp)
 {
   allocate();
 
-  if (comm->me == 0) 
+  if (comm->me == 0)
     {
        fread(&k[1],sizeof(double),atom->nangletypes,fp);
        fread(&kcost[1],sizeof(double),atom->nangletypes,fp);
@@ -246,7 +244,7 @@ double AngleCosineShift::single(int type, int i1, int i2, int i3)
   double delz1 = x[i1][2] - x[i2][2];
   domain->minimum_image(delx1,dely1,delz1);
   double r1 = sqrt(delx1*delx1 + dely1*dely1 + delz1*delz1);
-  
+
   double delx2 = x[i3][0] - x[i2][0];
   double dely2 = x[i3][1] - x[i2][1];
   double delz2 = x[i3][2] - x[i2][2];
@@ -259,5 +257,5 @@ double AngleCosineShift::single(int type, int i1, int i2, int i3)
   if (c < -1.0) c = -1.0;
   double s=sqrt(1.0-c*c);
 
-  return -k[type]-kcost[type]*c-ksint[type]*s;  
+  return -k[type]-kcost[type]*c-ksint[type]*s;
 }

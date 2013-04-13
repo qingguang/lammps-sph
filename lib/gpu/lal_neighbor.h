@@ -22,20 +22,6 @@
 
 #define IJ_SIZE 131072
 
-#ifdef USE_OPENCL
-
-#include "geryon/ocl_timer.h"
-#include "geryon/ocl_mat.h"
-using namespace ucl_opencl;
-
-#else
-
-#include "geryon/nvd_timer.h"
-#include "geryon/nvd_mat.h"
-using namespace ucl_cudadr;
-
-#endif
-
 namespace LAMMPS_AL {
 
 class Neighbor {
@@ -67,10 +53,17 @@ class Neighbor {
             const int gpu_nbor, const int gpu_host, const bool pre_cut,
             const int block_cell_2d, const int block_cell_id, 
             const int block_nbor_build, const int threads_per_atom,
-            const bool time_device);
+            const int warp_size, const bool time_device);
 
   /// Set the size of the cutoff+skin
-  inline void cell_size(const double size) { _cell_size=size; }
+  inline void cell_size(const double size, const double cutoff) { 
+    _cell_size=size;
+    _cutoff=cutoff;
+    if (cutoff>size)
+      _cells_in_cutoff=static_cast<int>(ceil(cutoff/size));
+    else
+      _cells_in_cutoff=1;
+  }
   
   /// Get the size of the cutoff+skin
   inline double cell_size() const { return _cell_size; }
@@ -106,13 +99,24 @@ class Neighbor {
 
   inline void acc_timers() {
     if (_nbor_time_avail) {
-      time_nbor.add_to_total();
-      time_kernel.add_to_total();
       if (_gpu_nbor==2) {
-        time_hybrid1.add_to_total();
-        time_hybrid2.add_to_total();
+        int mn=0;
+        for (int i=0; i<_total_atoms; i++)
+          mn=std::max(mn,host_acc[i]);
+        if (mn>_max_nbors)
+          assert(0==1);
       }
-      _nbor_time_avail=false;
+      if (_time_device) {
+        time_nbor.add_to_total();
+        time_kernel.add_to_total();
+        if (_gpu_nbor==2) {
+          time_hybrid1.add_to_total();
+          time_hybrid2.add_to_total();
+        }
+        if (_maxspecial>0)
+          time_transpose.add_to_total();
+        _nbor_time_avail=false;
+      }
     }
   }
 
@@ -192,14 +196,11 @@ class Neighbor {
 
   // ----------------- Data for GPU Neighbor Calculation ---------------
 
-  /// Host storage for device calculated neighbor lists
-  /** Same storage format as device matrix **/
-  UCL_H_Vec<int> host_nbor;
-  /// Device storage for neighbor list matrix that will be copied to host
+  /// Host/Device storage for device calculated neighbor lists
   /** - 1st row is numj
     * - Remaining rows are by atom, columns are nbors **/
-  UCL_D_Vec<int> dev_host_nbor;
-  UCL_D_Vec<int> dev_host_numj;
+  UCL_Vector<int,int> nbor_host;
+  UCL_D_Vec<int> dev_numj_host;
   UCL_H_Vec<int> host_ilist;
   UCL_H_Vec<int*> host_jlist;
   /// Device storage for special neighbor counts
@@ -213,7 +214,7 @@ class Neighbor {
   UCL_D_Vec<int> dev_cell_counts;
 
   /// Device timers
-  UCL_Timer time_nbor, time_kernel, time_hybrid1, time_hybrid2;
+  UCL_Timer time_nbor, time_kernel, time_hybrid1, time_hybrid2, time_transpose;
   
  private:
   NeighborShared *_shared;
@@ -221,13 +222,26 @@ class Neighbor {
   bool _allocated, _use_packing, _nbor_time_avail, _time_device;
   int _gpu_nbor, _max_atoms, _max_nbors, _max_host, _nbor_pitch, _maxspecial;
   bool _gpu_host, _alloc_packed;
-  double _cell_size, _bin_time;
+  double _cutoff, _cell_size, _bin_time;
 
   double _gpu_bytes, _c_bytes, _cell_bytes;
   void alloc(bool &success);
   
-  int _block_cell_2d, _block_cell_id, _block_nbor_build, _ncells;
-  int _threads_per_atom;
+  int _block_cell_2d, _block_cell_id, _max_block_nbor_build, _block_nbor_build;
+  int _ncells, _threads_per_atom, _total_atoms;
+  int _cells_in_cutoff;
+
+  template <class numtyp, class acctyp>
+  inline void resize_max_neighbors(const int maxn, bool &success);
+  
+  int _warp_size;
+  inline void set_nbor_block_size(const int mn) {
+    int desired=mn/(2*_warp_size);
+    desired*=_warp_size;
+    if (desired<_warp_size) desired=_warp_size;
+    else if (desired>_max_block_nbor_build) desired=_max_block_nbor_build;
+    _block_nbor_build=desired;
+  }
 };
 
 }

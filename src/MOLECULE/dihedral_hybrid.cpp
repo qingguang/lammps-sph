@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -13,6 +13,7 @@
 
 #include "math.h"
 #include "string.h"
+#include "ctype.h"
 #include "dihedral_hybrid.h"
 #include "atom.h"
 #include "neighbor.h"
@@ -79,10 +80,10 @@ void DihedralHybrid::compute(int eflag, int vflag)
     }
     for (m = 0; m < nstyles; m++) {
       if (ndihedrallist[m] > maxdihedral[m]) {
-	memory->destroy(dihedrallist[m]);
-	maxdihedral[m] = ndihedrallist[m] + EXTRA;
-	memory->create(dihedrallist[m],maxdihedral[m],5,
-		       "dihedral_hybrid:dihedrallist");
+        memory->destroy(dihedrallist[m]);
+        maxdihedral[m] = ndihedrallist[m] + EXTRA;
+        memory->create(dihedrallist[m],maxdihedral[m],5,
+                       "dihedral_hybrid:dihedrallist");
       }
       ndihedrallist[m] = 0;
     }
@@ -98,7 +99,7 @@ void DihedralHybrid::compute(int eflag, int vflag)
       ndihedrallist[m]++;
     }
   }
-  
+
   // call each sub-style's compute function
   // set neighbor->dihedrallist to sub-style dihedrallist before call
   // accumulate sub-style global/peratom energy/virial in hybrid
@@ -126,8 +127,8 @@ void DihedralHybrid::compute(int eflag, int vflag)
       if (force->newton_bond) n += atom->nghost;
       double **vatom_substyle = styles[m]->vatom;
       for (i = 0; i < n; i++)
-	for (j = 0; j < 6; j++)
-	  vatom[i][j] += vatom_substyle[i][j];
+        for (j = 0; j < 6; j++)
+          vatom[i][j] += vatom_substyle[i][j];
     }
   }
 
@@ -161,25 +162,76 @@ void DihedralHybrid::allocate()
 
 void DihedralHybrid::settings(int narg, char **arg)
 {
-  nstyles = narg;
+  int i,m,istyle;
+
+  if (narg < 1) error->all(FLERR,"Illegal dihedral_style command");
+
+  // delete old lists, since cannot just change settings
+
+  if (nstyles) {
+    for (int i = 0; i < nstyles; i++) delete styles[i];
+    delete [] styles;
+    for (int i = 0; i < nstyles; i++) delete [] keywords[i];
+    delete [] keywords;
+  }
+
+  if (allocated) {
+    memory->destroy(setflag);
+    memory->destroy(map);
+    delete [] ndihedrallist;
+    delete [] maxdihedral;
+    for (int i = 0; i < nstyles; i++)
+      memory->destroy(dihedrallist[i]);
+    delete [] dihedrallist;
+  }
+  allocated = 0;
+
+  // count sub-styles by skipping numeric args
+  // one exception is 1st arg of style "table", which is non-numeric word
+  // need a better way to skip these exceptions
+
+  nstyles = 0;
+  i = 0;
+  while (i < narg) {
+    if (strcmp(arg[i],"table") == 0) i++;
+    i++;
+    while (i < narg && !isalpha(arg[i][0])) i++;
+    nstyles++;
+  }
+
+  // allocate list of sub-styles
+
   styles = new Dihedral*[nstyles];
   keywords = new char*[nstyles];
 
-  int dummy;
+  // allocate each sub-style and call its settings() with subset of args
+  // define subset of args for a sub-style by skipping numeric args
+  // one exception is 1st arg of style "table", which is non-numeric
+  // need a better way to skip these exceptions
 
-  for (int m = 0; m < nstyles; m++) {
-    for (int i = 0; i < m; i++)
-      if (strcmp(arg[m],arg[i]) == 0) 
-	error->all(FLERR,"Dihedral style hybrid cannot use "
-		   "same dihedral style twice");
-    if (strcmp(arg[m],"hybrid") == 0) 
+  int dummy;
+  nstyles = 0;
+  i = 0;
+
+  while (i < narg) {
+    for (m = 0; m < nstyles; m++)
+      if (strcmp(arg[i],keywords[m]) == 0)
+        error->all(FLERR,"Dihedral style hybrid cannot use "
+                   "same dihedral style twice");
+    if (strcmp(arg[i],"hybrid") == 0)
       error->all(FLERR,
-		 "Dihedral style hybrid cannot have hybrid as an argument");
-    if (strcmp(arg[m],"none") == 0) 
+                 "Dihedral style hybrid cannot have hybrid as an argument");
+    if (strcmp(arg[i],"none") == 0)
       error->all(FLERR,"Dihedral style hybrid cannot have none as an argument");
-    styles[m] = force->new_dihedral(arg[m],lmp->suffix,dummy);
-    keywords[m] = new char[strlen(arg[m])+1];
-    strcpy(keywords[m],arg[m]);
+    styles[nstyles] = force->new_dihedral(arg[i],lmp->suffix,dummy);
+    keywords[nstyles] = new char[strlen(arg[i])+1];
+    strcpy(keywords[nstyles],arg[i]);
+    istyle = i;
+    if (strcmp(arg[i],"table") == 0) i++;
+    i++;
+    while (i < narg && !isalpha(arg[i][0])) i++;
+    styles[nstyles]->settings(i-istyle-1,&arg[istyle+1]);
+    nstyles++;
   }
 }
 
@@ -292,7 +344,7 @@ double DihedralHybrid::memory_usage()
   double bytes = maxeatom * sizeof(double);
   bytes += maxvatom*6 * sizeof(double);
   for (int m = 0; m < nstyles; m++) bytes += maxdihedral[m]*5 * sizeof(int);
-  for (int m = 0; m < nstyles; m++) 
+  for (int m = 0; m < nstyles; m++)
     if (styles[m]) bytes += styles[m]->memory_usage();
   return bytes;
 }

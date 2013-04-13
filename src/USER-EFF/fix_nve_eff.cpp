@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -28,13 +28,14 @@
 #include "domain.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
 FixNVEEff::FixNVEEff(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  if (!atom->electron_flag) 
+  if (!atom->electron_flag)
     error->all(FLERR,"Fix nve/eff requires atom style electron");
 
   time_integrate = 1;
@@ -43,7 +44,7 @@ FixNVEEff::FixNVEEff(LAMMPS *lmp, int narg, char **arg) :
 /* ---------------------------------------------------------------------- */
 
 int FixNVEEff::setmask()
-{   
+{
   int mask = 0;
   mask |= INITIAL_INTEGRATE;
   mask |= FINAL_INTEGRATE;
@@ -88,7 +89,7 @@ void FixNVEEff::initial_integrate(int vflag)
   if (igroup == atom->firstgroup) nlocal = atom->nfirst;
 
   // x + dt * [v + 0.5 * dt * (f / m)];
-  
+
   if (mass) {
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
@@ -113,7 +114,7 @@ void FixNVEEff::initial_integrate(int vflag)
 void FixNVEEff::final_integrate()
 {
   double dtfm;
-  
+
   double **v = atom->v;
   double *ervel = atom->ervel;
   double *erforce = atom->erforce;
@@ -125,7 +126,7 @@ void FixNVEEff::final_integrate()
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
   if (igroup == atom->firstgroup) nlocal = atom->nfirst;
-  
+
   // dyn_v[i] += m * dt * dyn_f[i];
 
   if (mass) {
@@ -171,4 +172,3 @@ void FixNVEEff::reset_dt()
   dtv = update->dt;
   dtf = 0.5 * update->dt * force->ftm2v;
 }
-

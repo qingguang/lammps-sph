@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -64,7 +64,7 @@ class PairRESquared : public Pair {
     double A[3][3];     // Rotation matrix (lab->body)
     double aTe[3][3];   // A'*E
     double gamma[3][3]; // A'*S^2*A
-  
+
     // per particle precomputations for torque
 
     double sa[3][3];       // S^2*A;
@@ -72,7 +72,7 @@ class PairRESquared : public Pair {
     double lAtwo[3][3][3]; // A'*S^2*lA
     double lAsa[3][3][3];  // lAtwo+lA'*sa
   };
-    
+
   void allocate();
 
   void precompute_i(const int i,RE2Vars &ws);
@@ -82,8 +82,8 @@ class PairRESquared : public Pair {
                             const double *r, const double rsq,
                             double *fforce, double *ttor,
                             double *rtor);
-  double resquared_lj(const int i, const int j, const RE2Vars &wi, 
-                      const double *r, const double rsq, double *fforce, 
+  double resquared_lj(const int i, const int j, const RE2Vars &wi,
+                      const double *r, const double rsq, double *fforce,
                       double *ttor, bool calc_torque);
 
   double cr60;         // 60^1/3
@@ -100,7 +100,7 @@ class PairRESquared : public Pair {
 
 E: Pair resquared requires atom style ellipsoid
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Illegal ... command
 
@@ -112,9 +112,9 @@ E: Incorrect args for pair coefficients
 
 Self-explanatory.  Check the input script or data file.
 
-E: Pair gayberne requires atoms with same type have same shape
+E: Pair resquared requires atoms with same type have same shape
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Pair resquared epsilon a,b,c coeffs are not all set
 
@@ -126,6 +126,6 @@ Self-explanatory.
 
 E: Bad matrix inversion in mldivide3
 
-UNDOCUMENTED
+This error should not occur unless the matrix is badly formed.
 
 */

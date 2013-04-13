@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_cosine_shift_exp_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,10 +26,19 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleCosineShiftExpOMP::AngleCosineShiftExpOMP(class LAMMPS *lmp)
+  : AngleCosineShiftExp(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +65,11 @@ void AngleCosineShiftExpOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -79,7 +87,7 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
   double delx1,dely1,delz1,delx2,dely2,delz2;
   double eangle,f1[3],f3[3],ff;
   double rsq1,rsq2,r1,r2,c,s,a11,a12,a22;
-  double exp2,aa,uumin,cccpsss,cssmscc;            
+  double exp2,aa,uumin,cccpsss,cssmscc;
 
   const double * const * const x = atom->x;
   double * const * const f = thr->get_f();
@@ -97,7 +105,6 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -107,7 +114,6 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -121,9 +127,9 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
     // C= sine of angle
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
-    
+
     // force & energy
-        
+
     aa=a[type];
     uumin=umin[type];
 
@@ -134,19 +140,19 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
        {  //  |a|<0.01 so use expansions relative precision <1e-5
 //         std::cout << "Using expansion\n";
             if (EFLAG) eangle = -0.125*(1+cccpsss)*(4+aa*(cccpsss-1))*uumin;
-            ff=0.25*uumin*cssmscc*(2+aa*cccpsss)/s;   
+            ff=0.25*uumin*cssmscc*(2+aa*cccpsss)/s;
        }
      else
        {
-//   std::cout << "Not using expansion\n";            
+//   std::cout << "Not using expansion\n";
             exp2=exp(0.5*aa*(1+cccpsss));
             if (EFLAG) eangle = opt1[type]*(1-exp2);
-            ff=0.5*a[type]*opt1[type]*exp2*cssmscc/s;       
+            ff=0.5*a[type]*opt1[type]*exp2*cssmscc/s;
        }
 
     a11 =   ff*c/ rsq1;
     a12 =  -ff  / (r1*r2);
-    a22 =   ff*c/ rsq2;      
+    a22 =   ff*c/ rsq2;
 
     f1[0] = a11*delx1 + a12*delx2;
     f1[1] = a11*dely1 + a12*dely2;
@@ -176,6 +182,6 @@ void AngleCosineShiftExpOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
+                             delx1,dely1,delz1,delx2,dely2,delz2,thr);
   }
 }

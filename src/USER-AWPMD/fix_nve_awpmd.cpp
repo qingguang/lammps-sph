@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -29,15 +29,16 @@
 #include "TCP/wpmd_split.h"
 
 using namespace LAMMPS_NS;
+using namespace FixConst;
 
 /* ---------------------------------------------------------------------- */
 
 FixNVEAwpmd::FixNVEAwpmd(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
-  if (!atom->wavepacket_flag) 
+  if (!atom->wavepacket_flag)
     error->all(FLERR,"Fix nve/awpmd requires atom style wavepacket");
-  //if (!atom->mass_type != 1) 
+  //if (!atom->mass_type != 1)
    // error->all(FLERR,"Fix nve/awpmd requires per type mass");
 
   time_integrate = 1;
@@ -46,7 +47,7 @@ FixNVEAwpmd::FixNVEAwpmd(LAMMPS *lmp, int narg, char **arg) :
 /* ---------------------------------------------------------------------- */
 
 int FixNVEAwpmd::setmask()
-{   
+{
   int mask = 0;
   mask |= INITIAL_INTEGRATE;
   mask |= FINAL_INTEGRATE;
@@ -75,7 +76,7 @@ void FixNVEAwpmd::init()
 
 void FixNVEAwpmd::initial_integrate(int vflag)
 {
- 
+
 
   // update v,vr and x,radius of atoms in group
 
@@ -89,8 +90,8 @@ void FixNVEAwpmd::initial_integrate(int vflag)
   double *ervelforce=atom->ervelforce;
   double *cs=atom->cs;
   double *csforce=atom->csforce;
-  
-  
+
+
   double *mass = atom->mass;
   int *spin = atom->spin;
   int *type = atom->type;
@@ -99,7 +100,7 @@ void FixNVEAwpmd::initial_integrate(int vflag)
   if (igroup == atom->firstgroup) nlocal = atom->nfirst;
 
   // x + dt * [v + 0.5 * dt * (f / m)];
-  
+
   // simple Euler update
   for (int i = 0; i < nlocal; i++) {
     if (mask[i] & groupbit) {
@@ -149,4 +150,3 @@ void FixNVEAwpmd::reset_dt()
   dtv = update->dt;
   dtf = 0.5 * update->dt * force->ftm2v;
 }
-

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -13,7 +13,7 @@
 
 #ifdef FIX_CLASS
 
-FixStyle(append_atoms,FixAppendAtoms)
+FixStyle(append/atoms,FixAppendAtoms)
 
 #else
 
@@ -63,44 +63,40 @@ Self-explanatory.  Check the input script syntax and compare to the
 documentation for the command.  You can use -echo screen as a
 command-line option when running LAMMPS to see the offending line.
 
-E: Only zhi currently implemented for append_atoms
+E: Only zhi currently implemented for fix append/atoms
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Append boundary must be shrink/minimum
 
-UNDOCUMENTED
+The boundary style of the face where atoms are added
+must be of type m (shrink/minimum).
 
-E: Only zhi currently implemented for append_atom
+E: Bad fix ID in fix append/atoms command
 
-UNDOCUMENTED
+The value of the fix_id for keyword spatial must start with the suffix
+f_.
 
-E: Bad fix ID in fix append_atoms command
+E: Cannot use append/atoms in periodic dimension
 
-UNDOCUMENTED
-
-E: Cannot use append_atoms in periodic dimension
-
-UNDOCUMENTED
+The boundary style of the face where atoms are added can not be of
+type p (periodic).
 
 E: Cannot append atoms to a triclinic box
 
-UNDOCUMENTED
+The simulation box must be defined with edges alligned with the
+Cartesian axes.
 
-E: Use of fix append_atoms with undefined lattice
+E: Use of fix append/atoms with undefined lattice
 
-UNDOCUMENTED
+A lattice must be defined before using this fix.
 
 E: Fix ID for fix ave/spatial does not exist
 
 Self-explanatory.
 
-E: Must define lattice to append_atoms
+E: Must define lattice to append/atoms
 
-UNDOCUMENTED
-
-U: must define lattice to append_atoms
-
-UNDOCUMENTED
+A lattice must be defined before using this fix.
 
 */

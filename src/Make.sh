@@ -1,6 +1,8 @@
-# Make.sh = update Makefile.lib or Makefile.list or style_*.h files
+# Make.sh = update Makefile.lib, Makefile.shlib, Makefile.list 
+#           or style_*.h files
 # Syntax: sh Make.sh style
 #         sh Make.sh Makefile.lib
+#         sh Make.sh Makefile.shlib
 #         sh Make.sh Makefile.list
 
 # function to create one style_*.h file
@@ -22,10 +24,16 @@ style () {
   elif (test ! -e style_$3.h) then
     mv style_$3.tmp style_$3.h
     rm -f Obj_*/$4.d
+    if (test $5) then 
+      rm -f Obj_*/$5.d
+    fi
     rm -f Obj_*/lammps.d
   elif (test "`diff --brief style_$3.h style_$3.tmp`" != "") then
     mv style_$3.tmp style_$3.h
     rm -f Obj_*/$4.d
+    if (test $5) then 
+      rm -f Obj_*/$5.d
+    fi
     rm -f Obj_*/lammps.d
   else
     rm -f style_$3.tmp
@@ -34,6 +42,10 @@ style () {
 
 # create individual style files
 # called by "make machine"
+# col 1 = string to search for
+# col 2 = search in *.h files starting with this name
+# col 3 = prefix of style file
+# col 4 
 
 if (test $1 = "style") then
 
@@ -49,10 +61,11 @@ if (test $1 = "style") then
   style INTEGRATE_CLASS ""          integrate  update
   style KSPACE_CLASS    ""          kspace     force
   style MINIMIZE_CLASS  min_        minimize   update
-  style PAIR_CLASS      pair_       pair       force
+  style PAIR_CLASS      pair_       pair       force      pair_hybrid
+  style READER_CLASS    reader_     reader     read_dump
   style REGION_CLASS    region_     region     domain
 
-# edit Makefile.lib
+# edit Makefile.lib, for creating non-shared lib
 # called by "make makelib"
 # use current list of *.cpp and *.h files in src dir w/out main.cpp
 
@@ -62,6 +75,17 @@ elif (test $1 = "Makefile.lib") then
   sed -i -e "s/SRC =	.*/SRC =	$list/" Makefile.lib
   list=`ls -1 *.h | tr "[:cntrl:]" " "`
   sed -i -e "s/INC =	.*/INC =	$list/" Makefile.lib
+
+# edit Makefile.lib, for creating non-shared lib
+# called by "make makelib"
+# use current list of *.cpp and *.h files in src dir w/out main.cpp
+
+elif (test $1 = "Makefile.shlib") then
+
+  list=`ls -1 *.cpp | sed s/^main\.cpp// | tr "[:cntrl:]" " "`
+  sed -i -e "s/SRC =	.*/SRC =	$list/" Makefile.shlib
+  list=`ls -1 *.h | tr "[:cntrl:]" " "`
+  sed -i -e "s/INC =	.*/INC =	$list/" Makefile.shlib
 
 # edit Makefile.list
 # called by "make makelist"

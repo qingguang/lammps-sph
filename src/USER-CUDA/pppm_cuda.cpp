@@ -1,22 +1,22 @@
 /* ----------------------------------------------------------------------
-   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator 
+   LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
 
    Original Version:
    http://lammps.sandia.gov, Sandia National Laboratories
-   Steve Plimpton, sjplimp@sandia.gov 
+   Steve Plimpton, sjplimp@sandia.gov
 
-   See the README file in the top-level LAMMPS directory. 
+   See the README file in the top-level LAMMPS directory.
 
-   ----------------------------------------------------------------------- 
+   -----------------------------------------------------------------------
 
    USER-CUDA Package and associated modifications:
-   https://sourceforge.net/projects/lammpscuda/ 
+   https://sourceforge.net/projects/lammpscuda/
 
    Christian Trott, christian.trott@tu-ilmenau.de
    Lars Winterfeld, lars.winterfeld@tu-ilmenau.de
-   Theoretical Physics II, University of Technology Ilmenau, Germany 
+   Theoretical Physics II, University of Technology Ilmenau, Germany
 
-   See the README file in the USER-CUDA directory. 
+   See the README file in the USER-CUDA directory.
 
    This software is distributed under the GNU General Public License.
 ------------------------------------------------------------------------- */
@@ -28,7 +28,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -57,6 +57,7 @@
 #include "remap_wrap.h"
 #include "memory.h"
 #include "error.h"
+#include "update.h"
 #include <ctime> //crmadd
 #include "cuda_wrapper_cu.h"
 #include "pppm_cuda_cu.h"
@@ -78,26 +79,27 @@ void printArray(double* data,int nx, int ny, int nz)
   for(int i=0;i<nz;i++)
   for(int j=0;j<ny;j++)
   {
-  	printf("%i %i\n",i,j);
-  	for(int k=0;k<nx;k++)
-  	printf("%e ",data[2*(i*ny*nx+j*nx+k)]);
-  	printf("\n\n");
+          printf("%i %i\n",i,j);
+          for(int k=0;k<nx;k++)
+          printf("%e ",data[2*(i*ny*nx+j*nx+k)]);
+          printf("\n\n");
   }
-} 
+}
 void printArray(double*** data,int nx, int ny, int nz)
 {
   for(int i=0;i<nx;i++)
   for(int j=0;j<ny;j++)
   {
-  	printf("%i %i\n",i,j);
-  	for(int k=0;k<nz;k++)
-  	printf("%e ",data[i][j][k]);
-  	printf("\n\n");
+          printf("%i %i\n",i,j);
+          for(int k=0;k<nz;k++)
+          printf("%e ",data[i][j][k]);
+          printf("\n\n");
   }
-} 
+}
 /* ---------------------------------------------------------------------- */
 
-PPPMCuda::PPPMCuda(LAMMPS *lmp, int narg, char **arg) : PPPM(lmp, (narg==2?1:narg), arg)
+PPPMCuda::PPPMCuda(LAMMPS *lmp, int narg, char **arg) : 
+  PPPMOld(lmp, (narg==2?1:narg), arg)
 {
   cuda = lmp->cuda;
    if(cuda == NULL)
@@ -107,11 +109,8 @@ PPPMCuda::PPPMCuda(LAMMPS *lmp, int narg, char **arg) : PPPM(lmp, (narg==2?1:nar
   #ifndef FFT_CUFFT
   error->all(FLERR,"Using kspace_style pppm/cuda without cufft is not possible. Compile with cufft=1 to include cufft. Aborting.");
   #endif
-  precision = atof(arg[0]);
-  if(narg>1)
-  precisionmodify=arg[1][0];
-  else precisionmodify='=';
-  
+  accuracy_relative = atof(arg[0]);
+
   nfactors = 3;
   factors = new int[nfactors];
   factors[0] = 2;
@@ -134,7 +133,7 @@ PPPMCuda::PPPMCuda(LAMMPS *lmp, int narg, char **arg) : PPPM(lmp, (narg==2?1:nar
 
   fft1c = fft2c = NULL;
   remap = NULL;
- 
+
   density_brick_int=NULL;
   density_intScale=1000000;
   cu_vdx_brick = cu_vdy_brick = cu_vdz_brick = NULL;
@@ -146,43 +145,43 @@ PPPMCuda::PPPMCuda(LAMMPS *lmp, int narg, char **arg) : PPPM(lmp, (narg==2?1:nar
   cu_work1 = cu_work2 = cu_work3 = NULL;
   cu_vg = NULL;
   cu_fkx = cu_fky = cu_fkz = NULL;
-  
+
   cu_flag = NULL;
   cu_debugdata = NULL;
   cu_rho_coeff = NULL;
   cu_virial = NULL;
-  
+
   cu_gf_b = NULL;
-  
+
   cu_slabbuf = NULL;
   slabbuf = NULL;
-  
+
   nmax = 0;
   part2grid = NULL;
   cu_part2grid = NULL;
   adev_data_array=NULL;
   poissontime=0;
   old_nmax=0;
-  cu_pppm_grid_n=NULL;	
-  cu_pppm_grid_ids=NULL;	
-  
+  cu_pppm_grid_n=NULL;
+  cu_pppm_grid_ids=NULL;
+
   pppm_grid_nmax=0;
   pppm2partgrid=new int[3];
-  pppm_grid=new int[3];  
+  pppm_grid=new int[3];
   firstpass=true;
   scale = 1.0;
 }
 
 
 /* ----------------------------------------------------------------------
-   free all memory 
+   free all memory
 ------------------------------------------------------------------------- */
 
 PPPMCuda::~PPPMCuda()
 {
   delete [] slabbuf;
   delete cu_slabbuf;
-  
+
   delete [] factors;
   factors=NULL;
   deallocate();
@@ -193,16 +192,16 @@ PPPMCuda::~PPPMCuda()
 }
 
 /* ----------------------------------------------------------------------
-   called once before run 
+   called once before run
 ------------------------------------------------------------------------- */
 
 void PPPMCuda::init()
 {
-	
-	cuda->shared_data.pppm.cudable_force=1;
-	
+
+  cuda->shared_data.pppm.cudable_force=1;
+
     //if(cuda->finished_run) {PPPM::init(); return;}
-    
+
   if (me == 0) {
     if (screen) fprintf(screen,"PPPMCuda initialization ...\n");
     if (logfile) fprintf(logfile,"PPPMCuda initialization ...\n");
@@ -219,14 +218,14 @@ void PPPMCuda::init()
   if (slabflag == 0 && domain->nonperiodic > 0)
     error->all(FLERR,"Cannot use nonperiodic boundaries with PPPMCuda");
   if (slabflag == 1) {
-    if (domain->xperiodic != 1 || domain->yperiodic != 1 || 
-	domain->boundary[2][0] != 1 || domain->boundary[2][1] != 1)
+    if (domain->xperiodic != 1 || domain->yperiodic != 1 ||
+        domain->boundary[2][0] != 1 || domain->boundary[2][1] != 1)
       error->all(FLERR,"Incorrect boundaries with slab PPPMCuda");
   }
 
-  if (order > MAXORDER) {
+  if (order < 2 || order > MAXORDER) {
     char str[128];
-    sprintf(str,"PPPMCuda order cannot be greater than %d",MAXORDER);
+    sprintf(str,"PPPMCuda order cannot be smaller than 2 or greater than %d",MAXORDER);
     error->all(FLERR,str);
   }
   // free all arrays previously allocated
@@ -294,17 +293,21 @@ void PPPMCuda::init()
     error->warning(FLERR,str);
   }
 
+  // set accuracy (force units) from accuracy_relative or accuracy_absolute
+
+  if (accuracy_absolute >= 0.0) accuracy = accuracy_absolute;
+  else accuracy = accuracy_relative * two_charge_force;
+
   // setup FFT grid resolution and g_ewald
   // normally one iteration thru while loop is all that is required
   // if grid stencil extends beyond neighbor proc, reduce order and try again
 
   int iteration = 0;
 
-  while (order > 0) {
-
+  while (order > 1) {
     if (iteration && me == 0)
       error->warning(FLERR,"Reducing PPPMCuda order b/c stencil extends "
-		     "beyond neighbor processor");
+                     "beyond neighbor processor");
     iteration++;
 
     set_grid();
@@ -321,9 +324,9 @@ void PPPMCuda::init()
     nxhi_in = (comm->myloc[0]+1)*nx_pppm / comm->procgrid[0] - 1;
     nylo_in = comm->myloc[1]*ny_pppm / comm->procgrid[1];
     nyhi_in = (comm->myloc[1]+1)*ny_pppm / comm->procgrid[1] - 1;
-    nzlo_in = comm->myloc[2] * 
+    nzlo_in = comm->myloc[2] *
       (static_cast<int> (nz_pppm/slab_volfactor)) / comm->procgrid[2];
-    nzhi_in = (comm->myloc[2]+1) * 
+    nzhi_in = (comm->myloc[2]+1) *
       (static_cast<int> (nz_pppm/slab_volfactor)) / comm->procgrid[2] - 1;
 
     // nlower,nupper = stencil size for mapping particles to PPPMCuda grid
@@ -379,27 +382,27 @@ void PPPMCuda::init()
       dist[1] = cuthalf/domain->prd[1];
       dist[2] = cuthalf/domain->prd[2];
     }
-    
+
     int nlo,nhi;
-    
-    nlo = static_cast<int> ((sublo[0]-dist[0]-boxlo[0]) * 
-			    nx_pppm/xprd + shift) - OFFSET;
-    nhi = static_cast<int> ((subhi[0]+dist[0]-boxlo[0]) * 
-			    nx_pppm/xprd + shift) - OFFSET;
+
+    nlo = static_cast<int> ((sublo[0]-dist[0]-boxlo[0]) *
+                            nx_pppm/xprd + shift) - OFFSET;
+    nhi = static_cast<int> ((subhi[0]+dist[0]-boxlo[0]) *
+                            nx_pppm/xprd + shift) - OFFSET;
     nxlo_out = nlo + nlower;
     nxhi_out = nhi + nupper;
 
-    nlo = static_cast<int> ((sublo[1]-dist[1]-boxlo[1]) * 
-			    ny_pppm/yprd + shift) - OFFSET;
-    nhi = static_cast<int> ((subhi[1]+dist[1]-boxlo[1]) * 
-			    ny_pppm/yprd + shift) - OFFSET;
+    nlo = static_cast<int> ((sublo[1]-dist[1]-boxlo[1]) *
+                            ny_pppm/yprd + shift) - OFFSET;
+    nhi = static_cast<int> ((subhi[1]+dist[1]-boxlo[1]) *
+                            ny_pppm/yprd + shift) - OFFSET;
     nylo_out = nlo + nlower;
     nyhi_out = nhi + nupper;
 
-    nlo = static_cast<int> ((sublo[2]-dist[2]-boxlo[2]) * 
-			    nz_pppm/zprd_slab + shift) - OFFSET;
-    nhi = static_cast<int> ((subhi[2]+dist[2]-boxlo[2]) * 
-			    nz_pppm/zprd_slab + shift) - OFFSET;
+    nlo = static_cast<int> ((sublo[2]-dist[2]-boxlo[2]) *
+                            nz_pppm/zprd_slab + shift) - OFFSET;
+    nhi = static_cast<int> ((subhi[2]+dist[2]-boxlo[2]) *
+                            nz_pppm/zprd_slab + shift) - OFFSET;
     nzlo_out = nlo + nlower;
     nzhi_out = nhi + nupper;
 
@@ -414,7 +417,7 @@ void PPPMCuda::init()
       nzhi_in =  nz_pppm - 1;
       nzhi_out = nz_pppm - 1;
     }
-  
+
     // nlo_ghost,nhi_ghost = # of planes I will recv from 6 directions
     //   that overlay domain I own
     // proc in that direction tells me via sendrecv()
@@ -426,43 +429,43 @@ void PPPMCuda::init()
     nplanes = nxlo_in - nxlo_out;
     if (comm->procneigh[0][0] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[0][0],0,
-		   &nxhi_ghost,1,MPI_INT,comm->procneigh[0][1],0,
-		   world,&status);
+                   &nxhi_ghost,1,MPI_INT,comm->procneigh[0][1],0,
+                   world,&status);
     else nxhi_ghost = nplanes;
 
     nplanes = nxhi_out - nxhi_in;
     if (comm->procneigh[0][1] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[0][1],0,
-		   &nxlo_ghost,1,MPI_INT,comm->procneigh[0][0],
-		   0,world,&status);
+                   &nxlo_ghost,1,MPI_INT,comm->procneigh[0][0],
+                   0,world,&status);
     else nxlo_ghost = nplanes;
 
     nplanes = nylo_in - nylo_out;
     if (comm->procneigh[1][0] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[1][0],0,
-		   &nyhi_ghost,1,MPI_INT,comm->procneigh[1][1],0,
-		   world,&status);
+                   &nyhi_ghost,1,MPI_INT,comm->procneigh[1][1],0,
+                   world,&status);
     else nyhi_ghost = nplanes;
 
     nplanes = nyhi_out - nyhi_in;
     if (comm->procneigh[1][1] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[1][1],0,
-		   &nylo_ghost,1,MPI_INT,comm->procneigh[1][0],0,
-		   world,&status);
+                   &nylo_ghost,1,MPI_INT,comm->procneigh[1][0],0,
+                   world,&status);
     else nylo_ghost = nplanes;
 
     nplanes = nzlo_in - nzlo_out;
     if (comm->procneigh[2][0] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[2][0],0,
-		   &nzhi_ghost,1,MPI_INT,comm->procneigh[2][1],0,
-		   world,&status);
+                   &nzhi_ghost,1,MPI_INT,comm->procneigh[2][1],0,
+                   world,&status);
     else nzhi_ghost = nplanes;
 
     nplanes = nzhi_out - nzhi_in;
     if (comm->procneigh[2][1] != me)
       MPI_Sendrecv(&nplanes,1,MPI_INT,comm->procneigh[2][1],0,
-		   &nzlo_ghost,1,MPI_INT,comm->procneigh[2][0],0,
-		   world,&status);
+                   &nzlo_ghost,1,MPI_INT,comm->procneigh[2][0],0,
+                   world,&status);
     else nzlo_ghost = nplanes;
 
     // test that ghost overlap is not bigger than my sub-domain
@@ -483,7 +486,6 @@ void PPPMCuda::init()
   }
 
   if (order == 0) error->all(FLERR,"PPPMCuda order has been reduced to 0");
-  //printf("PPPMCuda: order is %i\n");
 
 
 
@@ -570,11 +572,11 @@ void PPPMCuda::init()
 
   if (me == 0) {
     if (screen) fprintf(screen,"  brick FFT buffer size/proc = %d %d %d\n",
-			ngrid_max,nfft_both_max,nbuf_max);
+                        ngrid_max,nfft_both_max,nbuf_max);
     if (logfile) fprintf(logfile,"  brick FFT buffer size/proc = %d %d %d\n",
-			 ngrid_max,nfft_both_max,nbuf_max);
+                         ngrid_max,nfft_both_max,nbuf_max);
   }
-cuda_shared_pppm* ap=&(cuda->shared_data.pppm);
+  cuda_shared_pppm* ap=&(cuda->shared_data.pppm);
 
    ap->density_intScale=density_intScale;
    ap->nxlo_in=nxlo_in;
@@ -608,7 +610,7 @@ cuda_shared_pppm* ap=&(cuda->shared_data.pppm);
    ap->nlower=nlower;
    ap->nupper=nupper;
    ap->shiftone=shiftone;
-   
+
   // allocate K-space dependent memory
 
 
@@ -622,12 +624,11 @@ cuda_shared_pppm* ap=&(cuda->shared_data.pppm);
 }
 
 /* ----------------------------------------------------------------------
-   adjust PPPMCuda coeffs, called initially and whenever volume has changed 
+   adjust PPPMCuda coeffs, called initially and whenever volume has changed
 ------------------------------------------------------------------------- */
 
 void PPPMCuda::setup()
 {
-  int i,j,k,l,m,n;
   double *prd;
   cu_gf_b->upload();
   // volume-dependent factors
@@ -642,7 +643,7 @@ void PPPMCuda::setup()
   double zprd = prd[2];
   double zprd_slab = zprd*slab_volfactor;
   volume = xprd * yprd * zprd_slab;
-    
+
   delxinv = nx_pppm/xprd;
   delyinv = ny_pppm/yprd;
   delzinv = nz_pppm/zprd_slab;
@@ -656,188 +657,24 @@ void PPPMCuda::setup()
   // fkx,fky,fkz for my FFT grid pts
   Cuda_PPPM_Setup_fkxyz_vg(nx_pppm, ny_pppm,nz_pppm,unitkx,unitky,unitkz,g_ewald);
 
-  
-/*  cu_vg->download();
-  int offset=8100-2;//10*(nxhi_fft-nxlo_fft+1)*(nyhi_fft-nylo_fft+1)+10*(nyhi_fft-nylo_fft+1);
-  for (int i=nxlo_fft; i <= nxhi_fft+1;i++) printf("%e ",vg[i-nxlo_fft+offset][0]);
-  printf("\n\n");
-  double per;
 
-  #ifndef FFT_CUFFT
-  for (i = nxlo_fft; i <= nxhi_fft; i++) {
-    per = i - nx_pppm*(2*i/nx_pppm);
-    fkx[i] = unitkx*per;
-  }
 
-  for (i = nylo_fft; i <= nyhi_fft; i++) {
-    per = i - ny_pppm*(2*i/ny_pppm);
-    fky[i] = unitky*per;
-  }
-
-  for (i = nzlo_fft; i <= nzhi_fft; i++) {
-    per = i - nz_pppm*(2*i/nz_pppm);
-    fkz[i] = unitkz*per;
-  }
-  #endif
-  #ifdef FFT_CUFFT
-  for (i = 0; i < nx_pppm; i++) {
-    per = i - nx_pppm*(2*i/nx_pppm);
-    fkx[i] = unitkx*per;
-  }
-
-  for (i = 0; i < ny_pppm; i++) {
-    per = i - ny_pppm*(2*i/ny_pppm);
-    fky[i] = unitky*per;
-  }
-
-  for (i = 0; i < nz_pppm; i++) {
-    per = i - nz_pppm*(2*i/nz_pppm);
-    fkz[i] = unitkz*per;
-  }
-  #endif 
-   
-  // virial coefficients
-
-  double sqk,vterm;
-int save_n=0;
-int s_i,s_j,s_k;
-double max=0.0;
-  n = 0;
-  for (k = nzlo_fft; k <= nzhi_fft; k++) {
-    for (j = nylo_fft; j <= nyhi_fft; j++) {
-      for (i = nxlo_fft; i <= nxhi_fft; i++) {
-	sqk = fkx[i]*fkx[i] + fky[j]*fky[j] + fkz[k]*fkz[k];
-	if(n==8100) printf("%lf\n",sqk);
-	if (sqk == 0.0) {
-	  vg[n][0] = 0.0;
-	  vg[n][1] = 0.0;
-	  vg[n][2] = 0.0;
-	  vg[n][3] = 0.0;
-	  vg[n][4] = 0.0;
-	  vg[n][5] = 0.0;
-	} else {
-	  vterm = -2.0 * (1.0/sqk + 0.25/(g_ewald*g_ewald));
-	  double tmp=vg[n][0];
-	  vg[n][0] = 1.0 + vterm*fkx[i]*fkx[i];
-	  if(((vg[n][0]-tmp)*(vg[n][0]-tmp)>1e-6)&&(save_n==0)) {save_n=n;s_k=k;s_j=j;s_i=i;}
-	  vg[n][1] = 1.0 + vterm*fky[j]*fky[j];
-	  vg[n][2] = 1.0 + vterm*fkz[k]*fkz[k];
-	  vg[n][3] = vterm*fkx[i]*fky[j];
-	  vg[n][4] = vterm*fkx[i]*fkz[k];
-	  vg[n][5] = vterm*fky[j]*fkz[k];
-	  //if(vg[n][0]>max) {max=vg[n][0]; save_n=n;}
-	}
-	n++;
-      }
-    }
-  }
-  printf("%lf %i %i %i %i\n",max,save_n,s_k,s_j,s_i);
-  for (int i=nxlo_fft; i <= nxhi_fft;i++) printf("%e ",vg[i-nxlo_fft+offset][0]);
-  printf("\n\n");
-
-  //cu_fkx->upload();
-  //cu_fky->upload();
- // cu_fkz->upload();
-  //cu_vg->upload();  */
   // modified (Hockney-Eastwood) Coulomb Green's function
 
-double sqk;
-  int nx,ny,nz,kper,lper,mper;
-  double snx,sny,snz,snx2,sny2,snz2;
-  double argx,argy,argz,wx,wy,wz,sx,sy,sz,qx,qy,qz;
-  double sum1,dot1,dot2;
-  double numerator,denominator;
-
-  int nbx = static_cast<int> ((g_ewald*xprd/(MY_PI*nx_pppm)) * 
-			      pow(-log(EPS_HOC),0.25));
-  int nby = static_cast<int> ((g_ewald*yprd/(MY_PI*ny_pppm)) * 
-			      pow(-log(EPS_HOC),0.25));
-  int nbz = static_cast<int> ((g_ewald*zprd_slab/(MY_PI*nz_pppm)) * 
-			      pow(-log(EPS_HOC),0.25));
+  int nbx = static_cast<int> ((g_ewald*xprd/(MY_PI*nx_pppm)) *
+                              pow(-log(EPS_HOC),0.25));
+  int nby = static_cast<int> ((g_ewald*yprd/(MY_PI*ny_pppm)) *
+                              pow(-log(EPS_HOC),0.25));
+  int nbz = static_cast<int> ((g_ewald*zprd_slab/(MY_PI*nz_pppm)) *
+                              pow(-log(EPS_HOC),0.25));
   Cuda_PPPM_setup_greensfn(nx_pppm,ny_pppm,nz_pppm,unitkx,unitky,unitkz,g_ewald,
 nbx,nby,nbz,xprd,yprd,zprd_slab);
-/*
-  double form = 1.0;
 
-  n = 0;
-#ifndef FFT_CUFFT
-  for (m = nzlo_fft; m <= nzhi_fft; m++) {
-#endif
+
 #ifdef FFT_CUFFT
-  for (m = 0; m < nz_pppm; m++) {
-#endif
-    mper = m - nz_pppm*(2*m/nz_pppm);
-    snz = sin(0.5*unitkz*mper*zprd_slab/nz_pppm);
-    snz2 = snz*snz;
-
-#ifndef FFT_CUFFT
-    for (l = nylo_fft; l <= nyhi_fft; l++) {
-#endif
-#ifdef FFT_CUFFT
-    for (l = 0; l < ny_pppm; l++) {
-#endif
-      lper = l - ny_pppm*(2*l/ny_pppm);
-      sny = sin(0.5*unitky*lper*yprd/ny_pppm);
-      sny2 = sny*sny;
-
-#ifndef FFT_CUFFT
-      for (k = nxlo_fft; k <= nxhi_fft; k++) {
-#endif
-#ifdef FFT_CUFFT
-      for (k = 0; k < nx_pppm; k++) {
-#endif
-	kper = k - nx_pppm*(2*k/nx_pppm);
-	snx = sin(0.5*unitkx*kper*xprd/nx_pppm);
-	snx2 = snx*snx;
-      
-	sqk = pow(unitkx*kper,2.0) + pow(unitky*lper,2.0) + 
-	  pow(unitkz*mper,2.0);
-
-	if (sqk != 0.0) {
-	  numerator = form*12.5663706/sqk;
-	  denominator = gf_denom(snx2,sny2,snz2);  
-	  sum1 = 0.0;
-	  for (nx = -nbx; nx <= nbx; nx++) {
-	    qx = unitkx*(kper+nx_pppm*nx);
-	    sx = exp(-.25*pow(qx/g_ewald,2.0));
-	    wx = 1.0;
-	    argx = 0.5*qx*xprd/nx_pppm;
-	    if (argx != 0.0) wx = pow(sin(argx)/argx,order);
-	    for (ny = -nby; ny <= nby; ny++) {
-	      qy = unitky*(lper+ny_pppm*ny);
-	      sy = exp(-.25*pow(qy/g_ewald,2.0));
-	      wy = 1.0;
-	      argy = 0.5*qy*yprd/ny_pppm;
-	      if (argy != 0.0) wy = pow(sin(argy)/argy,order);
-	      for (nz = -nbz; nz <= nbz; nz++) {
-		qz = unitkz*(mper+nz_pppm*nz);
-		sz = exp(-.25*pow(qz/g_ewald,2.0));
-		wz = 1.0;
-		argz = 0.5*qz*zprd_slab/nz_pppm;
-		if (argz != 0.0) wz = pow(sin(argz)/argz,order);
-
-		dot1 = unitkx*kper*qx + unitky*lper*qy + unitkz*mper*qz;
-		dot2 = qx*qx+qy*qy+qz*qz;
-		sum1 += (dot1/dot2) * sx*sy*sz * pow(wx*wy*wz,2.0);
-	      }
-	    }
-	  }
-	  greensfn[n++] = numerator*sum1/denominator;
-	} else greensfn[n++] = 0.0;
-      }
-    }
-  }*/
-  
-#ifdef FFT_CUFFT
-  //cu_greensfn->upload();
-  //cu_fkx->upload();
-  //cu_fky->upload();
-  //cu_fkz->upload();
-  //cu_vg->upload();  
   cu_vdx_brick->upload();
   cu_vdy_brick->upload();
   cu_vdz_brick->upload();
-  
 #endif
   cu_rho_coeff->upload();
   cu_density_brick->memset_device(0);
@@ -845,14 +682,12 @@ nbx,nby,nbz,xprd,yprd,zprd_slab);
 }
 
 /* ----------------------------------------------------------------------
-   compute the PPPMCuda long-range force, energy, virial 
+   compute the PPPMCuda long-range force, energy, virial
 ------------------------------------------------------------------------- */
 
 void PPPMCuda::compute(int eflag, int vflag)
 {
-	
-//	printf("PPPMCuda::compute START\n");
-	cuda_shared_atom*   cu_atom   = & cuda->shared_data.atom;
+  cuda_shared_atom*   cu_atom   = & cuda->shared_data.atom;
 
   int i;
   timespec starttime;
@@ -860,7 +695,7 @@ void PPPMCuda::compute(int eflag, int vflag)
   timespec starttotal;
   timespec endtotal;
   // convert atoms from box to lamda coords
-  
+
   if (triclinic == 0) boxlo = domain->boxlo;
   else {
     boxlo = domain->boxlo_lamda;
@@ -873,21 +708,21 @@ void PPPMCuda::compute(int eflag, int vflag)
     memory->destroy(part2grid);
     nmax = atom->nmax;
     memory->create(part2grid,nmax,3,"pppm:part2grid");
- 	delete cu_part2grid;
- 	delete [] adev_data_array;
- 	adev_data_array=new dev_array[1];
- 	cu_part2grid = new cCudaData<int  , int   , yx > ((int*)part2grid,adev_data_array, nmax,3);
+         delete cu_part2grid;
+         delete [] adev_data_array;
+         adev_data_array=new dev_array[1];
+         cu_part2grid = new cCudaData<int  , int   , yx > ((int*)part2grid,adev_data_array, nmax,3);
 
-  	pppm_device_update(&cuda->shared_data,cu_part2grid->dev_data(),atom->nlocal,atom->nmax);
+          pppm_device_update(&cuda->shared_data,cu_part2grid->dev_data(),atom->nlocal,atom->nmax);
     old_nmax=nmax;
   }
   if(cu_atom->update_nlocal) {pppm_update_nlocal(cu_atom->nlocal);}
-  
+
   energy = 0.0;
-  if (vflag) 
+  if (vflag)
   {
-  	for (i = 0; i < 6; i++) virial[i] = 0.0;
-  	cu_virial->memset_device(0);
+          for (i = 0; i < 6; i++) virial[i] = 0.0;
+          cu_virial->memset_device(0);
   }
   if(eflag) cu_energy->memset_device(0);
   clock_gettime(CLOCK_REALTIME,&starttotal);
@@ -912,22 +747,22 @@ void PPPMCuda::compute(int eflag, int vflag)
   // all procs communicate density values from their ghost cells
   //   to fully sum contribution in their 3d bricks
   // remap from 3d decomposition to FFT decomposition
-  
- int nprocs=comm->nprocs;
+
+  int nprocs=comm->nprocs;
 
   clock_gettime(CLOCK_REALTIME,&starttime);
 
-if(nprocs>1)
-{
-  cu_density_brick->download();
-  brick2fft();
-}
-else
-{
-   #ifdef FFT_CUFFT
-   pppm_initfftdata(&cuda->shared_data,(PPPM_FLOAT*)cu_density_brick->dev_data(),(FFT_FLOAT*)cu_work2->dev_data());
-   #endif
-}
+  if(nprocs>1)
+  {
+    cu_density_brick->download();
+    brick2fft();
+  }
+  else
+  {
+     #ifdef FFT_CUFFT
+     pppm_initfftdata(&cuda->shared_data,(PPPM_FLOAT*)cu_density_brick->dev_data(),(FFT_FLOAT*)cu_work2->dev_data());
+     #endif
+  }
 
   clock_gettime(CLOCK_REALTIME,&endtime);
   cuda->shared_data.cuda_timings.pppm_brick2fft+=(endtime.tv_sec-starttime.tv_sec+1.0*(endtime.tv_nsec-starttime.tv_nsec)/1000000000);
@@ -935,7 +770,7 @@ else
   // compute potential gradient on my FFT grid and
   //   portion of e_long on this proc's FFT grid
   // return gradients (electric fields) in 3d brick decomposition
-  
+
   clock_gettime(CLOCK_REALTIME,&starttime);
   poisson(eflag,vflag);
   clock_gettime(CLOCK_REALTIME,&endtime);
@@ -945,13 +780,11 @@ else
   //   surrounding their 3d bricks
 
   // not necessary since all the calculations are done on one proc
-  
-  // calculate the force on my particles
-  //cu_vdx_brick->download();
-  //cu_vdy_brick->download();
-  //cu_vdz_brick->download();
 
-   clock_gettime(CLOCK_REALTIME,&starttime);
+  // calculate the force on my particles
+
+
+  clock_gettime(CLOCK_REALTIME,&starttime);
   fieldforce();
   clock_gettime(CLOCK_REALTIME,&endtime);
   cuda->shared_data.cuda_timings.pppm_fieldforce+=(endtime.tv_sec-starttime.tv_sec+1.0*(endtime.tv_nsec-starttime.tv_nsec)/1000000000);
@@ -965,7 +798,7 @@ else
     double energy_all;
     MPI_Allreduce(&energy,&energy_all,1,MPI_DOUBLE,MPI_SUM,world);
     energy = energy_all;
-   
+
     energy *= 0.5*volume;
     energy -= g_ewald*qsqsum/1.772453851 +
       MY_PI2*qsum*qsum / (g_ewald*g_ewald*volume);
@@ -985,86 +818,61 @@ else
   if (slabflag) slabcorr(eflag);
 
   // convert atoms back from lamda to box coords
-  
+
   if (triclinic) domain->lamda2x(atom->nlocal);
-  
+
   if(firstpass) firstpass=false;
 }
 
 
 /* ----------------------------------------------------------------------
-   allocate memory that depends on # of K-vectors and order 
+   allocate memory that depends on # of K-vectors and order
 ------------------------------------------------------------------------- */
 
 
 void PPPMCuda::allocate()
 {
-	//printf("PPPMCuda::allocate START Mem: %i\n",CudaWrapper_CheckMemUseage());
-/*if(sizeof(CUDA_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision\n");
-
-#ifdef PPPM_PRECISION
-if(sizeof(PPPM_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision for pppm core\n");
-if(sizeof(PPPM_FLOAT)==sizeof(double)) printf("PPPMCuda: Using double precision for pppm core\n");
-#endif
-#ifdef ENERGY_PRECISION
-if(sizeof(ENERGY_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision for energy\n");
-if(sizeof(ENERGY_FLOAT)==sizeof(double)) printf("PPPMCuda: Using double precision for energy\n");
-#endif
-#ifdef ENERGY_PRECISION
-if(sizeof(FFT_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision for fft\n");
-if(sizeof(FFT_FLOAT)==sizeof(double)) printf("PPPMCuda: Using double precision for fft\n");
-#endif
-#ifdef X_PRECISION
-if(sizeof(X_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision for positions\n");
-if(sizeof(X_FLOAT)==sizeof(double)) printf("PPPMCuda: Using double precision for positions\n");
-#endif
-#ifdef F_PRECISION
-if(sizeof(F_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision for forces\n");
-if(sizeof(F_FLOAT)==sizeof(double)) printf("PPPMCuda: Using double precision for forces\n");
-#endif*/
-
-//if(sizeof(PPPM_FLOAT)==sizeof(float)) printf("PPPMCuda: Using single precision\n");
 
   struct dev_array* dev_tmp=new struct dev_array[20];
-int n_cudata=0;
+  int n_cudata=0;
 
 
   memory->create3d_offset(density_brick,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:density_brick");
+                          nxlo_out,nxhi_out,"pppm:density_brick");
   memory->create3d_offset(density_brick_int,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:density_brick_int");
+                          nxlo_out,nxhi_out,"pppm:density_brick_int");
 
 
   cu_density_brick = new cCudaData<double, PPPM_FLOAT, x> ((double*) &(density_brick[nzlo_out][nylo_out][nxlo_out]), & (dev_tmp[n_cudata++]),
-  				   (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
+                                     (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
 
   cu_density_brick_int = new cCudaData<int, int, x> ((int*) &(density_brick_int[nzlo_out][nylo_out][nxlo_out]), & (dev_tmp[n_cudata++]),
-  				   (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
+                                     (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
 
   memory->create3d_offset(vdx_brick,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:vdx_brick");
+                          nxlo_out,nxhi_out,"pppm:vdx_brick");
   memory->create3d_offset(vdx_brick_tmp,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:vdx_brick_tmp");
+                          nxlo_out,nxhi_out,"pppm:vdx_brick_tmp");
 
   cu_vdx_brick = new cCudaData<double, PPPM_FLOAT, x> ((double*) &(vdx_brick[nzlo_out][nylo_out][nxlo_out]), & (dev_tmp[n_cudata++]),
-  				   (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
+                                     (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
 
   memory->create3d_offset(vdy_brick,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:vdy_brick");
+                          nxlo_out,nxhi_out,"pppm:vdy_brick");
   cu_vdy_brick = new cCudaData<double, PPPM_FLOAT, x> ((double*) &(vdy_brick[nzlo_out][nylo_out][nxlo_out]), & (dev_tmp[n_cudata++]),
-  				   (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
+                                     (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
 
   memory->create3d_offset(vdz_brick,nzlo_out,nzhi_out,nylo_out,nyhi_out,
-			  nxlo_out,nxhi_out,"pppm:vdz_brick");
+                          nxlo_out,nxhi_out,"pppm:vdz_brick");
   cu_vdz_brick = new cCudaData<double, PPPM_FLOAT, x> ((double*) &(vdz_brick[nzlo_out][nylo_out][nxlo_out]), & (dev_tmp[n_cudata++]),
-  				   (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
+                                     (nzhi_out-nzlo_out+1)*(nyhi_out-nylo_out+1)*(nxhi_out-nxlo_out+1));
 
   memory->create(density_fft,nfft_both,"pppm:density_fft");
 
   cu_density_fft = new cCudaData<double, PPPM_FLOAT, x> (density_fft, & (dev_tmp[n_cudata++]),nfft_both);
 
-  cu_energy = new cCudaData<double, ENERGY_FLOAT, x> (NULL, &(dev_tmp[n_cudata++]),ny_pppm*nz_pppm);    
-  cu_virial = new cCudaData<double, ENERGY_FLOAT, x> (NULL, &(dev_tmp[n_cudata++]),ny_pppm*nz_pppm*6);    
+  cu_energy = new cCudaData<double, ENERGY_FLOAT, x> (NULL, &(dev_tmp[n_cudata++]),ny_pppm*nz_pppm);
+  cu_virial = new cCudaData<double, ENERGY_FLOAT, x> (NULL, &(dev_tmp[n_cudata++]),ny_pppm*nz_pppm*6);
 
   memory->create(greensfn,nfft_both,"pppm:greensfn");
   cu_greensfn = new cCudaData<double, PPPM_FLOAT, x> (greensfn, & (dev_tmp[n_cudata++]) , nx_pppm*ny_pppm*nz_pppm);
@@ -1072,11 +880,11 @@ int n_cudata=0;
   memory->create(work1,2*nx_pppm*ny_pppm*nz_pppm,"pppm:work1");
   memory->create(work2,2*nx_pppm*ny_pppm*nz_pppm,"pppm:work2");
   memory->create(work3,2*nx_pppm*ny_pppm*nz_pppm,"pppm:work3");
-  
+
   cu_work1 = new cCudaData<double, FFT_FLOAT, x> (work1, & (dev_tmp[n_cudata++]) , 2*nx_pppm*ny_pppm*nz_pppm);
   cu_work2 = new cCudaData<double, FFT_FLOAT, x> (work2, & (dev_tmp[n_cudata++]) , 2*nx_pppm*ny_pppm*nz_pppm);
   cu_work3 = new cCudaData<double, FFT_FLOAT, x> (work3, & (dev_tmp[n_cudata++]) , 2*nx_pppm*ny_pppm*nz_pppm);
-  
+
 
   memory->create(fkx,nx_pppm,"pppmcuda:fkx");
   cu_fkx = new cCudaData<double, PPPM_FLOAT, x> (fkx, & (dev_tmp[n_cudata++]) , nx_pppm);
@@ -1106,7 +914,7 @@ int n_cudata=0;
   debugdata=new PPPM_FLOAT[100];
   cu_debugdata = new cCudaData<PPPM_FLOAT, PPPM_FLOAT, x> (debugdata,& (dev_tmp[n_cudata++]),100);
   cu_flag = new cCudaData<int, int, x> (&global_flag,& (dev_tmp[n_cudata++]),3);
-  
+
   // create 2 FFTs and a Remap
   // 1st FFT keeps data in FFT decompostion
   // 2nd FFT returns data in 3d brick decomposition
@@ -1118,39 +926,39 @@ int n_cudata=0;
 
 
   fft1c = new FFT3dCuda(lmp,world,nx_pppm,ny_pppm,nz_pppm,
-		   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
-		   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
-		   0,0,&tmp,true);
+                   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
+                   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
+                   0,0,&tmp,true);
 
   fft2c = new FFT3dCuda(lmp,world,nx_pppm,ny_pppm,nz_pppm,
-		   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
-		   nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,
-		   0,0,&tmp,false);
+                   nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
+                   nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,
+                   0,0,&tmp,false);
 
- 
-#ifdef FFT_CUFFT  
+
+#ifdef FFT_CUFFT
   fft1c->set_cudata(cu_work2->dev_data(),cu_work1->dev_data());
   fft2c->set_cudata(cu_work2->dev_data(),cu_work3->dev_data());
 #endif
 
   remap = new Remap(lmp,world,
-		    nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,
-		    nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
-		    1,0,0,2);
+                    nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,
+                    nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,
+                    1,0,0,2);
 
 
 pppm_device_init(cu_density_brick->dev_data(), cu_vdx_brick->dev_data(), cu_vdy_brick->dev_data(), cu_vdz_brick->dev_data(), cu_density_fft->dev_data(),cu_energy->dev_data(),cu_virial->dev_data()
-	    , cu_work1->dev_data(), cu_work2->dev_data(), cu_work3->dev_data(), cu_greensfn->dev_data(), cu_fkx->dev_data(), cu_fky->dev_data(), cu_fkz->dev_data(), cu_vg->dev_data()
-	    ,nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,nxlo_out,nxhi_out,nylo_out,nyhi_out,nzlo_out,nzhi_out,nx_pppm,ny_pppm,nz_pppm
-	    ,nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,cu_gf_b->dev_data()
-	    ,qqrd2e,order,cu_rho_coeff->dev_data(),cu_debugdata->dev_data(),cu_density_brick_int->dev_data(),slabflag
-	 );  
+            , cu_work1->dev_data(), cu_work2->dev_data(), cu_work3->dev_data(), cu_greensfn->dev_data(), cu_fkx->dev_data(), cu_fky->dev_data(), cu_fkz->dev_data(), cu_vg->dev_data()
+            ,nxlo_in,nxhi_in,nylo_in,nyhi_in,nzlo_in,nzhi_in,nxlo_out,nxhi_out,nylo_out,nyhi_out,nzlo_out,nzhi_out,nx_pppm,ny_pppm,nz_pppm
+            ,nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,cu_gf_b->dev_data()
+            ,qqrd2e,order,cu_rho_coeff->dev_data(),cu_debugdata->dev_data(),cu_density_brick_int->dev_data(),slabflag
+         );
 }
 
 
 
 /* ----------------------------------------------------------------------
-   deallocate memory that depends on # of K-vectors and order 
+   deallocate memory that depends on # of K-vectors and order
  ---------------------------------------------------------------------- */
 
 void PPPMCuda::deallocate()
@@ -1159,7 +967,7 @@ void PPPMCuda::deallocate()
   memory->destroy3d_offset(vdx_brick,nzlo_out,nylo_out,nxlo_out);
   memory->destroy3d_offset(vdy_brick,nzlo_out,nylo_out,nxlo_out);
   memory->destroy3d_offset(vdz_brick,nzlo_out,nylo_out,nxlo_out);
-  
+
   density_brick = vdx_brick = vdy_brick = vdz_brick = NULL;
 
   memory->destroy(density_fft);
@@ -1190,7 +998,7 @@ void PPPMCuda::deallocate()
   delete cu_density_fft;
   delete cu_energy;
   delete cu_virial;
-#ifdef FFT_CUFFT 
+#ifdef FFT_CUFFT
   delete cu_greensfn;
   delete cu_gf_b;
   delete cu_vg;
@@ -1206,7 +1014,7 @@ void PPPMCuda::deallocate()
   delete cu_debugdata;
   delete cu_rho_coeff;
 
-  
+
   cu_vdx_brick = cu_vdy_brick = cu_vdz_brick = NULL;
   cu_density_brick = NULL;
   cu_density_brick_int = NULL;
@@ -1220,12 +1028,12 @@ void PPPMCuda::deallocate()
   cu_vg = NULL;
   cu_fkx = cu_fky = cu_fkz = NULL;
 #endif
-  
+
   cu_flag = NULL;
   cu_debugdata = NULL;
   cu_rho_coeff = NULL;
   cu_part2grid = NULL;
-  
+
   memory->destroy(buf1);
   memory->destroy(buf2);
 
@@ -1236,7 +1044,7 @@ void PPPMCuda::deallocate()
 
   delete fft1c;
   fft1c = NULL;
-  double end=CudaWrapper_CheckMemUseage()/1024/1024;
+
   delete fft2c;
   fft2c = NULL;
   delete remap;
@@ -1246,7 +1054,7 @@ void PPPMCuda::deallocate()
 }
 
 /* ----------------------------------------------------------------------
-   set size of FFT grid (nx,ny,nz_pppm) and g_ewald 
+   set size of FFT grid (nx,ny,nz_pppm) and g_ewald
 -------------------------------------------------------------------------*/
 
 void PPPMCuda::set_grid()
@@ -1286,7 +1094,7 @@ void PPPMCuda::set_grid()
   acons[7][5] = 1755948832039.0 / 36229939200000.0;
   acons[7][6] = 4887769399.0 / 37838389248.0;
 
-  double q2 = qsqsum / force->dielectric;
+  double q2 = qsqsum * force->qqrd2e/ force->dielectric;
   bigint natoms = atom->natoms;
 
   // use xprd,yprd,zprd even if triclinic so grid size is the same
@@ -1297,7 +1105,7 @@ void PPPMCuda::set_grid()
   double yprd = domain->yprd;
   double zprd = domain->zprd;
   double zprd_slab = zprd*slab_volfactor;
-  
+
   // make initial g_ewald estimate
   // based on desired error and real space cutoff
   // fluid-occupied volume used to estimate real-space error
@@ -1306,8 +1114,8 @@ void PPPMCuda::set_grid()
   double h_x,h_y,h_z;
 
   if (!gewaldflag)
-    g_ewald = sqrt(-log(precision*sqrt(natoms*cutoff*xprd*yprd*zprd) / 
-			(2.0*q2))) / cutoff;
+    g_ewald = sqrt(-log(accuracy*sqrt(natoms*cutoff*xprd*yprd*zprd) /
+                        (2.0*q2))) / cutoff;
 
   // set optimal nx_pppm,ny_pppm,nz_pppm based on order and precision
   // nz_pppm uses extended zprd_slab instead of zprd
@@ -1316,28 +1124,28 @@ void PPPMCuda::set_grid()
 
   if (!gridflag) {
     double err;
-    h_x = h_y = h_z = 1/g_ewald;  
+    h_x = h_y = h_z = 1/g_ewald;
 
     nx_pppm = static_cast<int> (xprd/h_x + 1);
     ny_pppm = static_cast<int> (yprd/h_y + 1);
     nz_pppm = static_cast<int> (zprd_slab/h_z + 1);
 
     err = rms(h_x,xprd,natoms,q2,acons);
-    while (err > precision) {
+    while (err > accuracy) {
       err = rms(h_x,xprd,natoms,q2,acons);
       nx_pppm++;
       h_x = xprd/nx_pppm;
     }
 
     err = rms(h_y,yprd,natoms,q2,acons);
-    while (err > precision) {
+    while (err > accuracy) {
       err = rms(h_y,yprd,natoms,q2,acons);
       ny_pppm++;
       h_y = yprd/ny_pppm;
     }
 
     err = rms(h_z,zprd_slab,natoms,q2,acons);
-    while (err > precision) {
+    while (err > accuracy) {
       err = rms(h_z,zprd_slab,natoms,q2,acons);
       nz_pppm++;
       h_z = zprd_slab/nz_pppm;
@@ -1350,30 +1158,7 @@ void PPPMCuda::set_grid()
   while (!factorable(ny_pppm)) ny_pppm++;
   while (!factorable(nz_pppm)) nz_pppm++;
 
-  // if allowed try to change grid size until it is a power of a single prime factor
-  if(precisionmodify!='=')
-  {
-    if (me == 0) {
-      if (screen) {
-        fprintf(screen,"Initial grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
-      }
-      if (logfile) {
-        fprintf(logfile,"Initial grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
-      }
-    }
-  	make_power_of_prime(&nx_pppm);
-  	make_power_of_prime(&ny_pppm);
-  	make_power_of_prime(&nz_pppm);
-    if (me == 0) {
-      if (screen) {
-        fprintf(screen,"Modified grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
-      }
-      if (logfile) {
-        fprintf(logfile,"Modified grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
-      }
-    }
-  }
-  
+
   // adjust g_ewald for new grid size
 
   h_x = xprd/nx_pppm;
@@ -1399,7 +1184,7 @@ void PPPMCuda::set_grid()
     while (fabs(dgew) > SMALL && fmid != 0.0) {
       dgew *= 0.5;
       g_ewald = rtb + dgew;
-      fmid = diffpr(h_x,h_y,h_z,q2,acons);      
+      fmid = diffpr(h_x,h_y,h_z,q2,acons);
       if (fmid <= 0.0) rtb = g_ewald;
       ncount++;
       if (ncount > LARGE) error->all(FLERR,"Cannot compute PPPMCuda G");
@@ -1412,7 +1197,7 @@ void PPPMCuda::set_grid()
   double lpry = rms(h_y,yprd,natoms,q2,acons);
   double lprz = rms(h_z,zprd_slab,natoms,q2,acons);
   double lpr = sqrt(lprx*lprx + lpry*lpry + lprz*lprz) / sqrt(3.0);
-  double spr = 2.0*q2 * exp(-g_ewald*g_ewald*cutoff*cutoff) / 
+  double spr = 2.0*q2 * exp(-g_ewald*g_ewald*cutoff*cutoff) /
     sqrt(natoms*cutoff*xprd*yprd*zprd_slab);
 
   // free local memory
@@ -1426,96 +1211,32 @@ void PPPMCuda::set_grid()
       fprintf(screen,"  G vector = %g\n",g_ewald);
       fprintf(screen,"  grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
       fprintf(screen,"  stencil order = %d\n",order);
-      fprintf(screen,"  RMS precision = %g\n",MAX(lpr,spr));
+      fprintf(screen,"  absolute RMS force accuracy = %g\n",MAX(lpr,spr));
+      fprintf(screen,"  relative force accuracy = %g\n",
+              MAX(lpr,spr)/two_charge_force);
     }
     if (logfile) {
       fprintf(logfile,"  G vector = %g\n",g_ewald);
       fprintf(logfile,"  grid = %d %d %d\n",nx_pppm,ny_pppm,nz_pppm);
       fprintf(logfile,"  stencil order = %d\n",order);
-      fprintf(logfile,"  RMS precision = %g\n",MAX(lpr,spr));
+      fprintf(logfile,"  absolute RMS force accuracy = %g\n",MAX(lpr,spr));
+      fprintf(logfile,"  relative force accuracy = %g\n",
+              MAX(lpr,spr)/two_charge_force);
     }
   }
 }
 
 
 /* ----------------------------------------------------------------------
-   check if all factors of n are prime
-   return 1 if yes, 0 if no 
--------------------------------------------------------------------------*/
-
-void PPPMCuda::make_power_of_prime(int* n)
-{
-
-	if((precisionmodify!='+')&&(precisionmodify!='-')&&(precisionmodify!='c'))
-    {error->all(FLERR,"Unknown Option for PPPMCuda, assumeing '='");return;}
-    int oldn=*n;
-    int* primelist=new int[1000];
-    int count=0;
-    
-    int prime=1;
-    while(prime<2000) primelist[count++]=prime*=2;
-    prime=1;
-    while(prime<2000) primelist[count++]=prime*=3;
-    prime=1;
-    while(prime<2000) primelist[count++]=prime*=5;
-    prime=1;
-    while(prime<2000) primelist[count++]=prime*=7;
-    
-    for(int i=0;i<count-1;i++)
-    for(int j=0;j<count-i-1;j++) 
-    {
-    	if(primelist[j]>primelist[j+1])
-        {
-        	int a=primelist[j+1];
-        	primelist[j+1]=primelist[j];
-        	primelist[j]=a;
-        }
-    }
-    
-    int nextsmaller=0;
-    while((primelist[nextsmaller+1]<*n)&&(nextsmaller+1<count)) nextsmaller++;
-    
-    int nextlarger=count-1;
-    while((primelist[nextlarger-1]>*n)&&(nextlarger>0)) nextlarger--;
-    
-    if(precisionmodify=='-') 
-    	*n=primelist[nextsmaller];
-    if((precisionmodify=='+')&&
-    (primelist[nextlarger]*primelist[nextlarger]*primelist[nextlarger]<2*(*n)*(*n)*(*n))) 
-    	*n=primelist[nextlarger];
-    if(precisionmodify=='c')
-    {
-    	double factorsmaller=1.0*(*n)*(*n)*(*n)/(primelist[nextsmaller]*primelist[nextsmaller]*primelist[nextsmaller]);
-    	double factorlarger=1.0*(primelist[nextlarger]*primelist[nextlarger]*primelist[nextlarger])/((*n)*(*n)*(*n));
-    	if((factorlarger<factorsmaller)&&(factorlarger<2)) *n=primelist[nextlarger];
-    	else *n=primelist[nextsmaller]; 
-    	
-    }
-	delete [] primelist;
-	primelist = NULL;
-	if(*n<0.75*oldn)   
-	if (me == 0) {
-      if (screen) {
-        fprintf(screen,"\n\npppm/cuda WARNING:   \t\tSignificantly lower gridsize than requested.\n\t\t\t\t\tYou should most likely use '=' or '+' as precision modify option\n");
-      }
-      if (logfile) {
-        fprintf(logfile,"\n\npppm/cuda WARNING:   \t\tSignificantly lower gridsize than requested.\n\t\t\t\t\tYou should most likely use '=' or '+' as precision modify option\n.");
-      }
-    }
-}
-
-
-
-/* ----------------------------------------------------------------------
    find center grid pt for each of my particles
    check that full stencil for the particle will fit in my 3d brick
-   store central grid pt indices in part2grid array 
+   store central grid pt indices in part2grid array
 ------------------------------------------------------------------------- */
 
 
 void PPPMCuda::particle_map()
 {
-  MYDBG(printf("# CUDA PPPMCuda::particle_map() ... start\n");) 
+  MYDBG(printf("# CUDA PPPMCuda::particle_map() ... start\n");)
   int flag = 0;
 
     cu_flag->memset_device(0);
@@ -1530,25 +1251,25 @@ void PPPMCuda::particle_map()
        printf("z: %e ",debugdata[9]);
        printf("nx: %e ",debugdata[4]);
        printf("ny: %e ",debugdata[5]);
-       
+
       printf("\n");
       //printf("debugdata: cpu: %e %e %e %i\n",boxlo[0],boxlo[1],boxlo[2],atom->nlocal);
       cuda->cu_x->download();
-  	  int nx,ny,nz;
+            int nx,ny,nz;
 
-  	  double **x = atom->x;
+            double **x = atom->x;
       int nlocal = atom->nlocal;
-  	  for (int i = 0; i < nlocal; i++) {
+            for (int i = 0; i < nlocal; i++) {
         nx = static_cast<int> ((x[i][0]-boxlo[0])*delxinv+shift) - OFFSET;
         ny = static_cast<int> ((x[i][1]-boxlo[1])*delyinv+shift) - OFFSET;
-      	nz = static_cast<int> ((x[i][2]-boxlo[2])*delzinv+shift) - OFFSET;
+              nz = static_cast<int> ((x[i][2]-boxlo[2])*delzinv+shift) - OFFSET;
 
-	    if(i==1203)printf("Outside Atom: %i %e %e %e (%i %i %i)\n",i,x[i][0],x[i][1],x[i][2],nx,ny,nz);
-    	if (nx+nlower < nxlo_out || nx+nupper > nxhi_out ||
-		ny+nlower < nylo_out || ny+nupper > nyhi_out ||
-		nz+nlower < nzlo_out || nz+nupper > nzhi_out || i==1203) {printf("Outside Atom: %i %e %e %e (%i %i %i)\n",i,x[i][0],x[i][1],x[i][2],nx,ny,nz); }
-  	  }
-      
+            if(i==1203)printf("Outside Atom: %i %e %e %e (%i %i %i)\n",i,x[i][0],x[i][1],x[i][2],nx,ny,nz);
+            if (nx+nlower < nxlo_out || nx+nupper > nxhi_out ||
+                ny+nlower < nylo_out || ny+nupper > nyhi_out ||
+                nz+nlower < nzlo_out || nz+nupper > nzhi_out || i==1203) {printf("Outside Atom: %i %e %e %e (%i %i %i)\n",i,x[i][0],x[i][1],x[i][2],nx,ny,nz); }
+            }
+
     }
 
   int flag_all;
@@ -1560,7 +1281,7 @@ void PPPMCuda::particle_map()
    create discretized "density" on section of global grid due to my particles
    density(x,y,z) = charge "density" at grid points of my 3d brick
    (nxlo:nxhi,nylo:nyhi,nzlo:nzhi) is extent of my brick (including ghosts)
-   in global grid 
+   in global grid
 ------------------------------------------------------------------------- */
 
 
@@ -1571,7 +1292,7 @@ void PPPMCuda::make_rho()
 
 
 /* ----------------------------------------------------------------------
-   FFT-based Poisson solver 
+   FFT-based Poisson solver
 ------------------------------------------------------------------------- */
 void PPPMCuda::poisson(int eflag, int vflag)
 {
@@ -1581,29 +1302,29 @@ void PPPMCuda::poisson(int eflag, int vflag)
     return;
 #endif
 #ifdef FFT_CUFFT
-  timespec starttime,starttime2;
-  timespec endtime,endtime2;
-  
-  int nprocs=comm->nprocs;
+  timespec starttime;
+  timespec endtime;
+
+
   clock_gettime(CLOCK_REALTIME,&starttime);
   fft1c->compute(density_fft,work1,1);
-  
+
   clock_gettime(CLOCK_REALTIME,&endtime);
   poissontime+=(endtime.tv_sec-starttime.tv_sec+1.0*(endtime.tv_nsec-starttime.tv_nsec)/1000000000);
 
 
-  
+
   if (eflag || vflag) {
     poisson_energy(nxlo_fft,nxhi_fft,nylo_fft,nyhi_fft,nzlo_fft,nzhi_fft,vflag);
     ENERGY_FLOAT gpuvirial[6];
     energy+=sum_energy(cu_virial->dev_data(),cu_energy->dev_data(),nx_pppm,ny_pppm,nz_pppm,vflag,gpuvirial);
-    if(vflag) 
+    if(vflag)
     {
       for(int j=0;j<6;j++) virial[j]+=gpuvirial[j];
     }
   }
-  
-  
+
+
   // scale by 1/total-grid-pts to get rho(k)
   // multiply by Green's function to get V(k)
 
@@ -1614,8 +1335,8 @@ void PPPMCuda::poisson(int eflag, int vflag)
   // copy it into inner portion of vdx,vdy,vdz arrays
 
   // x direction gradient
-  
-  
+
+
   poisson_xgrad(nx_pppm,ny_pppm,nz_pppm);
 
 
@@ -1623,10 +1344,10 @@ void PPPMCuda::poisson(int eflag, int vflag)
   fft2c->compute(work2,work2,-1);
   clock_gettime(CLOCK_REALTIME,&endtime);
   poissontime+=(endtime.tv_sec-starttime.tv_sec+1.0*(endtime.tv_nsec-starttime.tv_nsec)/1000000000);
-  
+
   poisson_vdx_brick(nxhi_out,nxlo_out,nyhi_out,nylo_out,nzhi_out,nzlo_out,nx_pppm,ny_pppm,nz_pppm);
-  
-  
+
+
   // y direction gradient
 
   poisson_ygrad(nx_pppm,ny_pppm,nz_pppm);
@@ -1637,7 +1358,7 @@ void PPPMCuda::poisson(int eflag, int vflag)
   poissontime+=(endtime.tv_sec-starttime.tv_sec+1.0*(endtime.tv_nsec-starttime.tv_nsec)/1000000000);
 
   poisson_vdy_brick(nxhi_out,nxlo_out,nyhi_out,nylo_out,nzhi_out,nzlo_out,nx_pppm,ny_pppm,nz_pppm);
-      
+
   // z direction gradient
 
   poisson_zgrad(nx_pppm,ny_pppm,nz_pppm);
@@ -1652,7 +1373,7 @@ void PPPMCuda::poisson(int eflag, int vflag)
 }
 
 /*----------------------------------------------------------------------
-   interpolate from grid to get electric field & force on my particles 
+   interpolate from grid to get electric field & force on my particles
 -------------------------------------------------------------------------*/
 
 void PPPMCuda::fieldforce()
@@ -1661,48 +1382,20 @@ void PPPMCuda::fieldforce()
   return;
 }
 
-
-
-
 /* ----------------------------------------------------------------------
    perform and time the 4 FFTs required for N timesteps
 ------------------------------------------------------------------------- */
 
-void PPPMCuda::timing(int n, double &time3d, double &time1d)
+int PPPMCuda::timing_1d(int n, double &time1d)
 {
+  time1d = cuda->shared_data.cuda_timings.pppm_poisson/update->nsteps/4*n;
+  return 4;
+}
 
-  double time1,time2;
-
-  for (int i = 0; i < 2*nfft_both; i++) work1[i] = 0.0;
-
-  MPI_Barrier(world);
-  time1 = MPI_Wtime();
-
-  for (int i = 0; i < n; i++) {
-    fft1c->compute(work1,work1,1);
-    fft2c->compute(work1,work1,-1);
-    fft2c->compute(work1,work1,-1);
-    fft2c->compute(work1,work1,-1);
-  }
-
-  MPI_Barrier(world);
-  time2 = MPI_Wtime();
-  time3d = time2 - time1;
-
-  MPI_Barrier(world);
-  /*time1 = MPI_Wtime();
-
-  for (int i = 0; i < n; i++) {
-    fft1c->timing1d(work1,nfft_both,1);
-    fft2c->timing1d(work1,nfft_both,-1);
-    fft2c->timing1d(work1,nfft_both,-1);
-    fft2c->timing1d(work1,nfft_both,-1);
-  }
-
-  MPI_Barrier(world);
-  time2 = MPI_Wtime();
-  time1d = time2 - time1;*/
-
+int PPPMCuda::timing_3d(int n, double &time3d)
+{
+  time3d = cuda->shared_data.cuda_timings.pppm_poisson/update->nsteps*n;
+  return 4;
 }
 
 void PPPMCuda::slabcorr(int eflag)
@@ -1710,30 +1403,30 @@ void PPPMCuda::slabcorr(int eflag)
   // compute local contribution to global dipole moment
   if(slabbuf==NULL)
   {
-  	slabbuf=new ENERGY_FLOAT[(atom->nmax+31)/32];
-  	cu_slabbuf = new cCudaData<ENERGY_FLOAT,ENERGY_FLOAT, x> (slabbuf, (atom->nmax+31)/32);
+          slabbuf=new ENERGY_FLOAT[(atom->nmax+31)/32];
+          cu_slabbuf = new cCudaData<ENERGY_FLOAT,ENERGY_FLOAT, x> (slabbuf, (atom->nmax+31)/32);
   }
-  if((atom->nlocal+31)/32*sizeof(ENERGY_FLOAT)>=cu_slabbuf->dev_size())
+  if(unsigned((atom->nlocal+31)/32)*sizeof(ENERGY_FLOAT)>=unsigned(cu_slabbuf->dev_size()))
   {
-  	delete [] slabbuf;
-  	delete cu_slabbuf;
-  	slabbuf=new ENERGY_FLOAT[(atom->nmax+31)/32];
-  	cu_slabbuf = new cCudaData<ENERGY_FLOAT,ENERGY_FLOAT, x> (slabbuf, (atom->nmax+31)/32);
+          delete [] slabbuf;
+          delete cu_slabbuf;
+          slabbuf=new ENERGY_FLOAT[(atom->nmax+31)/32];
+          cu_slabbuf = new cCudaData<ENERGY_FLOAT,ENERGY_FLOAT, x> (slabbuf, (atom->nmax+31)/32);
   }
-  
-  
+
+
   double dipole = cuda_slabcorr_energy(&cuda->shared_data,slabbuf,(ENERGY_FLOAT*) cu_slabbuf->dev_data());
 
   double dipole_all;
   MPI_Allreduce(&dipole,&dipole_all,1,MPI_DOUBLE,MPI_SUM,world);
 
   // compute corrections
-  
+
   double e_slabcorr = 2.0*MY_PI*dipole_all*dipole_all/volume;
-  
+
   if (eflag) energy += qqrd2e*scale * e_slabcorr;
-  
-  double ffact = -4.0*MY_PI*dipole_all/volume; 
- 
+
+  double ffact = -4.0*MY_PI*dipole_all/volume;
+
   cuda_slabcorr_force(&cuda->shared_data,ffact);
 }

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -55,19 +55,18 @@ class FixWallGran : public Fix {
   int nlevels_respa;
   int time_origin;
 
-  bigint laststep;
   int *touch;
   double **shear;
   int shearupdate;
 
   void hooke(double, double, double, double, double *,
-	     double *, double *, double *, double *, double, double);
+             double *, double *, double *, double *, double, double);
   void hooke_history(double, double, double, double, double *,
-		     double *, double *, double *, double *, double, double,
-		     double *);
+                     double *, double *, double *, double *, double, double,
+                     double *);
   void hertz_history(double, double, double, double, double *,
-		     double *, double *, double *, double *, double, double,
-		     double *);
+                     double *, double *, double *, double *, double, double,
+                     double *);
 };
 
 }
@@ -85,7 +84,7 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Fix wall/gran requires atom style sphere
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Cannot use wall in periodic dimension
 

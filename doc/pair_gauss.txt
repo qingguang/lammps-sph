@@ -7,6 +7,7 @@
 :line
 
 pair_style gauss command :h3
+pair_style gauss/gpu command :h3
 pair_style gauss/omp command :h3
 pair_style gauss/cut command :h3
 pair_style gauss/cut/omp command :h3
@@ -92,7 +93,7 @@ section for more info.
 
 You can specify the accelerated styles explicitly in your input script
 by including their suffix, or you can use the "-suffix command-line
-switch"_Section_start.html#start_6 when you invoke LAMMPS, or you can
+switch7_Section_start.html#start_6 when you invoke LAMMPS, or you can
 use the "suffix"_suffix.html command in your input script.
 
 See "Section_accelerate"_Section_accelerate.html of the manual for
@@ -144,9 +145,9 @@ thermo_style custom step temp epair v_occ :pre
 
 [Restrictions:]
 
-The {gauss/cut} style is part of the "user-misc" package. It is only enabled
-if LAMMPS is build with that package. See the "Making of LAMMPS"_Section_start.html#3
-section for more info.
+The {gauss/cut} style is part of the "user-misc" package. It is only
+enabled if LAMMPS is build with that package. See the "Making of
+LAMMPS"_Section_start.html#3 section for more info.
 
 [Related commands:]
 

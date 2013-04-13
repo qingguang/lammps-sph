@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -46,3 +46,16 @@ class PairLJSDKGPU : public PairLJSDK {
 }
 #endif
 #endif
+
+/* ERROR/WARNING messages:
+
+E: Insufficient memory on accelerator
+
+There is insufficient memory on one of the devices specified for the gpu
+package
+
+E: Cannot use newton pair with lj/sdk/gpu pair style
+
+Self-explanatory.
+
+*/

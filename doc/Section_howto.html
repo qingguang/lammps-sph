@@ -319,7 +319,7 @@ jump in.polymer
 <P>All of the above examples work whether you are running on 1 or
 multiple processors, but assumed you are running LAMMPS on a single
 partition of processors.  LAMMPS can be run on multiple partitions via
-the "-partition" command-line switch as described in <A HREF = "Section_start.html#start_6">this
+the "-partition" command-line switch as described in <A HREF = "Section_start.html#start_7">this
 section</A> of the manual.
 </P>
 <P>In the last 2 examples, if LAMMPS were run on 3 partitions, the same
@@ -361,7 +361,7 @@ for more info on packages.
 </P>
 <P>In all these cases, you must run with one or more processors per
 replica.  The processors assigned to each replica are determined at
-run-time by using the <A HREF = "Section_start.html#start_6">-partition command-line
+run-time by using the <A HREF = "Section_start.html#start_7">-partition command-line
 switch</A> to launch LAMMPS on multiple
 partitions, which in this context are the same as replicas.  E.g.
 these commands:
@@ -370,7 +370,7 @@ these commands:
 mpirun -np 8 lmp_linux -partition 8x1 -in in.neb 
 </PRE>
 <P>would each run 8 replicas, on either 16 or 8 processors.  Note the use
-of the <A HREF = "Section_start.html#start_6">-in command-line switch</A> to specify
+of the <A HREF = "Section_start.html#start_7">-in command-line switch</A> to specify
 the input script which is required when running in multi-replica mode.
 </P>
 <P>Also note that with MPI installed on a machine (e.g. your desktop),
@@ -545,6 +545,17 @@ theta of HOH angle = 104.52 <BR>
 LJ sigma of O-O = 3.16435<BR>
 LJ epsilon, sigma of OH, HH = 0.0 <BR>
 </P>
+<P>Note that the when using the TIP4P pair style, the neighobr list
+cutoff for Coulomb interactions is effectively extended by a distance
+2 * (OM distance), to account for the offset distance of the
+fictitious charges on O atoms in water molecules.  Thus it is
+typically best in an efficiency sense to use a LJ cutoff >= Coulomb
+cutoff + 2*(OM distance), to shrink the size of the neighbor list.
+This leads to slightly larger cost for the long-range calculation, so
+you can test the trade-off for your model.  The OM distance and the LJ
+and Coulombic cutoffs are set in the <A HREF = "pair_lj.html">pair_style
+lj/cut/coul/long/tip4p</A> command.
+</P>
 <P>Wikipedia also has a nice article on <A HREF = "http://en.wikipedia.org/wiki/Water_model">water
 models</A>.
 </P>
@@ -648,8 +659,8 @@ invoked with minimal overhead (no setup or clean-up) if you wish to do
 multiple short runs, driven by another program.
 </P>
 <P>Examples of driver codes that call LAMMPS as a library are included in
-the "couple" directory of the LAMMPS distribution; see couple/README
-for more details:
+the examples/COUPLE directory of the LAMMPS distribution; see
+examples/COUPLE/README for more details:
 </P>
 <UL><LI>simple: simple driver programs in C++ and C which invoke LAMMPS as a
 library 
@@ -665,7 +676,7 @@ strain induced across grain boundaries
 
 
 
-<P><A HREF = "Section_start.html#start_4">This section</A> of the documentation
+<P><A HREF = "Section_start.html#start_5">This section</A> of the documentation
 describes how to build LAMMPS as a library.  Once this is done, you
 can interface with LAMMPS either via C++, C, Fortran, or Python (or
 any other language that supports a vanilla C-like interface).  For
@@ -762,7 +773,7 @@ conditions of the box (periodic, non-periodic, etc).  The orthogonal
 box has its "origin" at (xlo,ylo,zlo) and is defined by 3 edge vectors
 starting from the origin given by <B>a</B> = (xhi-xlo,0,0); <B>b</B> =
 (0,yhi-ylo,0); <B>c</B> = (0,0,zhi-zlo).  The 6 parameters
-(xlo,xhi,ylo,yhi,zlo,zhi) are defined at the time the simluation box
+(xlo,xhi,ylo,yhi,zlo,zhi) are defined at the time the simulation box
 is created, e.g. by the <A HREF = "create_box.html">create_box</A> or
 <A HREF = "read_data.html">read_data</A> or <A HREF = "read_restart.html">read_restart</A>
 commands.  Additionally, LAMMPS defines box size parameters lx,ly,lz
@@ -770,19 +781,64 @@ where lx = xhi-xlo, and similarly in the y and z dimensions.  The 6
 parameters, as well as lx,ly,lz, can be output via the <A HREF = "thermo_style.html">thermo_style
 custom</A> command.
 </P>
-<P>LAMMPS also allows simulations to be perfored in non-orthogonal
-simulation boxes shaped as a parallelepiped with triclinic symmetry.
-The parallelepiped has its "origin" at (xlo,ylo,zlo) and is defined by
-3 edge vectors starting from the origin given by <B>a</B> = (xhi-xlo,0,0); <B>b</B>
-= (xy,yhi-ylo,0); <B>c</B> = (xz,yz,zhi-zlo).  <I>Xy,xz,yz</I> can be 0.0 or
-positive or negative values and are called "tilt factors" because they
-are the amount of displacement applied to faces of an originally
-orthogonal box to transform it into the parallelepiped.  Note that in
-LAMMPS the triclinic simulation box edge vectors <B>a</B>, <B>b</B>, and <B>c</B> cannot be
-arbitrary vectors.  As indicated, <B>a</B> must be aligned with the x axis, <B>b</B>
-must be in the xy plane, and <B>c</B> is arbitrary.  However, this is not a
-restriction since it is possible to rotate any set of 3 crystal basis
-vectors so that they meet this restriction.
+<P>LAMMPS also allows simulations to be performed in triclinic
+(non-orthogonal) simulation boxes shaped as a parallelepiped with
+triclinic symmetry.  The parallelepiped has its "origin" at
+(xlo,ylo,zlo) and is defined by 3 edge vectors starting from the
+origin given by <B>a</B> = (xhi-xlo,0,0); <B>b</B> = (xy,yhi-ylo,0); <B>c</B> =
+(xz,yz,zhi-zlo).  <I>xy,xz,yz</I> can be 0.0 or positive or negative values
+and are called "tilt factors" because they are the amount of
+displacement applied to faces of an originally orthogonal box to
+transform it into the parallelepiped.  In LAMMPS the triclinic
+simulation box edge vectors <B>a</B>, <B>b</B>, and <B>c</B> cannot be arbitrary
+vectors.  As indicated, <B>a</B> must lie on the positive x axis.  <B>b</B> must
+lie in the xy plane, with strictly positive y component. <B>c</B> may have
+any orientation with strictly positive z component.  The requirement
+that <B>a</B>, <B>b</B>, and <B>c</B> have strictly positive x, y, and z components,
+respectively, ensures that <B>a</B>, <B>b</B>, and <B>c</B> form a complete
+right-handed basis.  These restrictions impose no loss of generality,
+since it is possible to rotate/invert any set of 3 crystal basis
+vectors so that they conform to the restrictions.
+</P>
+<P>For example, assume that the 3 vectors <B>A</B>,<B>B</B>,<B>C</B> are the edge
+vectors of a general parallelepiped, where there is no restriction on
+<B>A</B>,<B>B</B>,<B>C</B> other than they form a complete right-handed basis i.e.
+<B>A</B> x <B>B</B> . <B>C</B> > 0.  The equivalent LAMMPS <B>a</B>,<B>b</B>,<B>c</B> are a linear
+rotation of <B>A</B>, <B>B</B>, and <B>C</B> and can be computed as follows:
+</P>
+<CENTER><IMG SRC = "Eqs/transform.jpg">
+</CENTER>
+<P>where A = |<B>A</B>| indicates the scalar length of <B>A</B>. The ^ hat symbol
+indicates the corresponding unit vector. <I>beta</I> and <I>gamma</I> are angles
+between the vectors described below. Note that by construction, 
+<B>a</B>, <B>b</B>, and <B>c</B> have strictly positive x, y, and z components, respectively.
+If it should happen that
+<B>A</B>, <B>B</B>, and <B>C</B> form a left-handed basis, then the above equations
+are not valid for <B>c</B>. In this case, it is necessary
+to first apply an inversion. This can be achieved
+by interchanging two basis vectors or by changing the sign of one of them.
+</P>
+<P>For consistency, the same rotation/inversion applied to the basis vectors
+must also be applied to atom positions, velocities, 
+and any other vector quantities.
+This can be conveniently achieved by first converting to 
+fractional coordinates in the
+old basis and then converting to distance coordinates in the new basis.
+The transformation is given by the following equation:
+</P>
+<CENTER><IMG SRC = "Eqs/rotate.jpg">
+</CENTER>
+<P>where <I>V</I> is the volume of the box, <B>X</B> is the original vector quantity and 
+<B>x</B> is the vector in the LAMMPS basis. 
+</P>
+<P>There is no requirement that a triclinic box be periodic in any
+dimension, though it typically should be in at least the 2nd dimension
+of the tilt (y in xy) if you want to enforce a shift in periodic
+boundary conditions across that boundary.  Some commands that work
+with triclinic boxes, e.g. the <A HREF = "fix_deform.html">fix deform</A> and <A HREF = "fix_nh.html">fix
+npt</A> commands, require periodicity or non-shrink-wrap
+boundary conditions in specific dimensions.  See the command doc pages
+for details.
 </P>
 <P>The 9 parameters (xlo,xhi,ylo,yhi,zlo,zhi,xy,xz,yz) are defined at the
 time the simluation box is created.  This happens in one of 3 ways.
@@ -810,24 +866,55 @@ The 9 parameters, as well as lx,ly,lz, can be output via the
 <A HREF = "thermo_style.html">thermo_style custom</A> command.
 </P>
 <P>To avoid extremely tilted boxes (which would be computationally
-inefficient), no tilt factor can skew the box more than half the
-distance of the parallel box length, which is the 1st dimension in the
-tilt factor (x for xz).  For example, if xlo = 2 and xhi = 12, then
-the x box length is 10 and the xy tilt factor must be between -5 and
-5.  Similarly, both xz and yz must be between -(xhi-xlo)/2 and
-+(yhi-ylo)/2.  Note that this is not a limitation, since if the
-maximum tilt factor is 5 (as in this example), then configurations
-with tilt = ..., -15, -5, 5, 15, 25, ... are geometrically all
-equivalent.
+inefficient), LAMMPS normally requires that no tilt factor can skew
+the box more than half the distance of the parallel box length, which
+is the 1st dimension in the tilt factor (x for xz).  This is required
+both when the simulation box is created, e.g. via the
+<A HREF = "create_box.html">create_box</A> or <A HREF = "read_data.html">read_data</A> commands,
+as well as when the box shape changes dynamically during a simulation,
+e.g. via the <A HREF = "fix_deform.html">fix deform</A> or <A HREF = "fix_nh.html">fix npt</A>
+commands.
+</P>
+<P>For example, if xlo = 2 and xhi = 12, then the x box length is 10 and
+the xy tilt factor must be between -5 and 5.  Similarly, both xz and
+yz must be between -(xhi-xlo)/2 and +(yhi-ylo)/2.  Note that this is
+not a limitation, since if the maximum tilt factor is 5 (as in this
+example), then configurations with tilt = ..., -15, -5, 5, 15, 25,
+... are geometrically all equivalent.  If the box tilt exceeds this
+limit during a dynamics run (e.g. via the <A HREF = "fix_deform.html">fix deform</A>
+command), then the box is "flipped" to an equivalent shape with a tilt
+factor within the bounds, so the run can continue.  See the <A HREF = "fix_deform.html">fix
+deform</A> doc page for further details.
+</P>
+<P>One exception to this rule is if the 1st dimension in the tilt
+factor (x for xy) is non-periodic.  In that case, the limits on the
+tilt factor are not enforced, since flipping the box in that dimension
+does not change the atom positions due to non-periodicity.  In this
+mode, if you tilt the system to extreme angles, the simulation will
+simply become inefficient, due to the highly skewed simulation box.
+</P>
+<P>The limitation on not creating a simulation box with a tilt factor
+skewing the box more than half the distance of the parallel box length
+can be overridden via the <A HREF = "box.html">box</A> command.  Setting the <I>tilt</I>
+keyword to <I>large</I> allows any tilt factors to be specified.
+</P>
+<P>Box flips that may occur using the <A HREF = "fix_deform.html">fix deform</A> or
+<A HREF = "fix_nh.html">fix npt</A> commands can be turned off using the <I>flip no</I>
+option with either of the commands.
+</P>
+<P>Note that if a simulation box has a large tilt factor, LAMMPS will run
+less efficiently, due to the large volume of communication needed to
+acquire ghost atoms around a processor's irregular-shaped sub-domain.
+For extreme values of tilt, LAMMPS may also lose atoms and generate an
+error.
 </P>
 <P>Triclinic crystal structures are often defined using three lattice
 constants <I>a</I>, <I>b</I>, and <I>c</I>, and three angles <I>alpha</I>, <I>beta</I> and
-<I>gamma</I>. Note that in this nomenclature, the a, b, and c lattice constants
-are the scalar lengths of the edge vectors <B>a</B>, <B>b</B>, and <B>c</B> defined 
-above.  The
-relationship between these 6 quantities (a,b,c,alpha,beta,gamma) and
-the LAMMPS box sizes (lx,ly,lz) = (xhi-xlo,yhi-ylo,zhi-zlo) and tilt
-factors (xy,xz,yz) is as follows:
+<I>gamma</I>. Note that in this nomenclature, the a, b, and c lattice
+constants are the scalar lengths of the edge vectors <B>a</B>, <B>b</B>, and <B>c</B>
+defined above.  The relationship between these 6 quantities
+(a,b,c,alpha,beta,gamma) and the LAMMPS box sizes (lx,ly,lz) =
+(xhi-xlo,yhi-ylo,zhi-zlo) and tilt factors (xy,xz,yz) is as follows:
 </P>
 <CENTER><IMG SRC = "Eqs/box.jpg">
 </CENTER>
@@ -910,9 +997,9 @@ LAMMPS for computational efficiency to be 1/2 of the parallel box
 length.  However, <A HREF = "fix_deform.html">fix deform</A> can continuously strain
 a box by an arbitrary amount.  As discussed in the <A HREF = "fix_deform.html">fix
 deform</A> command, when the tilt value reaches a limit,
-the box is re-shaped to the opposite limit which is an equivalent
-tiling of periodic space.  The strain rate can then continue to change
-as before.  In a long NEMD simulation these box re-shaping events may
+the box is flipped to the opposite limit which is an equivalent tiling
+of periodic space.  The strain rate can then continue to change as
+before.  In a long NEMD simulation these box re-shaping events may
 occur many times.
 </P>
 <P>In a NEMD simulation, the "remap" option of <A HREF = "fix_deform.html">fix
@@ -1640,8 +1727,8 @@ derivative w.r.t. e_i, it follows that C_ij is also symmetric, with at
 most 7*6/2 = 21 distinct elements.
 </P>
 <P>At zero temperature, it is easy to estimate these derivatives by
-deforming the cell in one of the six directions using the command
-<A HREF = "displace_box.html">displace_box</A> and measuring the change in the
+deforming the simulation box in one of the six directions using the
+<A HREF = "change_box.html">change_box</A> command and measuring the change in the
 stress tensor. A general-purpose script that does this is given in the
 examples/elastic directory described in <A HREF = "Section_example.html">this
 section</A>.
@@ -1662,7 +1749,7 @@ converge and requires careful post-processing <A HREF = "#Shinoda">(Shinoda)</A>
 
 <A NAME = "howto_19"></A><H4>6.19 Library interface to LAMMPS 
 </H4>
-<P>As described in <A HREF = "Section_start.html#start_4">Section_start 4</A>, LAMMPS
+<P>As described in <A HREF = "Section_start.html#start_5">Section_start 4</A>, LAMMPS
 can be built as a library, so that it can be called by another code,
 used in a <A HREF = "Section_howto.html#howto_10">coupled manner</A> with other
 codes, or driven through a <A HREF = "Section_python.html">Python interface</A>.
@@ -1684,7 +1771,7 @@ void lammps_file(void *, char *);
 char *lammps_command(void *, char *); 
 </PRE>
 <P>The lammps_open() function is used to initialize LAMMPS, passing in a
-list of strings as if they were <A HREF = "Section_start.html#start_6">command-line
+list of strings as if they were <A HREF = "Section_start.html#start_7">command-line
 arguments</A> when LAMMPS is run in
 stand-alone mode from the command line, and a MPI communicator for
 LAMMPS to run under.  It returns a ptr to the LAMMPS object that is
@@ -1733,11 +1820,12 @@ details.
 <P>The key idea of the library interface is that you can write any
 functions you wish to define how your code talks to LAMMPS and add
 them to src/library.cpp and src/library.h, as well as to the <A HREF = "Section_python.html">Python
-interface</A>.  The routines you add can access
-or change any LAMMPS data you wish.  The couple and python directories
-have example C++ and C and Python codes which show how a driver code
-can link to LAMMPS as a library, run LAMMPS on a subset of processors,
-grab data from LAMMPS, change it, and put it back into LAMMPS.
+interface</A>.  The routines you add can access or
+change any LAMMPS data you wish.  The examples/COUPLE and python
+directories have example C++ and C and Python codes which show how a
+driver code can link to LAMMPS as a library, run LAMMPS on a subset of
+processors, grab data from LAMMPS, change it, and put it back into
+LAMMPS.
 </P>
 <HR>
 

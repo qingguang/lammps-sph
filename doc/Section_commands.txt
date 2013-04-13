@@ -241,8 +241,8 @@ Atom definition:
 
 "create_atoms"_create_atoms.html, "create_box"_create_box.html,
 "lattice"_lattice.html, "read_data"_read_data.html,
-"read_restart"_read_restart.html, "region"_region.html,
-"replicate"_replicate.html
+"read_dump"_read_dump.html, "read_restart"_read_restart.html,
+"region"_region.html, "replicate"_replicate.html
 
 Force fields:
 
@@ -285,9 +285,9 @@ Output:
 Actions:
 
 "delete_atoms"_delete_atoms.html, "delete_bonds"_delete_bonds.html,
-"displace_atoms"_displace_atoms.html,
-"displace_box"_displace_box.html, "minimize"_minimize.html,
-"neb"_neb.html "prd"_prd.html, "run"_run.html, "temper"_temper.html
+"displace_atoms"_displace_atoms.html, "change_box"_change_box.html,
+"minimize"_minimize.html, "neb"_neb.html "prd"_prd.html,
+"rerun"_rerun.html, "run"_run.html, "temper"_temper.html
 
 Miscellaneous:
 
@@ -313,9 +313,11 @@ in the command's documentation.
 "angle_style"_angle_style.html,
 "atom_modify"_atom_modify.html,
 "atom_style"_atom_style.html,
+"balance"_balance.html,
 "bond_coeff"_bond_coeff.html,
 "bond_style"_bond_style.html,
 "boundary"_boundary.html,
+"box"_box.html,
 "change_box"_change_box.html,
 "clear"_clear.html,
 "communicate"_communicate.html,
@@ -330,7 +332,6 @@ in the command's documentation.
 "dihedral_style"_dihedral_style.html,
 "dimension"_dimension.html,
 "displace_atoms"_displace_atoms.html,
-"displace_box"_displace_box.html,
 "dump"_dump.html,
 "dump image"_dump_image.html,
 "dump_modify"_dump_modify.html,
@@ -366,10 +367,13 @@ in the command's documentation.
 "prd"_prd.html,
 "print"_print.html,
 "processors"_processors.html,
+"quit"_quit.html,
 "read_data"_read_data.html,
+"read_dump"_read_dump.html,
 "read_restart"_read_restart.html,
 "region"_region.html,
 "replicate"_replicate.html,
+"rerun"_rerun.html,
 "reset_timestep"_reset_timestep.html,
 "restart"_restart.html,
 "run"_run.html,
@@ -401,12 +405,14 @@ of each style or click on the style itself for a full description:
 
 "adapt"_fix_adapt.html,
 "addforce"_fix_addforce.html,
+"append/atoms"_fix_append_atoms.html,
 "aveforce"_fix_aveforce.html,
 "ave/atom"_fix_ave_atom.html,
 "ave/correlate"_fix_ave_correlate.html,
 "ave/histo"_fix_ave_histo.html,
 "ave/spatial"_fix_ave_spatial.html,
 "ave/time"_fix_ave_time.html,
+"balance"_fix_balance.html,
 "bond/break"_fix_bond_break.html,
 "bond/create"_fix_bond_create.html,
 "bond/swap"_fix_bond_swap.html,
@@ -457,10 +463,11 @@ of each style or click on the style itself for a full description:
 "print"_fix_print.html,
 "qeq/comb"_fix_qeq_comb.html,
 "reax/bonds"_fix_reax_bonds.html,
-"reax/c/bonds"_fix_reax_bonds.html,
 "recenter"_fix_recenter.html,
 "restrain"_fix_restrain.html,
 "rigid"_fix_rigid.html,
+"rigid/nph"_fix_rigid.html,
+"rigid/npt"_fix_rigid.html,
 "rigid/nve"_fix_rigid.html,
 "rigid/nvt"_fix_rigid.html,
 "setforce"_fix_setforce.html,
@@ -483,6 +490,7 @@ of each style or click on the style itself for a full description:
 "wall/harmonic"_fix_wall.html,
 "wall/lj126"_fix_wall.html,
 "wall/lj93"_fix_wall.html,
+"wall/piston"_fix_wall_piston.html,
 "wall/reflect"_fix_wall_reflect.html,
 "wall/region"_fix_wall_region.html,
 "wall/srd"_fix_wall_srd.html :tb(c=8,ea=c)
@@ -493,6 +501,7 @@ package"_Section_start.html#start_3.
 
 "addtorque"_fix_addtorque.html,
 "atc"_fix_atc.html,
+"colvars"_fix_colvars.html,
 "imd"_fix_imd.html,
 "langevin/eff"_fix_langevin_eff.html,
 "meso"_fix_meso.html,
@@ -503,6 +512,7 @@ package"_Section_start.html#start_3.
 "nvt/eff"_fix_nh_eff.html,
 "nvt/sllod/eff"_fix_nvt_sllod_eff.html,
 "qeq/reax"_fix_qeq_reax.html,
+"reax/c/bonds"_fix_reaxc_bonds.html,
 "smd"_fix_smd.html,
 "temp/rescale/eff"_fix_temp_rescale_eff.html :tb(c=6,ea=c)
 
@@ -543,12 +553,14 @@ each style or click on the style itself for a full description:
 "cna/atom"_compute_cna_atom.html,
 "com"_compute_com.html,
 "com/molecule"_compute_com_molecule.html,
+"contact/atom"_compute_contact_atom.html,
 "coord/atom"_compute_coord_atom.html,
 "damage/atom"_compute_damage_atom.html,
 "dihedral/local"_compute_dihedral_local.html,
 "displace/atom"_compute_displace_atom.html,
 "erotate/asphere"_compute_erotate_asphere.html,
 "erotate/sphere"_compute_erotate_sphere.html,
+"erotate/sphere/atom"_compute_erotate_sphere_atom.html,
 "event/displace"_compute_event_displace.html,
 "group/group"_compute_group_group.html,
 "gyration"_compute_gyration.html,
@@ -619,6 +631,8 @@ potentials.  Click on the style itself for a full description:
 "hybrid/overlay"_pair_hybrid.html,
 "adp"_pair_adp.html,
 "airebo"_pair_airebo.html,
+"beck"_pair_beck.html,
+"bop"_pair_bop.html,
 "born"_pair_born.html,
 "born/coul/long"_pair_born.html,
 "born/coul/wolf"_pair_born.html,
@@ -627,10 +641,12 @@ potentials.  Click on the style itself for a full description:
 "buck"_pair_buck.html,
 "buck/coul/cut"_pair_buck.html,
 "buck/coul/long"_pair_buck.html,
+"buck/long/coul/long"_pair_buck_long.html,
 "colloid"_pair_colloid.html,
 "comb"_pair_comb.html,
 "coul/cut"_pair_coul.html,
 "coul/debye"_pair_coul.html,
+"coul/dsf"_pair_coul.html,
 "coul/long"_pair_coul.html,
 "coul/wolf"_pair_coul.html,
 "dipole/cut"_pair_dipole.html,
@@ -648,6 +664,8 @@ potentials.  Click on the style itself for a full description:
 "gran/hooke/history"_pair_gran.html,
 "hbond/dreiding/lj"_pair_hbond_dreiding.html,
 "hbond/dreiding/morse"_pair_hbond_dreiding.html,
+"kim"_pair_kim.html,
+"lcbop"_pair_lcbop.html,
 "line/lj"_pair_line_lj.html,
 "lj/charmm/coul/charmm"_pair_charmm.html,
 "lj/charmm/coul/charmm/implicit"_pair_charmm.html,
@@ -658,8 +676,11 @@ potentials.  Click on the style itself for a full description:
 "lj/cut"_pair_lj.html,
 "lj/cut/coul/cut"_pair_lj.html,
 "lj/cut/coul/debye"_pair_lj.html,
+"lj/cut/coul/dsf"_pair_lj.html,
 "lj/cut/coul/long"_pair_lj.html,
-"lj/cut/coul/long/tip4p"_pair_lj.html,
+"lj/long/coul/long"_pair_lj_long.html,
+"lj/cut/tip4p/long"_pair_lj.html,
+"lj/long/tip4p/long"_pair_lj_long.html,
 "lj/expand"_pair_lj_expand.html,
 "lj/gromacs"_pair_gromacs.html,
 "lj/gromacs/coul/gromacs"_pair_gromacs.html,
@@ -691,24 +712,24 @@ These are pair styles contributed by users, which can be used if
 package"_Section_start.html#start_3.
 
 "awpmd/cut"_pair_awpmd.html,
-"buck/coul"_pair_buck_coul.html,
 "coul/diel"_pair_coul_diel.html,
 "dipole/sf"_pair_dipole.html,
 "eam/cd"_pair_eam.html,
 "edip"_pair_edip.html,
 "eff/cut"_pair_eff.html,
 "gauss/cut"_pair_gauss.html,
-"lj/coul"_pair_lj_coul.html,
 "lj/sdk"_pair_sdk.html,
 "lj/sdk/coul/long"_pair_sdk.html,
 "lj/sf"_pair_lj_sf.html,
+"meam/spline"_pair_meam_spline.html,
+"meam/sw/spline"_pair_meam_sw_spline.html,
 "reax/c"_pair_reax_c.html,
-"sph/heatconduction"_pair_heatconduction.html,
-"sph/idealgas"_pair_idealgas.html,
-"sph/lj"_pair_lj.html,
-"sph/rhosum"_pair_rhosum.html,
-"sph/taitwater"_pair_taitwater.html,
-"sph/taitwater/morris"_pair_taitwater_morris.html,
+"sph/heatconduction"_pair_sph_heatconduction.html,
+"sph/idealgas"_pair_sph_idealgas.html,
+"sph/lj"_pair_sph_lj.html,
+"sph/rhosum"_pair_sph_rhosum.html,
+"sph/taitwater"_pair_sph_taitwater.html,
+"sph/taitwater/morris"_pair_sph_taitwater_morris.html,
 "tersoff/table"_pair_tersoff.html :tb(c=4,ea=c)
 
 These are accelerated pair styles, which can be used if LAMMPS is
@@ -717,42 +738,57 @@ package"_Section_accelerate.html.
 
 "adp/omp"_pair_adp.html,
 "airebo/omp"_pair_airebo.html,
+"beck/omp"_pair_beck.html,
 "born/coul/long/cuda"_pair_born.html,
+"born/coul/long/gpu"_pair_born.html,
 "born/coul/long/omp"_pair_born.html,
+"born/coul/wolf/gpu"_pair_born.html,
 "born/coul/wolf/omp"_pair_born.html,
+"born/gpu"_pair_born.html,
 "born/omp"_pair_born.html,
 "brownian/omp"_pair_brownian.html,
 "brownian/poly/omp"_pair_brownian.html,
 "buck/coul/cut/cuda"_pair_buck.html,
+"buck/coul/cut/gpu"_pair_buck.html,
 "buck/coul/cut/omp"_pair_buck.html,
 "buck/coul/long/cuda"_pair_buck.html,
+"buck/coul/long/gpu"_pair_buck.html,
 "buck/coul/long/omp"_pair_buck.html,
-"buck/coul/omp"_pair_buck_coul.html,
 "buck/cuda"_pair_buck.html,
+"buck/long/coul/long/omp"_pair_buck_long.html,
+"buck/gpu"_pair_buck.html,
 "buck/omp"_pair_buck.html,
+"colloid/gpu"_pair_colloid.html,
 "colloid/omp"_pair_colloid.html,
 "comb/omp"_pair_comb.html,
 "coul/cut/omp"_pair_coul.html,
 "coul/debye/omp"_pair_coul.html,
+"coul/dsf/gpu"_pair_coul.html,
 "coul/long/gpu"_pair_coul.html,
 "coul/long/omp"_pair_coul.html,
 "coul/wolf"_pair_coul.html,
+"dipole/cut/gpu"_pair_dipole.html,
 "dipole/cut/omp"_pair_dipole.html,
+"dipole/sf/gpu"_pair_dipole.html,
 "dipole/sf/omp"_pair_dipole.html,
 "dpd/omp"_pair_dpd.html,
 "dpd/tstat/omp"_pair_dpd.html,
 "eam/alloy/cuda"_pair_eam.html,
+"eam/alloy/gpu"_pair_eam.html,
 "eam/alloy/omp"_pair_eam.html,
 "eam/alloy/opt"_pair_eam.html,
 "eam/cd/omp"_pair_eam.html,
 "eam/cuda"_pair_eam.html,
 "eam/fs/cuda"_pair_eam.html,
+"eam/fs/gpu"_pair_eam.html,
 "eam/fs/omp"_pair_eam.html,
 "eam/fs/opt"_pair_eam.html,
+"eam/gpu"_pair_eam.html,
 "eam/omp"_pair_eam.html,
 "eam/opt"_pair_eam.html,
 "edip/omp"_pair_edip.html,
 "eim/omp"_pair_eim.html,
+"gauss/gpu"_pair_gauss.html,
 "gauss/omp"_pair_gauss.html,
 "gayberne/gpu"_pair_gayberne.html,
 "gayberne/omp"_pair_gayberne.html,
@@ -781,25 +817,26 @@ package"_Section_accelerate.html.
 "lj/class2/cuda"_pair_class2.html,
 "lj/class2/gpu"_pair_class2.html,
 "lj/class2/omp"_pair_class2.html,
-"lj/coul/omp"_pair_lj_coul.html,
+"lj/long/coul/long/omp"_pair_lj_long.html,
 "lj/cut/coul/cut/cuda"_pair_lj.html,
 "lj/cut/coul/cut/gpu"_pair_lj.html,
 "lj/cut/coul/cut/omp"_pair_lj.html,
 "lj/cut/coul/debye/cuda"_pair_lj.html,
+"lj/cut/coul/debye/gpu"_pair_lj.html,
 "lj/cut/coul/debye/omp"_pair_lj.html,
+"lj/cut/coul/dsf/gpu"_pair_lj.html,
 "lj/cut/coul/long/cuda"_pair_lj.html,
 "lj/cut/coul/long/gpu"_pair_lj.html,
 "lj/cut/coul/long/omp"_pair_lj.html,
 "lj/cut/coul/long/opt"_pair_lj.html,
-"lj/cut/coul/long/tip4p/omp"_pair_lj.html,
-"lj/cut/coul/long/tip4p/opt"_pair_lj.html,
 "lj/cut/coul/pppm/omp"_pair_lj.html,
-"lj/cut/coul/pppm/tip4p/omp"_pair_lj.html,
 "lj/cut/cuda"_pair_lj.html,
 "lj/cut/experimental/cuda"_pair_lj.html,
 "lj/cut/gpu"_pair_lj.html,
 "lj/cut/omp"_pair_lj.html,
 "lj/cut/opt"_pair_lj.html,
+"lj/cut/tip4p/long/omp"_pair_lj.html,
+"lj/cut/tip4p/long/opt"_pair_lj.html,
 "lj/expand/cuda"_pair_lj_expand.html,
 "lj/expand/gpu"_pair_lj_expand.html,
 "lj/expand/omp"_pair_lj_expand.html,
@@ -820,6 +857,7 @@ package"_Section_accelerate.html.
 "lj96/cut/omp"_pair_lj96.html,
 "lubricate/omp"_pair_lubricate.html,
 "lubricate/poly/omp"_pair_lubricate.html,
+"meam/spline/omp"_pair_meam_spline.html,
 "morse/cuda"_pair_morse.html,
 "morse/gpu"_pair_morse.html,
 "morse/omp"_pair_morse.html,
@@ -832,13 +870,16 @@ package"_Section_accelerate.html.
 "soft/omp"_pair_soft.html,
 "sw/cuda"_pair_sw.html,
 "sw/omp"_pair_sw.html,
+"table/gpu"_pair_table.html,
 "table/omp"_pair_table.html,
 "tersoff/cuda"_pair_tersoff.html,
 "tersoff/omp"_pair_tersoff.html,
 "tersoff/table/omp"_pair_tersoff.html,
 "tersoff/zbl/omp"_pair_tersoff_zbl.html,
 "tri/lj/omp"_pair_tri_lj.html,
+"yukawa/gpu"_pair_yukawa.html,
 "yukawa/omp"_pair_yukawa.html,
+"yukawa/colloid/gpu"_pair_yukawa_colloid.html,
 "yukawa/colloid/omp"_pair_yukawa_colloid.html :tb(c=4,ea=c)
 
 :line
@@ -906,7 +947,10 @@ package"_Section_start.html#start_3.
 "sdk"_angle_sdk.html,
 "cosine/shift"_angle_cosine_shift.html,
 "cosine/shift/exp"_angle_cosine_shift_exp.html,
-"dipole"_angle_dipole.html :tb(c=4,ea=c)
+"dipole"_angle_dipole.html,
+"fourier"_angle_fourier.html,
+"fourier/simple"_angle_fourier_simple.html,
+"quartic"_angle_quartic.html :tb(c=4,ea=c)
 
 These are accelerated angle styles, which can be used if LAMMPS is
 built with the "appropriate accelerated
@@ -920,6 +964,7 @@ package"_Section_accelerate.html.
 "cosine/shift/omp"_angle_cosine_shift.html,
 "cosine/shift/exp/omp"_angle_cosine_shift_exp.html,
 "cosine/squared/omp"_angle_cosine_squared.html,
+"dipole/omp"_angle_dipole.html
 "harmonic/omp"_angle_harmonic.html,
 "table/omp"_angle_table.html :tb(c=4,ea=c,w=100)
 
@@ -945,6 +990,9 @@ These are dihedral styles contributed by users, which can be used if
 package"_Section_start.html#start_3.
 
 "cosine/shift/exp"_dihedral_cosine_shift_exp.html,
+"fourier"_dihedral_fourier.html,
+"nharmonic"_dihedral_nharmonic.html,
+"quadratic"_dihedral_quadratic.html,
 "table"_dihedral_table.html :tb(c=4,ea=c)
 
 These are accelerated dihedral styles, which can be used if LAMMPS is
@@ -957,7 +1005,8 @@ package"_Section_accelerate.html.
 "harmonic/omp"_dihedral_harmonic.html,
 "helix/omp"_dihedral_helix.html,
 "multi/harmonic/omp"_dihedral_multi_harmonic.html,
-"opls/omp"_dihedral_opls.html :tb(c=4,ea=c,w=100)
+"opls/omp"_dihedral_opls.html
+"table/omp"_dihedral_table.html :tb(c=4,ea=c,w=100)
 
 :line
 
@@ -974,13 +1023,23 @@ description:
 "harmonic"_improper_harmonic.html,
 "umbrella"_improper_umbrella.html :tb(c=4,ea=c,w=100)
 
+These are improper styles contributed by users, which can be used if
+"LAMMPS is built with the appropriate
+package"_Section_start.html#start_3.
+
+"cossq"_improper_cossq.html,
+"ring"_improper_ring.html :tb(c=4,ea=c)
+
 These are accelerated improper styles, which can be used if LAMMPS is
 built with the "appropriate accelerated
 package"_Section_accelerate.html.
 
 "class2/omp"_improper_class2.html,
+"cossq/omp"_improper_cossq.html,
 "cvff/omp"_improper_cvff.html,
+"fourier"_improper_fourier.html,
 "harmonic/omp"_improper_harmonic.html,
+"ring/omp"_improper_ring.html,
 "umbrella/omp"_improper_umbrella.html :tb(c=4,ea=c,w=100)
 
 :line
@@ -991,15 +1050,13 @@ See the "kspace_style"_kspace_style.html command for an overview of
 Kspace solvers.  Click on the style itself for a full description:
 
 "ewald"_kspace_style.html,
+"ewald/disp"_kspace_style.html,
+"msm"_kspace_style.html,
 "pppm"_kspace_style.html,
 "pppm/cg"_kspace_style.html,
+"pppm/disp"_kspace_style.html,
+"pppm/disp/tip4p"_kspace_style.html,
 "pppm/tip4p"_kspace_style.html :tb(c=4,ea=c,w=100)
-
-These are Kspace solvers contributed by users, which can be used if
-"LAMMPS is built with the appropriate
-package"_Section_start.html#start_3.
-
-"ewald/n"_kspace_style.html :tb(c=4,ea=c,w=100)
 
 These are accelerated Kspace solvers, which can be used if LAMMPS is
 built with the "appropriate accelerated
@@ -1010,4 +1067,4 @@ package"_Section_accelerate.html.
 "pppm/gpu"_kspace_style.html,
 "pppm/omp"_kspace_style.html,
 "pppm/cg/omp"_kspace_style.html,
-"pppm/proxy"_kspace_style.html :tb(c=4,ea=c)
+"pppm/tip4p/omp"_kspace_style.html :tb(c=4,ea=c)

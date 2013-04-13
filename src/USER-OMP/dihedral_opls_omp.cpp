@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,8 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
-#include "mpi.h"
 #include "math.h"
 #include "dihedral_opls_omp.h"
 #include "atom.h"
@@ -27,11 +25,20 @@
 #include "update.h"
 #include "error.h"
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 
 #define TOLERANCE 0.05
 #define SMALL     0.001
 #define SMALLER   0.00001
+
+/* ---------------------------------------------------------------------- */
+
+DihedralOPLSOMP::DihedralOPLSOMP(class LAMMPS *lmp)
+  : DihedralOPLS(lmp), ThrOMP(lmp,THR_DIHEDRAL)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -58,11 +65,11 @@ void DihedralOPLSOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -76,7 +83,7 @@ void DihedralOPLSOMP::compute(int eflag, int vflag)
 template <int EVFLAG, int EFLAG, int NEWTON_BOND>
 void DihedralOPLSOMP::eval(int nfrom, int nto, ThrData * const thr)
 {
-  
+
   int i1,i2,i3,i4,n,type;
   double vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,vb2xm,vb2ym,vb2zm;
   double edihedral,f1[3],f2[3],f3[3],f4[3];
@@ -105,27 +112,23 @@ void DihedralOPLSOMP::eval(int nfrom, int nto, ThrData * const thr)
     vb1x = x[i1][0] - x[i2][0];
     vb1y = x[i1][1] - x[i2][1];
     vb1z = x[i1][2] - x[i2][2];
-    domain->minimum_image(vb1x,vb1y,vb1z);
 
     // 2nd bond
 
     vb2x = x[i3][0] - x[i2][0];
     vb2y = x[i3][1] - x[i2][1];
     vb2z = x[i3][2] - x[i2][2];
-    domain->minimum_image(vb2x,vb2y,vb2z);
 
     vb2xm = -vb2x;
     vb2ym = -vb2y;
     vb2zm = -vb2z;
-    domain->minimum_image(vb2xm,vb2ym,vb2zm);
 
     // 3rd bond
 
     vb3x = x[i4][0] - x[i3][0];
     vb3y = x[i4][1] - x[i3][1];
     vb3z = x[i4][2] - x[i3][2];
-    domain->minimum_image(vb3x,vb3y,vb3z);
-    
+
     // c0 calculation
 
     sb1 = 1.0 / (vb1x*vb1x + vb1y*vb1y + vb1z*vb1z);
@@ -183,19 +186,19 @@ void DihedralOPLSOMP::eval(int nfrom, int nto, ThrData * const thr)
       int me = comm->me;
 
       if (screen) {
-	char str[128];
-	sprintf(str,"Dihedral problem: %d/%d " BIGINT_FORMAT " %d %d %d %d",
-		me,thr->get_tid(),update->ntimestep,
-		atom->tag[i1],atom->tag[i2],atom->tag[i3],atom->tag[i4]);
-	error->warning(FLERR,str,0);
-	fprintf(screen,"  1st atom: %d %g %g %g\n",
-		me,x[i1][0],x[i1][1],x[i1][2]);
-	fprintf(screen,"  2nd atom: %d %g %g %g\n",
-		me,x[i2][0],x[i2][1],x[i2][2]);
-	fprintf(screen,"  3rd atom: %d %g %g %g\n",
-		me,x[i3][0],x[i3][1],x[i3][2]);
-	fprintf(screen,"  4th atom: %d %g %g %g\n",
-		me,x[i4][0],x[i4][1],x[i4][2]);
+        char str[128];
+        sprintf(str,"Dihedral problem: %d/%d " BIGINT_FORMAT " %d %d %d %d",
+                me,thr->get_tid(),update->ntimestep,
+                atom->tag[i1],atom->tag[i2],atom->tag[i3],atom->tag[i4]);
+        error->warning(FLERR,str,0);
+        fprintf(screen,"  1st atom: %d %g %g %g\n",
+                me,x[i1][0],x[i1][1],x[i1][2]);
+        fprintf(screen,"  2nd atom: %d %g %g %g\n",
+                me,x[i2][0],x[i2][1],x[i2][2]);
+        fprintf(screen,"  3rd atom: %d %g %g %g\n",
+                me,x[i3][0],x[i3][1],x[i3][2]);
+        fprintf(screen,"  4th atom: %d %g %g %g\n",
+                me,x[i4][0],x[i4][1],x[i4][2]);
       }
     }
 
@@ -212,7 +215,7 @@ void DihedralOPLSOMP::eval(int nfrom, int nto, ThrData * const thr)
     if (fabs(si) < SMALLER) si = SMALLER;
     siinv = 1.0/si;
 
-    pd = k1[type] - 2.0*k2[type]*sin(2.0*phi)*siinv + 
+    pd = k1[type] - 2.0*k2[type]*sin(2.0*phi)*siinv +
       3.0*k3[type]*sin(3.0*phi)*siinv - 4.0*k4[type]*sin(4.0*phi)*siinv;
 
     if (EFLAG) edihedral = k1[type]*(1.0 + c) + k2[type]*(1.0 - cos(2.0*phi))
@@ -277,7 +280,6 @@ void DihedralOPLSOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     if (EVFLAG)
       ev_tally_thr(this,i1,i2,i3,i4,nlocal,NEWTON_BOND,edihedral,f1,f3,f4,
-		   vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,thr);
+                   vb1x,vb1y,vb1z,vb2x,vb2y,vb2z,vb3x,vb3y,vb3z,thr);
   }
 }
-

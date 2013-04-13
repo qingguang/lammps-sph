@@ -35,7 +35,7 @@ Perform charge equilibration (QeQ) in conjunction with the COMB
 equilibration portion of the calculation using the so-called QEq
 method, whereby the charge on each atom is adjusted to minimize the
 energy of the system.  This fix can only be used with the COMB
-potential; see the "fix qeq/reax"_fix_qeq_reqx.html command for a QeQ
+potential; see the "fix qeq/reax"_fix_qeq_reax.html command for a QeQ
 calculation that can be used with any potential.
 
 Only charges on the atoms in the specified group are equilibrated.
@@ -73,7 +73,7 @@ section for more info.
 
 You can specify the accelerated styles explicitly in your input script
 by including their suffix, or you can use the "-suffix command-line
-switch"_Section_start.html#start_6 when you invoke LAMMPS, or you can
+switch"_Section_start.html#start_7 when you invoke LAMMPS, or you can
 use the "suffix"_suffix.html command in your input script.
 
 See "Section_accelerate"_Section_accelerate.html of the manual for

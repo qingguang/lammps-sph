@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -29,6 +29,8 @@ class VerletSplit : public Verlet {
   VerletSplit(class LAMMPS *, int, char **);
   ~VerletSplit();
   void init();
+  void setup();
+  void setup_minimal(int);
   void run(int);
   bigint memory_usage();
 
@@ -42,7 +44,7 @@ class VerletSplit : public Verlet {
 
   double **f_kspace;                 // copy of Kspace forces on Rspace procs
   int maxatom;
-  
+
   void rk_setup();
   void r2k_comm();
   void k2r_comm();
@@ -57,18 +59,20 @@ class VerletSplit : public Verlet {
 
 E: Verlet/split requires 2 partitions
 
-UNDOCUMENTED
+See the -partition command-line switch.
 
 E: Verlet/split requires Rspace partition size be multiple of Kspace partition size
 
-UNDOCUMENTED
+This is so there is an equal number of Rspace processors for every
+Kspace processor.
 
 E: Verlet/split requires Rspace partition layout be multiple of Kspace partition layout in each dim
 
-UNDOCUMENTED
+This is controlled by the processors command.
 
 W: No Kspace calculation with verlet/split
 
-UNDOCUMENTED
+The 2nd partition performs a kspace calculation so the kspace_style
+command must be used.
 
 */

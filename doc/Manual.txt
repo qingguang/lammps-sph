@@ -38,7 +38,7 @@ describe the version you have. :l
 
 The "PDF file"_Manual.pdf on the WWW site or in the tarball is updated
 about once per month.  This is because it is large, and we don't want
-it to be part of very patch. :l
+it to be part of every patch. :l
 
 There is also a "Developer.pdf"_Developer.pdf file in the doc
 directory, which describes the internal structure and algorithms of
@@ -86,11 +86,12 @@ it gives quick access to documentation for all LAMMPS commands.
   2.1 "What's in the LAMMPS distribution"_start_1 :ulb,b
   2.2 "Making LAMMPS"_start_2 :b
   2.3 "Making LAMMPS with optional packages"_start_3 :b
-  2.4 "Building LAMMPS as a library"_start_4 :b
-  2.5 "Running LAMMPS"_start_5 :b
-  2.6 "Command-line options"_start_6 :b
-  2.7 "Screen output"_start_7 :b
-  2.8 "Tips for users of previous versions"_2_8 :ule,b
+  2.4 "Building LAMMPS via the Make.py script"_start_4 :b
+  2.5 "Building LAMMPS as a library"_start_5 :b
+  2.6 "Running LAMMPS"_start_6 :b
+  2.7 "Command-line options"_start_7 :b
+  2.8 "Screen output"_start_8 :b
+  2.9 "Tips for users of previous versions"_start_9 :ule,b
 "Commands"_Section_commands.html :l
   3.1 "LAMMPS input script"_cmd_1 :ulb,b
   3.2 "Parsing rules"_cmd_2 :b
@@ -101,11 +102,14 @@ it gives quick access to documentation for all LAMMPS commands.
   4.1 "Standard packages"_pkg_1 :ulb,b
   4.2 "User packages"_pkg_2 :ule,b
 "Accelerating LAMMPS performance"_Section_accelerate.html :l
-  5.1 "OPT package"_acc_1 :ulb,b
-  5.2 "USER-OMP package"_acc_2 :b
-  5.3 "GPU package"_acc_3 :b
-  5.4 "USER-CUDA package"_acc_4 :b
-  5.5 "Comparison of GPU and USER-CUDA packages"_acc_5 :ule,b
+  5.1 "Measuring performance"_acc_1 :ulb,b
+  5.2 "General strategies"_acc_2 :b
+  5.3 "Packages with optimized styles"_acc_3 :b
+  5.4 "OPT package"_acc_4 :b
+  5.5 "USER-OMP package"_acc_5 :b
+  5.6 "GPU package"_acc_6 :b
+  5.7 "USER-CUDA package"_acc_7 :b
+  5.8 "Comparison of GPU and USER-CUDA packages"_acc_8 :ule,b
 "How-to discussions"_Section_howto.html :l
   6.1 "Restarting a simulation"_howto_1 :ulb,b
   6.2 "2d simulations"_howto_2 :b
@@ -177,6 +181,7 @@ it gives quick access to documentation for all LAMMPS commands.
 :link(start_6,Section_start.html#start_6)
 :link(start_7,Section_start.html#start_7)
 :link(start_8,Section_start.html#start_8)
+:link(start_9,Section_start.html#start_9)
 
 :link(cmd_1,Section_commands.html#cmd_1)
 :link(cmd_2,Section_commands.html#cmd_2)
@@ -192,6 +197,9 @@ it gives quick access to documentation for all LAMMPS commands.
 :link(acc_3,Section_accelerate.html#acc_3)
 :link(acc_4,Section_accelerate.html#acc_4)
 :link(acc_5,Section_accelerate.html#acc_5)
+:link(acc_6,Section_accelerate.html#acc_6)
+:link(acc_7,Section_accelerate.html#acc_7)
+:link(acc_8,Section_accelerate.html#acc_8)
 
 :link(howto_1,Section_howto.html#howto_1)
 :link(howto_2,Section_howto.html#howto_2)

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -35,6 +35,8 @@ class FixQEQComb : public Fix {
   virtual void post_force(int);
   void post_force_respa(int,int,int);
   double memory_usage();
+  int pack_comm(int , int *, double *, int, int *);
+  void unpack_comm(int , int , double *);
 
  protected:
   int me,firstflag;

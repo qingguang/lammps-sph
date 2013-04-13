@@ -10,14 +10,23 @@ read_data command :h3
 
 [Syntax:]
 
-read_data file :pre
+read_data file keyword args ... :pre
 
-file = name of data file to read in :ul
+file = name of data file to read in :ulb,l
+zero or more keyword/arg pairs may be appended :l
+keyword = {fix} :l
+  {fix} args = fix-ID header-string section-string
+    fix-ID = ID of fix to process header lines and sections of data file
+    header-string = header lines containing this string will be passed to fix
+    section-string = section names with this string will be passed to fix :pre
+:ule
+
 
 [Examples:]
 
 read_data data.lj
-read_data ../run7/data.polymer.gz :pre
+read_data ../run7/data.polymer.gz
+read_data data.protein fix mycmap crossterm CMAP :pre
 
 [Description:]
 
@@ -46,6 +55,14 @@ remaining lines of the section contain values.  The number of lines
 depends on the section keyword as described below.  Zero or more blank
 lines can be used between sections.  Sections can appear in any order,
 with a few exceptions as noted below.
+
+If the keyword {fix} is used, it specifies a fix that will be used to
+process portions of the data file.  Any header line containing
+{header-string} and any section with a name containing
+{section-string} will be passed to the fix.  See the "fix
+cmap"_fix_cmap.html command for an example of a fix that operates in
+this manner.  The doc page for the fix defines the syntax of the
+header line(s) and section(s) that it reads from the data file.
 
 The formatting of individual lines in the data file (indentation,
 spacing between words and numbers) is not important except that header
@@ -364,6 +381,12 @@ were used in the input script, each atom line would have these fields:
 
 atom-ID atom-type x y z q diameter density :pre
 
+Note that if a non-standard value is defined by multiple sub-styles,
+it must appear mutliple times in the atom line.  E.g. the atom line
+for atom_style hybrid dipole full would list "q" twice:
+
+atom-ID atom-type x y z q mux muy myz molecule-ID q :pre
+
 Atom lines (all lines or none of them) can optionally list 3 trailing
 integer values: nx,ny,nz.  For periodic dimensions, they specify which
 image of the simulation box the atom is considered to be in.  An image
@@ -681,25 +704,48 @@ line syntax: depends on atom style :ul
 
 all styles except those listed: atom-ID vx vy vz
 dipole: atom-ID vx vy vz wx wy wz
-electron: atom-ID vx vy vz evel
+electron: atom-ID vx vy vz ervel
 ellipsoid: atom-ID vx vy vz lx ly lz
-sphere: atom-ID vx vy vz wx wy wz :tb(s=:)
+sphere: atom-ID vx vy vz wx wy wz
+hybrid: atom-ID vx vy vz sub-style1 sub-style2 ... :tb(s=:)
 
 where the keywords have these meanings:
 
 vx,vy,vz = translational velocity of atom
 lx,ly,lz = angular momentum of aspherical atom
 wx,wy,wz = angular velocity of spherical atom
-evel = electron radial velocity (0 for fixed-core):ul
+ervel = electron radial velocity (0 for fixed-core):ul
 
 The velocity lines can appear in any order.  This section can only be
 used after an {Atoms} section.  This is because the {Atoms} section
 must have assigned a unique atom ID to each atom so that velocities
 can be assigned to them.
 
-Vx, vy, vz, and evel are in "units"_units.html of velocity.  Lx, ly,
+Vx, vy, vz, and ervel are in "units"_units.html of velocity.  Lx, ly,
 lz are in units of angular momentum (distance-velocity-mass).  Wx, Wy,
 Wz are in units of angular velocity (radians/time).
+
+For atom_style hybrid, following the 4 initial values (ID,vx,vy,vz),
+specific values for each sub-style must be listed.  The order of the
+sub-styles is the same as they were listed in the
+"atom_style"_atom_style.html command.  The sub-style specific values
+are those that are not the 5 standard ones (ID,vx,vy,vz).  For
+example, for the "sphere" sub-style, "wx", "wy", "wz" values would
+appear.  These are listed in the same order they appear as listed
+above.  Thus if
+
+atom_style hybrid electron sphere :pre
+
+were used in the input script, each velocity line would have these
+fields:
+
+atom-ID vx vy vz ervel wx wy wz :pre
+
+Note that if a non-standard value is defined by multiple sub-styles,
+it must appear mutliple times in the velocity line.  E.g. the velocity
+line for atom_style hybrid dipole sphere would list "wx" twice:
+
+atom-ID vx vy vz wx wy wz wx wy wz :pre
 
 Translational velocities can also be set by the
 "velocity"_velocity.html command in the input script.
@@ -714,6 +760,7 @@ LAMMPS"_Section_start.html#start_2 section of the documentation.
 
 [Related commands:]
 
-"read_restart"_read_restart.html, "create_atoms"_create_atoms.html
+"read_dump"_read_dump.html, "read_restart"_read_restart.html,
+"create_atoms"_create_atoms.html
 
 [Default:] none

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -39,12 +39,12 @@ class PairLJCharmmCoulLong : public Pair {
   void read_restart(FILE *);
   void write_restart_settings(FILE *);
   void read_restart_settings(FILE *);
-  double single(int, int, int, int, double, double, double, double &);
+  virtual double single(int, int, int, int, double, double, double, double &);
 
   void compute_inner();
   void compute_middle();
-  void compute_outer(int, int);
-  void *extract(const char *, int &);
+  virtual void compute_outer(int, int);
+  virtual void *extract(const char *, int &);
 
  protected:
   int implicit;
@@ -59,14 +59,7 @@ class PairLJCharmmCoulLong : public Pair {
   double *cut_respa;
   double g_ewald;
 
-  double tabinnersq;
-  double *rtable,*drtable,*ftable,*dftable,*ctable,*dctable;
-  double *etable,*detable,*ptable,*dptable,*vtable,*dvtable;
-  int ncoulshiftbits,ncoulmask;
-
   void allocate();
-  void init_tables();
-  void free_tables();
 };
 
 }

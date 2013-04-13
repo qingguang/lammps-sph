@@ -15,28 +15,36 @@
 </P>
 <PRE>kspace_style style value 
 </PRE>
-<UL><LI>style = <I>none</I> or <I>ewald</I> or <I>pppm</I> or <I>pppm/cg</I> or <I>pppm/tip4p</I> or <I>ewald/n</I> or <I>pppm/gpu</I> or <I>ewald/omp</I> or <I>pppm/omp</I> or <I>pppm/proxy</I> 
+<UL><LI>style = <I>none</I> or <I>ewald</I> or <I>ewald/disp</I> or <I>ewald/omp</I> or <I>pppm</I> or <I>pppm/cg</I> or <I>pppm/disp</I> or <I>pppm/tip4p</I> or <I>pppm/disp/tip4p</I> or <I>pppm/gpu</I> or <I>pppm/omp</I> or <I>pppm/cg/omp</I> or <I>pppm/tip4p/omp</I> or <I>msm</I> 
 
 <PRE>  <I>none</I> value = none
-  <I>ewald</I> value = precision
-    precision = desired accuracy
-  <I>pppm</I> value = precision
-    precision = desired accuracy
-  <I>pppm/cg</I> value = precision (smallq)
-    precision = desired accuracy
+  <I>ewald</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>ewald/disp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>ewald/omp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/cg</I> value = accuracy (smallq)
+    accuracy = desired relative error in forces
     smallq = cutoff for charges to be considered (optional) (charge units)
-  <I>pppm/tip4p</I> value = precision
-    precision = desired accuracy
-  <I>ewald/n</I> value = precision
-    precision = desired accuracy
-  <I>pppm/gpu</I> value = precision
-    precision = desired accuracy
-  <I>ewald/omp</I> value = precision
-    precision = desired accuracy
-  <I>pppm/omp</I> value = precision
-    precision = desired accuracy
-  <I>pppm/proxy</I> value = precision
-    precision = desired accuracy 
+  <I>pppm/disp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/tip4p</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/disp/tip4p</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/gpu</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/omp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/cg/omp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>pppm/tip4p/omp</I> value = accuracy
+    accuracy = desired relative error in forces
+  <I>msm</I> value = accuracy
+    accuracy = desired relative error in forces 
 </PRE>
 
 </UL>
@@ -44,20 +52,53 @@
 </P>
 <PRE>kspace_style pppm 1.0e-4
 kspace_style pppm/cg 1.0e-5 1.0e-6
+kspace style msm 1.0e-4
 kspace_style none 
 </PRE>
 <P><B>Description:</B>
 </P>
-<P>Define a K-space solver for LAMMPS to use each timestep to compute
-long-range Coulombic interactions or long-range 1/r^N interactions.
-When such a solver is used in conjunction with an appropriate pair
-style, the cutoff for Coulombic or other 1/r^N interactions is
-effectively infinite; each charge in the system interacts with charges
-in an infinite array of periodic images of the simulation domain.
+<P>Define a long-range solver for LAMMPS to use each timestep to compute
+long-range Coulombic interactions or long-range 1/r^6 interactions.
+Most of the long-range solvers perform their computation in K-space,
+hence the name of this command.
 </P>
+<P>When such a solver is used in conjunction with an appropriate pair
+style, the cutoff for Coulombic or 1/r^N interactions is effectively
+infinite.  If the Coulombic case, this means each charge in the system
+interacts with charges in an infinite array of periodic images of the
+simulation domain.
+</P>
+<P>Note that using a long-range solver requires use of a matching <A HREF = "pair.html">pair
+style</A> to perform consistent short-range pairwise
+calculations.  This means that the name of the pair style contains a
+matching keyword to the name of the KSpace style, as in this table:
+</P>
+<DIV ALIGN=center><TABLE  BORDER=1 >
+<TR ALIGN="center"><TD >Pair style </TD><TD > KSpace style </TD></TR>
+<TR ALIGN="center"><TD >coul/long </TD><TD > ewald or pppm</TD></TR>
+<TR ALIGN="center"><TD >coul/msm </TD><TD > msm</TD></TR>
+<TR ALIGN="center"><TD >lj/long or buck/long </TD><TD > disp (for dispersion)</TD></TR>
+<TR ALIGN="center"><TD >tip4p/long </TD><TD > tip4p 
+</TD></TR></TABLE></DIV>
+
+<HR>
+
 <P>The <I>ewald</I> style performs a standard Ewald summation as described in
 any solid-state physics text.
 </P>
+<P>The <I>ewald/disp</I> style adds a long-range dispersion sum option for
+1/r^6 potentials and is useful for simulation of interfaces
+<A HREF = "#Veld">(Veld)</A>.  It also performs standard Coulombic Ewald summations,
+but in a more efficient manner than the <I>ewald</I> style.  The 1/r^6
+capability means that Lennard-Jones or Buckingham potentials can be
+used without a cutoff, i.e. they become full long-range potentials.
+</P>
+<P>The <I>ewald/disp</I> style can also be used with non-orthogonal (triclinic
+symmetry) simulation boxes.  It is currently the only long-range
+solver that has this capability.
+</P>
+<HR>
+
 <P>The <I>pppm</I> style invokes a particle-particle particle-mesh solver
 <A HREF = "#Hockney">(Hockney)</A> which maps atom charge to a 3d mesh, uses 3d FFTs
 to solve Poisson's equation on the mesh, then interpolates electric
@@ -79,53 +120,81 @@ adds a charge at the massless 4th site in each TIP4P water molecule.
 It should be used with <A HREF = "pair_style.html">pair styles</A> with a
 <I>long/tip4p</I> in their style name.
 </P>
-<P>The <I>ewald/n</I> style augments <I>ewald</I> by adding long-range dispersion
-sum capabilities for 1/r^N potentials and is useful for simulation of
-interfaces <A HREF = "#Veld">(Veld)</A>.  It also performs standard coulombic Ewald
-summations, but in a more efficient manner than the <I>ewald</I> style.
-The 1/r^N capability means that Lennard-Jones or Buckingham potentials
-can be used with <I>ewald/n</I> without a cutoff, i.e. they become full
-long-range potentials.
+<HR>
+
+<P>The <I>pppm/disp</I> and <I>pppm/disp/tip4p</I> styles add a long-range
+dispersion sum option for 1/r^6 potentials, similar to the
+<I>ewald/disp</I> style.  The 1/r^6 capability means that Lennard-Jones or
+Buckingham potentials can be used without a cutoff, i.e. they become
+full long-range potentials.
 </P>
-<P>Currently, only the <I>ewald/n</I> style can be used with non-orthogonal
-(triclinic symmetry) simulation boxes.
-</P>
-<P>The <I>pppm/proxy</I> style is a special variant for calculations 
-in hybrid OpenMP/MPI parallel mode. It is functionally equivalent
-with <I>pppm</I>, but it its force computation is being executed 
-as a single thread concurrently with a multi-threaded non-bonded
-calculation for a pair style with <I>pppm/omp</I> suffix. For calcuations
-across many multi-core nodes, this can have a performance benefit
-over performing the real and reciprocal space part separately,
-specifically when otherwise the time spent on the pair style
-would slightly less than in <I>pppm</I> without threading.
-</P>
-<P>Note that the PPPM styles can be used with single-precision FFTs by
-using the compiler switch -DFFT_SINGLE for the FFT_INC setting in your
-lo-level Makefile.  This setting also changes some of the PPPM
-operations (e.g. mapping charge to mesh and interpolating electric
-fields to particles) to be performed in single precision.  This option
-can speed-up long-range calulations, particularly in parallel or on
-GPUs.  The use of the -DFFT_SINGLE flag is discussed in <A HREF = "Section_start.html#start_2_4">this
-section</A> of the manual.
+<P>For these styles, it is currently recommended that you set the
+dispersion mesh size and other parameters explicitly via the
+<A HREF = "kspace_modify.html">kspace_modify</A> command, rather than let LAMMPS set
+them automatically.  For example, a set of parameters that works well
+for TIP4P water models is a LJ cutoff of 10 Angstrom, interpolation
+order = 5 (the default), grid spacing = 4.17 Angstroms, and Ewald
+parameter = 0.28.  These parameters work well for the <I>ik</I>
+differentiation.  For the <I>ad</I> setting, a smaller grid is needed,
+e.g. 3 Angstroms.
 </P>
 <HR>
 
-<P>When a kspace style is used, a pair style that includes the
-short-range correction to the pairwise Coulombic or other 1/r^N forces
-must also be selected.  For Coulombic interactions, these styles are
-ones that have a <I>coul/long</I> in their style name.  For 1/r^6
-dispersion forces in a Lennard-Jones or Buckingham potential, see the
-<A HREF = "pair_lj_coul.html">pair_style lj/coul</A> or <A HREF = "pair_buck_coul.html">pair_style
-buck/coul</A> commands.
+<P>IMPORTANT NOTE: All of the PPPM styles can be used with
+single-precision FFTs by using the compiler switch -DFFT_SINGLE for
+the FFT_INC setting in your lo-level Makefile.  This setting also
+changes some of the PPPM operations (e.g. mapping charge to mesh and
+interpolating electric fields to particles) to be performed in single
+precision.  This option can speed-up long-range calulations,
+particularly in parallel or on GPUs.  The use of the -DFFT_SINGLE flag
+is discussed in <A HREF = "Section_start.html#start_2_4">this section</A> of the
+manual.
 </P>
-<P>A precision value of 1.0e-4 means one part in 10000.  This setting is
-used in conjunction with the pairwise cutoff to determine the number
-of K-space vectors for style <I>ewald</I> or the FFT grid size for style
-<I>pppm</I>.
+<HR>
+
+<P>The <I>msm</I> style invokes a multi-level summation method MSM solver,
+<A HREF = "#Hardy">(Hardy)</A> or <A HREF = "#Hardy2">(Hardy2)</A>, which maps atom charge to a 3d
+mesh, and uses a multi-level hierarchy of coarser and coarser meshes
+on which direct coulomb solves are done.  This method does not use
+FFTs and scales as N. It may therefore be faster than the other
+K-space solvers for relatively large problems when running on large
+core counts.
+</P>
+<P>MSM is most competitive versus Ewald and PPPM when only relatively 
+low accuracy forces, about 1e-4 relative error or less accurate, 
+are needed. Note that use of a larger coulomb cutoff (i.e. 15 
+angstroms instead of 10 angstroms) provides better MSM accuracy for 
+both the real space and grid computed forces.
+</P>
+<HR>
+
+<P>The specified <I>accuracy</I> determines the relative RMS error in per-atom
+forces calculated by the long-range solver.  It is set as a
+dimensionless number, relative to the force that two unit point
+charges (e.g. 2 monovalent ions) exert on each other at a distance of
+1 Angstrom.  This reference value was chosen as representative of the
+magnitude of electrostatic forces in atomic systems.  Thus an accuracy
+value of 1.0e-4 means that the RMS error will be a factor of 10000
+smaller than the reference force.
+</P>
+<P>The accuracy setting is used in conjunction with the pairwise cutoff
+to determine the number of K-space vectors for style <I>ewald</I> or the
+grid size for style <I>pppm</I> or <I>msm</I>.
+</P>
+<P>RMS force errors in real space for <I>ewald</I> and <I>pppm</I> are estimated
+using equation 18 of <A HREF = "#Kolafa">(Kolafa)</A>, which is also referenced as
+equation 9 of <A HREF = "#Petersen">(Petersen)</A>. RMS force errors in K-space for
+<I>ewald</I> are estimated using equation 11 of <A HREF = "#Petersen">(Petersen)</A>,
+which is similar to equation 32 of <A HREF = "#Kolafa">(Kolafa)</A>. RMS force
+errors in K-space for <I>pppm</I> are estimated using equation 38 of
+<A HREF = "#Deserno">(Deserno)</A>. RMS force errors for <I>msm</I> are estimated 
+following the procedure outlined in chapter 3 of <A HREF = "#Hardy">(Hardy)</A>,
+with equation 3.197 of particular note.
 </P>
 <P>See the <A HREF = "kspace_modify.html">kspace_modify</A> command for additional
-options of the K-space solvers that can be set.
+options of the K-space solvers that can be set, including a <I>force</I>
+option for setting an absoulte RMS error in forces, as opposed to a
+relative RMS error.
 </P>
 <HR>
 
@@ -156,21 +225,20 @@ more instructions on how to use the accelerated styles effectively.
 </P>
 <P><B>Restrictions:</B>
 </P>
+<P>All of the kspace styles are part of the KSPACE package.  They are
+only enabled if LAMMPS was built with that package.  See the <A HREF = "Section_start.html#start_3">Making
+LAMMPS</A> section for more info.  Note that
+the KSPACE package is installed by default.
+</P>
 <P>A simulation must be 3d and periodic in all dimensions to use an Ewald
 or PPPM solver.  The only exception is if the slab option is set with
 <A HREF = "kspace_modify.html">kspace_modify</A>, in which case the xy dimensions
 must be periodic and the z dimension must be non-periodic.
 </P>
-<P>Kspace styles are part of the KSPACE package.  They are only enabled
-if LAMMPS was built with that package.  See the <A HREF = "Section_start.html#start_3">Making
-LAMMPS</A> section for more info.
-</P>
-<P>The <I>ewald/n</I> style is part of the USER-EWALDN package.  It is only
-enabled if LAMMPS was built with that package.  See the <A HREF = "Section_start.html#start_3">Making
-LAMMPS</A> section for more info.
-</P>
-<P>When using a long-range pairwise TIP4P potential, you must use kspace
-style <I>pppm/tip4p</I> and vice versa.
+<P>The <I>msm</I> style is fairly new, and still lacks some important features
+and optimizations. The upper MSM levels (above the first level) are not 
+parallelized, so this MSM implementation may not yet scale very well 
+on large core counts.
 </P>
 <P><B>Related commands:</B>
 </P>
@@ -189,10 +257,22 @@ lj/coul</A>, <A HREF = "pair_buck.html">pair_style buck/coul/long</A>
 
 <P><B>(Darden)</B> Darden, York, Pedersen, J Chem Phys, 98, 10089 (1993).
 </P>
+<A NAME = "Deserno"></A>
+
+<P><B>(Deserno)</B> Deserno and Holm, J Chem Phys, 109, 7694 (1998).
+</P>
 <A NAME = "Hockney"></A>
 
 <P><B>(Hockney)</B> Hockney and Eastwood, Computer Simulation Using Particles,
 Adam Hilger, NY (1989).
+</P>
+<A NAME = "Kolafa"></A>
+
+<P><B>(Kolafa)</B> Kolafa and Perram, Molecular Simualtion, 9, 351 (1992).
+</P>
+<A NAME = "Petersen"></A>
+
+<P><B>(Petersen)</B> Petersen, J Chem Phys, 103, 3668 (1995).
 </P>
 <A NAME = "Pollock"></A>
 
@@ -201,5 +281,16 @@ Adam Hilger, NY (1989).
 <A NAME = "Veld"></A>
 
 <P><B>(Veld)</B> In 't Veld, Ismail, Grest, J Chem Phys, in press (2007).
+</P>
+<A NAME = "Hardy"></A>
+
+<P><B>(Hardy)</B> David Hardy thesis: Multilevel Summation for the Fast
+Evaluation of Forces for the Simulation of Biomolecules, University of
+Illinois at Urbana-Champaign, (2006).
+</P>
+<A NAME = "Hardy2"></A>
+
+<P><B>(Hardy)</B> Hardy, Stone, Schulten, Parallel Computing 35 (2009)
+164-177.
 </P>
 </HTML>

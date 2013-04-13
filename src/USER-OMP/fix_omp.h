@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -50,9 +50,11 @@ class FixOMP : public Fix {
 
  protected:
   ThrData **thr;
-  void *last_omp_style; // pointer to the style that needs
-						// to do the force reduction
-  
+  void *last_omp_style;    // pointer to the style that needs
+                           // to do the general force reduction
+  void *last_pair_hybrid;  // pointer to the pair style that needs
+                           // to call virial_fdot_compute()
+
  public:
   bool get_neighbor() const {return _neighbor;};
   bool get_newton() const   {return _newton;};

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -46,7 +46,7 @@ class FixSRD : public Fix {
   int cubicflag,shiftuser,shiftseed,shiftflag,tstat;
   double gridsrd,gridsearch,lamda,radfactor,cubictol;
   int triclinic,change_size,change_shape,deformflag;
-  
+
   double dt_big,dt_srd;
   double mass_big,mass_srd;
   double temperature_srd;
@@ -198,29 +198,29 @@ class FixSRD : public Fix {
   int inside_wall(double *, int);
 
   double collision_sphere_exact(double *, double *, double *, double *,
-				Big *, double *, double *, double *);
+                                Big *, double *, double *, double *);
   void collision_sphere_inexact(double *, double *,
-				Big *, double *, double *, double *);
+                                Big *, double *, double *, double *);
   double collision_ellipsoid_exact(double *, double *, double *, double *,
-				   Big *, double *, double *, double *);
+                                   Big *, double *, double *, double *);
   void collision_ellipsoid_inexact(double *, double *,
-				   Big *, double *, double *, double *);
+                                   Big *, double *, double *, double *);
   double collision_line_exact(double *, double *, double *, double *,
-			      Big *, double, double *, double *, double *);
+                              Big *, double, double *, double *, double *);
   double collision_tri_exact(double *, double *, double *, double *,
-			     Big *, double, double *, double *, double *);
+                             Big *, double, double *, double *, double *);
   double collision_wall_exact(double *, int, double *,
-			      double *, double *, double *);
+                              double *, double *, double *);
   void collision_wall_inexact(double *, int, double *, double *, double *);
 
   void slip(double *, double *, double *, Big *,
-	    double *, double *,  double *);
+            double *, double *,  double *);
   void slip_wall(double *, int, double *, double *);
   void noslip(double *, double *, double *, Big *, int,
-	      double *, double *,  double *);
+              double *, double *,  double *);
 
   void force_torque(double *, double *, double *,
-		    double *, double *,  double *);
+                    double *, double *,  double *);
   void force_wall(double *, double *, int);
 
   int update_srd(int, double, double *, double *, double *, double *);
@@ -244,7 +244,7 @@ class FixSRD : public Fix {
 
   double distance(int, int);
   void print_collision(int, int, int, double, double,
-		       double *, double *, double *, int);
+                       double *, double *, double *, int);
 };
 
 }
@@ -298,7 +298,8 @@ deform needs to be used.
 
 W: Using fix srd with box deformation but no SRD thermostat
 
-UNDOCUMENTED
+The deformation will heat the SRD particles so this can
+be dangerous.
 
 W: Fix srd SRD moves may trigger frequent reneighboring
 
@@ -328,17 +329,23 @@ E: Fix SRD: bad bin assignment for SRD advection
 Something has gone wrong in your SRD model; try using more
 conservative settings.
 
-E: SRD particle %d started inside big particle %d on step %ld bounce %d\n
+E: SRD particle %d started inside big particle %d on step %ld bounce %d
 
-UNDOCUMENTED
+See the inside keyword if you want this message to be an error vs
+warning.
+
+W: SRD particle %d started inside big particle %d on step %ld bounce %d
+
+See the inside keyword if you want this message to be an error vs
+warning.
 
 E: Bad quadratic solve for particle/line collision
 
-UNDOCUMENTED
+This is an internal error.  It should nornally not occur.
 
 E: Bad quadratic solve for particle/tri collision
 
-UNDOCUMENTED
+This is an internal error.  It should nornally not occur.
 
 W: Fix srd particle moved outside valid domain
 
@@ -350,11 +357,11 @@ Big particles must be extended spheriods or ellipsoids.
 
 E: Cannot use lines with fix srd unless overlap is set
 
-UNDOCUMENTED
+This is because line segements are connected to each other.
 
 E: Cannot use tris with fix srd unless overlap is set
 
-UNDOCUMENTED
+This is because triangles are connected to each other.
 
 E: Fix srd requires SRD particles all have same mass
 
@@ -366,11 +373,23 @@ This is not allowed.  Make your SRD bin size smaller.
 
 E: SRD bins for fix srd are not cubic enough
 
-The bin shape is not within tolerance of cubic.
+The bin shape is not within tolerance of cubic.  See the cubic
+keyword if you want this message to be an error vs warning.
+
+W: SRD bins for fix srd are not cubic enough
+
+The bin shape is not within tolerance of cubic.  See the cubic
+keyword if you want this message to be an error vs warning.
 
 E: SRD bin size for fix srd differs from user request
 
-Fix SRD had to adjust the bin size to fit the simulation box.
+Fix SRD had to adjust the bin size to fit the simulation box.  See the
+cubic keyword if you want this message to be an error vs warning.
+
+W: SRD bin size for fix srd differs from user request
+
+Fix SRD had to adjust the bin size to fit the simulation box.  See the
+cubic keyword if you want this message to be an error vs warning.
 
 E: Fix srd lamda must be >= 0.6 of SRD grid size
 

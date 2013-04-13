@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -42,8 +42,8 @@ class TAD : protected Pointers {
   int event_first;
 
   int neigh_every,neigh_delay,neigh_dist_check;
-  int nbuild,ndanger;
   int quench_reneighbor;
+  bigint nbuild,ndanger;
 
   double time_dynamics,time_quench,time_neb,time_comm,time_output;
   double time_start;
@@ -144,11 +144,11 @@ after the PRD simulation.
 
 E: Too many timesteps
 
-UNDOCUMENTED
+The cummulative timesteps must fit in a 64-bit integer.
 
 E: Too many iterations
 
-You must use a number of iterations that fit in a 32-bit integer 
+You must use a number of iterations that fit in a 32-bit integer
 for minimization.
 
 */

@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "bond_nonlinear_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -25,7 +24,16 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
+
+/* ---------------------------------------------------------------------- */
+
+BondNonlinearOMP::BondNonlinearOMP(class LAMMPS *lmp)
+  : BondNonlinear(lmp), ThrOMP(lmp,THR_BOND)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -52,11 +60,11 @@ void BondNonlinearOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -87,7 +95,6 @@ void BondNonlinearOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx = x[i1][0] - x[i2][0];
     dely = x[i1][1] - x[i2][1];
     delz = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx,dely,delz);
 
     rsq = delx*delx + dely*dely + delz*delz;
     r = sqrt(rsq);
@@ -117,6 +124,6 @@ void BondNonlinearOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,nlocal,NEWTON_BOND,
-			     ebond,fbond,delx,dely,delz,thr);
+                             ebond,fbond,delx,dely,delz,thr);
   }
 }

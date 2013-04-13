@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_cosine_periodic_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,10 +26,19 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleCosinePeriodicOMP::AngleCosinePeriodicOMP(class LAMMPS *lmp)
+  : AngleCosinePeriodic(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +65,11 @@ void AngleCosinePeriodicOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -97,7 +105,6 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -107,7 +114,6 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -133,7 +139,7 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
     tn = 1.0;
     tn_1 = 1.0;
     tn_2 = 0.0;
-    un = 1.0; 
+    un = 1.0;
     un_1 = 2.0;
     un_2 = 0.0;
 
@@ -155,8 +161,8 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
       un_2 = un_1;
       un_1 = un;
     }
-    tn = b_factor*pow(-1.0,m)*tn;
-    un = b_factor*pow(-1.0,m)*m*un;
+    tn = b_factor*pow(-1.0,(double)m)*tn;
+    un = b_factor*pow(-1.0,(double)m)*m*un;
 
     if (EFLAG) eangle = 2*k[type]*(1.0 - tn);
 
@@ -164,7 +170,7 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
     a11 = a*c / rsq1;
     a12 = -a / (r1*r2);
     a22 = a*c / rsq2;
-        
+
     f1[0] = a11*delx1 + a12*delx2;
     f1[1] = a11*dely1 + a12*dely2;
     f1[2] = a11*delz1 + a12*delz2;
@@ -193,6 +199,6 @@ void AngleCosinePeriodicOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
+                             delx1,dely1,delz1,delx2,dely2,delz2,thr);
   }
 }

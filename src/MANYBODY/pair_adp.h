@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -39,7 +39,7 @@ class PairADP : public Pair {
   int pack_reverse_comm(int, int, double *);
   void unpack_reverse_comm(int, int *, double *);
   double memory_usage();
-  
+
  protected:
   int nmax;                   // allocated size of per-atom arrays
   double cutforcesq,cutmax;
@@ -58,7 +58,7 @@ class PairADP : public Pair {
   double **u2r, **w2r;
   int *type2frho,**type2rhor,**type2z2r;
   int **type2u2r,**type2w2r;
-  
+
   // potentials in spline form used for force computation
 
   double dr,rdr,drho,rdrho;
@@ -107,14 +107,16 @@ Self-explanatory.  Check the input script or data file.
 
 E: No matching element in ADP potential file
 
-UNDOCUMENTED
+The ADP potential file does not contain elements that match the
+requested elements.
 
 E: Cannot open ADP potential file %s
 
-UNDOCUMENTED
+The specified ADP potential file cannot be opened.  Check that the
+path and name are correct.
 
 E: Incorrect element names in ADP potential file
 
-UNDOCUMENTED
+The element names in the ADP file do not match those requested.
 
 */

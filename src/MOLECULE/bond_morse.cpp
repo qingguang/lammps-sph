@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -71,7 +71,6 @@ void BondMorse::compute(int eflag, int vflag)
     delx = x[i1][0] - x[i2][0];
     dely = x[i1][1] - x[i2][1];
     delz = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx,dely,delz);
 
     rsq = delx*delx + dely*dely + delz*delz;
     r = sqrt(rsq);
@@ -146,7 +145,7 @@ void BondMorse::coeff(int narg, char **arg)
 }
 
 /* ----------------------------------------------------------------------
-   return an equilbrium bond length 
+   return an equilbrium bond length
 ------------------------------------------------------------------------- */
 
 double BondMorse::equilibrium_distance(int i)

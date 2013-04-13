@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -41,42 +41,60 @@ class PPPM : public KSpace {
   virtual ~PPPM();
   virtual void init();
   virtual void setup();
+  void setup_grid();
   virtual void compute(int, int);
-  virtual void timing(int, double &, double &);
+  virtual int timing_1d(int, double &);
+  virtual int timing_3d(int, double &);
   virtual double memory_usage();
+
+  virtual void compute_group_group(int, int, int);
 
  protected:
   int me,nprocs;
-  double precision;
   int nfactors;
   int *factors;
-  double qsum,qsqsum;
+  double qsum,qsqsum,q2;
   double cutoff;
   double volume;
   double delxinv,delyinv,delzinv,delvolinv;
   double shift,shiftone;
+  int peratom_allocate_flag;
 
   int nxlo_in,nylo_in,nzlo_in,nxhi_in,nyhi_in,nzhi_in;
   int nxlo_out,nylo_out,nzlo_out,nxhi_out,nyhi_out,nzhi_out;
   int nxlo_ghost,nxhi_ghost,nylo_ghost,nyhi_ghost,nzlo_ghost,nzhi_ghost;
   int nxlo_fft,nylo_fft,nzlo_fft,nxhi_fft,nyhi_fft,nzhi_fft;
   int nlower,nupper;
-  int ngrid,nfft,nbuf,nfft_both;
+  int ngrid,nfft,nfft_both;
 
   FFT_SCALAR ***density_brick;
   FFT_SCALAR ***vdx_brick,***vdy_brick,***vdz_brick;
+  FFT_SCALAR ***u_brick;
+  FFT_SCALAR ***v0_brick,***v1_brick,***v2_brick;
+  FFT_SCALAR ***v3_brick,***v4_brick,***v5_brick;
   double *greensfn;
   double **vg;
   double *fkx,*fky,*fkz;
   FFT_SCALAR *density_fft;
   FFT_SCALAR *work1,*work2;
-  FFT_SCALAR *buf1,*buf2;
 
   double *gf_b;
-  FFT_SCALAR **rho1d,**rho_coeff;
+  FFT_SCALAR **rho1d,**rho_coeff,**drho1d,**drho_coeff;
+  double *sf_precoeff1, *sf_precoeff2, *sf_precoeff3;
+  double *sf_precoeff4, *sf_precoeff5, *sf_precoeff6;
+  double sf_coeff[6];          // coefficients for calculating ad self-forces
+  double **acons;
+
+  // group-group interactions
+
+  int group_allocate_flag;
+  FFT_SCALAR ***density_A_brick,***density_B_brick;
+  FFT_SCALAR *density_A_fft,*density_B_fft;
 
   class FFT3d *fft1,*fft2;
   class Remap *remap;
+  class CommGrid *cg;
+  class CommGrid *cg_peratom;
 
   int **part2grid;             // storage for particle -> grid mapping
   int nmax;
@@ -87,26 +105,62 @@ class PPPM : public KSpace {
   int typeH,typeO;             // atom types of TIP4P water H and O atoms
   double qdist;                // distance from O site to negative charge
   double alpha;                // geometric factor
+  
+  void set_grid_global();
+  void set_grid_local();
+  void adjust_gewald();
+  double newton_raphson_f();
+  double derivf();
+  double final_accuracy();
 
-  void set_grid();
   virtual void allocate();
+  virtual void allocate_peratom();
   virtual void deallocate();
+  virtual void deallocate_peratom();
   int factorable(int);
-  double rms(double, double, bigint, double, double **);
-  double diffpr(double, double, double, double, double **);
+  double compute_df_kspace();
+  double estimate_ik_error(double, double, bigint);
+  double compute_qopt();
   void compute_gf_denom();
-
+  void compute_gf_ik();
+  void compute_gf_ad();
+  void compute_sf_precoeff();
+  
   virtual void particle_map();
   virtual void make_rho();
   virtual void brick2fft();
-  virtual void fillbrick();
-  virtual void poisson(int, int);
+  
+  virtual void poisson();
+  void poisson_ik();
+  void poisson_ad();
+  
   virtual void fieldforce();
+  void fieldforce_ik();
+  void fieldforce_ad();
+  
+  virtual void poisson_peratom();
+  virtual void fieldforce_peratom();
   void procs2grid2d(int,int,int,int *, int*);
-  void compute_rho1d(const FFT_SCALAR &, const FFT_SCALAR &, 
-		     const FFT_SCALAR &);
+  void compute_rho1d(const FFT_SCALAR &, const FFT_SCALAR &,
+                     const FFT_SCALAR &);
+  void compute_drho1d(const FFT_SCALAR &, const FFT_SCALAR &,
+                     const FFT_SCALAR &);
   void compute_rho_coeff();
-  void slabcorr(int);
+  void slabcorr();
+
+  // grid communication
+
+  void pack_forward(int, FFT_SCALAR *, int, int *);
+  void unpack_forward(int, FFT_SCALAR *, int, int *);
+  void pack_reverse(int, FFT_SCALAR *, int, int *);
+  void unpack_reverse(int, FFT_SCALAR *, int, int *);
+
+  // group-group interactions
+
+  virtual void allocate_groups();
+  virtual void deallocate_groups();
+  virtual void make_rho_groups(int, int, int);
+  virtual void poisson_groups(int);
 
 /* ----------------------------------------------------------------------
    denominator for Hockney-Eastwood Green's function
@@ -117,10 +171,11 @@ class PPPM : public KSpace {
            j=-inf               l=0
 
           = -(z*z)**n /(2n-1)! * (d/dx)**(2n-1) cot(x)  at z = sin(x)
-   gf_b = denominator expansion coeffs 
+   gf_b = denominator expansion coeffs
 ------------------------------------------------------------------------- */
 
-  inline double gf_denom(const double &x, const double &y, const double &z) const {
+  inline double gf_denom(const double &x, const double &y,
+                         const double &z) const {
     double sx,sy,sz;
     sz = sy = sx = 0.0;
     for (int l = order-1; l >= 0; l--) {
@@ -170,9 +225,9 @@ E: Incorrect boundaries with slab PPPM
 Must have periodic x,y dimensions and non-periodic z dimension to use
 2d slab option with PPPM.
 
-E: PPPM order cannot be greater than %d
+E: PPPM order cannot be < 2 or > than %d
 
-Self-explanatory.
+This is a limitation of the PPPM implementation in LAMMPS.
 
 E: KSpace style is incompatible with Pair style
 
@@ -210,14 +265,18 @@ E: PPPM grid is too large
 
 The global PPPM grid is larger than OFFSET in one or more dimensions.
 OFFSET is currently set to 4096.  You likely need to decrease the
-requested precision.
+requested accuracy.
 
 E: PPPM order has been reduced to 0
 
 LAMMPS has attempted to reduce the PPPM order to enable the simulation
 to run, but can reduce the order no further.  Try increasing the
-accuracy of PPPM by reducing the tolerance size, thus inducing a 
+accuracy of PPPM by reducing the tolerance size, thus inducing a
 larger PPPM grid.
+
+E: KSpace accuracy must be > 0
+
+The kspace accuracy designated in the input must be greater than zero.
 
 E: Cannot compute PPPM G
 
@@ -239,5 +298,9 @@ every 1 check yes".  Second, it may mean that an atom has moved far
 outside a processor's sub-domain or even the entire simulation box.
 This indicates bad physics, e.g. due to highly overlapping atoms, too
 large a timestep, etc.
+
+E: Cannot (yet) use K-space slab correction with compute group/group
+
+This option is not yet supported.
 
 */

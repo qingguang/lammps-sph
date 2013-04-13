@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -27,33 +27,16 @@
 #include "memory.h"
 #include "error.h"
 
+#include "cuda_modify_flags.h"
+
 using namespace LAMMPS_NS;
+using namespace FixConst;
+using namespace FixConstCuda;
 
 #define DELTA 4
 
-// mask settings - same as in fix.cpp
-
-#define INITIAL_INTEGRATE   1
-#define POST_INTEGRATE      2
-#define PRE_EXCHANGE        4
-#define PRE_NEIGHBOR        8
-#define PRE_FORCE          16
-#define POST_FORCE         32
-#define FINAL_INTEGRATE    64
-#define END_OF_STEP       128
-#define THERMO_ENERGY     256
-#define INITIAL_INTEGRATE_RESPA   512
-#define POST_INTEGRATE_RESPA     1024
-#define PRE_FORCE_RESPA          2048
-#define POST_FORCE_RESPA         4096
-#define FINAL_INTEGRATE_RESPA    8192
-#define MIN_PRE_EXCHANGE        16384
-#define MIN_POST_FORCE          32768
-#define MIN_ENERGY              65536
-
-#include "cuda_modify_flags.h"
-
 #define BIG 1.0e20
+
 
 /* ---------------------------------------------------------------------- */
 
@@ -154,7 +137,7 @@ void ModifyCuda::init()
   n_final_integrate_host = n_final_integrate;
   n_end_of_step_host = n_end_of_step;
   n_thermo_energy_host = n_thermo_energy;
-  
+
   n_initial_integrate = n_initial_integrate_cuda+n_initial_integrate_host;
   n_post_integrate = n_post_integrate_cuda+n_post_integrate_host;
   n_pre_exchange = n_pre_exchange_cuda+n_pre_exchange_host;
@@ -164,17 +147,17 @@ void ModifyCuda::init()
   n_final_integrate = n_final_integrate_cuda+n_final_integrate_host;
   n_end_of_step = n_end_of_step_cuda+n_end_of_step_host;
   n_thermo_energy = n_thermo_energy_cuda+n_thermo_energy_host;
-  
+
   list_init(INITIAL_INTEGRATE_RESPA,
-	    n_initial_integrate_respa,list_initial_integrate_respa);
+            n_initial_integrate_respa,list_initial_integrate_respa);
   list_init(POST_INTEGRATE_RESPA,
-	    n_post_integrate_respa,list_post_integrate_respa);
+            n_post_integrate_respa,list_post_integrate_respa);
   list_init(POST_FORCE_RESPA,
-	    n_post_force_respa,list_post_force_respa);
+            n_post_force_respa,list_post_force_respa);
   list_init(PRE_FORCE_RESPA,
-	    n_pre_force_respa,list_pre_force_respa);
+            n_pre_force_respa,list_pre_force_respa);
   list_init(FINAL_INTEGRATE_RESPA,
-	    n_final_integrate_respa,list_final_integrate_respa);
+            n_final_integrate_respa,list_final_integrate_respa);
 
   list_init(MIN_PRE_EXCHANGE,n_min_pre_exchange,list_min_pre_exchange);
   list_init(MIN_POST_FORCE,n_min_post_force,list_min_post_force);
@@ -248,16 +231,16 @@ void ModifyCuda::init()
 
 void ModifyCuda::initial_integrate(int vflag)
 {
-	for(int i = 0; i < n_initial_integrate_cuda; i++)
-		fix[list_initial_integrate_cuda[i]]->initial_integrate(vflag);
+        for(int i = 0; i < n_initial_integrate_cuda; i++)
+                fix[list_initial_integrate_cuda[i]]->initial_integrate(vflag);
 
-	if(n_initial_integrate_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_initial_integrate_host; i++)
-			fix[list_initial_integrate[i]]->initial_integrate(vflag);
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        if(n_initial_integrate_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_initial_integrate_host; i++)
+                        fix[list_initial_integrate[i]]->initial_integrate(vflag);
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -266,16 +249,16 @@ void ModifyCuda::initial_integrate(int vflag)
 
 void ModifyCuda::post_integrate()
 {
-	for(int i = 0; i < n_post_integrate_cuda; i++)
-		fix[list_post_integrate_cuda[i]]->post_integrate();
-	
-	if(n_post_integrate_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_post_integrate_host; i++)
-			fix[list_post_integrate[i]]->post_integrate();
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        for(int i = 0; i < n_post_integrate_cuda; i++)
+                fix[list_post_integrate_cuda[i]]->post_integrate();
+
+        if(n_post_integrate_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_post_integrate_host; i++)
+                        fix[list_post_integrate[i]]->post_integrate();
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -284,16 +267,16 @@ void ModifyCuda::post_integrate()
 
 void ModifyCuda::pre_exchange()
 {
-	for(int i = 0; i < n_pre_exchange_cuda; i++)
-		fix[list_pre_exchange_cuda[i]]->pre_exchange();
+        for(int i = 0; i < n_pre_exchange_cuda; i++)
+                fix[list_pre_exchange_cuda[i]]->pre_exchange();
 
-	if(n_pre_exchange_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_pre_exchange_host; i++)
-			fix[list_pre_exchange[i]]->pre_exchange();
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        if(n_pre_exchange_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_pre_exchange_host; i++)
+                        fix[list_pre_exchange[i]]->pre_exchange();
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -302,34 +285,48 @@ void ModifyCuda::pre_exchange()
 
 void ModifyCuda::pre_neighbor()
 {
-	for(int i = 0; i < n_pre_neighbor_cuda; i++)
-		fix[list_pre_neighbor_cuda[i]]->pre_neighbor();
-	
-	if(n_pre_neighbor_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_pre_neighbor_host; i++)
-			fix[list_pre_neighbor[i]]->pre_neighbor();
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        for(int i = 0; i < n_pre_neighbor_cuda; i++)
+                fix[list_pre_neighbor_cuda[i]]->pre_neighbor();
+
+        if(n_pre_neighbor_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_pre_neighbor_host; i++)
+                        fix[list_pre_neighbor[i]]->pre_neighbor();
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
    pre_force call, only for relevant fixes
 ------------------------------------------------------------------------- */
 
+void ModifyCuda::setup_pre_force(int vflag)
+{
+        for(int i = 0; i < n_pre_force_cuda; i++)
+                fix[list_pre_force_cuda[i]]->pre_force(vflag);
+
+        if(n_pre_force_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_pre_force_host; i++)
+                        fix[list_pre_force[i]]->pre_force(vflag);
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
+}
+
 void ModifyCuda::pre_force(int vflag)
 {
-	for(int i = 0; i < n_pre_force_cuda; i++)
-		fix[list_pre_force_cuda[i]]->pre_force(vflag);
+        for(int i = 0; i < n_pre_force_cuda; i++)
+                fix[list_pre_force_cuda[i]]->pre_force(vflag);
 
-	if(n_pre_force_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_pre_force_host; i++)
-			fix[list_pre_force[i]]->pre_force(vflag);
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        if(n_pre_force_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_pre_force_host; i++)
+                        fix[list_pre_force[i]]->pre_force(vflag);
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -338,16 +335,16 @@ void ModifyCuda::pre_force(int vflag)
 
 void ModifyCuda::post_force(int vflag)
 {
-	for(int i = 0; i < n_post_force_cuda; i++)
-			fix[list_post_force_cuda[i]]->post_force(vflag);
+        for(int i = 0; i < n_post_force_cuda; i++)
+                        fix[list_post_force_cuda[i]]->post_force(vflag);
 
-	if(n_post_force_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_post_force_host; i++)
-			fix[list_post_force[i]]->post_force(vflag);
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        if(n_post_force_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_post_force_host; i++)
+                        fix[list_post_force[i]]->post_force(vflag);
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -356,16 +353,16 @@ void ModifyCuda::post_force(int vflag)
 
 void ModifyCuda::final_integrate()
 {
-	for (int i = 0; i < n_final_integrate_cuda; i++)
-		fix[list_final_integrate_cuda[i]]->final_integrate();
-	
-	if(n_final_integrate_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_final_integrate_host; i++)
-			fix[list_final_integrate[i]]->final_integrate();
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
+        for (int i = 0; i < n_final_integrate_cuda; i++)
+                fix[list_final_integrate_cuda[i]]->final_integrate();
+
+        if(n_final_integrate_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_final_integrate_host; i++)
+                        fix[list_final_integrate[i]]->final_integrate();
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -375,24 +372,24 @@ void ModifyCuda::final_integrate()
 
 void ModifyCuda::end_of_step()
 {
-	for (int i = 0; i < n_end_of_step_cuda; i++)
-		if (update->ntimestep % end_of_step_every_cuda[i] == 0)
-			fix[list_end_of_step_cuda[i]]->end_of_step();
-	
-	if(n_end_of_step_host != 0)
-	{
-		int do_thisstep=0;
-		for (int i = 0; i < n_end_of_step_host; i++)
-			if (update->ntimestep % end_of_step_every[i] == 0) do_thisstep=1;
-		if(do_thisstep)
-		{
-		  cuda->downloadAll(); cuda->oncpu = true;
-		  for (int i = 0; i < n_end_of_step_host; i++)
-			 if (update->ntimestep % end_of_step_every[i] == 0)
-				fix[list_end_of_step[i]]->end_of_step();
-		  cuda->uploadAll(); cuda->oncpu = false;
-		}
-	}
+        for (int i = 0; i < n_end_of_step_cuda; i++)
+                if (update->ntimestep % end_of_step_every_cuda[i] == 0)
+                        fix[list_end_of_step_cuda[i]]->end_of_step();
+
+        if(n_end_of_step_host != 0)
+        {
+                int do_thisstep=0;
+                for (int i = 0; i < n_end_of_step_host; i++)
+                        if (update->ntimestep % end_of_step_every[i] == 0) do_thisstep=1;
+                if(do_thisstep)
+                {
+                  cuda->downloadAll(); cuda->oncpu = true;
+                  for (int i = 0; i < n_end_of_step_host; i++)
+                         if (update->ntimestep % end_of_step_every[i] == 0)
+                                fix[list_end_of_step[i]]->end_of_step();
+                  cuda->uploadAll(); cuda->oncpu = false;
+                }
+        }
 }
 
 /* ----------------------------------------------------------------------
@@ -403,20 +400,20 @@ void ModifyCuda::end_of_step()
 
 double ModifyCuda::thermo_energy()
 {
-	double energy = 0.0;
-	
-	for (int i = 0; i < n_thermo_energy_cuda; i++)
-		energy += fix[list_thermo_energy_cuda[i]]->compute_scalar();
-	
-	if(n_thermo_energy_host != 0)
-	{
-		cuda->downloadAll(); cuda->oncpu = true;
-		for (int i = 0; i < n_thermo_energy_host; i++)
-			energy += fix[list_thermo_energy[i]]->compute_scalar();
-		cuda->uploadAll(); cuda->oncpu = false;
-	}
-	
-	return energy;
+        double energy = 0.0;
+
+        for (int i = 0; i < n_thermo_energy_cuda; i++)
+                energy += fix[list_thermo_energy_cuda[i]]->compute_scalar();
+
+        if(n_thermo_energy_host != 0)
+        {
+                cuda->downloadAll(); cuda->oncpu = true;
+                for (int i = 0; i < n_thermo_energy_host; i++)
+                        energy += fix[list_thermo_energy[i]]->compute_scalar();
+                cuda->uploadAll(); cuda->oncpu = false;
+        }
+
+        return energy;
 }
 
 

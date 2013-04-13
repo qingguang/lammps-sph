@@ -53,28 +53,39 @@ turn off (or weight) the pairwise interaction that would otherwise
 exist between 4 bonded atoms.
 </P>
 <P>In the formulas listed for each dihedral style, <I>phi</I> is the torsional
-angle defined by the quadruplet of atoms.
+angle defined by the quadruplet of atoms.  This angle has a sign
+convention as shown in this diagram:
 </P>
-<P>Here are some important points to take note of when defining the
-LAMMPS dihedral coefficients in the formulas that follow so that they
-are compatible with other force fields:
+<CENTER><IMG SRC = "Eqs/dihedral_sign.jpg">
+</CENTER>
+<P>where the I,J,K,L ordering of the 4 atoms that define the dihedral
+is from left to right.
 </P>
-<UL><LI>The LAMMPS convention is that the trans position = 180 degrees, while
-in some force fields trans = 0 degrees. 
-
-<LI>Some force fields reverse the sign convention on <I>d</I>. 
-
-<LI>Some force fields divide/multiply <I>K</I> by the number of multiple
-torsions that contain the j-k bond in an i-j-k-l torsion. 
-
-<LI>Some force fields let <I>n</I> be positive or negative which corresponds to
-<I>d</I> = 1 or -1 for the harmonic style. 
-</UL>
+<P>This sign convention effects several of the dihedral styles listed
+below (e.g. charmm, helix) in the sense that the energy formula
+depends on the sign of phi, which may be reflected in the value of the
+coefficients you specify.
+</P>
+<P>IMPORTANT NOTE: When comparing the formulas and coefficients for
+various LAMMPS dihedral styles with dihedral equations defined by
+other force fields, note that some force field implementations
+divide/multiply the energy prefactor <I>K</I> by the multiple number of
+torsions that contain the J-K bond in an I-J-K-L torsion.  LAMMPS does
+not do this, i.e. the listed dihedral equation applies to each
+individual dihedral.  Thus you need to define <I>K</I> appropriately via
+the <A HREF = "dihedral_coeff.html">dihedral_coeff</A> command to account for this
+difference if necessary.
+</P>
 <HR>
 
 <P>Here is an alphabetic list of dihedral styles defined in LAMMPS.  Click on
 the style to display the formula it computes and coefficients
-specified by the associated <A HREF = "dihedral_coeff.html">dihedral_coeff</A> command:
+specified by the associated <A HREF = "dihedral_coeff.html">dihedral_coeff</A> command.
+</P>
+<P>Note that there are also additional dihedral styles submitted by users
+which are included in the LAMMPS distribution.  The list of these with
+links to the individual styles are given in the dihedral section of
+<A HREF = "Section_commands.html#cmd_5">this page</A>.
 </P>
 <UL><LI><A HREF = "dihedral_none.html">dihedral_style none</A> - turn off dihedral interactions
 <LI><A HREF = "dihedral_hybrid.html">dihedral_style hybrid</A> - define multiple styles of dihedral interactions 
@@ -86,11 +97,6 @@ specified by the associated <A HREF = "dihedral_coeff.html">dihedral_coeff</A> c
 <LI><A HREF = "dihedral_multi_harmonic.html">dihedral_style multi/harmonic</A> - multi-harmonic dihedral
 <LI><A HREF = "dihedral_opls.html">dihedral_style opls</A> - OPLS dihedral 
 </UL>
-<P>There are also additional dihedral styles submitted by users which are
-included in the LAMMPS distribution.  The list of these with links to
-the individual styles are given in the dihedral section of <A HREF = "Section_commands.html#cmd_5">this
-page</A>.
-</P>
 <HR>
 
 <P><B>Restrictions:</B>

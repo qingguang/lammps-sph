@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -49,24 +49,21 @@ class PairGayBerneGPU : public PairGayBerne {
 
 /* ERROR/WARNING messages:
 
-E: Pair gayberne requires atom style ellipsoid
+E: Pair gayberne/gpu requires atom style ellipsoid
 
-UNDOCUMENTED
+Self-explanatory.
 
-E: Out of memory on GPGPU
+E: Insufficient memory on accelerator
 
-UNDOCUMENTED
+There is insufficient memory on one of the devices specified for the gpu
+package
 
 E: Cannot use newton pair with gayberne/gpu pair style
 
-UNDOCUMENTED
-
-E: Pair gayberne/gpu requires atom style ellipsoid
-
-UNDOCUMENTED
+Self-explanatory.
 
 E: Pair gayberne/gpu requires atoms with same type have same shape
 
-UNDOCUMENTED
+Self-explanatory.
 
 */

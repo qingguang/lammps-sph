@@ -28,8 +28,14 @@
 #include <vector>
 #include <iostream>
 
-#include "CL/cl.h"
-#include "CL/cl_platform.h"
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#include <OpenCL/cl_platform.h>
+#else
+#include <CL/cl.h>
+#include <CL/cl_platform.h>
+#endif
+
 #include "ocl_macros.h"
 #include "ucl_types.h"
 
@@ -94,13 +100,19 @@ class UCL_Device {
   inline cl_context & context() { return _context; }
   
   /// Returns the default stream for the current device
-  inline command_queue & cq() { return cq(0); }
+  inline command_queue & cq() { return cq(_default_cq); }
   
   /// Returns the stream indexed by i
   inline command_queue & cq(const int i) { return _cq[i]; }
   
+  /// Set the default command queue
+  /** \param i index of the command queue (as added by push_command_queue()) 
+      If i is 0, the command queue created with device initialization is
+      used **/
+  inline void set_command_queue(const int i) { _default_cq=i; }
+  
   /// Block until all commands in the default stream have completed
-  inline void sync() { sync(0); }
+  inline void sync() { sync(_default_cq); }
   
   /// Block until all commands in the specified stream have completed
   inline void sync(const int i) { ucl_sync(cq(i)); }
@@ -118,7 +130,7 @@ class UCL_Device {
     if (errorv!=CL_SUCCESS) {
       std::cerr << "Could not create command queue on device: " << name() 
                 << std::endl;
-      exit(1);
+      UCL_GERYON_EXIT;
     }
   }
 
@@ -145,6 +157,11 @@ class UCL_Device {
   inline int device_type() { return device_type(_device); }
   /// Get device type (UCL_CPU, UCL_GPU, UCL_ACCELERATOR, UCL_DEFAULT)
   inline int device_type(const int i);
+  
+  /// Returns true if host memory is efficiently addressable from device
+  inline bool shared_memory() { return shared_memory(_device); }
+  /// Returns true if host memory is efficiently addressable from device
+  inline bool shared_memory(const int i) { return device_type(i)==UCL_CPU; }
   
   /// Returns true if double precision is support for the current device
   bool double_precision() { return double_precision(_device); }
@@ -230,7 +247,7 @@ class UCL_Device {
   
   void add_properties(cl_device_id);
   int create_context();
-  
+  int _default_cq;
 };
 
 // Grabs the properties for all devices
@@ -242,6 +259,7 @@ inline UCL_Device::UCL_Device() {
   _device=-1;
   _num_devices=0;
   _platform=0;
+  _default_cq=0;
 
   // --- Get Number of Platforms
   errorv=clGetPlatformIDs(1,&_cl_platform,&nplatforms);
@@ -293,11 +311,12 @@ inline int UCL_Device::create_context() {
     #ifndef UCL_NO_EXIT
     std::cerr << "UCL Error: Could not access accelerator number " << _device
               << " for use.\n";
-    exit(1);
+    UCL_GERYON_EXIT;
     #endif
     return UCL_ERROR;
   }
   push_command_queue();
+  _default_cq=0;
   return UCL_SUCCESS;
 }
 

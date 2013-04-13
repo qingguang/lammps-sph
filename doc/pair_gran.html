@@ -131,8 +131,11 @@ constant with units of force/distance.  In the Hertzian case, Kn is
 like a non-linear spring constant with units of force/area or
 pressure, and as shown in the <A HREF = "#Zhang">(Zhang)</A> paper, Kn = 4G /
 (3(1-nu)) where nu = the Poisson ratio, G = shear modulus = E /
-(2(1+nu)), and E = Young's modulus.  Similarly, Kt = 8G / (2-nu).
-Thus in the Hertzian case Kn and Kt can be set to values that
+(2(1+nu)), and E = Young's modulus.  Similarly, Kt = 4G / (2-nu).
+(NOTE: in an earlier version of the manual, we incorrectly stated that
+Kt = 8G / (2-nu).)
+</P>
+<P>Thus in the Hertzian case Kn and Kt can be set to values that
 corresponds to properties of the material being modeled.  This is also
 true in the Hookean case, except that a spring constant must be chosen
 that is appropriate for the absolute size of particles in the model.
@@ -189,7 +192,7 @@ those packages.  See the <A HREF = "Section_start.html#start_3">Making LAMMPS</A
 section for more info.
 </P>
 <P>You can specify the accelerated styles explicitly in your input script
-by including their suffix, or you can use the <A HREF = "Section_start.html#start_6">-suffix command-line
+by including their suffix, or you can use the <A HREF = "Section_start.html#start_7">-suffix command-line
 switch</A> when you invoke LAMMPS, or you can
 use the <A HREF = "suffix.html">suffix</A> command in your input script.
 </P>
@@ -238,6 +241,12 @@ all of this.
 <P>This pair style requires you to use the <A HREF = "communicate.html">communicate vel
 yes</A> option so that velocites are stored by ghost
 atoms.
+</P>
+<P>These pair styles will not restart exactly when using the
+<A HREF = "read_restart.html">read_restart</A> command, though they should provide
+statistically similar results.  This is because the forces they
+compute depend on atom velocities.  See the
+<A HREF = "read_restart.html">read_restart</A> command for more details.
 </P>
 <P><B>Related commands:</B>
 </P>

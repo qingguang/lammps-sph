@@ -5,13 +5,12 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "stdlib.h"
 #include "atom_vec_full.h"
 #include "atom.h"
@@ -28,7 +27,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-AtomVecFull::AtomVecFull(LAMMPS *lmp, int narg, char **arg) : 
+AtomVecFull::AtomVecFull(LAMMPS *lmp, int narg, char **arg) :
   AtomVec(lmp, narg, arg)
 {
   molecular = 1;
@@ -50,7 +49,7 @@ AtomVecFull::AtomVecFull(LAMMPS *lmp, int narg, char **arg) :
 /* ----------------------------------------------------------------------
    grow atom arrays
    n = 0 grows arrays by DELTA
-   n > 0 allocates arrays to size n 
+   n > 0 allocates arrays to size n
 ------------------------------------------------------------------------- */
 
 void AtomVecFull::grow(int n)
@@ -74,58 +73,58 @@ void AtomVecFull::grow(int n)
 
   nspecial = memory->grow(atom->nspecial,nmax,3,"atom:nspecial");
   special = memory->grow(atom->special,nmax,atom->maxspecial,"atom:special");
-  
+
   num_bond = memory->grow(atom->num_bond,nmax,"atom:num_bond");
   bond_type = memory->grow(atom->bond_type,nmax,atom->bond_per_atom,
-			   "atom:bond_type");
+                           "atom:bond_type");
   bond_atom = memory->grow(atom->bond_atom,nmax,atom->bond_per_atom,
-			   "atom:bond_atom");
+                           "atom:bond_atom");
 
   num_angle = memory->grow(atom->num_angle,nmax,"atom:num_angle");
   angle_type = memory->grow(atom->angle_type,nmax,atom->angle_per_atom,
-			    "atom:angle_type");
+                            "atom:angle_type");
   angle_atom1 = memory->grow(atom->angle_atom1,nmax,atom->angle_per_atom,
-			     "atom:angle_atom1");
+                             "atom:angle_atom1");
   angle_atom2 = memory->grow(atom->angle_atom2,nmax,atom->angle_per_atom,
-			     "atom:angle_atom2");
+                             "atom:angle_atom2");
   angle_atom3 = memory->grow(atom->angle_atom3,nmax,atom->angle_per_atom,
-			     "atom:angle_atom3");
-  
+                             "atom:angle_atom3");
+
   num_dihedral = memory->grow(atom->num_dihedral,nmax,"atom:num_dihedral");
   dihedral_type = memory->grow(atom->dihedral_type,nmax,
-			       atom->dihedral_per_atom,"atom:dihedral_type");
-  dihedral_atom1 = 
+                               atom->dihedral_per_atom,"atom:dihedral_type");
+  dihedral_atom1 =
     memory->grow(atom->dihedral_atom1,nmax,atom->dihedral_per_atom,
-		 "atom:dihedral_atom1");
-  dihedral_atom2 = 
+                 "atom:dihedral_atom1");
+  dihedral_atom2 =
     memory->grow(atom->dihedral_atom2,nmax,atom->dihedral_per_atom,
-		 "atom:dihedral_atom2");
-  dihedral_atom3 = 
+                 "atom:dihedral_atom2");
+  dihedral_atom3 =
     memory->grow(atom->dihedral_atom3,nmax,atom->dihedral_per_atom,
-		 "atom:dihedral_atom3");
-  dihedral_atom4 = 
+                 "atom:dihedral_atom3");
+  dihedral_atom4 =
     memory->grow(atom->dihedral_atom4,nmax,atom->dihedral_per_atom,
-		 "atom:dihedral_atom4");
+                 "atom:dihedral_atom4");
 
   num_improper = memory->grow(atom->num_improper,nmax,"atom:num_improper");
-  improper_type = 
+  improper_type =
     memory->grow(atom->improper_type,nmax,atom->improper_per_atom,
-		 "atom:improper_type");
-  improper_atom1 = 
+                 "atom:improper_type");
+  improper_atom1 =
     memory->grow(atom->improper_atom1,nmax,atom->improper_per_atom,
-		 "atom:improper_atom1");
-  improper_atom2 = 
+                 "atom:improper_atom1");
+  improper_atom2 =
     memory->grow(atom->improper_atom2,nmax,atom->improper_per_atom,
-		 "atom:improper_atom2");
-  improper_atom3 = 
+                 "atom:improper_atom2");
+  improper_atom3 =
     memory->grow(atom->improper_atom3,nmax,atom->improper_per_atom,
-		 "atom:improper_atom3");
-  improper_atom4 = 
+                 "atom:improper_atom3");
+  improper_atom4 =
     memory->grow(atom->improper_atom4,nmax,atom->improper_per_atom,
-		 "atom:improper_atom4");
+                 "atom:improper_atom4");
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       modify->fix[atom->extra_grow[iextra]]->grow_arrays(nmax);
 }
 
@@ -213,14 +212,14 @@ void AtomVecFull::copy(int i, int j, int delflag)
   for (k = 0; k < nspecial[j][2]; k++) special[j][k] = special[i][k];
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       modify->fix[atom->extra_grow[iextra]]->copy_arrays(i,j);
 }
 
 /* ---------------------------------------------------------------------- */
 
 int AtomVecFull::pack_comm(int n, int *list, double *buf,
-			   int pbc_flag, int *pbc)
+                           int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -256,7 +255,7 @@ int AtomVecFull::pack_comm(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecFull::pack_comm_vel(int n, int *list, double *buf,
-			       int pbc_flag, int *pbc)
+                               int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -284,32 +283,32 @@ int AtomVecFull::pack_comm_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
       }
     }
   }
@@ -383,7 +382,7 @@ void AtomVecFull::unpack_reverse(int n, int *list, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecFull::pack_border(int n, int *list, double *buf,
-			     int pbc_flag, int *pbc)
+                             int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -429,7 +428,7 @@ int AtomVecFull::pack_border(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecFull::pack_border_vel(int n, int *list, double *buf,
-				 int pbc_flag, int *pbc)
+                                 int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -462,42 +461,42 @@ int AtomVecFull::pack_border_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = q[j];
-	buf[m++] = molecule[j];
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = q[j];
+        buf[m++] = molecule[j];
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = q[j];
-	buf[m++] = molecule[j];
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = q[j];
+        buf[m++] = molecule[j];
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
       }
     }
   }
@@ -582,7 +581,7 @@ int AtomVecFull::unpack_border_hybrid(int n, int first, double *buf)
 
 /* ----------------------------------------------------------------------
    pack data for atom I for sending to another proc
-   xyz must be 1st 3 values, so comm::exchange() can test on them 
+   xyz must be 1st 3 values, so comm::exchange() can test on them
 ------------------------------------------------------------------------- */
 
 int AtomVecFull::pack_exchange(int i, double *buf)
@@ -599,7 +598,7 @@ int AtomVecFull::pack_exchange(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
 
   buf[m++] = q[i];
   buf[m++] = molecule[i];
@@ -642,7 +641,7 @@ int AtomVecFull::pack_exchange(int i, double *buf)
   for (k = 0; k < nspecial[i][2]; k++) buf[m++] = special[i][k];
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->pack_exchange(i,&buf[m]);
 
   buf[0] = m;
@@ -668,7 +667,7 @@ int AtomVecFull::unpack_exchange(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
 
   q[nlocal] = buf[m++];
   molecule[nlocal] = static_cast<int> (buf[m++]);
@@ -712,9 +711,9 @@ int AtomVecFull::unpack_exchange(double *buf)
     special[nlocal][k] = static_cast<int> (buf[m++]);
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->
-	unpack_exchange(nlocal,&buf[m]);
+        unpack_exchange(nlocal,&buf[m]);
 
   atom->nlocal++;
   return m;
@@ -736,9 +735,9 @@ int AtomVecFull::size_restart()
       5*num_dihedral[i] + 5*num_improper[i];
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       for (i = 0; i < nlocal; i++)
-	n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
   return n;
 }
@@ -746,7 +745,7 @@ int AtomVecFull::size_restart()
 /* ----------------------------------------------------------------------
    pack atom I's data for restart file including extra quantities
    xyz must be 1st 3 values, so that read_restart can test on them
-   molecular types may be negative, but write as positive   
+   molecular types may be negative, but write as positive
 ------------------------------------------------------------------------- */
 
 int AtomVecFull::pack_restart(int i, double *buf)
@@ -760,20 +759,20 @@ int AtomVecFull::pack_restart(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
   buf[m++] = v[i][0];
   buf[m++] = v[i][1];
   buf[m++] = v[i][2];
 
   buf[m++] = q[i];
   buf[m++] = molecule[i];
- 
+
   buf[m++] = num_bond[i];
   for (k = 0; k < num_bond[i]; k++) {
     buf[m++] = MAX(bond_type[i][k],-bond_type[i][k]);
     buf[m++] = bond_atom[i][k];
   }
-  
+
   buf[m++] = num_angle[i];
   for (k = 0; k < num_angle[i]; k++) {
     buf[m++] = MAX(angle_type[i][k],-angle_type[i][k]);
@@ -801,7 +800,7 @@ int AtomVecFull::pack_restart(int i, double *buf)
   }
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       m += modify->fix[atom->extra_restart[iextra]]->pack_restart(i,&buf[m]);
 
   buf[0] = m;
@@ -830,14 +829,14 @@ int AtomVecFull::unpack_restart(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
   v[nlocal][0] = buf[m++];
   v[nlocal][1] = buf[m++];
   v[nlocal][2] = buf[m++];
 
   q[nlocal] = buf[m++];
   molecule[nlocal] = static_cast<int> (buf[m++]);
-    
+
   num_bond[nlocal] = static_cast<int> (buf[m++]);
   for (k = 0; k < num_bond[nlocal]; k++) {
     bond_type[nlocal][k] = static_cast<int> (buf[m++]);
@@ -896,7 +895,8 @@ void AtomVecFull::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = (512 << 20) | (512 << 10) | 512;
+  image[nlocal] = ((tagint) IMGMAX << IMG2BITS) |
+    ((tagint) IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
@@ -917,7 +917,7 @@ void AtomVecFull::create_atom(int itype, double *coord)
    initialize other atom quantities
 ------------------------------------------------------------------------- */
 
-void AtomVecFull::data_atom(double *coord, int imagetmp, char **values)
+void AtomVecFull::data_atom(double *coord, tagint imagetmp, char **values)
 {
   int nlocal = atom->nlocal;
   if (nlocal == nmax) grow(0);
@@ -971,7 +971,7 @@ int AtomVecFull::data_atom_hybrid(int nlocal, char **values)
 }
 
 /* ----------------------------------------------------------------------
-   return # of bytes of allocated memory 
+   return # of bytes of allocated memory
 ------------------------------------------------------------------------- */
 
 bigint AtomVecFull::memory_usage()
@@ -989,47 +989,47 @@ bigint AtomVecFull::memory_usage()
   if (atom->memcheck("q")) bytes += memory->usage(q,nmax);
   if (atom->memcheck("molecule")) bytes += memory->usage(molecule,nmax);
   if (atom->memcheck("nspecial")) bytes += memory->usage(nspecial,nmax,3);
-  if (atom->memcheck("special")) 
+  if (atom->memcheck("special"))
     bytes += memory->usage(special,nmax,atom->maxspecial);
 
   if (atom->memcheck("num_bond")) bytes += memory->usage(num_bond,nmax);
-  if (atom->memcheck("bond_type")) 
+  if (atom->memcheck("bond_type"))
     bytes += memory->usage(bond_type,nmax,atom->bond_per_atom);
-  if (atom->memcheck("bond_atom")) 
+  if (atom->memcheck("bond_atom"))
     bytes += memory->usage(bond_atom,nmax,atom->bond_per_atom);
 
   if (atom->memcheck("num_angle")) bytes += memory->usage(num_angle,nmax);
-  if (atom->memcheck("angle_type")) 
+  if (atom->memcheck("angle_type"))
     bytes += memory->usage(angle_type,nmax,atom->angle_per_atom);
-  if (atom->memcheck("angle_atom1")) 
+  if (atom->memcheck("angle_atom1"))
     bytes += memory->usage(angle_atom1,nmax,atom->angle_per_atom);
-  if (atom->memcheck("angle_atom2")) 
+  if (atom->memcheck("angle_atom2"))
     bytes += memory->usage(angle_atom2,nmax,atom->angle_per_atom);
-  if (atom->memcheck("angle_atom3")) 
+  if (atom->memcheck("angle_atom3"))
     bytes += memory->usage(angle_atom3,nmax,atom->angle_per_atom);
 
   if (atom->memcheck("num_dihedral")) bytes += memory->usage(num_dihedral,nmax);
-  if (atom->memcheck("dihedral_type")) 
+  if (atom->memcheck("dihedral_type"))
     bytes += memory->usage(dihedral_type,nmax,atom->dihedral_per_atom);
-  if (atom->memcheck("dihedral_atom1")) 
+  if (atom->memcheck("dihedral_atom1"))
     bytes += memory->usage(dihedral_atom1,nmax,atom->dihedral_per_atom);
-  if (atom->memcheck("dihedral_atom2")) 
+  if (atom->memcheck("dihedral_atom2"))
     bytes += memory->usage(dihedral_atom2,nmax,atom->dihedral_per_atom);
-  if (atom->memcheck("dihedral_atom3")) 
+  if (atom->memcheck("dihedral_atom3"))
     bytes += memory->usage(dihedral_atom3,nmax,atom->dihedral_per_atom);
-  if (atom->memcheck("dihedral_atom4")) 
+  if (atom->memcheck("dihedral_atom4"))
     bytes += memory->usage(dihedral_atom4,nmax,atom->dihedral_per_atom);
 
   if (atom->memcheck("num_improper")) bytes += memory->usage(num_improper,nmax);
-  if (atom->memcheck("improper_type")) 
+  if (atom->memcheck("improper_type"))
     bytes += memory->usage(improper_type,nmax,atom->improper_per_atom);
-  if (atom->memcheck("improper_atom1")) 
+  if (atom->memcheck("improper_atom1"))
     bytes += memory->usage(improper_atom1,nmax,atom->improper_per_atom);
-  if (atom->memcheck("improper_atom2")) 
+  if (atom->memcheck("improper_atom2"))
     bytes += memory->usage(improper_atom2,nmax,atom->improper_per_atom);
-  if (atom->memcheck("improper_atom3")) 
+  if (atom->memcheck("improper_atom3"))
     bytes += memory->usage(improper_atom3,nmax,atom->improper_per_atom);
-  if (atom->memcheck("improper_atom4")) 
+  if (atom->memcheck("improper_atom4"))
     bytes += memory->usage(improper_atom4,nmax,atom->improper_per_atom);
 
   return bytes;

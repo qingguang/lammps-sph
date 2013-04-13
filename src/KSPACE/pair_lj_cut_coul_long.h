@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -25,6 +25,7 @@ PairStyle(lj/cut/coul/long,PairLJCutCoulLong)
 namespace LAMMPS_NS {
 
 class PairLJCutCoulLong : public Pair {
+
  public:
   PairLJCutCoulLong(class LAMMPS *);
   virtual ~PairLJCutCoulLong();
@@ -33,7 +34,7 @@ class PairLJCutCoulLong : public Pair {
   void coeff(int, char **);
   virtual void init_style();
   void init_list(int, class NeighList *);
-  double init_one(int, int);
+  virtual double init_one(int, int);
   void write_restart(FILE *);
   void read_restart(FILE *);
   virtual void write_restart_settings(FILE *);
@@ -42,8 +43,8 @@ class PairLJCutCoulLong : public Pair {
 
   void compute_inner();
   void compute_middle();
-  void compute_outer(int, int);
-  void *extract(const char *, int &);
+  virtual void compute_outer(int, int);
+  virtual void *extract(const char *, int &);
 
  protected:
   double cut_lj_global;
@@ -52,16 +53,10 @@ class PairLJCutCoulLong : public Pair {
   double **epsilon,**sigma;
   double **lj1,**lj2,**lj3,**lj4,**offset;
   double *cut_respa;
+  double qdist;             // TIP4P distance from O site to negative charge
   double g_ewald;
 
-  double tabinnersq;
-  double *rtable,*drtable,*ftable,*dftable,*ctable,*dctable;
-  double *etable,*detable,*ptable,*dptable,*vtable,*dvtable;
-  int ncoulshiftbits,ncoulmask;
-
   void allocate();
-  void init_tables();
-  void free_tables();
 };
 
 }

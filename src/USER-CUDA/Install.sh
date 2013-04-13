@@ -17,7 +17,11 @@ if (test $1 = 1) then
 
   if (test -e ../Makefile.package.settings) then
     sed -i -e '/^include.*cuda.*$/d' ../Makefile.package.settings
-    sed -i '4 i include ..\/..\/lib\/cuda\/Makefile.lammps' ../Makefile.package.settings
+    # multiline form needed for BSD sed on Macs
+    sed -i -e '4 i \
+include ..\/..\/lib\/cuda\/Makefile.lammps
+' ../Makefile.package.settings
+
   fi
 
   # force rebuild of files with LMP_USER_CUDA switch
@@ -49,18 +53,17 @@ if (test $1 = 1) then
     cp pair_buck_coul_long_cuda.h ..
   fi
 
-  if (test -e ../pair_cg_cmm.cpp) then
-    cp pair_cg_cmm_cuda.cpp ..
-    cp pair_cg_cmm_coul_cut_cuda.cpp ..
-    cp pair_cg_cmm_coul_debye_cuda.cpp ..
-    cp pair_cg_cmm_cuda.h ..
-    cp pair_cg_cmm_coul_cut_cuda.h ..
-    cp pair_cg_cmm_coul_debye_cuda.h ..
-  fi
-
-  if (test -e ../pair_cg_cmm_coul_long.cpp) then
-    cp pair_cg_cmm_coul_long_cuda.cpp ..
-    cp pair_cg_cmm_coul_long_cuda.h ..
+  if (test -e ../pair_lj_sdk.cpp) then
+    cp pair_lj_sdk_cuda.cpp ..
+    #cp pair_lj_sdk_coul_cut_cuda.cpp ..
+    #cp pair_lj_sdk_coul_debye_cuda.cpp ..
+    cp pair_lj_sdk_cuda.h ..
+    #cp pair_lj_sdk_coul_cut_cuda.h ..
+    #cp pair_lj_sdk_coul_debye_cuda.h ..
+    if (test -e ../pair_lj_sdk_coul_long.cpp) then
+      cp pair_lj_sdk_coul_long_cuda.cpp ..
+      cp pair_lj_sdk_coul_long_cuda.h ..
+    fi
   fi
 
   if (test -e ../pppm.cpp) then
@@ -73,7 +76,6 @@ if (test $1 = 1) then
     cp pair_lj_cut_coul_long_cuda.cpp ..
     cp pair_lj_cut_coul_long_cuda.h ..
   fi
-  
 
   if (test -e ../pair_eam.cpp) then
     cp pair_eam_alloy_cuda.cpp ..
@@ -252,10 +254,10 @@ elif (test $1 = 0) then
   rm -f ../pair_buck_coul_cut_cuda.cpp
   rm -f ../pair_buck_coul_long_cuda.cpp
   rm -f ../pair_buck_cuda.cpp
-  rm -f ../pair_cg_cmm_coul_cut_cuda.cpp
-  rm -f ../pair_cg_cmm_coul_debye_cuda.cpp
-  rm -f ../pair_cg_cmm_coul_long_cuda.cpp
-  rm -f ../pair_cg_cmm_cuda.cpp
+  rm -f ../pair_lj_sdk_cuda.cpp
+  #rm -f ../pair_lj_sdk_coul_cut_cuda.cpp
+  #rm -f ../pair_lj_sdk_coul_debye_cuda.cpp
+  rm -f ../pair_lj_sdk_coul_long_cuda.cpp
   rm -f ../pair_eam_alloy_cuda.cpp
   rm -f ../pair_eam_cuda.cpp
   rm -f ../pair_eam_fs_cuda.cpp
@@ -316,10 +318,11 @@ elif (test $1 = 0) then
   rm -f ../pair_buck_coul_cut_cuda.h
   rm -f ../pair_buck_coul_long_cuda.h
   rm -f ../pair_buck_cuda.h
-  rm -f ../pair_cg_cmm_coul_cut_cuda.h
-  rm -f ../pair_cg_cmm_coul_debye_cuda.h
-  rm -f ../pair_cg_cmm_coul_long_cuda.h
-  rm -f ../pair_cg_cmm_cuda.h
+  rm -f ../pair_lj_sdk_cuda.h
+  #rm -f ../pair_lj_sdk_coul_cut_cuda.h
+  #rm -f ../pair_lj_sdk_coul_debye_cuda.h
+  rm -f ../pair_lj_sdk_coul_long_cuda.h
+  rm -f ../pair_lj_sdk_cuda.h
   rm -f ../pair_eam_alloy_cuda.h
   rm -f ../pair_eam_cuda.h
   rm -f ../pair_eam_fs_cuda.h

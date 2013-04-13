@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -55,15 +55,16 @@ command-line option when running LAMMPS to see the offending line.
 
 E: Fix wall/piston command only available at zlo
 
-UNDOCUMENTED
+The face keyword must be zlo.
 
 E: Must shrink-wrap piston boundary
 
-UNDOCUMENTED
+The boundary style of the face where the piston is applied must be of
+type s (shrink-wrapped).
 
 E: Illegal fix wall/piston velocity
 
-UNDOCUMENTED
+The piston velocity must be positive.
 
 E: Cannot use wall in periodic dimension
 
@@ -71,10 +72,10 @@ Self-explanatory.
 
 E: Use of fix wall/piston with undefined lattice
 
-UNDOCUMENTED
+A lattice must be defined before using this fix.
 
 E: NL ramp in wall/piston only implemented in zlo for now
 
-UNDOCUMENTED
+The ramp keyword can only be used for piston applied to face zlo.
 
 */

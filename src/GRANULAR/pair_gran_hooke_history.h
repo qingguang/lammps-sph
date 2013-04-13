@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -26,6 +26,8 @@ namespace LAMMPS_NS {
 
 class PairGranHookeHistory : public Pair {
  public:
+  int computeflag;
+
   PairGranHookeHistory(class LAMMPS *);
   virtual ~PairGranHookeHistory();
   virtual void compute(int, int);
@@ -38,8 +40,11 @@ class PairGranHookeHistory : public Pair {
   void read_restart(FILE *);
   void write_restart_settings(FILE *);
   void read_restart_settings(FILE *);
-  double single(int, int, int, int, double, double, double, double &);
   void reset_dt();
+  double single(int, int, int, int, double, double, double, double &);
+  int pack_comm(int, int *, double *, int, int *);
+  void unpack_comm(int, int, double *);
+  void *extract(const char *, int &);
 
  protected:
   double kn,kt,gamman,gammat,xmu;
@@ -48,15 +53,15 @@ class PairGranHookeHistory : public Pair {
   int freeze_group_bit;
   int history;
 
-  bigint laststep;
-  class FixShearHistory *fix_history;
-
   char *suffix;
-
+  int neighprev;
   double *onerad_dynamic,*onerad_frozen;
   double *maxrad_dynamic,*maxrad_frozen;
 
-  int neighprev;
+  class FixShearHistory *fix_history;
+  class Fix *fix_rigid;
+  int *body;
+  double *mass_rigid;
 
   void allocate();
 };
@@ -80,7 +85,7 @@ Self-explanatory.  Check the input script or data file.
 
 E: Pair granular requires atom style sphere
 
-UNDOCUMENTED
+Self-explanatory.
 
 E: Pair granular requires ghost atoms store velocity
 

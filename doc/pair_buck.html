@@ -13,17 +13,23 @@
 </H3>
 <H3>pair_style buck/cuda command 
 </H3>
+<H3>pair_style buck/gpu command 
+</H3>
 <H3>pair_style buck/omp command 
 </H3>
 <H3>pair_style buck/coul/cut command 
 </H3>
 <H3>pair_style buck/coul/cut/cuda command 
 </H3>
+<H3>pair_style buck/coul/cut/gpu command 
+</H3>
 <H3>pair_style buck/coul/cut/omp command 
 </H3>
 <H3>pair_style buck/coul/long command 
 </H3>
 <H3>pair_style buck/coul/long/cuda command 
+</H3>
+<H3>pair_style buck/coul/long/gpu command 
 </H3>
 <H3>pair_style buck/coul/long/omp command 
 </H3>
@@ -129,7 +135,7 @@ those packages.  See the <A HREF = "Section_start.html#start_3">Making LAMMPS</A
 section for more info.
 </P>
 <P>You can specify the accelerated styles explicitly in your input script
-by including their suffix, or you can use the <A HREF = "Section_start.html#start_6">-suffix command-line
+by including their suffix, or you can use the <A HREF = "Section_start.html#start_7">-suffix command-line
 switch</A> when you invoke LAMMPS, or you can
 use the <A HREF = "suffix.html">suffix</A> command in your input script.
 </P>
@@ -146,9 +152,9 @@ I,J pairs must be specified explicitly.
 <P>These styles support the <A HREF = "pair_modify.html">pair_modify</A> shift option
 for the energy of the exp() and 1/r^6 portion of the pair interaction.
 </P>
-<P>The <I>buck/coul/long</I> pair style does not support the
-<A HREF = "pair_modify.html">pair_modify</A> table option since a tabulation
-capability has not yet been added to this potential.
+<P>The <I>buck/coul/long</I> pair style supports the
+<A HREF = "pair_modify.html">pair_modify</A> table option ti tabulate the
+short-range portion of the long-range Coulombic interaction.
 </P>
 <P>These styles support the pair_modify tail option for adding long-range
 tail corrections to energy and pressure for the A,C terms in the

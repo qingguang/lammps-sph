@@ -5,13 +5,12 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "math.h"
 #include "stdlib.h"
 #include "atom_vec_dipole.h"
@@ -51,7 +50,7 @@ AtomVecDipole::AtomVecDipole(LAMMPS *lmp, int narg, char **arg) :
 /* ----------------------------------------------------------------------
    grow atom arrays
    n = 0 grows arrays by DELTA
-   n > 0 allocates arrays to size n 
+   n > 0 allocates arrays to size n
 ------------------------------------------------------------------------- */
 
 void AtomVecDipole::grow(int n)
@@ -74,7 +73,7 @@ void AtomVecDipole::grow(int n)
   mu = memory->grow(atom->mu,nmax,4,"atom:mu");
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       modify->fix[atom->extra_grow[iextra]]->grow_arrays(nmax);
 }
 
@@ -114,14 +113,14 @@ void AtomVecDipole::copy(int i, int j, int delflag)
   mu[j][3] = mu[i][3];
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       modify->fix[atom->extra_grow[iextra]]->copy_arrays(i,j);
 }
 
 /* ---------------------------------------------------------------------- */
 
 int AtomVecDipole::pack_comm(int n, int *list, double *buf,
-			     int pbc_flag, int *pbc)
+                             int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -163,7 +162,7 @@ int AtomVecDipole::pack_comm(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecDipole::pack_comm_vel(int n, int *list, double *buf,
-				 int pbc_flag, int *pbc)
+                                 int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -194,38 +193,38 @@ int AtomVecDipole::pack_comm_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = mu[j][0];
-	buf[m++] = mu[j][1];
-	buf[m++] = mu[j][2];
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = mu[j][0];
+        buf[m++] = mu[j][1];
+        buf[m++] = mu[j][2];
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = mu[j][0];
-	buf[m++] = mu[j][1];
-	buf[m++] = mu[j][2];
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = mu[j][0];
+        buf[m++] = mu[j][1];
+        buf[m++] = mu[j][2];
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
       }
     }
   }
@@ -338,7 +337,7 @@ void AtomVecDipole::unpack_reverse(int n, int *list, double *buf)
 /* ---------------------------------------------------------------------- */
 
 int AtomVecDipole::pack_border(int n, int *list, double *buf,
-			       int pbc_flag, int *pbc)
+                               int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz;
@@ -390,7 +389,7 @@ int AtomVecDipole::pack_border(int n, int *list, double *buf,
 /* ---------------------------------------------------------------------- */
 
 int AtomVecDipole::pack_border_vel(int n, int *list, double *buf,
-				   int pbc_flag, int *pbc)
+                                   int pbc_flag, int *pbc)
 {
   int i,j,m;
   double dx,dy,dz,dvx,dvy,dvz;
@@ -426,48 +425,48 @@ int AtomVecDipole::pack_border_vel(int n, int *list, double *buf,
     }
     if (!deform_vremap) {
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = q[j];
-	buf[m++] = mu[j][0];
-	buf[m++] = mu[j][1];
-	buf[m++] = mu[j][2];
-	buf[m++] = mu[j][3];
-	buf[m++] = v[j][0];
-	buf[m++] = v[j][1];
-	buf[m++] = v[j][2];
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = q[j];
+        buf[m++] = mu[j][0];
+        buf[m++] = mu[j][1];
+        buf[m++] = mu[j][2];
+        buf[m++] = mu[j][3];
+        buf[m++] = v[j][0];
+        buf[m++] = v[j][1];
+        buf[m++] = v[j][2];
       }
     } else {
       dvx = pbc[0]*h_rate[0] + pbc[5]*h_rate[5] + pbc[4]*h_rate[4];
       dvy = pbc[1]*h_rate[1] + pbc[3]*h_rate[3];
       dvz = pbc[2]*h_rate[2];
       for (i = 0; i < n; i++) {
-	j = list[i];
-	buf[m++] = x[j][0] + dx;
-	buf[m++] = x[j][1] + dy;
-	buf[m++] = x[j][2] + dz;
-	buf[m++] = tag[j];
-	buf[m++] = type[j];
-	buf[m++] = mask[j];
-	buf[m++] = q[j];
-	buf[m++] = mu[j][0];
-	buf[m++] = mu[j][1];
-	buf[m++] = mu[j][2];
-	buf[m++] = mu[j][3];
-	if (mask[i] & deform_groupbit) {
-	  buf[m++] = v[j][0] + dvx;
-	  buf[m++] = v[j][1] + dvy;
-	  buf[m++] = v[j][2] + dvz;
-	} else {
-	  buf[m++] = v[j][0];
-	  buf[m++] = v[j][1];
-	  buf[m++] = v[j][2];
-	}
+        j = list[i];
+        buf[m++] = x[j][0] + dx;
+        buf[m++] = x[j][1] + dy;
+        buf[m++] = x[j][2] + dz;
+        buf[m++] = tag[j];
+        buf[m++] = type[j];
+        buf[m++] = mask[j];
+        buf[m++] = q[j];
+        buf[m++] = mu[j][0];
+        buf[m++] = mu[j][1];
+        buf[m++] = mu[j][2];
+        buf[m++] = mu[j][3];
+        if (mask[i] & deform_groupbit) {
+          buf[m++] = v[j][0] + dvx;
+          buf[m++] = v[j][1] + dvy;
+          buf[m++] = v[j][2] + dvz;
+        } else {
+          buf[m++] = v[j][0];
+          buf[m++] = v[j][1];
+          buf[m++] = v[j][2];
+        }
       }
     }
   }
@@ -579,7 +578,7 @@ int AtomVecDipole::pack_exchange(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
 
   buf[m++] = q[i];
   buf[m++] = mu[i][0];
@@ -588,7 +587,7 @@ int AtomVecDipole::pack_exchange(int i, double *buf)
   buf[m++] = mu[i][3];
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->pack_exchange(i,&buf[m]);
 
   buf[0] = m;
@@ -612,7 +611,7 @@ int AtomVecDipole::unpack_exchange(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
 
   q[nlocal] = buf[m++];
   mu[nlocal][0] = buf[m++];
@@ -621,9 +620,9 @@ int AtomVecDipole::unpack_exchange(double *buf)
   mu[nlocal][3] = buf[m++];
 
   if (atom->nextra_grow)
-    for (int iextra = 0; iextra < atom->nextra_grow; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_grow; iextra++)
       m += modify->fix[atom->extra_grow[iextra]]->
-	unpack_exchange(nlocal,&buf[m]);
+        unpack_exchange(nlocal,&buf[m]);
 
   atom->nlocal++;
   return m;
@@ -639,12 +638,12 @@ int AtomVecDipole::size_restart()
   int i;
 
   int nlocal = atom->nlocal;
-  int n = 15 * nlocal;
+  int n = 16 * nlocal;
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       for (i = 0; i < nlocal; i++)
-	n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
+        n += modify->fix[atom->extra_restart[iextra]]->size_restart(i);
 
   return n;
 }
@@ -652,7 +651,7 @@ int AtomVecDipole::size_restart()
 /* ----------------------------------------------------------------------
    pack atom I's data for restart file including extra quantities
    xyz must be 1st 3 values, so that read_restart can test on them
-   molecular types may be negative, but write as positive   
+   molecular types may be negative, but write as positive
 ------------------------------------------------------------------------- */
 
 int AtomVecDipole::pack_restart(int i, double *buf)
@@ -664,7 +663,7 @@ int AtomVecDipole::pack_restart(int i, double *buf)
   buf[m++] = tag[i];
   buf[m++] = type[i];
   buf[m++] = mask[i];
-  buf[m++] = image[i];
+  *((tagint *) &buf[m++]) = image[i];
   buf[m++] = v[i][0];
   buf[m++] = v[i][1];
   buf[m++] = v[i][2];
@@ -673,9 +672,10 @@ int AtomVecDipole::pack_restart(int i, double *buf)
   buf[m++] = mu[i][0];
   buf[m++] = mu[i][1];
   buf[m++] = mu[i][2];
+  buf[m++] = mu[i][3];
 
   if (atom->nextra_restart)
-    for (int iextra = 0; iextra < atom->nextra_restart; iextra++) 
+    for (int iextra = 0; iextra < atom->nextra_restart; iextra++)
       m += modify->fix[atom->extra_restart[iextra]]->pack_restart(i,&buf[m]);
 
   buf[0] = m;
@@ -702,7 +702,7 @@ int AtomVecDipole::unpack_restart(double *buf)
   tag[nlocal] = static_cast<int> (buf[m++]);
   type[nlocal] = static_cast<int> (buf[m++]);
   mask[nlocal] = static_cast<int> (buf[m++]);
-  image[nlocal] = static_cast<int> (buf[m++]);
+  image[nlocal] = *((tagint *) &buf[m++]);
   v[nlocal][0] = buf[m++];
   v[nlocal][1] = buf[m++];
   v[nlocal][2] = buf[m++];
@@ -711,6 +711,7 @@ int AtomVecDipole::unpack_restart(double *buf)
   mu[nlocal][0] = buf[m++];
   mu[nlocal][1] = buf[m++];
   mu[nlocal][2] = buf[m++];
+  mu[nlocal][3] = buf[m++];
 
   double **extra = atom->extra;
   if (atom->nextra_store) {
@@ -738,7 +739,8 @@ void AtomVecDipole::create_atom(int itype, double *coord)
   x[nlocal][1] = coord[1];
   x[nlocal][2] = coord[2];
   mask[nlocal] = 1;
-  image[nlocal] = (512 << 20) | (512 << 10) | 512;
+  image[nlocal] = ((tagint) IMGMAX << IMG2BITS) |
+    ((tagint) IMGMAX << IMGBITS) | IMGMAX;
   v[nlocal][0] = 0.0;
   v[nlocal][1] = 0.0;
   v[nlocal][2] = 0.0;
@@ -757,7 +759,7 @@ void AtomVecDipole::create_atom(int itype, double *coord)
    initialize other atom quantities
 ------------------------------------------------------------------------- */
 
-void AtomVecDipole::data_atom(double *coord, int imagetmp, char **values)
+void AtomVecDipole::data_atom(double *coord, tagint imagetmp, char **values)
 {
   int nlocal = atom->nlocal;
   if (nlocal == nmax) grow(0);
@@ -779,9 +781,9 @@ void AtomVecDipole::data_atom(double *coord, int imagetmp, char **values)
   mu[nlocal][0] = atof(values[6]);
   mu[nlocal][1] = atof(values[7]);
   mu[nlocal][2] = atof(values[8]);
-  mu[nlocal][3] = sqrt(mu[nlocal][0]*mu[nlocal][0] + 
-		       mu[nlocal][1]*mu[nlocal][1] + 
-		       mu[nlocal][2]*mu[nlocal][2]);
+  mu[nlocal][3] = sqrt(mu[nlocal][0]*mu[nlocal][0] +
+                       mu[nlocal][1]*mu[nlocal][1] +
+                       mu[nlocal][2]*mu[nlocal][2]);
 
   image[nlocal] = imagetmp;
 
@@ -804,14 +806,14 @@ int AtomVecDipole::data_atom_hybrid(int nlocal, char **values)
   mu[nlocal][0] = atof(values[1]);
   mu[nlocal][1] = atof(values[2]);
   mu[nlocal][2] = atof(values[3]);
-  mu[nlocal][3] = sqrt(mu[nlocal][0]*mu[nlocal][0] + 
-		       mu[nlocal][1]*mu[nlocal][1] + 
-		       mu[nlocal][2]*mu[nlocal][2]);
+  mu[nlocal][3] = sqrt(mu[nlocal][0]*mu[nlocal][0] +
+                       mu[nlocal][1]*mu[nlocal][1] +
+                       mu[nlocal][2]*mu[nlocal][2]);
   return 4;
 }
 
 /* ----------------------------------------------------------------------
-   return # of bytes of allocated memory 
+   return # of bytes of allocated memory
 ------------------------------------------------------------------------- */
 
 bigint AtomVecDipole::memory_usage()

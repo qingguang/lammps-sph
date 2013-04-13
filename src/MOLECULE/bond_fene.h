@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -54,7 +54,7 @@ class BondFENE : public Bond {
 W: FENE bond too long: %ld %d %d %g
 
 A FENE bond has stretched dangerously far.  It's interaction strength
-will be truncated to attempt to prevent the bond from blowing up. :dd
+will be truncated to attempt to prevent the bond from blowing up.
 
 E: Bad FENE bond
 
@@ -72,6 +72,6 @@ Most FENE models need this setting for the special_bonds command.
 W: FENE bond too long: %ld %g
 
 A FENE bond has stretched dangerously far.  It's interaction strength
-will be truncated to attempt to prevent the bond from blowing up. :dd
+will be truncated to attempt to prevent the bond from blowing up.
 
 */

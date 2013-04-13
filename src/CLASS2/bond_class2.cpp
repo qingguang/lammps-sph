@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -72,7 +72,6 @@ void BondClass2::compute(int eflag, int vflag)
     delx = x[i1][0] - x[i2][0];
     dely = x[i1][1] - x[i2][1];
     delz = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx,dely,delz);
 
     rsq = delx*delx + dely*dely + delz*delz;
     r = sqrt(rsq);
@@ -124,7 +123,7 @@ void BondClass2::allocate()
 }
 
 /* ----------------------------------------------------------------------
-   set coeffs from one line in input script or data file 
+   set coeffs from one line in input script or data file
 ------------------------------------------------------------------------- */
 
 void BondClass2::coeff(int narg, char **arg)
@@ -154,7 +153,7 @@ void BondClass2::coeff(int narg, char **arg)
 }
 
 /* ----------------------------------------------------------------------
-   return an equilbrium bond length 
+   return an equilbrium bond length
 ------------------------------------------------------------------------- */
 
 double BondClass2::equilibrium_distance(int i)
@@ -163,7 +162,7 @@ double BondClass2::equilibrium_distance(int i)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 writes out coeffs to restart file 
+   proc 0 writes out coeffs to restart file
 ------------------------------------------------------------------------- */
 
 void BondClass2::write_restart(FILE *fp)
@@ -175,7 +174,7 @@ void BondClass2::write_restart(FILE *fp)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 reads coeffs from restart file, bcasts them 
+   proc 0 reads coeffs from restart file, bcasts them
 ------------------------------------------------------------------------- */
 
 void BondClass2::read_restart(FILE *fp)

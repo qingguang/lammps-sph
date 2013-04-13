@@ -8,16 +8,19 @@
 
 pair_style eam command :h3
 pair_style eam/cuda command :h3
+pair_style eam/gpu command :h3
 pair_style eam/omp command :h3
 pair_style eam/opt command :h3
 pair_style eam/alloy command :h3
 pair_style eam/alloy/cuda command :h3
+pair_style eam/alloy/gpu command :h3
 pair_style eam/alloy/omp command :h3
 pair_style eam/alloy/opt command :h3
 pair_style eam/cd command :h3
 pair_style eam/cd/omp command :h3
 pair_style eam/fs command :h3
 pair_style eam/fs/cuda command :h3
+pair_style eam/fs/gpu command :h3
 pair_style eam/fs/omp command :h3
 pair_style eam/fs/opt command :h3
 
@@ -372,7 +375,7 @@ section for more info.
 
 You can specify the accelerated styles explicitly in your input script
 by including their suffix, or you can use the "-suffix command-line
-switch"_Section_start.html#start_6 when you invoke LAMMPS, or you can
+switch"_Section_start.html#start_7 when you invoke LAMMPS, or you can
 use the "suffix"_suffix.html command in your input script.
 
 See "Section_accerlate"_Section_accelerate.html of the manual for more

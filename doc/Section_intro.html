@@ -155,13 +155,13 @@ commands)
 <LI>  polymer potentials: all-atom, united-atom, bead-spring, breakable
 <LI>  water potentials: TIP3P, TIP4P, SPC
 <LI>  implicit solvent potentials: hydrodynamic lubrication, Debye
+<LI>  <A HREF = "http://openkim.org">KIM archive</A> of potentials
 <LI>  long-range Coulombics and dispersion: Ewald, Wolf,     PPPM (similar to particle-mesh Ewald), Ewald/N for long-range Lennard-Jones
 <LI>  force-field compatibility with common CHARMM, AMBER, DREIDING, OPLS, GROMACS, COMPASS options
-<LI>  handful of GPU-enabled pair styles 
+<LI>  handful of GPU-enabled pair styles
+<LI>  hybrid potentials: multiple pair, bond, angle, dihedral, improper     potentials can be used in one simulation
+<LI>  overlaid potentials: superposition of multiple pair potentials 
 </UL>
-<P>  hybrid potentials: multiple pair, bond, angle, dihedral, improper     potentials can be used in one simulation
-  overlaid potentials: superposition of multiple pair potentials
-</P>
 <H4>Atom creation 
 </H4>
 <P>(<A HREF = "read_data.html">read_data</A>, <A HREF = "lattice.html">lattice</A>,
@@ -200,7 +200,8 @@ commands)
 <LI>  Brownian dynamics
 <LI>  rigid body integration
 <LI>  energy minimization via conjugate gradient or steepest descent relaxation
-<LI>  rRESPA hierarchical timestepping 
+<LI>  rRESPA hierarchical timestepping
+<LI>  rerun command for post-processing of dump files 
 </UL>
 <H4>Diagnostics 
 </H4>
@@ -525,7 +526,6 @@ and efforts.
 <LI>Ilya Valuev (JIHT), valuev at physik.hu-berlin.de, USER-AWPMD package for wave-packet MD
 <LI>Christian Trott (U Tech Ilmenau), christian.trott at tu-ilmenau.de, USER-CUDA package
 <LI>Andres Jaramillo-Botero (Caltech), ajaramil at wag.caltech.edu, USER-EFF package for electron force field
-<LI>Pieter in' t Veld (BASF), pieter.intveld at basf.com, USER-EWALDN package for 1/r^N long-range solvers
 <LI>Christoph Kloss (JKU), Christoph.Kloss at jku.at, USER-LIGGGHTS package for granular models and granular/fluid coupling
 <LI>Metin Aktulga (LBL), hmaktulga at lbl.gov, USER-REAXC package for C version of ReaxFF
 <LI>Georg Gunzenmuller (EMI), georg.ganzenmueller at emi.fhg.de, USER-SPH package 

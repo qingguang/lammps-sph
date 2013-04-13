@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -60,7 +60,7 @@ class DihedralClass2 : public Dihedral {
 W: Dihedral problem: %d %ld %d %d %d %d
 
 Conformation of the 4 listed dihedral atoms is extreme; you may want
-to check your simulation geometry. :dd
+to check your simulation geometry.
 
 E: Invalid coeffs for this dihedral style
 

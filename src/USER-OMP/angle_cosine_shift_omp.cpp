@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "angle_cosine_shift_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,10 +26,19 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 #define SMALL 0.001
+
+/* ---------------------------------------------------------------------- */
+
+AngleCosineShiftOMP::AngleCosineShiftOMP(class LAMMPS *lmp)
+  : AngleCosineShift(lmp), ThrOMP(lmp,THR_ANGLE)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -57,11 +65,11 @@ void AngleCosineShiftOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -77,13 +85,14 @@ void AngleCosineShiftOMP::eval(int nfrom, int nto, ThrData * const thr)
 {
   int i1,i2,i3,n,type;
   double delx1,dely1,delz1,delx2,dely2,delz2;
-  double eangle,f1[3],f3[3];
-  double rsq1,rsq2,r1,r2,c,s,cps,kcos,ksin,a11,a12,a22;
+  double f1[3],f3[3];
+  double rsq1,rsq2,r1,r2,c,s,cps,a11,a12,a22;
 
   const double * const * const x = atom->x;
   double * const * const f = thr->get_f();
   const int * const * const anglelist = neighbor->anglelist;
   const int nlocal = atom->nlocal;
+  double eangle = 0.0;
 
   for (n = nfrom; n < nto; n++) {
     i1 = anglelist[n][0];
@@ -96,7 +105,6 @@ void AngleCosineShiftOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -106,7 +114,6 @@ void AngleCosineShiftOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -120,12 +127,12 @@ void AngleCosineShiftOMP::eval(int nfrom, int nto, ThrData * const thr)
     // C= sine of angle
     s = sqrt(1.0 - c*c);
     if (s < SMALL) s = SMALL;
-    
-    // force & energy
-    if (EFLAG) eangle = -k[type]-kcos*c-ksin*s;  
 
-    kcos=kcost[type];
-    ksin=ksint[type];
+    // force & energy
+    const double kcos=kcost[type];
+    const double ksin=ksint[type];
+    if (EFLAG) eangle = -k[type]-kcos*c-ksin*s;
+
     cps = c/s;          // NOTE absorbed one c
 
     a11 = (-kcos +ksin*cps )*c/ rsq1;
@@ -160,6 +167,6 @@ void AngleCosineShiftOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,i3,nlocal,NEWTON_BOND,eangle,f1,f3,
-			     delx1,dely1,delz1,delx2,dely2,delz2,thr);
+                             delx1,dely1,delz1,delx2,dely2,delz2,thr);
   }
 }

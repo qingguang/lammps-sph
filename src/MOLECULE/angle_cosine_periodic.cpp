@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -80,7 +80,6 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
     delx1 = x[i1][0] - x[i2][0];
     dely1 = x[i1][1] - x[i2][1];
     delz1 = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx1,dely1,delz1);
 
     rsq1 = delx1*delx1 + dely1*dely1 + delz1*delz1;
     r1 = sqrt(rsq1);
@@ -90,7 +89,6 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
     delx2 = x[i3][0] - x[i2][0];
     dely2 = x[i3][1] - x[i2][1];
     delz2 = x[i3][2] - x[i2][2];
-    domain->minimum_image(delx2,dely2,delz2);
 
     rsq2 = delx2*delx2 + dely2*dely2 + delz2*delz2;
     r2 = sqrt(rsq2);
@@ -116,7 +114,7 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
     tn = 1.0;
     tn_1 = 1.0;
     tn_2 = 0.0;
-    un = 1.0; 
+    un = 1.0;
     un_1 = 2.0;
     un_2 = 0.0;
 
@@ -138,8 +136,8 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
       un_2 = un_1;
       un_1 = un;
     }
-    tn = b_factor*pow(-1.0,m)*tn;
-    un = b_factor*pow(-1.0,m)*m*un;
+    tn = b_factor*pow(-1.0,(double)m)*tn;
+    un = b_factor*pow(-1.0,(double)m)*m*un;
 
     if (eflag) eangle = 2*k[type]*(1.0 - tn);
 
@@ -147,7 +145,7 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
     a11 = a*c / rsq1;
     a12 = -a / (r1*r2);
     a22 = a*c / rsq2;
-        
+
     f1[0] = a11*delx1 + a12*delx2;
     f1[1] = a11*dely1 + a12*dely2;
     f1[2] = a11*delz1 + a12*delz2;
@@ -176,7 +174,7 @@ void AngleCosinePeriodic::compute(int eflag, int vflag)
     }
 
     if (evflag) ev_tally(i1,i2,i3,nlocal,newton_bond,eangle,f1,f3,
-			 delx1,dely1,delz1,delx2,dely2,delz2);
+                         delx1,dely1,delz1,delx2,dely2,delz2);
   }
 }
 
@@ -232,7 +230,7 @@ double AngleCosinePeriodic::equilibrium_angle(int i)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 writes out coeffs to restart file 
+   proc 0 writes out coeffs to restart file
 ------------------------------------------------------------------------- */
 
 void AngleCosinePeriodic::write_restart(FILE *fp)
@@ -243,7 +241,7 @@ void AngleCosinePeriodic::write_restart(FILE *fp)
 }
 
 /* ----------------------------------------------------------------------
-   proc 0 reads coeffs from restart file, bcasts them 
+   proc 0 reads coeffs from restart file, bcasts them
 ------------------------------------------------------------------------- */
 
 void AngleCosinePeriodic::read_restart(FILE *fp)
@@ -273,7 +271,7 @@ double AngleCosinePeriodic::single(int type, int i1, int i2, int i3)
   double delz1 = x[i1][2] - x[i2][2];
   domain->minimum_image(delx1,dely1,delz1);
   double r1 = sqrt(delx1*delx1 + dely1*dely1 + delz1*delz1);
-  
+
   double delx2 = x[i3][0] - x[i2][0];
   double dely2 = x[i3][1] - x[i2][1];
   double delz2 = x[i3][2] - x[i2][2];
@@ -286,5 +284,5 @@ double AngleCosinePeriodic::single(int type, int i1, int i2, int i3)
   if (c < -1.0) c = -1.0;
 
   c = cos(acos(c)*multiplicity[type]);
-  return k[type]*(1.0-b[type]*pow(-1.0,multiplicity[type])*c);
+  return k[type]*(1.0-b[type]*pow(-1.0,(double)multiplicity[type])*c);
 }

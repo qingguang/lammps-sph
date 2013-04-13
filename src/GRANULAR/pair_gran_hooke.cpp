@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -21,7 +21,10 @@
 #include "pair_gran_hooke.h"
 #include "atom.h"
 #include "force.h"
+#include "fix.h"
+#include "neighbor.h"
 #include "neigh_list.h"
+#include "comm.h"
 
 using namespace LAMMPS_NS;
 
@@ -43,12 +46,21 @@ void PairGranHooke::compute(int eflag, int vflag)
   double vr1,vr2,vr3,vnnr,vn1,vn2,vn3,vt1,vt2,vt3;
   double wr1,wr2,wr3;
   double vtr1,vtr2,vtr3,vrel;
-  double meff,damp,ccel,tor1,tor2,tor3;
+  double mi,mj,meff,damp,ccel,tor1,tor2,tor3;
   double fn,fs,ft,fs1,fs2,fs3;
   int *ilist,*jlist,*numneigh,**firstneigh;
 
   if (eflag || vflag) ev_setup(eflag,vflag);
   else evflag = vflag_fdotr = 0;
+
+  // update rigid body ptrs and values for ghost atoms if using FixRigid masses
+
+  if (fix_rigid && neighbor->ago == 0) {
+    int tmp;
+    body = (int *) fix_rigid->extract("body",tmp);
+    mass_rigid = (double *) fix_rigid->extract("masstotal",tmp);
+    comm->forward_comm_pair(this);
+  }
 
   double **x = atom->x;
   double **v = atom->v;
@@ -91,100 +103,108 @@ void PairGranHooke::compute(int eflag, int vflag)
       radsum = radi + radj;
 
       if (rsq < radsum*radsum) {
-	r = sqrt(rsq);
-	rinv = 1.0/r;
-	rsqinv = 1.0/rsq;
+        r = sqrt(rsq);
+        rinv = 1.0/r;
+        rsqinv = 1.0/rsq;
 
-	// relative translational velocity
+        // relative translational velocity
 
-	vr1 = v[i][0] - v[j][0];
-	vr2 = v[i][1] - v[j][1];
-	vr3 = v[i][2] - v[j][2];
+        vr1 = v[i][0] - v[j][0];
+        vr2 = v[i][1] - v[j][1];
+        vr3 = v[i][2] - v[j][2];
 
-	// normal component
+        // normal component
 
-	vnnr = vr1*delx + vr2*dely + vr3*delz;
-	vn1 = delx*vnnr * rsqinv;
-	vn2 = dely*vnnr * rsqinv;
-	vn3 = delz*vnnr * rsqinv;
+        vnnr = vr1*delx + vr2*dely + vr3*delz;
+        vn1 = delx*vnnr * rsqinv;
+        vn2 = dely*vnnr * rsqinv;
+        vn3 = delz*vnnr * rsqinv;
 
-	// tangential component
+        // tangential component
 
-	vt1 = vr1 - vn1;
-	vt2 = vr2 - vn2;
-	vt3 = vr3 - vn3;
+        vt1 = vr1 - vn1;
+        vt2 = vr2 - vn2;
+        vt3 = vr3 - vn3;
 
-	// relative rotational velocity
+        // relative rotational velocity
 
-	wr1 = (radi*omega[i][0] + radj*omega[j][0]) * rinv;
-	wr2 = (radi*omega[i][1] + radj*omega[j][1]) * rinv;
-	wr3 = (radi*omega[i][2] + radj*omega[j][2]) * rinv;
+        wr1 = (radi*omega[i][0] + radj*omega[j][0]) * rinv;
+        wr2 = (radi*omega[i][1] + radj*omega[j][1]) * rinv;
+        wr3 = (radi*omega[i][2] + radj*omega[j][2]) * rinv;
 
-	// normal forces = Hookian contact + normal velocity damping
+        // meff = effective mass of pair of particles
+        // if I or J part of rigid body, use body mass
+        // if I or J is frozen, meff is other particle
 
-	if (rmass) {
-	  meff = rmass[i]*rmass[j] / (rmass[i]+rmass[j]);
-	  if (mask[i] & freeze_group_bit) meff = rmass[j];
-	  if (mask[j] & freeze_group_bit) meff = rmass[i];
-	} else {
-	  itype = type[i];
-	  jtype = type[j];
-	  meff = mass[itype]*mass[jtype] / (mass[itype]+mass[jtype]);
-	  if (mask[i] & freeze_group_bit) meff = mass[jtype];
-	  if (mask[j] & freeze_group_bit) meff = mass[itype];
-	}
+        if (rmass) {
+          mi = rmass[i];
+          mj = rmass[j];
+        } else {
+          mi = mass[type[i]];
+          mj = mass[type[j]];
+        }
+        if (fix_rigid) {
+          if (body[i] >= 0) mi = mass_rigid[body[i]];
+          if (body[j] >= 0) mj = mass_rigid[body[j]];
+        }
 
-	damp = meff*gamman*vnnr*rsqinv;
-	ccel = kn*(radsum-r)*rinv - damp;
+        meff = mi*mj / (mi+mj);
+        if (mask[i] & freeze_group_bit) meff = mj;
+        if (mask[j] & freeze_group_bit) meff = mi;
 
-	// relative velocities
+        // normal forces = Hookian contact + normal velocity damping
 
-	vtr1 = vt1 - (delz*wr2-dely*wr3);
-	vtr2 = vt2 - (delx*wr3-delz*wr1);
-	vtr3 = vt3 - (dely*wr1-delx*wr2);
-	vrel = vtr1*vtr1 + vtr2*vtr2 + vtr3*vtr3;
-	vrel = sqrt(vrel);
+        damp = meff*gamman*vnnr*rsqinv;
+        ccel = kn*(radsum-r)*rinv - damp;
 
-	// force normalization
+        // relative velocities
 
-	fn = xmu * fabs(ccel*r);
-	fs = meff*gammat*vrel;
-	if (vrel != 0.0) ft = MIN(fn,fs) / vrel;
-	else ft = 0.0;
+        vtr1 = vt1 - (delz*wr2-dely*wr3);
+        vtr2 = vt2 - (delx*wr3-delz*wr1);
+        vtr3 = vt3 - (dely*wr1-delx*wr2);
+        vrel = vtr1*vtr1 + vtr2*vtr2 + vtr3*vtr3;
+        vrel = sqrt(vrel);
 
-	// tangential force due to tangential velocity damping
+        // force normalization
 
-	fs1 = -ft*vtr1;
-	fs2 = -ft*vtr2;
-	fs3 = -ft*vtr3;
+        fn = xmu * fabs(ccel*r);
+        fs = meff*gammat*vrel;
+        if (vrel != 0.0) ft = MIN(fn,fs) / vrel;
+        else ft = 0.0;
 
-	// forces & torques
+        // tangential force due to tangential velocity damping
 
-	fx = delx*ccel + fs1;
-	fy = dely*ccel + fs2;
-	fz = delz*ccel + fs3;
-	f[i][0] += fx;
-	f[i][1] += fy;
-	f[i][2] += fz;
+        fs1 = -ft*vtr1;
+        fs2 = -ft*vtr2;
+        fs3 = -ft*vtr3;
 
-	tor1 = rinv * (dely*fs3 - delz*fs2);
-	tor2 = rinv * (delz*fs1 - delx*fs3);
-	tor3 = rinv * (delx*fs2 - dely*fs1);
-	torque[i][0] -= radi*tor1;
-	torque[i][1] -= radi*tor2;
-	torque[i][2] -= radi*tor3;
+        // forces & torques
 
-	if (newton_pair || j < nlocal) {
-	  f[j][0] -= fx;
-	  f[j][1] -= fy;
-	  f[j][2] -= fz;
-	  torque[j][0] -= radj*tor1;
-	  torque[j][1] -= radj*tor2;
-	  torque[j][2] -= radj*tor3;
-	}
+        fx = delx*ccel + fs1;
+        fy = dely*ccel + fs2;
+        fz = delz*ccel + fs3;
+        f[i][0] += fx;
+        f[i][1] += fy;
+        f[i][2] += fz;
 
-	if (evflag) ev_tally_xyz(i,j,nlocal,newton_pair,
-				 0.0,0.0,fx,fy,fz,delx,dely,delz);
+        tor1 = rinv * (dely*fs3 - delz*fs2);
+        tor2 = rinv * (delz*fs1 - delx*fs3);
+        tor3 = rinv * (delx*fs2 - dely*fs1);
+        torque[i][0] -= radi*tor1;
+        torque[i][1] -= radi*tor2;
+        torque[i][2] -= radi*tor3;
+
+        if (newton_pair || j < nlocal) {
+          f[j][0] -= fx;
+          f[j][1] -= fy;
+          f[j][2] -= fz;
+          torque[j][0] -= radj*tor1;
+          torque[j][1] -= radj*tor2;
+          torque[j][2] -= radj*tor3;
+        }
+
+        if (evflag) ev_tally_xyz(i,j,nlocal,newton_pair,
+                                 0.0,0.0,fx,fy,fz,delx,dely,delz);
       }
     }
   }
@@ -195,14 +215,14 @@ void PairGranHooke::compute(int eflag, int vflag)
 /* ---------------------------------------------------------------------- */
 
 double PairGranHooke::single(int i, int j, int itype, int jtype, double rsq,
-			     double factor_coul, double factor_lj,
-			     double &fforce)
+                             double factor_coul, double factor_lj,
+                             double &fforce)
 {
   double radi,radj,radsum,r,rinv,rsqinv;
   double delx,dely,delz;
   double vr1,vr2,vr3,vnnr,vn1,vn2,vn3,vt1,vt2,vt3,wr1,wr2,wr3;
   double vtr1,vtr2,vtr3,vrel;
-  double meff,damp,ccel;
+  double mi,mj,meff,damp,ccel;
   double fn,fs,ft,fs1,fs2,fs3;
 
   double *radius = atom->radius;
@@ -228,7 +248,7 @@ double PairGranHooke::single(int i, int j, int itype, int jtype, double rsq,
   vr1 = v[i][0] - v[j][0];
   vr2 = v[i][1] - v[j][1];
   vr3 = v[i][2] - v[j][2];
-  
+
   // normal component
 
   double **x = atom->x;
@@ -254,21 +274,37 @@ double PairGranHooke::single(int i, int j, int itype, int jtype, double rsq,
   wr2 = (radi*omega[i][1] + radj*omega[j][1]) * rinv;
   wr3 = (radi*omega[i][2] + radj*omega[j][2]) * rinv;
 
-  // normal forces = Hookian contact + normal velocity damping
+  // meff = effective mass of pair of particles
+  // if I or J part of rigid body, use body mass
+  // if I or J is frozen, meff is other particle
 
   double *rmass = atom->rmass;
   double *mass = atom->mass;
+  int *type = atom->type;
   int *mask = atom->mask;
 
   if (rmass) {
-    meff = rmass[i]*rmass[j] / (rmass[i]+rmass[j]);
-    if (mask[i] & freeze_group_bit) meff = rmass[j];
-    if (mask[j] & freeze_group_bit) meff = rmass[i];
+    mi = rmass[i];
+    mj = rmass[j];
   } else {
-    meff = mass[itype]*mass[jtype] / (mass[itype]+mass[jtype]);
-    if (mask[i] & freeze_group_bit) meff = mass[jtype];
-    if (mask[j] & freeze_group_bit) meff = mass[itype];
+    mi = mass[type[i]];
+    mj = mass[type[j]];
   }
+  if (fix_rigid) {
+    // NOTE: need to make sure ghost atoms have updated body?
+    // depends on where single() is called from
+    int tmp;
+    body = (int *) fix_rigid->extract("body",tmp);
+    mass_rigid = (double *) fix_rigid->extract("masstotal",tmp);
+    if (body[i] >= 0) mi = mass_rigid[body[i]];
+    if (body[j] >= 0) mj = mass_rigid[body[j]];
+  }
+
+  meff = mi*mj / (mi+mj);
+  if (mask[i] & freeze_group_bit) meff = mj;
+  if (mask[j] & freeze_group_bit) meff = mi;
+
+  // normal forces = Hookian contact + normal velocity damping
 
   damp = meff*gamman*vnnr*rsqinv;
   ccel = kn*(radsum-r)*rinv - damp;
@@ -287,15 +323,15 @@ double PairGranHooke::single(int i, int j, int itype, int jtype, double rsq,
   fs = meff*gammat*vrel;
   if (vrel != 0.0) ft = MIN(fn,fs) / vrel;
   else ft = 0.0;
-  
+
   // set all forces and return no energy
-  
+
   fforce = ccel;
   svector[0] = -ft*vtr1;
   svector[1] = -ft*vtr2;
   svector[2] = -ft*vtr3;
-  svector[3] = sqrt(svector[0]*svector[0] + 
-		    svector[1]*svector[1] + 
-		    svector[2]*svector[2]);
+  svector[3] = sqrt(svector[0]*svector[0] +
+                    svector[1]*svector[1] +
+                    svector[2]*svector[2]);
   return 0.0;
 }

@@ -154,13 +154,14 @@ commands)
   polymer potentials: all-atom, united-atom, bead-spring, breakable
   water potentials: TIP3P, TIP4P, SPC
   implicit solvent potentials: hydrodynamic lubrication, Debye
+  "KIM archive"_http://openkim.org of potentials
   long-range Coulombics and dispersion: Ewald, Wolf, \
     PPPM (similar to particle-mesh Ewald), Ewald/N for long-range Lennard-Jones
   force-field compatibility with common CHARMM, AMBER, DREIDING, OPLS, GROMACS, COMPASS options
-  handful of GPU-enabled pair styles :ul
+  handful of GPU-enabled pair styles
   hybrid potentials: multiple pair, bond, angle, dihedral, improper \
     potentials can be used in one simulation
-  overlaid potentials: superposition of multiple pair potentials
+  overlaid potentials: superposition of multiple pair potentials :ul
 
 Atom creation :h4
 ("read_data"_read_data.html, "lattice"_lattice.html,
@@ -197,7 +198,8 @@ Integrators :h4
   Brownian dynamics
   rigid body integration
   energy minimization via conjugate gradient or steepest descent relaxation
-  rRESPA hierarchical timestepping :ul
+  rRESPA hierarchical timestepping
+  rerun command for post-processing of dump files :ul
 
 Diagnostics :h4
 
@@ -510,7 +512,6 @@ Reese Jones (Sandia) and collaborators, rjones at sandia.gov, USER-ATC package f
 Ilya Valuev (JIHT), valuev at physik.hu-berlin.de, USER-AWPMD package for wave-packet MD
 Christian Trott (U Tech Ilmenau), christian.trott at tu-ilmenau.de, USER-CUDA package
 Andres Jaramillo-Botero (Caltech), ajaramil at wag.caltech.edu, USER-EFF package for electron force field
-Pieter in' t Veld (BASF), pieter.intveld at basf.com, USER-EWALDN package for 1/r^N long-range solvers
 Christoph Kloss (JKU), Christoph.Kloss at jku.at, USER-LIGGGHTS package for granular models and granular/fluid coupling
 Metin Aktulga (LBL), hmaktulga at lbl.gov, USER-REAXC package for C version of ReaxFF
 Georg Gunzenmuller (EMI), georg.ganzenmueller at emi.fhg.de, USER-SPH package :ul

@@ -17,7 +17,6 @@ pair_style lj/class2/coul/long command :h3
 pair_style lj/class2/coul/long/cuda command :h3
 pair_style lj/class2/coul/long/gpu command :h3
 pair_style lj/class2/coul/long/omp command :h3
-pair_style lj/class2/coul/pppm/omp command :h3
 
 [Syntax:]
 
@@ -60,8 +59,7 @@ The {lj/class2} styles compute a 6/9 Lennard-Jones potential given by
 Rc is the cutoff.
 
 The {lj/class2/coul/cut} and {lj/class2/coul/long} styles add a
-Coulombic term as described for the "lj/cut"_pair_lj.html pair
-styles.
+Coulombic term as described for the "lj/cut"_pair_lj.html pair styles.
 
 See "(Sun)"_#Sun for a description of the COMPASS class2 force field.
 
@@ -115,7 +113,7 @@ section for more info.
 
 You can specify the accelerated styles explicitly in your input script
 by including their suffix, or you can use the "-suffix command-line
-switch"_Section_start.html#start_6 when you invoke LAMMPS, or you can
+switch"_Section_start.html#start_7 when you invoke LAMMPS, or you can
 use the "suffix"_suffix.html command in your input script.
 
 See "Section_accelerate"_Section_accelerate.html of the manual for

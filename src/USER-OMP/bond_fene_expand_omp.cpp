@@ -5,7 +5,7 @@
 
    Copyright (2003) Sandia Corporation.  Under the terms of Contract
    DE-AC04-94AL85000 with Sandia Corporation, the U.S. Government retains
-   certain rights in this software.  This software is distributed under 
+   certain rights in this software.  This software is distributed under
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
@@ -15,7 +15,6 @@
    Contributing author: Axel Kohlmeyer (Temple U)
 ------------------------------------------------------------------------- */
 
-#include "lmptype.h"
 #include "bond_fene_expand_omp.h"
 #include "atom.h"
 #include "comm.h"
@@ -27,7 +26,16 @@
 
 #include <math.h>
 
+#include "suffix.h"
 using namespace LAMMPS_NS;
+
+/* ---------------------------------------------------------------------- */
+
+BondFENEExpandOMP::BondFENEExpandOMP(class LAMMPS *lmp)
+  : BondFENEExpand(lmp), ThrOMP(lmp,THR_BOND)
+{
+  suffix_flag |= Suffix::OMP;
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -54,11 +62,11 @@ void BondFENEExpandOMP::compute(int eflag, int vflag)
 
     if (evflag) {
       if (eflag) {
-	if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
-	else eval<1,1,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,1,1>(ifrom, ito, thr);
+        else eval<1,1,0>(ifrom, ito, thr);
       } else {
-	if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
-	else eval<1,0,0>(ifrom, ito, thr);
+        if (force->newton_bond) eval<1,0,1>(ifrom, ito, thr);
+        else eval<1,0,0>(ifrom, ito, thr);
       }
     } else {
       if (force->newton_bond) eval<0,0,1>(ifrom, ito, thr);
@@ -81,6 +89,7 @@ void BondFENEExpandOMP::eval(int nfrom, int nto, ThrData * const thr)
   double * const * const f = thr->get_f();
   const int * const * const bondlist = neighbor->bondlist;
   const int nlocal = atom->nlocal;
+  const int tid = thr->get_tid();
 
   for (n = nfrom; n < nto; n++) {
     i1 = bondlist[n][0];
@@ -90,7 +99,6 @@ void BondFENEExpandOMP::eval(int nfrom, int nto, ThrData * const thr)
     delx = x[i1][0] - x[i2][0];
     dely = x[i1][1] - x[i2][1];
     delz = x[i1][2] - x[i2][2];
-    domain->minimum_image(delx,dely,delz);
 
     rsq = delx*delx + dely*dely + delz*delz;
     r = sqrt(rsq);
@@ -105,10 +113,14 @@ void BondFENEExpandOMP::eval(int nfrom, int nto, ThrData * const thr)
 
     if (rlogarg < 0.1) {
       char str[128];
+
       sprintf(str,"FENE bond too long: " BIGINT_FORMAT " %d %d %g",
-	      update->ntimestep,atom->tag[i1],atom->tag[i2],sqrt(rsq));
+              update->ntimestep,atom->tag[i1],atom->tag[i2],sqrt(rsq));
       error->warning(FLERR,str,0);
-      if (rlogarg <= -3.0) error->one(FLERR,"Bad FENE bond");
+
+      if (check_error_thr((rlogarg <= -3.0),tid,FLERR,"Bad FENE bond"))
+        return;
+
       rlogarg = 0.1;
     }
 
@@ -127,7 +139,7 @@ void BondFENEExpandOMP::eval(int nfrom, int nto, ThrData * const thr)
     if (EFLAG) {
       ebond = -0.5 * k[type]*r0sq*log(rlogarg);
       if (rshiftsq < TWO_1_3*sigma[type]*sigma[type])
-	ebond += 4.0*epsilon[type]*sr6*(sr6-1.0) + epsilon[type];
+        ebond += 4.0*epsilon[type]*sr6*(sr6-1.0) + epsilon[type];
     }
 
     // apply force to each of 2 atoms
@@ -145,6 +157,6 @@ void BondFENEExpandOMP::eval(int nfrom, int nto, ThrData * const thr)
     }
 
     if (EVFLAG) ev_tally_thr(this,i1,i2,nlocal,NEWTON_BOND,
-			     ebond,fbond,delx,dely,delz,thr);
+                             ebond,fbond,delx,dely,delz,thr);
   }
 }
