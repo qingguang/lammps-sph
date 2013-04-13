@@ -90,7 +90,6 @@ void BondFENEExpand::compute(int eflag, int vflag)
 
     if (rlogarg < 0.1) {
       char str[128];
-      error->warning(FLERR,str,0);
       if (rlogarg <= -3.0) error->one(FLERR,"Bad FENE bond");
     }
 
@@ -253,7 +252,6 @@ double BondFENEExpand::single(int type, double rsq, int i, int j)
 
   if (rlogarg < 0.1) {
     char str[128];
-    error->warning(FLERR,str,0);
     if (rlogarg <= -3.0) error->one(FLERR,"Bad FENE bond");
   }
 
