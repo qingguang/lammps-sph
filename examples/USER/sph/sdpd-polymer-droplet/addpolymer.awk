@@ -128,19 +128,4 @@ END {
 	    prev=jp    
 	}
     }
-
-    #printf("\nAngles\n\n")
-    iangle = 0
-
-    for (a=1; a<iatom; a++) {
-	if (isbond(a) isbond(a+1) && type[a]==polymertype && type[a+1]==polymertype && type[a+2]==polymertype ) {
-	    iangle++
-	    ia = a
-	    ja = a+1
-	    ka = a+2
-	    angletype=1
-	    # number of angle, type of angle, three atoms to form an angle
-	    #print iangle, angletype, ia, ja, ka
-	}
-    }
 }
