@@ -1,69 +1,78 @@
-# read lammps files with "fix deposit"
-log vmd.tcl
-user add key q exit
+# vmd -psf poly3d.psf  -dcd /scratch2/work/lammps-sph/examples/USER/sph/sdpd-polymer-fedosov/poly3d.dcd  -e makemol.tcl
+log ~/vmd.tcl
 
-#topo readlammpsdata poly3d.txt
+# to supress output
+proc @ {} {
+    concat
+}
+
+set sel_solvent [atomselect top "name 1"]
+$sel_solvent set name sol
+
+set sel_polymer [atomselect top "name 2"]
+$sel_polymer set name polymer
+
+set sel_wall [atomselect top "name 4"]
+$sel_wall set name wall
 
 
-# read variable number of atoms
-#topo readvarxyz [lindex $argv 0]
-#animate read psf poly3d.psf
+# domain size from lammps configuration file
+set Lx 0.25
+set Ly 0.0533333
+set Lz 0.01
 
-#mol modstyle 0 0 Points 16
-set Lx 5e-2
-set nx 50
-set dx [expr 3*${Lx}/${nx}]
-
-set pb [list ${Lx} ${Lx} ${Lx}]
-pbc set ${pb} -all
+# dx for particle placing
+set dx 8.333333e-4
 
 set sel [atomselect top all]
-$sel set radius 0.018
+$sel set radius ${dx}
 
-#mol modstyle 0 0 VDW 0.600000 15.000000
+set xmin [expr 2*${dx}]
+set xmax [expr $Lx-2*${dx}]
 
-#color Display Background white
-#color Display FPS black
-#color Axes Labels black
-axes location off
+set ymin [expr 2*${dx}]
+set ymax [expr $Ly-2*${dx}]
 
-proc remove_long_bonds { max_length } {
-     for { set i 0 } { $i < [ molinfo top get numatoms ] } { incr i } {
-         set bead [ atomselect top "index $i" ]
-         set bonds [ lindex [$bead getbonds] 0 ]
+set zmin [expr 2*${dx}]
+set zmax [expr $Lz-2*${dx}]
 
-         if { [ llength bonds ] > 0 } {
-             set bonds_new {}
-             set xyz [ lindex [$bead get {x y z}] 0 ]
+proc makeS {sstring} {
+    [atomselect top "name S"] set name polymer
+    set small [atomselect top ${sstring}]
+    $small set name S
+}
 
-             foreach j $bonds {
-                 set bead_to [ atomselect top "index $j" ]
-                 set xyz_to [ lindex [$bead_to get {x y z}] 0 ]
-                 if { [ vecdist $xyz $xyz_to ] < $max_length } {
-                     lappend bonds_new $j
-                 }
-             }
-             $bead setbonds [ list $bonds_new ]
-         }
-     }
-} 
+set sstring "x>${xmin} and x<${xmax} and y>${ymin} and y<${ymax} and z>${zmin} and z<${zmax} and name polymer"
 
-molinfo top get numframes
+mol modselect 0 0 name polymer
+color Display Background white
+color Name S blue
 
-set x1 [expr ${dx}]
-set x2 [expr ${Lx}-${dx}]
-set y1 [expr ${dx}]
-set y2 [expr ${Lx}-${dx}]
-#mol modselect 0 0 all and x>$x1 and x<$x2 and y>$y1 and y<$y2
+color Axes Labels blue
 
-pbc box
+mol representation Lines 3.000000
 
-# set n [molinfo top get numframes]
-# for { set i 0 } { $i < $n } { incr i } {
-#     $sel frame $i
+mol addrep 0
+mol modselect 1 0 name polymer
+mol modstyle 1 0 VDW 0.500000 12.000000
+
+set xt 0.2
+set yt 0.15
+# contraction starts at
+set xcmin [expr {${Lx} * 0.5 * (1-${xt})}]
+set ycmin [expr {${Ly} * 0.5 * (1-${yt})}]
+
+set xcmax [expr { ${xcmin} + ${Lx}*${xt}}]
+set ycmax [expr { ${ycmin} + ${Ly}*${yt}}]
+
+
+pbc join resid -all  -verbose -sel "name polymer"
+
+# after 4000
+# set num 41
+# for {set i 0} {$i < $num} {incr i} {
+#     # go to the given frame
 #     animate goto $i
-#     $sel update
-#     puts "processing frame: $i"
-#     remove_long_bonds [expr 0.5*${Lx}]
+#     set filename snap.[format "%04d" $i].rgb
+#     render snapshot $filename
 # }
-
