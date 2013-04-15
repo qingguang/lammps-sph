@@ -10,7 +10,7 @@ variable           sdpd_rho0 equal 1
 variable           sdpd_eta_s equal ${etas}
 variable           sdpd_eta_p equal ${etap}
 
-variable           sdpd_background equal 0
+variable           sdpd_background equal 1
 variable           sdpd_temp equal 0
 variable           spring_fene_temp equal 1e15
 
