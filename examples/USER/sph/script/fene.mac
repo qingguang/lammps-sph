@@ -13,3 +13,6 @@ http://lammps.sandia.gov/doc/bond_harmonic.html
 E_harmonic: K*(r-r0)^2$
 diff(E_harmonic, r);
 
+
+F_fene: diff(E_fene, r);
+solve(F_fene = F0, r);

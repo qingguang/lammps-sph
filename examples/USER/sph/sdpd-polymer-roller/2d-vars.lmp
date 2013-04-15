@@ -25,14 +25,14 @@ variable          delta      equal  ${Delta}*${dx}
 variable          solvent_mass equal ${sdpd_rho_solvent}*${dx}^${dim}
 variable          polymer_mass equal ${sdpd_rho_polymer}*${dx}^${dim}
 
-variable           Nprerun equal 50000
+variable           Nprerun equal 500
 variable           prerun_rho_polymer equal ${sdpd_rho_polymer}
 variable           prerun_rho_solvent equal ${sdpd_rho_solvent}
 variable           prerun_background  equal ${sdpd_background}
 variable           prerun_eta_s equal ${sdpd_eta_s}
 variable           prerun_eta_p equal ${sdpd_eta_p}
 
-variable           Npertrun equal  50000
+variable           Npertrun equal  500
 variable           prerun_c equal ${sdpd_c}
 variable           prerun_temp  equal 1e14
 variable           prerun_H          equal ${H0}

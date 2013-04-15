@@ -1,0 +1,31 @@
+kill(all);
+eq1: v=F/(2*mu)*L^2/4;
+eq2: Re = v*L/mu;
+eq3: gdot = v/L;
+eq4: tau = mu/H;
+eq5: Wi = tau*gdot;
+
+sol: solve([eq1, eq2, eq3, eq4, eq5], [v, Wi, tau, Re, gdot])[1];
+
+
+dx: 8.3333e-4;
+nx: 256;
+Lx: nx*dx;
+v: 0.08;
+eta: 1.20e-2;
+rho: 1.0;
+
+Re: Lx*v/eta;
+kill(all);
+
+
+
+/* kill(all); */
+/* f: F* [2*sin(2*%pi/Lx*x)*cos(2*%pi/Lx*y), -2*cos(2*%pi/Lx*x)*sin(2*%pi/Lx*y)]; */
+/* u: [-sin(2*%pi/Lx*x)*cos(2*%pi/Lx*y), cos(2*%pi/Lx*x)*sin(2*%pi/Lx*y)]; */
+
+/* mu*(diff(u, x, 2) + diff(u, y, 2)) = f; */
+
+
+
+
