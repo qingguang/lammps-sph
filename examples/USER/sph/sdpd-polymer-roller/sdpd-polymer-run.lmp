@@ -1,4 +1,9 @@
 echo               both
+shell              mkdir ${dname}
+
+if "${restart}==0" then &
+"shell              cp poly3d.txt ${dname}"
+
 log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
@@ -7,10 +12,13 @@ atom_style         hybrid  bond meso
 
 #3D box
 include            ${ndim}-vars.lmp
-variable           cc equal 5*${dx}
+variable           cc equal 6*${dx}
 communicate        single cutoff ${cc} vel yes
-#read_data           poly3d.txt
-read_restart      sdpd.restart.1200000
+
+if "${restart}==0" then &
+"read_data           poly3d.txt" else &
+"read_restart      ${restart_file}" & 
+"velocity all set 0 0 0 units box"
 
 
 special_bonds   lj 1 1 1
@@ -32,16 +40,17 @@ include            ${ndim}-image.lmp
 compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
-restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-include           in.prerun
-restart     0
+#restart     ${Nprerun}  ${dname}/sdpd.restart.tem
+#thermo             100
+#include           in.prerun
+#restart     0
 #### end of prerun ####
 
 variable           local_c equal ${sdpd_c}
 variable           local_eta_s equal ${sdpd_eta_s}
 variable           local_eta_p equal ${sdpd_eta_p}
 variable           local_temp  equal ${sdpd_temp} 
-variable           local_H     equal ${H}
+variable           local_H     equal ${H0}
 variable           local_r0     equal ${r0}
 include            in.pair_and_bond
 
@@ -65,7 +74,7 @@ y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
-thermo             1000
+thermo             100
 
 variable    velx  atom vx
 variable    vely  atom vy 
@@ -85,22 +94,21 @@ timestep           ${dt}
 variable           dt delete
 
 ##################
-restart           ${Npertrun}    ${dname}/sdpd.restart.pert
-include   in.perturbation
-run   ${Npertrun} every 5000 "velocity all zero linear"
-unfix  pert
-restart     0
+#restart           ${Npertrun}    ${dname}/sdpd.restart.pert
+#include   in.perturbation
+
+#if "${restart}==0" then &
+#"run   ${Npertrun} every 5000 'velocity all zero linear'"
+
+#unfix  pert
+#restart     0
 #####################
 
-restart 200000    ${dname}/sdpd.restart
+restart 30000    ${dname}/sdpd.restart
 
 variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
 variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
 fix                 kol_force all addforce v_var_x v_var_y 0.0
-#variable            var_kol atom ${A_kol}*${solvent_mass}*cos(2*PI*y/${Ly})
-#fix                 kol_force all addforce v_var_kol 0.0 0.0
 
-
-run   100000000 every 10000 "velocity all zero linear"
-
-
+run   10000000 every 10000 "velocity all zero linear" &
+"velocity all zero angular"
