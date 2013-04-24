@@ -50,7 +50,7 @@ dump               dump_ext exten custom ${Nfreq} ${dname}/exten*.dat &
     id type xu yu zu &
     c_rho_peratom
 
-dump               dump_stress all custom ${Nfreq} ${dname}/stress*.dat &
+dump               dump_stress all custom ${Nfreqstress} ${dname}/stress*.dat &
     x y z &
     c_bstress[1] c_bstress[2] c_bstress[4] &
     c_astress[1] c_astress[2] c_astress[4] &
@@ -85,8 +85,11 @@ timestep           ${dt}
 
 restart 100000    ${dname}/sdpd.restart
 
-bond_style fene
-bond_coeff 1 ${H} ${r0}  0 0
+#bond_style fene
+#bond_coeff 1 ${H} ${r0}  0 0
+
+bond_style fene/expand
+bond_coeff 1 ${H} ${r0} 0 0 ${delta}
 
 #bond_style harmonic
 #bond_coeff 1 ${H} ${r0}

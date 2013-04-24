@@ -12,16 +12,23 @@ fi
 
 rm -rf dum* im* poly* log.lammps
 
-nproc=1
+nproc=6
 ndim=2d
-Nbeads=12
-Nsolvent=12
-Force=0.01
-nx=20
-eta=0.03
-dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
+Nbeads=16
+Nsolvent=16
+Force=1
+nx=48
+eta=3e-3
+H0=0.01
+R0=4
+Delta=1
 
-vars="-var nx ${nx} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
+#dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
+dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-eta${eta}
+#vars="-var nx ${nx} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
+vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
+      -var force ${Force} -var eta ${eta} \
+      -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent}"
 
 ${lmp} ${vars} -in sdpd-polymer-init.lmp
 ${restart2data} poly3d.restart poly3d.txt

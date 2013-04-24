@@ -41,7 +41,6 @@ compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
 restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-thermo             100
 include           in.prerun
 restart     0
 #### end of prerun ####
