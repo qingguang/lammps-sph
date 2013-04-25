@@ -1,18 +1,10 @@
-<<<<<<< HEAD
-F=0.2
-=======
 F=1
->>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
 dim=2
 
 dx=2.5e-3/3
 sdpd_c=10
 sdpd_rho=1
-<<<<<<< HEAD
-sdpd_eta=1e-3*3
-=======
-sdpd_eta=3e-3
->>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
+sdpd_eta=3e-3*3
 sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
@@ -21,13 +13,13 @@ T=1
 vt=(3*kb*T/sdpd_mass)**0.5
 
 
-Lall=20*dx
+Lall=512*dx
 L=Lall/2
-tau=0.1144
+tau=1.25*2
 
 ky=2*3.141592653/L
-v0=F/(sdpd_mu*ky**2)
-#v0=0.7
+#v0=F/(sdpd_mu*ky**2)
+v0=0.15
 #H=5.3e-4
 #r0=2.0*dx
 #pc=H*r0**2/(kb*T)
