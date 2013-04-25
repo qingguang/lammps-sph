@@ -17,7 +17,7 @@ communicate        single cutoff ${cc} vel yes
 
 if "${restart}==0" then &
 "read_data           poly3d.txt" else &
-"read_restart      ${restart_file}" &
+"read_restart      ${restart_file}" & 
 "velocity all set 0 0 0 units box"
 
 
@@ -41,7 +41,6 @@ compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
 restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-thermo             100
 include           in.prerun
 restart     0
 #### end of prerun ####
@@ -74,7 +73,7 @@ y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
-thermo             10
+thermo             100
 
 variable    velx  atom vx
 variable    vely  atom vy 
@@ -94,14 +93,14 @@ timestep           ${dt}
 variable           dt delete
 
 ##################
-restart           ${Npertrun}    ${dname}/sdpd.restart.pert
-include   in.perturbation
+#restart           ${Npertrun}    ${dname}/sdpd.restart.pert
+#include   in.perturbation
 
-if "${restart}==0" then &
-"run   ${Npertrun} every 5000 'velocity all zero linear'"
+#if "${restart}==0" then &
+#"run   ${Npertrun} every 5000 'velocity all zero linear'"
 
-unfix  pert
-restart     0
+#unfix  pert
+#restart     0
 #####################
 
 restart 30000    ${dname}/sdpd.restart
@@ -112,6 +111,5 @@ fix                 kol_force all addforce v_var_x v_var_y 0.0
 
 # variable bodyfx atom mass*${A_kol}*mass*((y>${Ly}/2.0)-(y<${Ly}/2.0))
 # fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
-
-run   280000 every 10000 "velocity all zero linear" &
+run   10000000 every 10000 "velocity all zero linear" &
 "velocity all zero angular"

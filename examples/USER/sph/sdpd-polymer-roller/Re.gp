@@ -1,10 +1,18 @@
+<<<<<<< HEAD
 F=0.2
+=======
+F=1
+>>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
 dim=2
 
 dx=2.5e-3/3
 sdpd_c=10
 sdpd_rho=1
+<<<<<<< HEAD
 sdpd_eta=1e-3*3
+=======
+sdpd_eta=3e-3
+>>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
 sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
@@ -13,7 +21,7 @@ T=1
 vt=(3*kb*T/sdpd_mass)**0.5
 
 
-Lall=512*dx
+Lall=20*dx
 L=Lall/2
 tau=0.1144
 

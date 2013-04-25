@@ -13,8 +13,13 @@ fi
 
 nproc=2
 ndim=2d
+<<<<<<< HEAD
 Nbeads=8
 Nsolvent=9
+=======
+Nbeads=24
+Nsolvent=25
+>>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
 nx=512
 Force=1.0
 etas=3e-3
@@ -27,7 +32,7 @@ c=10
 restart=0
 restart_file=initial/nb16ns16H0.01R04.dat
 
-dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
+dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} \
       -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta} -var sdpd_c ${c} \
