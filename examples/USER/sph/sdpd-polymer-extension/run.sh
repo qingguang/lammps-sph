@@ -15,8 +15,8 @@ rm -rf dum* im* poly* log.lammps
 nproc=6
 ndim=2d
 Nbeads=16
-Nsolvent=16
-Force=1
+Nsolvent=1104
+Force=1e-5
 nx=48
 eta=3e-3
 H0=0.01
