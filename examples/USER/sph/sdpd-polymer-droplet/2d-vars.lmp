@@ -15,9 +15,9 @@ variable           p_type     equal 2
 variable           d_type     equal 3
 
 variable          rdroplet   equal 0.2*${Lx}
-variable          alpha       equal 0.01
+#variable          alpha     equal 0.02
 
-variable           sdpd_background equal 0
+#variable           sdpd_background equal 0
 variable           sdpd_temp equal 0
 variable           spring_fene_temp equal 1e15
 

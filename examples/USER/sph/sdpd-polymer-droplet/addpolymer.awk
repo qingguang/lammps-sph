@@ -18,7 +18,11 @@ BEGIN {
     Npoly = 1e22
   }
   # polymer type
-  polymertype=2
+  polymertype = 2
+  # solven type
+  solventype = 1
+  # the first polymer
+  ipoly=1
 }
 
 /LAMMPS/{
@@ -70,6 +74,16 @@ BEGIN {
 }
 
 inatoms && (NF==0) {
+  # print all atom lines
+  for (q=1; q<=id; q++) {
+      na = npatom[polyhash[q]]
+      if ( (type[q]==polymertype) && (na<Nbeads) ) {
+	  # remove short polymer
+	  printf "remove polymer with %i\n", na > "/dev/stderr"
+	  type[q] = solventype
+      }
+      print q, type[q], all[q]
+  }
   inatoms = 0
   print
   next
@@ -96,8 +110,17 @@ inatoms{
   if ( (isbond(id) || isbond(id-1) ) && (type[id] != 3) ) {
      $2=polymertype
      type[id]=polymertype
+     # number of atoms in current polymer
+     npatom[ipoly]++
+     polyhash[id]=ipoly
+  } else {
+      # chain breaks
+      ipoly++
   }
-  print $0
+  # store atom line
+  $1=""
+  $2=""
+  all[id]=$0
   next
 }
 
@@ -112,7 +135,7 @@ END {
     ipoly=0
     printf("") > "poly.id"
     for (q=1; q<iatom; q++) {
-	if (isbond(q) && type[q]==polymertype && type[q+1]==polymertype ) {
+	if (type[q]==polymertype && type[q+1]==polymertype ) {
 	    ibond++
 	    ip = q
 	    jp = q+1

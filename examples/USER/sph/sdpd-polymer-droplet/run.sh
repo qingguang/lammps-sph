@@ -13,25 +13,28 @@ fi
 
 nproc=1
 ndim=2d
-Nbeads=16
-Nsolvent=16
-nx=64
-Force=0.75
+Nbeads=8
+Nsolvent=8
+nx=32
+Force=20.0
 etas=3e-3
 etap=3e-3
 H0=0.01
 R0=4
 Delta=1
 c=10
+alpha=0.01
+sdpd_background=0.95
 # use restart file 0: no, 1: yes
 restart=0
 restart_file=initial/nb16ns16H0.01R04.dat
 
-dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}
+dname=feex-pert-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}-c${c}-alpha${alpha}-bg${sdpd_background}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var etas ${etas} -var etap ${etap} \
       -var H0 ${H0} -var R0 ${R0} -var Delta ${Delta} -var sdpd_c ${c} \
-      -var restart ${restart} -var restart_file ${restart_file}"
+      -var restart ${restart} -var restart_file ${restart_file} \
+      -var alpha ${alpha} -var sdpd_background ${sdpd_background}"
 
 function preproc() {
     ${lmp} ${vars} -in sdpd-polymer-init.lmp
