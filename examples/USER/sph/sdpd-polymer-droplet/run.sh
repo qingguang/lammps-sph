@@ -23,7 +23,7 @@ H0=0.01
 R0=4
 Delta=1
 c=10
-alpha=0.01
+alpha=0.001
 sdpd_background=0.95
 # use restart file 0: no, 1: yes
 restart=0
