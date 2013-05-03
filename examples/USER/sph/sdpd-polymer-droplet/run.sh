@@ -11,19 +11,19 @@ else
 fi
 
 
-nproc=1
+nproc=2
 ndim=2d
 Nbeads=8
 Nsolvent=8
 nx=32
 Force=20.0
-etas=3e-3
-etap=3e-3
+etas=3e-4
+etap=3e-4
 H0=0.01
 R0=4
 Delta=1
 c=10
-alpha=0.001
+alpha=0.005
 sdpd_background=0.95
 # use restart file 0: no, 1: yes
 restart=0

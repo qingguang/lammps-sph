@@ -19,7 +19,7 @@ variable          rdroplet   equal 0.2*${Lx}
 
 #variable           sdpd_background equal 0
 variable           sdpd_temp equal 0
-variable           spring_fene_temp equal 1e15
+variable           spring_fene_temp equal 1e17
 
 variable           h equal 2.7*${dx}
 variable          A_kol equal ${force}
