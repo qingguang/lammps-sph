@@ -45,7 +45,7 @@ compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
 restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-thermo             100
+thermo             1000
 include           in.prerun
 restart     0
 #### end of prerun ####
@@ -78,7 +78,7 @@ y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
-thermo             10
+thermo             1000
 
 variable    velx  atom vx
 variable    vely  atom vy 

@@ -79,7 +79,6 @@ inatoms && (NF==0) {
       na = npatom[polyhash[q]]
       if ( (type[q]==polymertype) && (na<Nbeads) ) {
 	  # remove short polymer
-	  printf "remove polymer with %i\n", na > "/dev/stderr"
 	  type[q] = solventype
       }
       print q, type[q], all[q]

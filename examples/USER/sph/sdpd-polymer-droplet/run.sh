@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph.sh
+configfile=$HOME/lammps-rs.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
@@ -11,19 +11,19 @@ else
 fi
 
 
-nproc=2
+nproc=8
 ndim=2d
-Nbeads=8
-Nsolvent=8
-nx=32
-Force=20.0
-etas=3e-4
-etap=3e-4
+Nbeads=16
+Nsolvent=16
+nx=256
+Force=3
+etas=3e-3
+etap=3e-3
 H0=0.01
-R0=4
+R0=2
 Delta=1
 c=10
-alpha=0.005
+alpha=$1
 sdpd_background=0.95
 # use restart file 0: no, 1: yes
 restart=0
