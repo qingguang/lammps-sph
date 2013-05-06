@@ -1,0 +1,116 @@
+echo               both
+shell              mkdir ${dname}
+
+if "${restart}==0" then &
+"shell              cp poly3d.txt ${dname}"
+
+log                ${dname}/log.lammps
+dimension          ${ndim}
+units              si
+atom_style         hybrid  bond meso
+# create simulation box
+
+#3D box
+include            ${ndim}-vars.lmp
+variable           cc equal 6*${dx}
+communicate        single cutoff ${cc} vel yes
+
+if "${restart}==0" then &
+"read_data           poly3d.txt" else &
+"read_restart      ${restart_file}" &
+"velocity all set 0 0 0 units box"
+
+
+special_bonds   lj 1 1 1
+
+set  type  1 meso_rho ${sdpd_rho_solvent}
+set  type  2 meso_rho ${sdpd_rho_solvent}
+
+set               type 1 mass ${solvent_mass}
+set               type 2 mass ${solvent_mass}
+
+pair_style         hybrid/overlay sph/rhosum_multiphase 1 sdpd &
+                   sph/surfacetension sph/colorgradient 1
+
+pair_coeff         * * sph/rhosum_multiphase   ${h}
+fix                integrate_fix_full all meso
+
+include            stress.lmp
+include            ${ndim}-image.lmp
+
+compute            rho_peratom all meso_rho/atom
+include            dump_set.lmp
+
+#### begin prerun ####
+if "${Nprerun}>0" then &
+"restart     ${Nprerun}  ${dname}/sdpd.restart.tem" &
+"thermo             1000" &
+"include           in.prerun" &
+"restart     0"
+#### end of prerun ####
+
+variable           local_c equal ${sdpd_c}
+variable           local_eta_s equal ${sdpd_eta_s}
+variable           local_temp  equal ${sdpd_temp} 
+include            in.pair_and_bond
+
+compute            ke all ke
+compute            sdpd_kin all temp
+compute            pe all pe bond
+
+variable           vke equal c_ke
+variable           vpe equal c_pe
+fix                print_energy all print 1000 "${vke} ${vpe}" file ${dname}/energy.dat screen no
+
+
+# "profile" corrected temperature
+compute         pTemp all temp/profile 1 1 0 y 10
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
+
+thermo_style       custom step c_sdpd_kin c_pTemp
+thermo_modify      norm no
+thermo             1000
+
+variable    velx  atom vx
+variable    vely  atom vy 
+variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
+
+variable           eps equal 0
+#0.25*${dx}
+neighbor           ${eps} bin
+variable           eps delete
+neigh_modify       every 1 check no
+
+variable           eta_s equal ${sdpd_eta_s}
+variable           sound_speed equal ${sdpd_c}
+include            settimestep.lmp
+timestep           ${dt}
+variable           dt delete
+
+##################
+restart           ${Npertrun}    ${dname}/sdpd.restart.pert
+include   in.perturbation
+
+if "${restart}==0" then &
+"run   ${Npertrun} every 5000 'velocity all zero linear'"
+
+unfix  pert
+restart     0
+#####################
+
+restart 30000    ${dname}/sdpd.restart
+
+variable            var_x atom ${A_kol}*${solvent_mass}*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
+variable            var_y atom -${A_kol}*${solvent_mass}*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
+fix                 kol_force all addforce v_var_x v_var_y 0.0
+
+# variable bodyfx atom mass*${A_kol}*mass*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+# fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
+
+run   280000 every 10000 "velocity all zero linear" &
+"velocity all zero angular"
