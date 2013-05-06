@@ -1,31 +1,70 @@
 kill(all);
-eq1: v=F/(2*mu)*L^2/4;
+load(dimension);
+
+assume(L>0, F>0, mu>0);
+put(L, length, dimension);
+put(F, length/time^2, dimension);
+/* is the kinematic viscosity */
+put(mu, length^2/time, dimension);
+put(x, length, dimension);
+put(y, length, dimension);
+
+/* spring constant */
+put(H, length, dimension);
+put(tau, time, dimension);
+
+/* velocity */
+put(v, length/time, dimension);
+
+/* force in 4 rollers */
+f: F*[2*sin(2*%pi/L*x)*cos(2*%pi/L*y), -2*cos(2*%pi/L*x)*sin(2*%pi/L*y)];
+
+/* velocity field in Newtonian case */
+u: F*L^2/(4*%pi^2*mu)*[-sin(2*%pi/L*x)*cos(2*%pi/L*y), cos(2*%pi/L*x)*sin(2*%pi/L*y)];
+
+/* absolute velocity */
+ua: trigsimp(sqrt(u.u));
+/* plot3d(ev(ua, F=1, mu=1, L=2*%pi), [x, 0, 1], [y, 0, 1]); */
+
+/* check if the velocity field is a solution (should be true) */
+is(mu*(diff(u, x, 2) + diff(u, y, 2)) = f);
+
+/* strain rate */
+edot_xx: diff(u[1], x);
+/* check dimension of the strain rate (should be true)*/
+is(dimension(edot_xx) = 1/time);
+
+/* I think the maximum velocity is at point (L/4, 0) */
+eq1: v=ev(ua, x=L/4, y=0);
 eq2: Re = v*L/mu;
-eq3: gdot = v/L;
-eq4: tau = mu/H;
-eq5: Wi = tau*gdot;
+/* strain rate in the center of the domain */
+eq3: edot=abs(ev(edot_xx, x=L/2, y=L/2));
+/* relaxation time of the polymer, K is a prefactor  */
+/* See (3.10) and (3.8) http://math.unice.fr/~musacchi/tesi/node39.html */
+eq4: tau = K*mu/H*N^2;
+eq5: Wi = tau*edot;
 
-sol: solve([eq1, eq2, eq3, eq4, eq5], [v, Wi, tau, Re, gdot])[1];
+/* Solve eq1-eq5 assuming we do not know v and do not know mu */
+sol_v: solve([eq1, eq2, eq3, eq4, eq5], [v, Wi, tau, Re, edot])[1];
 
+/* Solve eq1-eq5 assuming we know mu and do not know v */
+sol_mu: solve([eq1, eq2, eq3, eq4, eq5], [mu, Wi, tau, Re, edot])[1];
 
-dx: 8.3333e-4;
-nx: 256;
-Lx: nx*dx;
-v: 0.08;
-eta: 1.20e-2;
-rho: 1.0;
+dimension(rhs(sol_mu[4]));
 
-Re: Lx*v/eta;
-kill(all);
+infeval: true;
+/* env1: [dx = 8.3333e-4, nx=516, L=nx*dx, F=3.0, v=0.1, mu_s=1.25e-2]; */
+/* env2: [dx = 8.3333e-4, nx=516, L=nx*dx, F=3.0, v=0.45, mu_s=3.00e-3]; */
 
+env1: [dx = 8.3333e-4, nx=256, L=nx*dx, F=3.0, v=0.14, mu_s=1.0e-2];
 
+/* Estimation of Re and mu */
+float(ev(assoc(Re, sol_mu), env1));
+float(ev(assoc(mu, sol_mu), env1));
 
-/* kill(all); */
-/* f: F* [2*sin(2*%pi/Lx*x)*cos(2*%pi/Lx*y), -2*cos(2*%pi/Lx*x)*sin(2*%pi/Lx*y)]; */
-/* u: [-sin(2*%pi/Lx*x)*cos(2*%pi/Lx*y), cos(2*%pi/Lx*x)*sin(2*%pi/Lx*y)]; */
+/* Estimation of Re and mu */
+float(ev(assoc(Re, sol_mu), env2));
+float(ev(assoc(mu, sol_mu), env2));
 
-/* mu*(diff(u, x, 2) + diff(u, y, 2)) = f; */
-
-
-
-
+print(sol_v[2])$
+print(sol_v[4])$
