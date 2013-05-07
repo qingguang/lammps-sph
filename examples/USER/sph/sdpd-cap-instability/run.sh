@@ -13,8 +13,8 @@ fi
 
 nproc=8
 ndim=2d
-nx=128
-Force=30
+nx=256
+Force=10
 etas=3e-3
 etap=3e-3
 c=10
