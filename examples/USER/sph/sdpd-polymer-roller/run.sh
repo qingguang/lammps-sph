@@ -11,10 +11,10 @@ else
 fi
 
 
-nproc=8
+nproc=2
 ndim=2d
-Nbeads=24
-Nsolvent=25
+Nbeads=16
+Nsolvent=48
 nx=512
 Force=1.0
 etas=3e-3

@@ -12,11 +12,11 @@ fi
 
 rm -rf dum* im* poly* log.lammps
 
-nproc=6
+nproc=8
 ndim=2d
-Nbeads=16
-Nsolvent=1104
-Force=1e-5
+Nbeads=32
+Nsolvent=5592
+Force=1e-4
 nx=48
 eta=3e-3
 H0=0.01
@@ -24,7 +24,7 @@ R0=4
 Delta=1
 
 #dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
-dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-eta${eta}
+dname=feex-run4-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-eta${eta}
 #vars="-var nx ${nx} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var eta ${eta} \

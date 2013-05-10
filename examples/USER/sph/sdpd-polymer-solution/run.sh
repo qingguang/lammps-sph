@@ -10,21 +10,21 @@ else
     exit -1
 fi
 # choose case "roller" "kolmogorov" "wall" "deform" "RPF"
-case=wall
+case=deform
 #case=roller
 nproc=2
 ndim=2d
-Nbeads=5
-Nsolvent=5
+Nbeads=10
+Nsolvent=390
 nx=20
 #Force=164
 Force=20
-etas=3e-2
-etap=3e-2
+etas=3e-3
+etap=3e-3
 H0=3
 R0=4
 Delta=1.0
-rate=2e2
+rate=10
 dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-etap${etap}
 #dname=harmonic-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-f${Force}-etap${etap}
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} -var case ${case} \ 
