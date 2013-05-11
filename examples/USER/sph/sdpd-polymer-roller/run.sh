@@ -10,16 +10,10 @@ else
     exit -1
 fi
 
-
-nproc=2
+nproc=4
 ndim=2d
-<<<<<<< HEAD
-Nbeads=8
-Nsolvent=9
-=======
-Nbeads=24
-Nsolvent=25
->>>>>>> 4c93691dd48480b691e448d90a74c7a5eded951f
+Nbeads=16
+Nsolvent=33
 nx=512
 Force=1.0
 etas=3e-3

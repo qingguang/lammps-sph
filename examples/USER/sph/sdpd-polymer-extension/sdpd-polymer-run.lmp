@@ -93,7 +93,7 @@ bond_coeff 1 ${H} ${r0} 0 0 ${delta}
 
 #bond_style harmonic
 #bond_coeff 1 ${H} ${r0}
-run 150000
+#run 150000
 
 fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
 fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
