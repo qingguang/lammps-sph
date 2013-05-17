@@ -91,12 +91,12 @@ inatoms{
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
 
   # if atom has a bound we change atom type to natoms_type
-  if ( isbound($1) ) {
-      $2 = natom_type
-  }
-  if ( ($1>1) && isbound($1-1) ) {
-      $2 = natom_type
-  }
+#  if ( isbound($1) ) {
+#      $2 = natom_type
+#  }
+#  if ( ($1>1) && isbound($1-1) ) {
+#      $2 = natom_type
+#  }
   print $0
   next
 }
@@ -109,17 +109,13 @@ inatoms{
 END {
   printf("\nBonds\n\n")
   ibond = 0
-  for (q=1; q<iatom; q++) {
+  for (q=3000; q<iatom; q++) {
     if (isbound(q)) {
       ibond++
       ip = q
       jp = q+1
       bondtype=1
       print ibond, bondtype, ip, jp
-     if (isbound(jp)){
-      ibond++
-    print ibond, bondtype, ip, jp+1
-    } 
     }
   }
 }
