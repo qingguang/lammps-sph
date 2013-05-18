@@ -55,7 +55,7 @@ variable dpos equal sqrt(v_dxpos+v_dypos)
 variable  vtime equal  step
 #compute endtoend exten pair/local dist
 #variable disttwo euqual c_endtoend
-fix extra exten  print 1000 "${vtime} ${dpos}" file ${dname}/extension.dat screen no
+fix extra exten  print 1000 "${vtime} ${dpos}" file ${dname}/extendrag.dat screen no
 
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 10
@@ -81,11 +81,12 @@ restart 1000000    ${dname}/sdpd.restart
 fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
 fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
 
-run 1000000
+run 1000
 
 unfix force_head
 unfix force_tail
 
+fix endend exten print 1000 "${vtime} ${dpos}" file ${dname}/extenfree.dat screen no
 run 100000000
 
 

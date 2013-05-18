@@ -15,7 +15,7 @@ rm -rf dum* im* poly* log.lammps
 nproc=4
 ndim=2d
 nx=32
-Nbeads=16
+Nbeads=32
 Nsolvent=3456 #${nx}*${nx}*7/2-${nx}*7/2-${Nbeads}
 Force=1e-4
 eta=3e-3
