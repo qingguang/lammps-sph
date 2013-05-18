@@ -39,10 +39,10 @@ include            ${ndim}-image.lmp
 
 compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
-#### begin prerun ####
-restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-include           in.prerun
-restart     0
+##### begin prerun ####
+#restart     ${Nprerun}  ${dname}/sdpd.restart.tem
+#include           in.prerun
+#restart     0
 #### end of prerun ####
 
 variable           local_c equal ${sdpd_c}

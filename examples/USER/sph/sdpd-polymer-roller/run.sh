@@ -10,12 +10,12 @@ else
     exit -1
 fi
 
-nproc=16
+nproc=4
 ndim=2d
 Nbeads=16
-Nsolvent=48
-nx=96
-Force=1.0
+Nsolvent=17
+nx=48
+Force=30.0
 etas=3e-3
 etap=3e-3
 H0=0.01
