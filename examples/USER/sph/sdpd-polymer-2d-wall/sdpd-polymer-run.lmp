@@ -1,13 +1,10 @@
 echo               both
-#atom_modify	sort 3.0e-6 3.0e-6
 dimension          2
 units              si
-atom_style       hybrid bond meso
-boundary          p f p
-
+atom_style       hybrid angle meso
+include          ${ndim}-vars.lmp
 # create simulation box
 #2D box
-variable          Lx equal 2.00e-3
 read_data           poly.txt
 
 # create wall particles
@@ -27,10 +24,10 @@ create_atoms       2 region lwall
 bond_style      fene
 special_bonds   lj 1 1 1
 #H*ro^2/(kT)=100
-variable    H_fene equal 5   
-variable        r0_fene equal 5e-5
-bond_coeff  1 ${H_fene} ${r0_fene} 0.0 0.0
+bond_coeff  1 ${H0} ${r0} 0.0 0.0
 
+angle_style harmonic
+angle_coeff 1 ${K} 180
 
 group              uwall region uwall 
 group              lwall region lwall

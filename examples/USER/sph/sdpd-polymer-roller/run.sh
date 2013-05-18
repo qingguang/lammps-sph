@@ -12,8 +12,8 @@ fi
 
 nproc=4
 ndim=2d
-Nbeads=16
-Nsolvent=17
+Nbeads=4
+Nsolvent=12
 nx=48
 Force=30.0
 etas=3e-3
