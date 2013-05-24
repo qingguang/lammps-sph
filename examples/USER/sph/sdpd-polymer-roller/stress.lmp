@@ -11,6 +11,10 @@ variable       vbyyav equal c_byyav
 variable       vbxyav equal c_bxyav
 fix            print_avstress all print 1000 "${vbxxav} ${vbyyav} ${vbxyav}" file ${dname}/avstress.dat screen no
 
+variable dhists equal 0.02
+variable stress_full_xxyy atom c_astress[1]-c_astress[2]
+fix av_xxyy_full_stress all ave/spatial 1 ${Nfreq} ${Nfreq} y lower ${dhists} v_stress_full_xxyy file ${dname}/sxxyy.av units reduced ave one
+variable dhists delete
 
 # Stress compontens xx, yy, zz, xy, xz, yz. 
 # center line

@@ -1,4 +1,4 @@
-F=1
+F=30
 dim=2
 
 dx=2.5e-3/3
@@ -6,7 +6,7 @@ sdpd_c=10
 sdpd_rho=1
 
 #v0=0.26
-sdpd_eta=3e-3*3
+sdpd_eta=3e-3
 sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
@@ -17,13 +17,18 @@ vt=(3*kb*T/sdpd_mass)**0.5
 L=512*dx
 tau=58
 
-ky=2*3.141592653/(L/2)
+
+ky=2*3.141592653/L
 v0=F/(sdpd_mu*ky**2)
-v0=0.125
+#v0=0.15
+#H=5.3e-4
+#r0=2.0*dx
+#pc=H*r0**2/(kb*T)
+
 Ma=v0/sdpd_c
 #Res=F/(sdpd_mu**2*ky**3)
-Re=v0*L/sdpd_mu
-Wi=tau*v0/L
+Re=v0*Lall/sdpd_mu
+Wi=tau*v0/Lall
 
 print "Maxiaml Velocity: ", v0
 print "thermal velocity:",vt

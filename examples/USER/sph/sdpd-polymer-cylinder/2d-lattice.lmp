@@ -1,0 +1,20 @@
+variable           eps equal 0.3*${dx}
+variable           negeps equal -${eps}
+region             box block 0.0 ${Lx}  0.0 ${Ly} ${negeps} ${eps} units box
+region             rvoid1 cylinder z ${xcyl} ${ycyl1} ${rcyl}  ${negeps} ${eps} units box side in
+region             rvoid2 cylinder z ${xcyl} ${ycyl2} ${rcyl}  ${negeps} ${eps} units box side in
+region             rvoid3 cylinder z ${xcyl} ${ycyl3} ${rcyl}  ${negeps} ${eps} units box side in
+create_box         2 box
+lattice            sq ${dx}
+
+region             runion union 3 rvoid1 rvoid2 rvoid3 side in
+region             rout  union 3 rvoid1 rvoid2 rvoid3  side out
+#region            outside cylinder z ${xcyl} ${ycyl} ${rcyl}  ${negeps} ${eps} units box side out  
+# two types of atoms
+# 1: solvent
+# 2: polymer
+create_atoms       2 region runion
+lattice            sq ${dx}
+create_atoms       1 region rout
+variable           eps delete
+variable           negeps delete
