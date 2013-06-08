@@ -18,7 +18,7 @@ group solvent      type 1
 group polymer      type 2
 set  group solvent meso_rho ${sdpd_rho_solvent}
 set  group polymer meso_rho ${sdpd_rho_polymer}
-
+include ${case}/in.group
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
@@ -88,6 +88,7 @@ variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely)
 variable           eps equal 0.25*${dx}
 neighbor           ${eps} bin
 variable           eps delete
+#neighbor           1.0e-6 bin
 neigh_modify       every 1
 
 restart 1000000    ${dname}/sdpd.restart
