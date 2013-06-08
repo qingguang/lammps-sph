@@ -23,7 +23,6 @@
 #include "error.h"
 #include "domain.h"
 #include "update.h"
-#include "wiener.h"
 #include <iostream>
 
 using namespace LAMMPS_NS;
@@ -46,7 +45,8 @@ void PairSDPD::init_style()
 /* ---------------------------------------------------------------------- */
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
-  Pair(lmp) {
+  Pair(lmp), 
+  wiener(domain->dimension) {
   first = 1;
 }
 
@@ -91,7 +91,6 @@ void PairSDPD::compute(int eflag, int vflag) {
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
   const int ndim = domain->dimension;
-  Wiener wiener(ndim);
   const double sqrtdt = sqrt(update->dt);
   
   double smimj, smjmi;

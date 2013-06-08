@@ -13,13 +13,13 @@ fi
 
 nproc=8
 ndim=2d
-nx=256
-Force=10
+nx=128
+Force=30
 etas=3e-3
 etap=3e-3
 c=10
 alpha=$1
-sdpd_background=0.95
+sdpd_background=0.50
 fraction=0.5
 # use restart file 0: no, 1: yes
 restart=0
