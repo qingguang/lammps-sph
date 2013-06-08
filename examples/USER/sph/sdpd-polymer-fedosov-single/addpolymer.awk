@@ -28,7 +28,8 @@ BEGIN {
 
 /xlo xhi/{
   box[x,lo]=$1
-  box[x,hi]=$1
+  box[x,hi]=$2
+  cutoff = 0.5*($2-$1)
 }
 
 /ylo yhi/{

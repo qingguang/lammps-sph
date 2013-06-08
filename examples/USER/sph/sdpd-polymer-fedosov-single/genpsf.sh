@@ -3,12 +3,17 @@
 set -e
 set -u
 
+input=poly3d.restart
+datafile=${input/.restart/.dat}
+output=${input/.restart/.psf}
+
+../../../../tools/restart2data ${input} ${datafile}
+
 tmpfile=$(mktemp /tmp/XXXXX)
-output=poly3d.psf
 # generate psf file with vmd
 vmd -dispdev text -eofexit <<EOF
 package require topotools
-topo readlammpsdata  poly3d.txt full
+topo readlammpsdata  ${datafile} full
 animate write psf ${tmpfile}
 EOF
 
