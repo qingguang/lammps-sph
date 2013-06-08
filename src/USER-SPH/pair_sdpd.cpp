@@ -23,7 +23,6 @@
 #include "error.h"
 #include "domain.h"
 #include "update.h"
-#include "wiener.h"
 #include <iostream>
 
 using namespace LAMMPS_NS;
@@ -46,7 +45,8 @@ void PairSDPD::init_style()
 /* ---------------------------------------------------------------------- */
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
-  Pair(lmp) {
+  Pair(lmp), 
+  wiener(domain->dimension) {
   first = 1;
 }
 
@@ -91,7 +91,6 @@ void PairSDPD::compute(int eflag, int vflag) {
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
   const int ndim = domain->dimension;
-  Wiener wiener(ndim);
   const double sqrtdt = sqrt(update->dt);
   
   double smimj, smjmi;
@@ -140,8 +139,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
     // compute pressure of atom i with Tait EOS
     tmp = rho[i] / rho0[itype];
-    fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - sdpd_background[itype] );
+    fi = B[itype] * (tmp  - sdpd_background[itype] );
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -174,8 +172,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
         // compute pressure  of atom j with Tait EOS
         tmp = rho[j] / rho0[jtype];
-        fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - sdpd_background[jtype] );
+        fj = B[jtype] * (tmp  - sdpd_background[jtype] );
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];

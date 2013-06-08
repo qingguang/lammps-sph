@@ -41,7 +41,7 @@ compute            rho_peratom all meso_rho/atom
 include            dump_set.lmp
 #### begin prerun ####
 restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-thermo             100
+thermo             1000
 include           in.prerun
 restart     0
 #### end of prerun ####
@@ -74,14 +74,13 @@ y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
-thermo             10
+thermo             1000
 
 variable    velx  atom vx
 variable    vely  atom vy 
 variable    velxy  atom  sqrt(v_velx*v_velx+v_vely*v_vely) 
 
 variable           eps equal 0
-#0.25*${dx}
 neighbor           ${eps} bin
 variable           eps delete
 neigh_modify       every 1 check no
@@ -113,5 +112,5 @@ fix                 kol_force all addforce v_var_x v_var_y 0.0
 # variable bodyfx atom mass*${A_kol}*mass*((y>${Ly}/2.0)-(y<${Ly}/2.0))
 # fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
 
-run   280000 every 10000 "velocity all zero linear" &
+run   2800000 every 10000 "velocity all zero linear" &
 "velocity all zero angular"
