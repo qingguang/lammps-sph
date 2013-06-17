@@ -10,6 +10,17 @@ else
     exit -1
 fi
 
+nproc=4
+ndim=3d
+Force=6.12
+T=1e7
+dname=solvent-H0.5-R0-f${Force}-T${T}
+
+vars="-var ndim ${ndim} -var dname ${dname} -var force ${Force} -var temp ${T}"
+
+mkdir -p ${dname}
+
 rm -rf dum* im* poly* log.lammps
 
-${mpirun}  -np 6 ${lmp} -in sdpd_test_3d.lmp
+${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd_test_3d.lmp
+

@@ -2,8 +2,8 @@ variable          dim equal 3
 variable          kb       equal 1.3806503e-23
 
 variable           Ly  equal 1.803e-3
-variable           Lx  equal ${Ly}/50*20
-variable           Lz  equal ${Ly}/50*10
+variable           Lx  equal ${Ly}/50*10
+variable           Lz  equal ${Ly}/50*5
 
 variable           dx   equal 2.5e-5
 
@@ -12,7 +12,7 @@ variable           sdpd_rho0 equal 1000
 
 variable           sdpd_c equal 1
 
-variable           sdpd_eta equal 3e-2
+variable           sdpd_eta equal 1.5e-2
 
 variable           sdpd_background equal 1.0
 variable           sdpd_temp equal 1e9

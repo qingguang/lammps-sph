@@ -5,14 +5,16 @@ Ve=0.035
 Ra=Ve/L
 f=6.12
 eta=1.5e-5
+Re=0.048*Ly/eta
 va=f*(L**2/4)/(2*eta)
 etas=f*(L**2/4)/(2*Ve)
 dx=2.5e-5
 Vo=dx**dim
 rho=1000
-gx=6.2
+gx=6.12
 sxy=gx * Vo * Ly / (4.0)*rho
 print "shear rate: ", Ra
+print "Renold number", Re
 print "simulation velocity: ",Ve
 print "analytical velocity: ",va
 print "simulation eta: ",etas
