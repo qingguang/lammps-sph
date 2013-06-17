@@ -11,8 +11,8 @@ else
 fi
 
 nproc=1
-ndim=2d
-Nbeads=25
+ndim=3d
+Nbeads=5
 Nsolvent=0
 Force=6.12
 dname=fene-nb${Nbeads}-ns${Nsolvent}-H0.05-R0-f${Force}

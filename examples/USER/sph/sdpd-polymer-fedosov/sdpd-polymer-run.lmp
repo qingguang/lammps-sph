@@ -9,9 +9,10 @@ communicate        single vel yes
 #3D box
 include            ${ndim}-vars.lmp
 read_data           poly3d.txt
-#read_restart         sdpd.restart.50000
+
 special_bonds   lj 1 1 1
 bond_style fene
+bond_coeff 1 ${H} ${r0}  0 0
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
@@ -64,7 +65,6 @@ restart 10000 ${dname}/sdpd.restart
 
 #include           fene.lmp
 
-bond_coeff 1 ${H} ${r0}  0 0
 #RPF force
 variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
 fix reverce_periodic all addforce v_bodyfx 0.0 0.0 
@@ -84,4 +84,4 @@ fix reverce_periodic all addforce v_bodyfx 0.0 0.0
 # add dcd file
 dump               dump_dcd all dcd 1000 poly3d.dcd
 
-run   1000000 every 1000 "velocity all zero linear"
+run   100000000 every 1000 "velocity all zero linear"
