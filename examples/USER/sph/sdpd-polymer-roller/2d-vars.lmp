@@ -18,7 +18,7 @@ variable           h equal 2.7*${dx}
 variable          A_kol equal ${force}
 variable          Nfreq equal 1000
 variable          Nfreqimage equal 1000
-variable          Nfreqstress equal 1000
+variable          Nfreqstress equal 2000
 variable          r0       equal ${R0}*${dx}
 variable          r0_fene     equal 3^(1.0/${dim})*${dx}
 variable          delta      equal  ${Delta}*${dx}
@@ -32,7 +32,7 @@ variable           prerun_background  equal ${sdpd_background}
 variable           prerun_eta_s equal ${sdpd_eta_s}
 variable           prerun_eta_p equal ${sdpd_eta_p}
 
-variable           Npertrun equal  500
+variable           Npertrun equal  5000
 variable           prerun_c equal ${sdpd_c}
 variable           prerun_temp  equal 1e16
 variable           prerun_H          equal ${H0}

@@ -1,9 +1,10 @@
 #! /bin/bash
-rm -rf punto.dat
-rm -rf pdata
-#awk 'fl{print $3, $4, $5, $6,$7,$8} /ITEM: ATOMS/{fl=1}' *.dat > punto.dat
-#awk -f extpolymer.awk dump0*.dat
-awk -f extsolvent.awk dump0*.dat
-# write auto-correlation to corr.dat
-#octave -q --eval ext
-#gnuplot fitcorr.gp
+
+nskip=150
+for nb in 20 30; do
+    awk --lint=fatal -v L=10.0 -f ../scripts/xyz2punto.awk  b10-nb${nb}/poly3d.xyz | \
+	awk -v ns=${nskip} 'f>ns; NF==0{f++}' > punto${nb}.dat 
+    ~/google-svn/awk/polymer/polycm.awk punto${nb}.dat > punto${nb}.cm
+    getrg --rg punto${nb}.dat | awk '{s+=$1; n++; print s/n}' > rg${nb}.cum
+done
+

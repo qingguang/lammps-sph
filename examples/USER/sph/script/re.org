@@ -1,3 +1,11 @@
+#+Title: Wi and Re
+#+PROPERTY: exports both
+#+PROPERTY: noweb yes
+#+PROPERTY: makeindex t
+#+OPTIONS: todo:nil
+#+MATHJAX: align:"left" mathml:t
+
+#+BEGIN_SRC maxima :results output
 kill(all);
 load(dimension);
 
@@ -41,7 +49,7 @@ eq2: Re = v*L/mu;
 eq3: edot=abs(ev(edot_xx, x=L/2, y=L/2));
 /* relaxation time of the polymer, K is a prefactor  */
 /* See (3.10) and (3.8) http://math.unice.fr/~musacchi/tesi/node39.html */
-eq4: tau = K*mu/H*N^2;
+eq4: tau = K*mu/H;
 eq5: Wi = tau*edot;
 
 /* Solve eq1-eq5 assuming we do not know v and do not know mu */
@@ -53,18 +61,28 @@ sol_mu: solve([eq1, eq2, eq3, eq4, eq5], [mu, Wi, tau, Re, edot])[1];
 dimension(rhs(sol_mu[4]));
 
 infeval: true;
-/* env1: [dx = 8.3333e-4, nx=516, L=nx*dx, F=3.0, v=0.1, mu_s=1.25e-2]; */
-/* env2: [dx = 8.3333e-4, nx=516, L=nx*dx, F=3.0, v=0.45, mu_s=3.00e-3]; */
+env1: [dx = 8.3333e-4, nx=516, L=nx*dx, F=2.0, v=0.1, mu_s=1.25e-2];
+env2: [dx = 8.3333e-4, nx=516, L=nx*dx, F=1.0, v=0.3, mu_s=3.00e-3];
 
-env1: [dx = 8.3333e-4, nx=256, L=nx*dx, F=3.0, v=0.14, mu_s=1.0e-2];
-
-/* Estimation of Re and mu */
+/* Estimation Re and mu */
 float(ev(assoc(Re, sol_mu), env1));
 float(ev(assoc(mu, sol_mu), env1));
 
-/* Estimation of Re and mu */
+/* Estimation Re and mu */
 float(ev(assoc(Re, sol_mu), env2));
 float(ev(assoc(mu, sol_mu), env2));
 
-print(sol_v[2])$
-print(sol_v[4])$
+print(sol_mu[2]);
+print(sol_v[4]);
+#+END_SRC
+
+#+RESULTS:
+:       F K L
+: Wi = ------- 
+:      2 %pi H
+:            3
+:         F L
+: Re = ---------- 
+:           2   2
+:      4 %pi  mu
+
