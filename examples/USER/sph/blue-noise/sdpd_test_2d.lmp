@@ -1,0 +1,44 @@
+echo               both
+dimension          2
+units              si
+atom_style        hybrid  meso
+boundary          p p p
+include      2d-vars.lmp
+# create simulation box
+#3D box
+region             box block 0.0 ${Lx}  0.0 ${Ly} ${nLz} ${pLz} units box
+create_box         1 box
+
+# create fluid particles
+lattice            sq ${dx}
+variable           Natoms equal ${nx}*${nx}
+create_atoms       1 random ${Natoms} 123456 box
+
+set                type   1 mass ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * *    sdpd/rhosum   ${h}
+pair_coeff         * *    sdpd          ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp} ${sdpd_background}
+
+compute            sdpd_kin all temp
+compute            rho_peratom all meso_rho/atom
+fix                integrate_fix_full all meso
+
+dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+thermo_style       custom step c_sdpd_kin
+thermo_modify      norm no
+thermo             1
+
+include            settimestep.lmp
+
+neighbor           0     bin
+neigh_modify       delay 0 every 1
+
+timestep           ${dt}
+communicate        single vel yes
+
+run                10

@@ -6,36 +6,25 @@ atom_style         meso
 boundary          p p p
 # create simulation box
 #3D box
-<<<<<<< HEAD
-variable           L  equal 5.0e-4
-=======
 variable           dx   equal 2.5e-5
 variable           L  equal 20*${dx}
->>>>>>> e6eb88fabef03d4688324629c9312ca84adc68b3
 region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
 create_box         1 box
 
 # create fluid particles
-<<<<<<< HEAD
-<<<<<<< HEAD
 variable           dx equal 2.5e-5
 lattice            sc ${dx}
 create_atoms       1 region box
 
 variable           sdpd_rho  equal 1e3
 variable           m equal  ${sdpd_rho}*${dx}^${ndim}
-mass               1 ${m}
-=======
-variable           dx   equal 2.5e-5
-=======
->>>>>>> e6eb88fabef03d4688324629c9312ca84adc68b3
+#mass               1 ${m}
 variable           sdpd_rho equal 1000
 lattice            sc ${dx}
 create_atoms       1 region box
 
 variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
-mass               1 ${sdpd_mass}
->>>>>>> 04704a85bf324e5c4d998edc3130c2d7234f8b93
+#mass               1 ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
 # smothing length
@@ -69,9 +58,5 @@ variable           dt index 5e-6
 
 neighbor           3.0e-6 bin
 timestep           ${dt}
-<<<<<<< HEAD
-run                400
-=======
 communicate        single vel yes
 run                40000
->>>>>>> db5e91127163e9ed31415457ecf862b553bae011

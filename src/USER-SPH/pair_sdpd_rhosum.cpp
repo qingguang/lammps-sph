@@ -13,6 +13,7 @@
 
 #include "math.h"
 #include "stdlib.h"
+#include "sph_kernel_quintic.h"
 #include "pair_sdpd_rhosum.h"
 #include "atom.h"
 #include "force.h"
@@ -82,6 +83,8 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
   double *rho = atom->rho;
   int *type = atom->type;
   double *mass = atom->mass;
+  double *rmass = atom->rmass;
+  int rmass_flag = atom->rmass_flag;
 
   // check consistency of pair coefficients
 
@@ -142,8 +145,12 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
-	const double imass = mass[itype];
-
+	double imass;
+        if (rmass_flag) {
+          imass = rmass[i];
+        } else {
+          imass = mass[itype];
+        }
         jlist = firstneigh[i];
         jnum = numneigh[i];
 
@@ -160,39 +167,17 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
           if (rsq < cutsq[itype][jtype]) {
             h = cut[itype][jtype];
             ih = 1.0 / h;
-            ihsq = ih * ih;
-
             if (domain->dimension == 3) {
-              
-              // Lucy kernel, 3d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf =  2.0889086280811262819e0 * (h + 3. * r) * wf * wf * wf * ih;
-
-              // quadric kernel, 3d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 2.1541870227086614782e0 * wf * ihsq * ih;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic3d(r) * ih * ih * ih;
             } else {
-              // Lucy kernel, 2d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf = 1.5915494309189533576e0 * (h + 3. * r) * wf * wf * wf;
-
-              // quadric kernel, 2d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 1.5915494309189533576e0 * wf * ihsq;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic2d(r) * ih * ih ;
             }
-
             rho[i] += wf;
           }
-
         } // jj loop
 	rho[i] *= imass;
-	
       } // ii loop
     }
   }

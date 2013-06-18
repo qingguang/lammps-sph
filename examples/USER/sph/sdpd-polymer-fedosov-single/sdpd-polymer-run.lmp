@@ -63,7 +63,7 @@ restart 10000 ${dname}/sdpd.restart
 group                 polymer type 2
 compute            rg            polymer gyration
 variable           vrg equal c_rg
-fix extra all print 1 "${vrg}" file ${dname}/rg.dat screen no
+fix extra all print ${Nfreq} "${vrg}" file ${dname}/rg.dat screen no
 
 
 bond_coeff 1 ${H} ${r0}  0 0

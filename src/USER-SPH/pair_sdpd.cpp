@@ -24,6 +24,7 @@
 #include "domain.h"
 #include "update.h"
 #include <iostream>
+#include "sph_kernel_quintic.h"
 
 using namespace LAMMPS_NS;
 
@@ -85,10 +86,13 @@ void PairSDPD::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *mass = atom->mass;
+  double *rmass = atom->rmass;
   double *de = atom->de;
   double *drho = atom->drho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
+  int rmass_flag = atom->rmass_flag;
+
   int newton_pair = force->newton_pair;
   const int ndim = domain->dimension;
   const double sqrtdt = sqrt(update->dt);
@@ -135,12 +139,14 @@ void PairSDPD::compute(int eflag, int vflag) {
     jlist = firstneigh[i];
     jnum = numneigh[i];
 
-    imass = mass[itype];
+    if (rmass_flag) {
+      imass = rmass[i];
+    } else {
+      imass = mass[itype];
+    }
 
     // compute pressure of atom i with Tait EOS
-    tmp = rho[i] / rho0[itype];
-    fi = tmp * tmp * tmp;
-    fi = B[itype] * (fi * fi * tmp - sdpd_background[itype] );
+    fi = B[itype] * (rho[i] / rho0[itype] - sdpd_background[itype] );
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -151,30 +157,27 @@ void PairSDPD::compute(int eflag, int vflag) {
       delz = ztmp - x[j][2];
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
-      jmass = mass[jtype];
+      if (rmass_flag) {
+	jmass = rmass[j];
+      } else {
+	jmass = mass[jtype];
+      }
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
         ihsq = ih * ih;
-
-        wfd = h - sqrt(rsq);
-        if (ndim == 3) {
-          // Lucy Kernel, 3d
-          // Note that wfd, the derivative of the weight function with respect to r,
-          // is lacking a factor of r.
-          // The missing factor of r is recovered by
-          // (1) using delV . delX instead of delV . (delX/r) and
-          // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
-          wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+	double wfd;
+        if (domain->dimension == 3) {
+          // Quintic spline
+	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-          // Lucy Kernel, 2d
-          wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 
         // compute pressure  of atom j with Tait EOS
-        tmp = rho[j] / rho0[jtype];
-        fj = tmp * tmp * tmp;
-        fj = B[jtype] * (fj * fj * tmp - sdpd_background[jtype] );
+        fj = B[jtype] * (rho[j] / rho0[jtype] - sdpd_background[jtype] );
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -214,35 +217,29 @@ void PairSDPD::compute(int eflag, int vflag) {
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
             const double Zij = -4.0*k_bltz*Ti*fvisc;
-            const  double Aij = sqrt(Zij);
+            const double Aij = sqrt(Zij);
             const double Bij = 0.0;
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
             _dUi[di] = 0.0;
           }
         }
-
 	const double Vi = imass / rho[i];
 	const double Vj = jmass / rho[j];
         fpair = - (fi*Vi*Vi + fj*Vj*Vj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
- //modify force pair
-
-f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
-f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-     if (domain->dimension ==3 ) {
-
-f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-// and change in density
-} 
+	//modify force pair
+	f[i][0] += delx * fpair + velx * fvisc + _dUi[0];
+	f[i][1] += dely * fpair + vely * fvisc + _dUi[1];
+	if (domain->dimension ==3 ) {
+	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+	  // and change in density
+	} 
    
-    drho[i] += jmass * delVdotDelR * wfd;
-
+	drho[i] += jmass * delVdotDelR * wfd;
         // change in thermal energy
         de[i] += deltaE;
-
-
 
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
@@ -261,6 +258,9 @@ f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	   		delz * fpair + velz * fvisc +_dUi[2],
 	   		delx, dely, delz);
       }
+    }
+    if (i==15) {
+      std::cerr << f[i][0] << ' ' << f[i][1] << ' ' << f[i][2] << '\n';
     }
   }
   if (vflag_fdotr) virial_fdotr_compute();
