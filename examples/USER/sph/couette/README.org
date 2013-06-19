@@ -1,0 +1,33 @@
+* Intorduction
+Couette flow with parameters from Morris [1] and unisg reverse
+Couette flow [2].
+
+| eta | 1e-6 | m^2 s^-1 |
+| L   | 1e-3 | m        |
+| rho |  1e3 | kg m^-3  |
+| F   | 1e-4 | m s^-2   |
+
+* Setup
+
+Run run.sh. After simulation finished use gnuplot file couette.gp
+to see the plots.
+
+* Footnotes
+
+[1] Morris, J. P., Fox, P. J. & Zhu, Y. Modeling Low Reynolds Number
+Incompressible Flows Using SPH. Journal of Computational Physics 136,
+214–226 (1997).
+http://dx.doi.org/10.1006/jcph.1997.5776
+
+[2] Fedosov, D. A., Karniadakis, G. E. & Caswell, B. Steady shear
+rheometry of dissipative particle dynamics models of polymer fluids in
+reverse Couette flow. The Journal of Chemical Physics 132,
+144103–144103–14 (2010).
+
+
+
+
+
+
+
+
