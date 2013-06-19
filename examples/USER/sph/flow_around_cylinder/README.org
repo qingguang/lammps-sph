@@ -1,0 +1,24 @@
+* Intorduction
+Flow around cylinder from Morris et al. [1]. 
+
+| eta |    1e-6 | m^2 s^-1 |
+| L   |    1e-1 | m        |
+| R   |    2e-2 | m        |
+| rho |     1e3 | kg m^-3  |
+| F   |  1.5e-7 | m s^-2   |
+| c   | 1.25e-4 | m s^-1   |
+
+* Setup
+
+Run run.sh. After simulation finished use gnuplot file flow.gp
+to see the plots.
+
+To load particle into vmd run:
+vmd -e post.tcl -dcd data/data.dcd
+
+* Footnotes
+
+[1] Morris, J. P., Fox, P. J. & Zhu, Y. Modeling Low Reynolds Number
+Incompressible Flows Using SPH. Journal of Computational Physics 136,
+214–226 (1997).
+http://dx.doi.org/10.1006/jcph.1997.5776
