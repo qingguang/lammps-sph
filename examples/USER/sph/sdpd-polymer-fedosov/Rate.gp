@@ -1,9 +1,9 @@
 dim=3
 Ly=1.803e-3
 L=Ly/2
-Ve=0.035
+Ve=0.01
 Ra=Ve/L
-f=6.12
+f=0.612
 eta=1.5e-5
 va=f*(L**2/4)/(2*eta)
 etas=f*(L**2/4)/(2*Ve)

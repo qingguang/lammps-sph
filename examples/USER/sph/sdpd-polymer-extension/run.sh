@@ -14,10 +14,10 @@ rm -rf dum* im* poly* log.lammps
 
 nproc=1
 ndim=2d
-Nbeads=12
-Nsolvent=12
+Nbeads=16
+Nsolvent=
 Force=0.01
-nx=20
+nx=48
 eta=0.03
 dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
 
