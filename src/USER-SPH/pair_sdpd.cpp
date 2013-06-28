@@ -11,9 +11,11 @@
    See the README file in the top-level LAMMPS directory.
    ------------------------------------------------------------------------- */
 #include <fenv.h>
-#include "math.h"
+#include <assert.h>
+#include <math.h>
 #include "stdlib.h"
 #include "pair_sdpd.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -73,7 +75,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
   int *ilist, *jlist, *numneigh, **firstneigh;
   double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, ihsq, velx, vely, velz;
-  double rsq, tmp, wfd, delVdotDelR, deltaE;
+  double rsq, tmp, delVdotDelR, deltaE;
 
   if (eflag || vflag)
     ev_setup(eflag, vflag);
@@ -154,22 +156,15 @@ void PairSDPD::compute(int eflag, int vflag) {
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
-        ihsq = ih * ih;
-
-        wfd = h - sqrt(rsq);
+	double wfd;
         if (ndim == 3) {
-          // Lucy Kernel, 3d
-          // Note that wfd, the derivative of the weight function with respect to r,
-          // is lacking a factor of r.
-          // The missing factor of r is recovered by
-          // (1) using delV . delX instead of delV . (delX/r) and
-          // (2) using f[i][0] += delx * fpair instead of f[i][0] += (delx/r) * fpair
-          wfd = -25.066903536973515383e0 * wfd * wfd * ihsq * ihsq * ihsq * ih;
+          // Quintic spline
+	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-          // Lucy Kernel, 2d
-          wfd = -19.098593171027440292e0 * wfd * wfd * ihsq * ihsq * ihsq;
+	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+          wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
-
         // compute pressure  of atom j with Tait EOS
         tmp = rho[j] / rho0[jtype];
         fj = B[jtype] * (tmp  - sdpd_background[jtype] );
@@ -195,12 +190,10 @@ void PairSDPD::compute(int eflag, int vflag) {
 	    eij[2]= delz/sqrt(rsq);
 	  }
  
-        const double Fij=-wfd;
         smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
         wiener.get_wiener_Espanol(sqrtdt);
-	const double numi=rho[i]/imass;
-	const double numj=rho[j]/jmass;
-        const double fvisc = viscosity[itype][jtype] *(1/(numi*numi)+1/(numj*numj)) * wfd;
+        double fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
+        fvisc *= imass * jmass * wfd;
 
         //define random force
         for (int di=0;di<ndim;di++) {
@@ -212,36 +205,32 @@ void PairSDPD::compute(int eflag, int vflag) {
         for (int di=0;di<ndim;di++) {
           if (Ti>0) {
             const double Zij = -4.0*k_bltz*Ti*fvisc;
-            const  double Aij = sqrt(Zij);
+	    double Aij;
+	    if (Zij<0) {
+	      Aij = 0;
+	    } else {
+	      Aij = sqrt(Zij);
+	    }
             const double Bij = 0.0;
             _dUi[di] = (random_force[di]*Aij + Bij*wiener.trace_d*eij[di])  / update->dt;
           } else {
             _dUi[di] = 0.0;
           }
         }
-
-	const double Vi = imass / rho[i];
-	const double Vj = jmass / rho[j];
-        fpair = - (fi*Vi*Vi + fj*Vj*Vj) * wfd;
+	fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
- //modify force pair
+	//modify force pair
 
-f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
-f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
-     if (domain->dimension ==3 ) {
-
-f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
-// and change in density
-} 
+	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
+	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
+	if (ndim ==3 ) {
+	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
+	}
    
-    drho[i] += jmass * delVdotDelR * wfd;
-
+	drho[i] += jmass * delVdotDelR * wfd;
         // change in thermal energy
         de[i] += deltaE;
-
-
-
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];

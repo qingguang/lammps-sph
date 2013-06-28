@@ -14,6 +14,7 @@
 #include "math.h"
 #include "stdlib.h"
 #include "pair_sdpd_rhosum.h"
+#include "sph_kernel_quintic.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -92,7 +93,7 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
           if (!setflag[i][i] || !setflag[j][j]) {
             if (comm->me == 0) {
               printf(
-                  "SDPD particle types %d and %d interact, but not all of their single particle properties are set.\n",
+                  "SPH particle types %d and %d interact, but not all of their single particle properties are set.\n",
                   i, j);
             }
           }
@@ -117,21 +118,13 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
       for (ii = 0; ii < inum; ii++) {
         i = ilist[ii];
         itype = type[i];
+
         h = cut[itype][itype];
         if (domain->dimension == 3) {
-          // Lucy kernel, 3d
-          wf = 2.0889086280811262819e0 / (h * h * h);
-
-          // quadric kernel, 3d
-          //wf = 2.1541870227086614782 / (h * h * h);
+          wf = sph_kernel_quintic3d(0.0) / (h * h * h);
         } else {
-          // Lucy kernel, 2d
-          wf = 1.5915494309189533576e0 / (h * h);
-
-          // quadric kernel, 2d
-          //wf = 1.5915494309189533576e0 / (h * h);
+          wf = sph_kernel_quintic2d(0.0) / (h * h);
         }
-        
         rho[i] = wf;
       } // ii loop
 
@@ -142,8 +135,7 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
         ytmp = x[i][1];
         ztmp = x[i][2];
         itype = type[i];
-	const double imass = mass[itype];
-
+        double imass = mass[itype];
         jlist = firstneigh[i];
         jnum = numneigh[i];
 
@@ -160,31 +152,12 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
           if (rsq < cutsq[itype][jtype]) {
             h = cut[itype][jtype];
             ih = 1.0 / h;
-            ihsq = ih * ih;
-
             if (domain->dimension == 3) {
-              
-              // Lucy kernel, 3d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf =  2.0889086280811262819e0 * (h + 3. * r) * wf * wf * wf * ih;
-
-              // quadric kernel, 3d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 2.1541870227086614782e0 * wf * ihsq * ih;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic3d(r) * ih * ih * ih;
             } else {
-              // Lucy kernel, 2d
-              r = sqrt(rsq);
-              wf = (h - r) * ihsq;
-              wf = 1.5915494309189533576e0 * (h + 3. * r) * wf * wf * wf;
-
-              // quadric kernel, 2d
-              //wf = 1.0 - rsq * ihsq;
-              //wf = wf * wf;
-              //wf = wf * wf;
-              //wf = 1.5915494309189533576e0 * wf * ihsq;
+              r = sqrt(rsq) * ih;
+              wf = sph_kernel_quintic2d(r) * ih * ih ;
             }
 
             rho[i] += wf;
@@ -192,7 +165,6 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
 
         } // jj loop
 	rho[i] *= imass;
-	
       } // ii loop
     }
   }
@@ -226,7 +198,7 @@ void PairSDPDRhoSum::allocate() {
 void PairSDPDRhoSum::settings(int narg, char **arg) {
   if (narg != 1)
     error->all(FLERR,
-        "Illegal number of setting arguments for pair_style sdpd/rhosum");
+        "Illegal number of setting arguments for pair_style sph/rhosum");
   nstep = force->inumeric(arg[0]);
 }
 
@@ -236,7 +208,7 @@ void PairSDPDRhoSum::settings(int narg, char **arg) {
 
 void PairSDPDRhoSum::coeff(int narg, char **arg) {
   if (narg != 3)
-    error->all(FLERR,"Incorrect number of args for sdpd/rhosum coefficients");
+    error->all(FLERR,"Incorrect number of args for sph/rhosum coefficients");
   if (!allocated)
     allocate();
 
@@ -266,7 +238,7 @@ void PairSDPDRhoSum::coeff(int narg, char **arg) {
 
 double PairSDPDRhoSum::init_one(int i, int j) {
   if (setflag[i][j] == 0) {
-    error->all(FLERR,"All pair sdpd/rhosum coeffs are not set");
+    error->all(FLERR,"All pair sph/rhosum coeffs are not set");
   }
 
   cut[j][i] = cut[i][j];
@@ -309,4 +281,3 @@ void PairSDPDRhoSum::unpack_comm(int n, int first, double *buf) {
   for (i = first; i < last; i++)
     rho[i] = buf[m++];
 }
-

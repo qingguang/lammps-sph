@@ -12,6 +12,7 @@ if (test $1 = 1) then
   cp -p pair_sph_rhosum.cpp ..
   cp -p pair_sph_taitwater.cpp ..
   cp -p pair_sph_taitwater_morris.cpp ..
+  cp -p sph_kernel_quintic.cpp ..
   cp -p compute_meso_e_atom.cpp ..
   cp -p compute_meso_rho_atom.cpp ..
   cp -p compute_meso_t_atom.cpp ..
@@ -28,6 +29,7 @@ if (test $1 = 1) then
   cp -p pair_sph_rhosum.h ..
   cp -p pair_sph_taitwater.h ..
   cp -p pair_sph_taitwater_morris.h ..
+  cp -p sph_kernel_quintic.h ..
   cp -p compute_meso_e_atom.h ..
   cp -p compute_meso_rho_atom.h ..
   cp -p compute_meso_t_atom.h ..
@@ -45,6 +47,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_rhosum.cpp
   rm -f ../pair_sph_taitwater.cpp
   rm -f ../pair_sph_taitwater_morris.cpp
+  rm -f ../sph_kernel_quintic.cpp
   rm -f ../compute_meso_e_atom.cpp
   rm -f ../compute_meso_rho_atom.cpp
   rm -f ../compute_meso_t_atom.cpp
@@ -61,6 +64,7 @@ elif (test $1 = 0) then
   rm -f ../pair_sph_rhosum.h
   rm -f ../pair_sph_taitwater.h
   rm -f ../pair_sph_taitwater_morris.h
+  rm -f ../sph_kernel_quintic.h
   rm -f ../compute_meso_e_atom.h
   rm -f ../compute_meso_rho_atom.h
   rm -f ../compute_meso_t_atom.h

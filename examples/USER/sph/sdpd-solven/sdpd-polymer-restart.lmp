@@ -1,0 +1,75 @@
+echo               both
+variable           ndim string  2d
+dimension          ${ndim}
+units              si
+atom_style         hybrid  bond meso
+communicate        single vel yes
+# create simulation box
+
+
+include            ${ndim}-model.lmp
+
+read_restart      kana.restart.10000
+
+special_bonds   lj 1 1 1
+bond_style fene
+bond_coeff 1 ${H} ${r0}  0 0
+
+
+mass               1 ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+
+# use Tait's EOS in combination with Morris' laminar viscosity.
+# We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
+# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
+pair_style         hybrid/overlay sph/rhosum 1 sdpd
+variable           sdpd_temp index 1e9
+pair_coeff         * * sph/rhosum   ${h}
+pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp}
+
+compute            rho_peratom all meso_rho/atom
+compute            e_peratom all meso_e/atom
+compute            ke_peratom all ke/atom
+compute            esph all reduce sum c_e_peratom
+compute            ke all ke
+compute            sdpd_kin all temp
+variable           etot equal c_ke+c_esph
+
+# do full time integration for shear driver and fluid, but keep walls stationary
+fix                integrate_fix_full all meso
+
+variable bodyfx atom mass*${gx}*((y>${Ly}/2.0)-(y<${Ly}/2.0))
+fix reverce_periodic all addforce v_bodyfx 0.0 0.0           
+
+# "profile" corrected temperature
+#compute         pTemp all temp/profile 1 1 0 y 5
+
+# average velocity
+compute vxav all reduce ave vx
+variable  vx_cm atom vx-c_vxav
+fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
+y center 0.01 v_vx_cm file vx.av ave running units reduced
+
+include            stress.lmp
+dump               dump_id all custom ${Nfreq} dump*.dat id type x y z vx vy vz c_rho_peratom
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+
+thermo_style       custom step c_sdpd_kin
+thermo_modify      norm no
+thermo             10
+dump imgDump all image ${Nfreq} image.*.jpg type type atom no bond atom 5e-6 adiam 1e-5 view 60 60 zoom 1.3  box yes 0.01
+dump_modify        imgDump pad 9
+
+
+neighbor           ${dx} bin
+include            settimestep.lmp
+timestep           ${dt}
+
+restart 10000 kana.restart
+run     1000000
+# run   1000000 every 1000 "velocity all zero linear" & 
+# "velocity all zero angular"
+
