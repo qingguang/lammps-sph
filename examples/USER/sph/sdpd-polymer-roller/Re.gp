@@ -9,7 +9,7 @@ sdpd_mu=sdpd_eta/sdpd_rho
 sdpd_mass=dx**dim*sdpd_rho
 
 kb=1.3806503e-23
-T=1
+T=1e9
 vt=(3*kb*T/sdpd_mass)**0.5
 
 

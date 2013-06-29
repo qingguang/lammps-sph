@@ -1,5 +1,5 @@
 echo               both
-variable           ndim string  3d
+log                ${dname}/log.lammps
 dimension          ${ndim}
 units              si
 atom_style         meso
@@ -36,7 +36,7 @@ set                group all meso_rho ${sdpd_rho}
 # We set rho_0 = 1000 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
 # The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
 pair_style         hybrid/overlay sph/rhosum 1 sdpd
-variable           sdpd_temp index 1e9
+variable           sdpd_temp index 1e7
 pair_coeff         * * sph/rhosum   ${h}
 pair_coeff         * *    sdpd ${sdpd_rho} ${sdpd_c} ${sdpd_eta} ${h}  ${sdpd_temp}
 
@@ -56,22 +56,24 @@ compute         pTemp all temp/profile 1 1 0 y 5
 compute vxav all reduce ave vx
 variable  vx_cm atom vx-c_vxav
 fix av_vx all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y center 0.01 v_vx_cm file vx.av ave running units reduced
+y center 0.01 v_vx_cm file ${dname}/vx.av ave running units reduced
 
 # order of components xx, yy, zz, xy, xz, yz.
 compute stress all stress/atom virial
 #variable stress_pressure atom (c_stress[4]-c_pTemp[4]/count(all))*${sdpd_rho}
 variable stress_pressure atom c_stress[4]
 fix av_xy_stress all ave/spatial 1 ${Nfreq} ${Nfreq} &
-y lower 0.01 v_stress_pressure file sxy.av units reduced ave running
+y lower 0.01 v_stress_pressure file ${dname}/sxy.av units reduced ave running
 
-dump               dump_id all custom 1000 dump*.dat id type x y z vx vy vy c_rho_peratom
+include ${ndim}-image.lmp
+
+dump               dump_id all custom 1000 ${dname}/dump*.dat id type x y z vx vy vy c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
+dump_modify        dump_id pad 9
 thermo_style       custom step c_sdpd_kin
 thermo_modify      norm no
-thermo             10
+thermo             1000
 
 #variable           vkin equal c_sdpd_kin
 #fix extra all print 10 "${vkin}" file "kin.dat.dt"
@@ -83,4 +85,4 @@ include            settimestep.lmp
 timestep           ${dt}
 communicate        single vel yes
 
-run                100
+run                100000000 every 1000 "velocity all zero linear" 

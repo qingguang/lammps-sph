@@ -1,2 +1,3 @@
 variable           sdpd_mass equal ${dx}*${dx}*${dx}*${sdpd_rho}
 variable           Lz  equal ${Ly}/50*5
+variable           Nfre    equal    1000

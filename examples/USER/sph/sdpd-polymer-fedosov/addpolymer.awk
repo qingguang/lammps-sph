@@ -86,7 +86,7 @@ inatoms{
   # change image field
   $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
   # add molecule ID
- # $6=$6 " 0"
+  # $6=$6 " 0"
   id=$1
   if (isbond(id) || isbond(id-1) ) {
      $2=polymertype
@@ -103,8 +103,8 @@ inatoms{
 END {
   printf("\nBonds\n\n")
   ibond = 0
-ipoly=0
-printf("") > "poly.id"
+  ipoly=0
+  printf("") > "poly.id"
   for (q=1; q<iatom; q++) {
     if (isbond(q)) {
       ibond++
@@ -112,14 +112,14 @@ printf("") > "poly.id"
       jp = q+1
       bondtype=1
       print ibond, bondtype, ip, jp
-if (ip != prev) {
-if (prev>0) {
-print prev, ipoly >> "poly.id"
-}
-     ipoly++
+      if (ip != prev) {
+	  if (prev>0) {
+	      print prev, ipoly >> "poly.id"
+	  }
+	  ipoly++
       }
       print ip, ipoly >> "poly.id"
       prev=jp    
-}
+    }
   }
 }

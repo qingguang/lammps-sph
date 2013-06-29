@@ -42,7 +42,7 @@ compute         pTemp all temp/profile 1 1 0 y 10
 include   velocity.lmp
 include            stress.lmp
 
-dump               dump_id all custom 100 ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
+dump               dump_id all custom 1000 ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
@@ -51,7 +51,7 @@ thermo_style       custom step c_sdpd_kin c_pTemp
 thermo_modify      norm no
 thermo             100
 
-#include            ${ndim}-image.lmp
+include            ${ndim}-image.lmp
 
 variable           eps equal 0.25*${dx}
 neighbor           ${eps} bin
@@ -82,6 +82,6 @@ fix reverce_periodic all addforce v_bodyfx 0.0 0.0
 #fix             pamsd all print 100 "${amsd_t} ${amsd_x}" file ${dname}/amsd.dat screen yes
 
 # add dcd file
-dump               dump_dcd all dcd 1000 poly3d.dcd
+dump               dump_dcd all dcd 10000 poly3d.dcd
 
-run   1000000 every 1000 "velocity all zero linear"
+run   100000000 every 1000 "velocity all zero linear"
