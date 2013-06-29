@@ -55,4 +55,4 @@ include            settimestep.lmp
 timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
-run   100000
+run   10000

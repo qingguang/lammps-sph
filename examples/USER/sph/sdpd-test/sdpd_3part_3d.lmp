@@ -1,5 +1,5 @@
 echo               both
-dimension          2
+dimension          3
 units              si
 atom_modify map array sort 0.0 0.0
 atom_style         meso
@@ -14,26 +14,31 @@ variable          xcenter equal 0.5*${Lx}
 # smothing length
 variable          h equal 6.5e-5
 
-region             box block 0.0000e-3 ${Lx} 0.0000e-3 ${Lx} -1.0e-6 1.0e-6 units box
+region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
 create_box         1 box
 mass               1 1.7e-7
 
 # create atom with id=1
-create_atoms 1 single ${xcenter} ${xcenter} 0.0 units box
+create_atoms 1 single ${xcenter} ${xcenter} ${xcenter} units box
 group        fst id == 1
 velocity     fst set 0.0 0.0 0.0 units box
 
 # create atom with id=2
 variable          x2pos equal ${xcenter}+0.5*${h}
-create_atoms 1 single ${x2pos} ${xcenter} 0.0 units box
+create_atoms 1 single ${x2pos} ${xcenter} ${xcenter} units box
 group        scd id == 2
 velocity     scd set 1.0 0.0 0.0 units box
+
+create_atoms 1 single ${xcenter} ${x2pos} ${xcenter} units box
+group        scd id == 3
+velocity     scd set 1.0 0.0 0.0 units box
+
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 
 variable           rho0 equal 50.0
-variable              c equal 1.0
-variable           eta  equal 0.0
+variable              c equal 0.0
+variable           eta  equal 1.0
 variable           temp equal 0.0
 variable           rho_background equal 0.0
 pair_coeff         * * sdpd     ${rho0} ${c} ${eta} ${h} ${temp} ${rho_background}

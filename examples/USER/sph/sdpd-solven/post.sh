@@ -1,7 +1,7 @@
 #! /bin/bash
 
 Lx=1.2
-for dname in $(ls -d c*back*); do
+for dname in $(ls -d c*); do
     bash ../script/lammps2punto.sh ${dname}/dump* > ${dname}/punto.dat
     rdf --nskipsnap 1 -d 3 -m 0.5 -x ${Lx} -y ${Lx} -z ${Lx} ${dname}/punto.dat  > ${dname}/rdf.dat
 

@@ -15,7 +15,7 @@ Lx: 1.000e-3$
 h: 6.5e-5$
 cutoff: h$
 
-load ("lucy-kernel.mac");
+load ("quintic-kernel.mac");
 /* load("quadric-kernel.mac");*/
 
 r: makelist([], i, 1, npart);
@@ -27,7 +27,7 @@ m: makelist(1.7e-7, i, 1, npart);
 nu: makelist(0.0, i, 1, npart);
 
 /* sound speed */
-c: 0.1$
+c: 1.0$
 
 r[1]: [Lx/2.0, Lx/2.0]$
 v[1]: [0.0, 0.0]$
@@ -38,10 +38,11 @@ v[2]: [1.0, 0.0]$
 
 /* equation of state */
 rho_0: 50.0;
-p(rho):= c^2*rho_0/7*( (rho/rho_0)^7 - 1 )$
+/* p(rho):= c^2*rho_0/7*( (rho/rho_0)^7 - 1 )$ */
+p(rho):= c*rho$
 
 rho: makelist(
-  sum(m[j]*w(r[i]-r[j]), j, 1, npart), i, 1, npart
+  m[i]*sum(w(r[i]-r[j]), j, 1, npart), i, 1, npart
   );
 
 /* conservative force */

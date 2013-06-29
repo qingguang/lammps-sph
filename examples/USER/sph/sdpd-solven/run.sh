@@ -10,12 +10,12 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=4
 ndim=3d
 Nbeads=1
 Nsolvent=0
-sdpd_c=20000
-sdpd_eta=5
+sdpd_c=6000.0
+sdpd_eta=48.9
 sdpd_background=$1
 dname=c${sdpd_c}-eta${sdpd_eta}-sdpd_background${sdpd_background}
 

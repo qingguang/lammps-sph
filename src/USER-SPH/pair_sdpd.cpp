@@ -194,7 +194,6 @@ void PairSDPD::compute(int eflag, int vflag) {
         wiener.get_wiener_Espanol(sqrtdt);
         double fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
         fvisc *= imass * jmass * wfd;
-
         //define random force
         for (int di=0;di<ndim;di++) {
            random_force[di]=0;          
@@ -217,7 +216,7 @@ void PairSDPD::compute(int eflag, int vflag) {
             _dUi[di] = 0.0;
           }
         }
-	fpair = - (imass*imass*fi + jmass*jmass*fj) * wfd;
+	fpair = - (imass*imass*fi/(rho[i]*rho[i]) + jmass*jmass*fj/(rho[j]*rho[j])) * wfd;
         /// TODO: energy is wrong
         deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
 	//modify force pair
@@ -310,7 +309,7 @@ void PairSDPD::coeff(int narg, char **arg) {
   }
 
   /// TODO: I removed rho0_one for B_one
-  double B_one = soundspeed_one * soundspeed_one / 7.0;
+  double B_one = soundspeed_one * soundspeed_one * rho0_one;
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
