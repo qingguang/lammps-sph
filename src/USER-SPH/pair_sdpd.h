@@ -42,6 +42,7 @@ class PairSDPD : public Pair {
   // SDPD temperature
   double **sdpd_temp;
   double *sdpd_background;
+  double *sdpd_gamma;
   int first;
 
   void allocate();
@@ -54,6 +55,9 @@ class PairSDPD : public Pair {
 
   Wiener wiener;
   };
+
+ double sdpd_equation_of_state(double rho,   double rho0, double c,
+			       double gamma, double rbackground);
 
 }
 

@@ -8,14 +8,14 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-read_data           poly3d.txt
+read_data          ${dname}/poly3d.txt
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd/rhosum   ${h}
-pair_coeff         * *    sdpd ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp} ${sdpd_background}
+pair_coeff         * * sdpd     ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${h} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
 
 compute            rho_peratom all meso_rho/atom
 compute            e_peratom all meso_e/atom

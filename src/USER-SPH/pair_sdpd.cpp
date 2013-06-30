@@ -62,7 +62,7 @@ PairSDPD::~PairSDPD() {
     memory->destroy(rho0);
     memory->destroy(soundspeed);
     memory->destroy(sdpd_background);
-    memory->destroy(B);
+    memory->destroy(sdpd_gamma);
     memory->destroy(viscosity);
   }
 }
@@ -140,8 +140,7 @@ void PairSDPD::compute(int eflag, int vflag) {
     imass = mass[itype];
 
     // compute pressure of atom i with Tait EOS
-    tmp = rho[i] / rho0[itype];
-    fi = B[itype] * (tmp  - sdpd_background[itype] );
+    fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -165,9 +164,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
-        // compute pressure  of atom j with Tait EOS
-        tmp = rho[j] / rho0[jtype];
-        fj = B[jtype] * (tmp  - sdpd_background[jtype] );
+	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -268,7 +265,7 @@ void PairSDPD::allocate() {
   memory->create(rho0, n + 1, "pair:rho0");
   memory->create(soundspeed, n + 1, "pair:soundspeed");
   memory->create(sdpd_background, n + 1, "pair:sdpd_background");
-  memory->create(B, n + 1, "pair:B");
+  memory->create(sdpd_gamma, n + 1, "pair:sdpd_gamma");
   memory->create(cut, n + 1, n + 1, "pair:cut");
   memory->create(viscosity, n + 1, n + 1, "pair:viscosity");
   memory->create(sdpd_temp, n + 1, n + 1, "pair:sdpd_temp");
@@ -287,7 +284,7 @@ void PairSDPD::settings(int narg, char **arg) {
    set coeffs for one or more type pairs
    ------------------------------------------------------------------------- */
 void PairSDPD::coeff(int narg, char **arg) {
-  if ( (narg != 7) && (narg != 8) )
+  if ( (narg != 8) && (narg != 9) )
     error->all(FLERR,
                "Incorrect args for pair_style sdpd coefficients: 6 or 7 parameters are required");
   if (!allocated)
@@ -301,21 +298,20 @@ void PairSDPD::coeff(int narg, char **arg) {
   double viscosity_one = force->numeric(arg[4]);
   double cut_one = force->numeric(arg[5]);
   double sdpd_temp_one = force->numeric(arg[6]);
+  double sdpd_gamma_one = force->numeric(arg[7]);
   double sdpd_background_one;
-  if (narg>7) {
-    sdpd_background_one = force->numeric(arg[7]);
+  if (narg>8) {
+    sdpd_background_one = force->numeric(arg[8]);
   } else {
     sdpd_background_one = 1.0;
   }
 
-  /// TODO: I removed rho0_one for B_one
-  double B_one = soundspeed_one * soundspeed_one * rho0_one;
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
     rho0[i] = rho0_one;
     soundspeed[i] = soundspeed_one;
     sdpd_background[i] = sdpd_background_one;
-    B[i] = B_one;
+    sdpd_gamma[i] = sdpd_gamma_one;
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       viscosity[i][j] = viscosity_one;
       sdpd_temp[i][j] = sdpd_temp_one;
@@ -445,4 +441,11 @@ void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
       }
     }
   }
+}
+
+
+double LAMMPS_NS::sdpd_equation_of_state(double rho, double rho0, double c, 
+			      double gamma, double rbackground) {
+    return pow(c,2)*pow(rho,gamma)*pow(rho0,1-gamma)*pow(gamma,-1)
+      -pow(c,2)*pow(rbackground,gamma)*rho0*pow(gamma,-1);
 }
