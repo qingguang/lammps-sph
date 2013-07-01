@@ -1,0 +1,68 @@
+/* A maxima file for SPH/SDPD */
+load ("vector");
+load ("eigen");
+
+/* number of dimensions */
+ndim: 3;
+
+/* number of particles */
+npart: 3;
+
+/* domain size */
+Lx: 1.000e-3$
+
+/* smoothing length */
+h: 6.5e-5$
+cutoff: h$
+
+load ("quintic-kernel.mac");
+/* load("quadric-kernel.mac");*/
+
+r: makelist([], i, 1, npart);
+v: makelist([], i, 1, npart);
+
+/* mass */
+m: makelist(1.7e-7, i, 1, npart);
+/* viscosity */
+nu: makelist(1, i, 1, npart);
+
+/* sound speed */
+c: 0.1$
+
+r[1]: [Lx/2.0, Lx/2.0, Lx/2.0]$
+v[1]: [0.0, 0.0, 0.0]$
+
+r[2]: [Lx/2.0+0.5*h, Lx/2.0, Lx/2.0]$
+v[2]: [1.0, 0.0, 0.0]$
+
+r[3]: [Lx/2.0, Lx/2.0+0.5*h, Lx/2.0]$
+v[3]: [1.0, 0.0, 0.0]$
+
+
+/* equation of state */
+rho_0: 1.0;
+/* p(rho):= c^2*rho_0/7*( (rho/rho_0)^7 - 1 )$ */
+p(rho):= c^2*rho$
+
+rho: makelist(
+  m[i]*sum(w(r[i]-r[j]), j, 1, npart), i, 1, npart
+  );
+
+/* conservative force */
+Fc(i, j):= block([pi, pj, rabs],
+  pi: p(rho[i]),
+  pj: p(rho[j]),
+  rabs: vabs(r[i] - r[j]),
+  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdx(rabs)) * unitvector(r[i] - r[j])$
+
+/* dissipative force */
+Fd(i, j):= block([rabs],
+  rabs: vabs(r[i] - r[j]),
+  m[j]*m[i] * (nu[i]+nu[j]) / (rho[i]*rho[j]) * dwdx(rabs)/rabs * (v[i]-v[j]))$
+
+Fpair(i, j):= Fc(i, j) + Fd(i, j);
+
+F(i):= sum( if i=j then 0 else Fpair(i, j), j, 1, npart);
+
+float(rho);
+float(F(1));
