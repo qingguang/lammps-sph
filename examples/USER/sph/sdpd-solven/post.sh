@@ -3,6 +3,7 @@
 Lx=1.2
 for dname in $(ls -d *eta*); do
     bash ../script/lammps2punto.sh ${dname}/dump* > ${dname}/punto.dat
+    awk -v maxx=${Lx} -f ~/google-svn/awk/polymer/tophys3d.awk ${dname}/punto.dat > ${dname}/punto.mdt
     rdf --nskipsnap 1 -d 3 -m 0.5 -x ${Lx} -y ${Lx} -z ${Lx} ${dname}/punto.dat  > ${dname}/rdf.dat
 
     for id in $(seq 1 500); do

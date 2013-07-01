@@ -14,7 +14,7 @@ nproc=1
 ndim=3d
 sdpd_eta=25.0
 sdpd_background=0.00
-sdpd_c=1500
+sdpd_c=$1
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"

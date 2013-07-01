@@ -4,7 +4,7 @@ ndim=2
 Lx=1.2
 for dname in $(ls -d *eta*); do
     bash ../script/lammps2punto.sh ${dname}/dump* > ${dname}/punto.dat
-    rdf --nskipsnap 12 -d ${ndim} -m 0.5 -x ${Lx} -y ${Lx} -z ${Lx} ${dname}/punto.dat  > ${dname}/rdf.dat
+    rdf --nskipsnap 30 -d ${ndim} -m 0.5 -x ${Lx} -y ${Lx} -z ${Lx} ${dname}/punto.dat  > ${dname}/rdf.dat
 
     for id in $(seq 1 100); do
 	printf "id: %i\n" ${id} > "/dev/stderr"
