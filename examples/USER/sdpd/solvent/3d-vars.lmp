@@ -1,0 +1,22 @@
+variable           dim equal 3
+variable           kb  equal 1.3806503e-23
+
+variable           dx   equal 0.08
+variable           Ly  equal 15*${dx}
+variable           Lx  equal 15*${dx}
+variable           Lz  equal 15*${dx}
+
+variable           sdpd_rho equal  1.0
+variable           sdpd_rho0 equal 1.0
+variable           sdpd_gamma equal 7.0
+variable           dt_factor equal 1.0
+
+#variable           sdpd_c equal    300.0
+#variable           sdpd_eta equal  20.0
+
+#variable           sdpd_background equal 0.9
+variable           sdpd_temp equal 1.0/${kb}
+variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
+variable           h equal 3.0*${dx}
+variable           Nfreq equal 1000
+variable           sdpd_mass equal ${sdpd_rho}*${dx}^${dim}
