@@ -224,7 +224,6 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	}
    
-	drho[i] += jmass * delVdotDelR * wfd;
         // change in thermal energy
         de[i] += deltaE;
 	if (newton_pair || j < nlocal) {
@@ -234,7 +233,6 @@ void PairSDPD::compute(int eflag, int vflag) {
 	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
 	  }
 	  de[j] += deltaE;
-          drho[j] += imass * delVdotDelR * wfd;
         }
         //modify until this line
         if (evflag)

@@ -1,4 +1,4 @@
-f = "/scratch/work/google-svn/latex/diff-paper/gnuplot/plotdata/rdf-data"
+f = system("ls ${HOME}/google-svn/latex/diff-paper/gnuplot/plotdata/rdf-data")
 bgline="0.00 0.22 0.56"
 cline="1.00e+01 2.78e+01"
 

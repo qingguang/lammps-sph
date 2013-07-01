@@ -13,3 +13,4 @@ else &
 "variable dt equal ${dt_c}"
 
 print "(settimestep) dt_c dt_eta dt ${dt_c} ${dt_eta} ${dt}"
+variable dt equal ${dt_factor}*${dt}
