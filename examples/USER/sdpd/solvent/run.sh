@@ -2,7 +2,7 @@
 
 set -e
 set -u
-configfile=$HOME/lammps-sph.sh
+configfile=$HOME/lammps-sdpd.sh
 if [ -f "${configfile}" ]; then
     source "${configfile}"
 else
@@ -11,7 +11,7 @@ else
 fi
 
 nproc=1
-ndim=3d
+ndim=3
 sdpd_eta=25.0
 sdpd_background=0.00
 sdpd_c=$1
