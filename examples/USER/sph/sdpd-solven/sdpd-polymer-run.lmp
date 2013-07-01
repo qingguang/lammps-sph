@@ -8,7 +8,11 @@ communicate        single vel yes
 
 #3D box
 include            ${ndim}-vars.lmp
-read_data          ${dname}/poly3d.txt
+# create fluid particles
+include            ${ndim}-lattice.lmp
+create_atoms       1 region box
+mass               *  ${sdpd_mass}
+#read_data          ${dname}/poly3d.txt
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
@@ -30,11 +34,6 @@ fix                integrate_fix_full all meso
 # "profile" corrected temperature
 compute         pTemp all temp/profile 1 1 0 y 10
 variable        nTemp equal c_pTemp*${kb}
-
-# average velocity
-
-include   velocity.lmp
-include            stress.lmp
 
 dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
 dump_modify        dump_id first yes
