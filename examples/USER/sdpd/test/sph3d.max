@@ -53,12 +53,12 @@ Fc(i, j):= block([pi, pj, rabs],
   pi: p(rho[i]),
   pj: p(rho[j]),
   rabs: vabs(r[i] - r[j]),
-  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdx(rabs)) * unitvector(r[i] - r[j])$
+  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdr(rabs)) * unitvector(r[i] - r[j])$
 
 /* dissipative force */
 Fd(i, j):= block([rabs],
   rabs: vabs(r[i] - r[j]),
-  m[j]*m[i] * (nu[i]+nu[j]) / (rho[i]*rho[j]) * dwdx(rabs)/rabs * (v[i]-v[j]))$
+  m[j]*m[i] * (nu[i]+nu[j]) / (rho[i]*rho[j]) * dwdr(rabs)/rabs * (v[i]-v[j]))$
 
 Fpair(i, j):= Fc(i, j) + Fd(i, j);
 
