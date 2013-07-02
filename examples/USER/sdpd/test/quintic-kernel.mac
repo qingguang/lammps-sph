@@ -1,33 +1,31 @@
-load ("vector");
-load ("eigen");
 load("pw.mac");
 
-/* ndim: 2; */
-/* cutoff: 1e-5; */
-
-norm2D: 63/(478*%pi);
-norm3D: 9/(40*%pi);
-norm[2]: norm2D;
-norm[3]: norm3D;
+norm[2]: 63/(478*%pi);
+norm[3]: 9/(40*%pi);
 
 vabs(R):= sqrt(R.R);
+
 fsim: [
 (3 - s)^5 - 6*(2 - s)^5 + 15*(1 - s)^5,
 (3 - s)^5 - 6*(2 - s)^5,
 (3 - s)^5
 ];
-
 dfsim: diff(fsim, s);
 
 wvect(s):=''(pw([-1,fsim[1],1,fsim[2],2,fsim[3], 3, 0, inf], s));
-dwall(s):=''(pw([-1,dfsim[1],1,dfsim[2],2,dfsim[3], 3, 0, inf], s));
+dwvect(s):=''(pw([-1,dfsim[1],1,dfsim[2],2,dfsim[3], 3, 0, inf], s));
 
-w(x):= norm[ndim]*wvect(3*vabs(x)/cutoff)/cutoff^ndim;
-dwdx(x):= 3*norm[ndim]/cutoff*dwall(3*vabs(x)/cutoff)/cutoff^ndim$
+w(R):= norm[ndim]*wvect(3*vabs(R)/cutoff)/cutoff^ndim;
+dwdr(R):= 3*norm[ndim]/cutoff*dwvect(3*vabs(R)/cutoff)/cutoff^ndim;
 
-/* infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x); */
-/* plot2d(w(x), [x, 0, cutoff]); */
-/* plot2d(infun(x), [x, 0, cutoff]); */
-/* quad_qags(infun(x), x, 0, cutoff); */
+test_kernel(ndim, cutoff):= block([cutoff, infun],
+  infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x),
+  quad_qags(infun(x), x, 0, cutoff)
+  );
 
-
+cutoff: 1e-5;
+ndim: 2;
+infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x);
+plot2d(w(x), [x, 0, cutoff]);
+plot2d(infun(x), [x, 0, cutoff]);
+quad_qags(infun(x), x, 0, cutoff);
