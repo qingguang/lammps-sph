@@ -64,5 +64,13 @@ Fpair(i, j):= Fc(i, j) + Fd(i, j);
 
 F(i):= sum( if i=j then 0 else Fpair(i, j), j, 1, npart);
 
+A: makelist(2.0, i, 1, npart);
+dAc(i, j):= block([rabs],
+  rabs: vabs(r[i]-r[j]),
+  m[j]*A[j]/rho[j] * dwdr(rabs));
+
+dA(i):= sum(dAc(i, j), j, 1, npart);
+
 float(rho);
 float(F(1));
+float(dA(1));
