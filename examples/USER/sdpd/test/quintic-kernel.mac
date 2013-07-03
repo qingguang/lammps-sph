@@ -23,9 +23,9 @@ test_kernel(ndim, cutoff):= block([cutoff, infun],
   quad_qags(infun(x), x, 0, cutoff)
   );
 
-cutoff: 1e-5;
-ndim: 2;
-infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x);
-plot2d(w(x), [x, 0, cutoff]);
-plot2d(infun(x), [x, 0, cutoff]);
-quad_qags(infun(x), x, 0, cutoff);
+/* cutoff: 1e-5; */
+/* ndim: 2; */
+/* infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x); */
+/* plot2d(w(x), [x, 0, cutoff]); */
+/* plot2d(infun(x), [x, 0, cutoff]); */
+/* quad_qags(infun(x), x, 0, cutoff); */
