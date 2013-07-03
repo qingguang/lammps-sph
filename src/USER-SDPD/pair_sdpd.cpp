@@ -109,7 +109,7 @@ void PairSDPD::compute(int eflag, int vflag) {
           if (!setflag[i][i] || !setflag[j][j]) {
             if (comm->me == 0) {
               printf(
-		     "SPH particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
+		     "SDPD particle types %d and %d interact with cutoff=%g, but not all of their single particle properties are set.\n",
 		     i, j, sqrt(cutsq[i][j]));
             }
           }
@@ -139,7 +139,6 @@ void PairSDPD::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
-    // compute pressure of atom i with Tait EOS
     fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
