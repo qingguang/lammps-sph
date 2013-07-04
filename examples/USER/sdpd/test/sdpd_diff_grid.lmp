@@ -8,35 +8,21 @@ communicate        single vel yes
 # create simulation box
 #2D box
 # domain size
-variable          Lx equal 1.000e-3
-# the center of the domain
-variable          xcenter equal 0.5*${Lx}
+
 # smothing length
-variable          h equal 6.5e-5
-
-region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
-create_box         1 box
-mass               1 1.7e-7
-
-# create atom with id=1
-create_atoms 1 single ${xcenter} ${xcenter} ${xcenter} units box
-group        fst id == 1
-velocity     fst set 0.0 0.0 0.0 units box
-
-# create atom with id=2
-variable          x2pos equal ${xcenter}+0.5*${h}
-create_atoms 1 single ${x2pos} ${xcenter} ${xcenter} units box
-group        scd id == 2
-velocity     scd set 1.0 0.0 0.0 units box
-
-create_atoms 1 single ${xcenter} ${x2pos} ${xcenter} units box
-group        scd id == 3
-velocity     scd set 1.0 0.0 0.0 units box
-
-
-pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+variable          h equal 1.0
+variable          dx equal ${h}/3.0
+variable          Lx equal 10*${dx}
 
 variable           rho0 equal 1.0
+lattice            sc ${dx} origin 0.5 0.5 0.5
+region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
+create_box         1 box
+create_atoms       1 region box
+variable           sdpd_mass  equal ${rho0}*${dx}^3
+mass               1 ${sdpd_mass}
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 variable              c equal 0.1
 variable           eta  equal 1.0
 variable           temp equal 0.0
@@ -56,14 +42,17 @@ variable           force_sdpd_fx equal fx[1]
 variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
 
-variable           vv            atom   sin(x)
+variable           pi            equal 3.1415927
+#variable           vv            atom   
+variable           vv            atom   sin(2*${pi}*x/${Lx})
 
 
 compute            diff_peratom all meso_diff/atom ${h} v_vv
-dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_peratom c_diff_peratom
-run                0
-
+dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom c_diff_peratom
 variable           dvv           equal c_diff_peratom[1]
+
+run                0
 
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
 print              "dA: ${dvv}"
+
