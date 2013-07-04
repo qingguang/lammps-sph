@@ -143,42 +143,42 @@ void ComputeMesoDiffAtom::compute_peratom()
     diffVector[i] = mass[itype] * wfd * varVector[i] / rho[i];
   } // ii loop
 
-      // add density at each atom via kernel function overlap
-      for (int ii = 0; ii < inum; ii++) {
-        int i = ilist[ii];
-        double xtmp = x[i][0];
-        double ytmp = x[i][1];
-        double ztmp = x[i][2];
-        int itype = type[i];
-        int* jlist = firstneigh[i];
-        int jnum = numneigh[i];
+  // add density at each atom via kernel function overlap
+  for (int ii = 0; ii < inum; ii++) {
+    int i = ilist[ii];
+    double xtmp = x[i][0];
+    double ytmp = x[i][1];
+    double ztmp = x[i][2];
+    int itype = type[i];
+    int* jlist = firstneigh[i];
+    int jnum = numneigh[i];
 
-        for (int jj = 0; jj < jnum; jj++) {
-          int j = jlist[jj];
-          j &= NEIGHMASK;
+    for (int jj = 0; jj < jnum; jj++) {
+      int j = jlist[jj];
+      j &= NEIGHMASK;
 
-          int jtype = type[j];
-          double delx = xtmp - x[j][0];
-          double dely = ytmp - x[j][1];
-          double delz = ztmp - x[j][2];
-          double rsq = delx * delx + dely * dely + delz * delz;
+      int jtype = type[j];
+      double delx = xtmp - x[j][0];
+      double dely = ytmp - x[j][1];
+      double delz = ztmp - x[j][2];
+      double rsq = delx * delx + dely * dely + delz * delz;
 
-          if (rsq < cutsq) {
-            double h = cutoff;
-            double ih = 1.0 / h;
-	    double wfd;
-            if (domain->dimension == 3) {
-              double r = sqrt(rsq) * ih;
-              wfd = sph_dw_quintic3d(r) * ih * ih * ih * ih;
-            } else {
-              double r = sqrt(rsq) * ih;
-              wfd = sph_dw_quintic2d(r) * ih * ih * ih;
-            }
-	    int jtype = type[j];
-	    diffVector[i] += mass[jtype] * wfd * varVector[j] / rho[j];
-          }
-        } // jj loop
-      } // ii loop
+      if (rsq < cutsq) {
+	double h = cutoff;
+	double ih = 1.0 / h;
+	double wfd;
+	if (domain->dimension == 3) {
+	  double r = sqrt(rsq) * ih;
+	  wfd = sph_dw_quintic3d(r) * ih * ih * ih * ih;
+	} else {
+	  double r = sqrt(rsq) * ih;
+	  wfd = sph_dw_quintic2d(r) * ih * ih * ih;
+	}
+	int jtype = type[j];
+	diffVector[i] -= mass[jtype] * wfd * varVector[j] / rho[j];
+      }
+    } // jj loop
+  } // ii loop
 }
 
 /* ----------------------------------------------------------------------
