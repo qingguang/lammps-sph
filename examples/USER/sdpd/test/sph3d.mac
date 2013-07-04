@@ -9,7 +9,27 @@ ndim: 3;
 npart: 3;
 
 /* domain size */
-Lx: 1.000e-3$
+[Lx, Ly, Lz]: 1.000e-3$
+
+/* length of the vector */
+vabs(R):= sqrt(R.R);
+dR(A, B):= block([del, dmin, d],
+  dmin: +inf,
+  for del in map(lambda([idx], idx*[Lx, Ly, Lz]), listify(cartesian_product( {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}))) do (
+    dV: B - (A+del),
+    d: vabs(dV),
+    if d<dmin then (dmin: d, dr: dV)
+    ),
+  dr
+  );
+
+/* 
+[Lx, Ly, Lz]: [1, 2, 3];
+print(dR( [0.5, 0.5, 0.5], [0.6, 0.6, 0.6]));
+print(dR( [0.5, 0.5, 0.1], [0.6, 0.6, 2.9]));
+print(dR( [0.1, 0.1, 0.1], [0.9, 1.9, 2.95]));
+*/
+  
 
 /* smoothing length */
 h: 6.5e-5$
@@ -38,7 +58,6 @@ v[2]: [1.0, 0.0, 0.0]$
 r[3]: [Lx/2.0, Lx/2.0+0.5*h, Lx/2.0]$
 v[3]: [1.0, 0.0, 0.0]$
 
-
 /* equation of state */
 rho_0: 1.0;
 /* p(rho):= c^2*rho_0/7*( (rho/rho_0)^7 - 1 )$ */
@@ -52,12 +71,12 @@ rho: makelist(
 Fc(i, j):= block([pi, pj, rabs],
   pi: p(rho[i]),
   pj: p(rho[j]),
-  rabs: vabs(r[i] - r[j]),
-  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdr(rabs)) * unitvector(r[i] - r[j])$
+  rabs: vabs(dR(r[i], r[j])),
+  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdr(rabs)) * unitvector(dR(r[i], r[j]))$
 
 /* dissipative force */
 Fd(i, j):= block([rabs],
-  rabs: vabs(r[i] - r[j]),
+  rabs: vabs(dR(r[i], r[j])),
   m[j]*m[i] * (nu[i]+nu[j]) / (rho[i]*rho[j]) * dwdr(rabs)/rabs * (v[i]-v[j]))$
 
 Fpair(i, j):= Fc(i, j) + Fd(i, j);
@@ -67,7 +86,7 @@ F(i):= sum( if i=j then 0 else Fpair(i, j), j, 1, npart);
 A: makelist(sin(r[i][1]), i, 1, npart);
   
 dAc(i, j):= block([rabs],
-  rabs: vabs(r[i]-r[j]),
+  rabs: vabs(dR(r[i], r[j])),
   -m[j]*A[j]/rho[j] * dwdr(rabs));
 
 dA(i):= sum(dAc(i, j), j, 1, npart);
