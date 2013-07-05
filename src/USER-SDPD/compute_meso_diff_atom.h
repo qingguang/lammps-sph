@@ -31,6 +31,8 @@ class ComputeMesoDiffAtom : public Compute {
   void init();
   void init_list(int, class NeighList *);
   void compute_peratom();
+  int pack_comm(int, int *, double *, int, int *);
+  void unpack_comm(int, int, double *);
   double memory_usage();
 
  private:
@@ -39,7 +41,7 @@ class ComputeMesoDiffAtom : public Compute {
   double cutsq;
   class NeighList *list;
   int    ivariable;
-  double *diffVector;
+  double **diffVector;
   double *varVector;
 };
 

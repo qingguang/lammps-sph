@@ -60,10 +60,10 @@ variable           vv            atom   sin(x)
 
 
 compute            diff_peratom all meso_diff/atom ${h} v_vv
-dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_peratom c_diff_peratom
+variable           dvx           atom c_diff_peratom[1]
+dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_peratom v_dvx
 run                0
 
-variable           dvv           equal c_diff_peratom[1]
-
+variable           dvv           equal v_dvx[1]
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
 print              "dA: ${dvv}"
