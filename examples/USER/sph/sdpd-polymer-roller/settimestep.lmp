@@ -1,12 +1,17 @@
-variable sdpd_mu_p equal ${sdpd_eta_p}/${sdpd_rho_polymer}
-variable sdpd_mu_s equal ${sdpd_eta_s}/${sdpd_rho_solvent}
+# input variables are eta_p, eta_s, sound_speed should be set berfor
+# including this file
+
+variable sdpd_mu_p equal ${eta_p}/${sdpd_rho_polymer}
+variable sdpd_mu_s equal ${eta_s}/${sdpd_rho_solvent}
+
+
 if "${sdpd_mu_p}>${sdpd_mu_s}" then &
 "variable sdpd_mu equal ${sdpd_mu_p}" &
 else &
 "variable sdpd_mu equal ${sdpd_mu_s}"
 
 variable dt_eta equal 1/8.0*${dx}*${dx}/(${sdpd_mu})
-variable dt_c equal 1/4.0*${dx}/${sdpd_c}
+variable dt_c equal 1/4.0*${dx}/${sound_speed}
 #variable dt_fene equal 
 if "${dt_c}>${dt_eta}" then &
 "variable dt equal ${dt_eta}" &
@@ -20,3 +25,7 @@ variable sdpd_mu_s delete
 variable sdpd_mu delete
 variable dt_eta delete
 variable dt_c delete
+
+variable eta_p delete
+variable eta_s delete
+variable sound_speed delete
