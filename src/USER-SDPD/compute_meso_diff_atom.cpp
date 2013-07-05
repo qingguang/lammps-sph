@@ -55,7 +55,8 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
     error->all(FLERR,"meso_diff/atomstyle variable is not atom-style variable");
 
   peratom_flag = 1;
-  size_peratom_cols = 0;
+  size_peratom_cols = 3;
+  comm_forward = 1;
 
   nmax = 0;
   diffVector = NULL;
@@ -65,7 +66,8 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
 
 ComputeMesoDiffAtom::~ComputeMesoDiffAtom()
 {
-  memory->sfree(diffVector);
+  memory->destroy(diffVector);
+  memory->destroy(varVector);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -98,13 +100,6 @@ void ComputeMesoDiffAtom::init_list(int id, NeighList *ptr)
 
 void ComputeMesoDiffAtom::compute_peratom()
 {
-  //int i, j, ii, jj, jnum, itype, jtype;
-  //double xtmp, ytmp, ztmp, delx, dely, delz;
-  //double r, rsq, h, ih, ihsq;
-  //double wfd;
-
-  // neighbor list variables
-  //int *numneigh, **firstneigh;
   double **x = atom->x;
   double *rho = atom->rho;
   int *type = atom->type;
@@ -120,27 +115,23 @@ void ComputeMesoDiffAtom::compute_peratom()
   // grow diffVector array if necessary
 
   if (atom->nlocal > nmax) {
-    memory->sfree(diffVector);
+    memory->destroy(diffVector);
+    memory->destroy(varVector);
     nmax = atom->nmax;
-    diffVector = (double *) memory->smalloc(nmax*sizeof(double),"atom:diffVector");
-    varVector = (double *) memory->smalloc(nmax*sizeof(double),"atom:varVector");
-    vector_atom = diffVector;
+    memory->create(diffVector,nmax,3,"stress/atom:stress");
+    memory->create(varVector,nmax,"stress/atom:stress");
+    array_atom = diffVector;
   }
 
   input->variable->compute_atom(ivariable,igroup,varVector,1,0);
+  comm->forward_comm_compute(this);
 
   for (int ii = 0; ii < inum; ii++) {
     int i = ilist[ii];
     int itype = type[i];
-
-    double h = cutoff;
-    double wfd;
-    if (domain->dimension == 3) {
-      wfd = sph_dw_quintic3d(0.0) / (h * h * h * h);
-    } else {
-      wfd = sph_dw_quintic2d(0.0) / (h * h * h);
-    }
-    diffVector[i] = mass[itype] * wfd * varVector[i] / rho[i];
+    diffVector[i][0] = 0.0;
+    diffVector[i][1] = 0.0;
+    diffVector[i][2] = 0.0;
   } // ii loop
 
   // add density at each atom via kernel function overlap
@@ -175,7 +166,17 @@ void ComputeMesoDiffAtom::compute_peratom()
 	  wfd = sph_dw_quintic2d(r) * ih * ih * ih;
 	}
 	int jtype = type[j];
-	diffVector[i] -= mass[jtype] * wfd * varVector[j] / rho[j];
+	double eij[domain->dimension];
+	eij[0]= delx/sqrt(rsq);
+	eij[1]= dely/sqrt(rsq);
+	if (domain->dimension == 3) {
+	  eij[2]= delz/sqrt(rsq);
+	}
+	diffVector[i][0] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[0];
+	diffVector[i][1] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[1];
+	if (domain->dimension == 3) {
+	  diffVector[i][2] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[2];
+	}
       }
     } // jj loop
   } // ii loop
@@ -187,6 +188,30 @@ void ComputeMesoDiffAtom::compute_peratom()
 
 double ComputeMesoDiffAtom::memory_usage()
 {
-  double bytes = nmax * sizeof(double);
+  double bytes = nmax * 4 * sizeof(double);
   return bytes;
+}
+
+int    ComputeMesoDiffAtom::pack_comm(int n, int *list, double *buf,
+                                  int pbc_flag, int *pbc)
+{
+  int i,j,m;
+
+  m = 0;
+  for (i = 0; i < n; i++) {
+    j = list[i];
+    buf[m++] = varVector[j];
+  }
+  return 1;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void ComputeMesoDiffAtom::unpack_comm(int n, int first, double *buf)
+{
+  int i,m,last;
+
+  m = 0;
+  last = first + n;
+  for (i = first; i < last; i++) varVector[i] = buf[m++];
 }
