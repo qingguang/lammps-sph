@@ -5,15 +5,22 @@ load ("eigen");
 /* number of dimensions */
 ndim: 3;
 
-/* number of particles */
-npart: 3;
+/* smoothing length */
+nx: 5;
+h: 1.0;
+cutoff: h;
+dx: h/3.0;
+Lx: nx*dx;
+Ly: nx*dx;
+Lz: nx*dx;
 
 /* domain size */
-[Lx, Ly, Lz]: 1.000e-3$
+
 
 /* length of the vector */
 vabs(R):= sqrt(R.R);
-dR(A, B):= block([del, dmin, d],
+
+dR(A, B):= block([del, dmin, d, dV],
   dmin: +inf,
   for del in map(lambda([idx], idx*[Lx, Ly, Lz]), listify(cartesian_product( {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}))) do (
     dV: B - (A+del),
@@ -23,40 +30,22 @@ dR(A, B):= block([del, dmin, d],
   dr
   );
 
-/* 
-[Lx, Ly, Lz]: [1, 2, 3];
-print(dR( [0.5, 0.5, 0.5], [0.6, 0.6, 0.6]));
-print(dR( [0.5, 0.5, 0.1], [0.6, 0.6, 2.9]));
-print(dR( [0.1, 0.1, 0.1], [0.9, 1.9, 2.95]));
-*/
-  
+/* number of particles */
+npart: nx^3;
+idx: setify(makelist(0.5*dx + i*dx, i, 0, nx-1))$
+r:   listify(cartesian_product(idx, idx, idx))$
 
-/* smoothing length */
-h: 6.5e-5$
-cutoff: h$
-
+/* velocity */
+v: makelist([0, 0, 0], i, 1, npart)$
 load ("quintic-kernel.mac");
-/* load("quadric-kernel.mac");*/
-
-r: makelist([], i, 1, npart);
-v: makelist([], i, 1, npart);
 
 /* mass */
-m: makelist(1.7e-7, i, 1, npart);
+m: makelist(rho_0*dx^3, i, 1, npart)$
 /* viscosity */
-nu: makelist(1, i, 1, npart);
+nu: makelist(1, i, 1, npart)$
 
 /* sound speed */
 c: 0.1$
-
-r[1]: [Lx/2.0, Lx/2.0, Lx/2.0]$
-v[1]: [0.0, 0.0, 0.0]$
-
-r[2]: [Lx/2.0+0.5*h, Lx/2.0, Lx/2.0]$
-v[2]: [1.0, 0.0, 0.0]$
-
-r[3]: [Lx/2.0, Lx/2.0+0.5*h, Lx/2.0]$
-v[3]: [1.0, 0.0, 0.0]$
 
 /* equation of state */
 rho_0: 1.0;
@@ -64,7 +53,7 @@ rho_0: 1.0;
 p(rho):= c^2*rho$
 
 rho: makelist(
-  m[i]*sum(w(r[i]-r[j]), j, 1, npart), i, 1, npart
+  m[i]*sum(w(rabs: vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
   );
 
 /* conservative force */
@@ -83,15 +72,18 @@ Fpair(i, j):= Fc(i, j) + Fd(i, j);
 
 F(i):= sum( if i=j then 0 else Fpair(i, j), j, 1, npart);
 
-A: makelist(sin(r[i][1]), i, 1, npart);
-  
+A: makelist(sin(2*%pi*r[i][1]/Lx), i, 1, npart);
+
 dAc(i, j):= block([rabs, eij],
   rabs: vabs(dR(r[i], r[j])),
   eij: unitvector(dR(r[i], r[j])),
   m[j]*A[j]/rho[j] * dwdr(rabs) * eij[1] );
-
 dA(i):= sum(if i=j then 0 else dAc(i, j), j, 1, npart);
 
 float(rho);
 float(F(1));
+
+dAar: makelist(dA(i), i, npart);
+xar: makelist(r[i][1], i, npart);
+
 float(dA(1));
