@@ -1,5 +1,6 @@
 echo               both
-dimension          3
+variable           ndim equal 2
+dimension          ${ndim}
 units              si
 atom_modify map array sort 0 0
 atom_style         meso
@@ -12,14 +13,23 @@ communicate        single vel yes
 # smothing length
 variable          h equal 1.0
 variable          dx equal ${h}/3.0
-variable          Lx equal 10*${dx}
+variable          Lx equal 100*${dx}
+variable          Ly equal 100*${dx}
+if "${ndim}==3" then &
+"variable          Lz equal 4*${dx}" &
+else &
+"variable          Lz equal ${dx}/10"
 
 variable           rho0 equal 1.0
-lattice            sc ${dx} origin 0.5 0.5 0.5
-region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
+if "${ndim}==3" then &
+"lattice            sc ${dx} origin 0.5 0.5 0.5" &
+else &
+"lattice            sq ${dx} origin 0.5 0.5 0"
+
+region             box block 0 ${Lx} 0 ${Ly} 0 ${Lz} units box
 create_box         1 box
 create_atoms       1 region box
-variable           sdpd_mass  equal ${rho0}*${dx}^3
+variable           sdpd_mass  equal ${rho0}*${dx}^${ndim}
 mass               1 ${sdpd_mass}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
@@ -42,17 +52,15 @@ variable           force_sdpd_fx equal fx[1]
 variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
 
+velocity          all set 1 0 0
+
 variable           pi            equal 3.1415927
-#variable           vv            atom   
-variable           vv            atom   sin(2*${pi}*x/${Lx})
-
-
+variable           vv            atom   sin(2*${pi}*y/${Lx})
 compute            diff_peratom all meso_diff/atom ${h} v_vv
-dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom c_diff_peratom
-variable           dvv           equal c_diff_peratom[1]
-
+variable           dvx           atom c_diff_peratom[2]
+dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom v_dvx
+variable           dvv           equal v_dvx[1]
 run                0
-
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
 print              "dA: ${dvv}"
 
