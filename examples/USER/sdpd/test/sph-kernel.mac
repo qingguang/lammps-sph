@@ -25,6 +25,7 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
   define(funmake(dwdr, [R]), 3*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
 
+/*
 ndim: 3;
 cutoff: 1.0;
 define_kernel(ndim, cutoff, 'lucy, wl, dwl)$
@@ -37,3 +38,4 @@ infunq(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wq(x));
 infunl(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wl(x));
 quad_qags(x, x, 0, cutoff);
 quad_qags(infunl, x, 0, cutoff);
+*/
