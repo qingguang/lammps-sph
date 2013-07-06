@@ -35,7 +35,11 @@ print(dR( [0.1, 0.1, 0.1], [0.9, 1.9, 2.95]));
 h: 6.5e-5$
 cutoff: h$
 
-load ("quintic-kernel.mac");
+/*load("quintic-kernel.mac");*/
+load ("sph-kernel.mac");
+define_kernel(ndim, cutoff, 'quintic, w, dwdr);
+
+
 /* load("quadric-kernel.mac");*/
 
 r: makelist([], i, 1, npart);
@@ -64,7 +68,7 @@ rho_0: 1.0;
 p(rho):= c^2*rho$
 
 rho: makelist(
-  m[i]*sum(w(r[i]-r[j]), j, 1, npart), i, 1, npart
+  m[i]*sum(w(vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
   );
 
 /* conservative force */
