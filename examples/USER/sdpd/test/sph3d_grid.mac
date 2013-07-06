@@ -6,7 +6,7 @@ load ("eigen");
 ndim: 3;
 
 /* smoothing length */
-nx: 5;
+nx: 3;
 h: 1.0;
 cutoff: h;
 dx: h/3.0;
@@ -37,7 +37,8 @@ r:   listify(cartesian_product(idx, idx, idx))$
 
 /* velocity */
 v: makelist([0, 0, 0], i, 1, npart)$
-load ("quintic-kernel.mac");
+load ("sph-kernel.mac");
+define_kernel(ndim, cutoff, 'quintic, w, dwdr);
 
 /* mass */
 m: makelist(rho_0*dx^3, i, 1, npart)$
@@ -53,7 +54,7 @@ rho_0: 1.0;
 p(rho):= c^2*rho$
 
 rho: makelist(
-  m[i]*sum(w(rabs: vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
+  m[i]*sum(w(vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
   );
 
 /* conservative force */
