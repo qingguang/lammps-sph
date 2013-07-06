@@ -13,8 +13,10 @@ communicate        single vel yes
 # smothing length
 variable          h equal 1.0
 variable          dx equal ${h}/3.0
-variable          Lx equal 100*${dx}
-variable          Ly equal 100*${dx}
+variable          nx equal 1000
+variable          Lx equal ${nx}*${dx}
+variable          Ly equal ${nx}*${dx}
+variable          Natom equal ${nx}*${nx}
 if "${ndim}==3" then &
 "variable          Lz equal 4*${dx}" &
 else &
