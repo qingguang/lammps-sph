@@ -33,7 +33,9 @@ using namespace LAMMPS_NS;
 /* ---------------------------------------------------------------------- */
 
 ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
-  Compute(lmp, narg, arg)
+  Compute(lmp, narg, arg),
+  diffVector(NULL),
+  varVector(NULL)
 {
   if (narg != 5) error->all(FLERR,"Illegal compute meso_rho/atom command");
   if (atom->rho_flag != 1) error->all(FLERR,"compute meso_rho/atom command requires atom_style with density (e.g. meso)");
@@ -59,8 +61,6 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
   comm_forward = 1;
 
   nmax = 0;
-  diffVector = NULL;
-  varVector = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -173,10 +173,10 @@ void ComputeMesoDiffAtom::compute_peratom()
 	if (domain->dimension == 3) {
 	  eij[2]= delz/sqrt(rsq);
 	}
-	diffVector[i][0] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[0];
-	diffVector[i][1] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[1];
+	diffVector[i][0] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[0];
+	diffVector[i][1] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[1];
 	if (domain->dimension == 3) {
-	  diffVector[i][2] += mass[jtype] * wfd * varVector[j] / rho[j] * eij[2];
+	  diffVector[i][2] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[2];
 	}
       }
     } // jj loop
