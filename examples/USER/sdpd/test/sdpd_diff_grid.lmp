@@ -11,11 +11,11 @@ communicate        single vel yes
 # domain size
 
 # smothing length
-variable          h equal 1.0
-variable          dx equal ${h}/3.0
-variable          nx equal 1000
-variable          Lx equal ${nx}*${dx}
-variable          Ly equal ${nx}*${dx}
+variable          nx index 15
+variable          Lx equal 1.0
+variable          Ly equal ${Lx}
+variable          dx equal ${Lx}/${nx}
+variable           h equal 3*${dx}
 variable          Natom equal ${nx}*${nx}
 if "${ndim}==3" then &
 "variable          Lz equal 4*${dx}" &
@@ -48,21 +48,22 @@ fix                integrate_fix_full all  meso
 
 neighbor           0 bin
 neigh_modify       every 1
-timestep           1e-19
+timestep           0
 
-variable           force_sdpd_fx equal fx[1]
-variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
 
-velocity          all set 1 0 0
+variable           lambda       equal 1.0
+variable           maxD         equal 2*PI*${Lx}/${lambda}
+variable           A            atom   sin(2*PI*x/${Lx}/${lambda})
+variable           dA           atom   2*PI/${Lx}/${lambda}*cos(2*PI*x/${Lx}/${lambda})
 
-variable           pi            equal 3.1415927
-variable           vv            atom   sin(2*${pi}*y/${Lx})
-compute            diff_peratom all meso_diff/atom ${h} v_vv
-variable           dvx           atom c_diff_peratom[2]
-dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom v_dvx
-variable           dvv           equal v_dvx[1]
-run                0
-print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
-print              "dA: ${dvv}"
+compute            sph_diff all meso_diff/atom ${h} v_A
+variable           dAsphx           atom c_sph_diff[1]
 
+variable           dA_err       atom abs(v_dA-v_dAsphx)/${maxD}
+compute            cave         all reduce ave v_dA_err
+
+dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom v_dAsphx v_dA
+
+thermo_style       custom step  c_cave
+run                1
