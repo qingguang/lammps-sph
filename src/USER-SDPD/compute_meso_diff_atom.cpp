@@ -60,6 +60,7 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
 
   nmax = 0;
   diffVector = NULL;
+  varVector = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
