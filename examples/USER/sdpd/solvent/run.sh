@@ -20,4 +20,4 @@ dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}gam
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
 
 mkdir -p ${dname}
-${mpirun} -np ${nproc} ${lmp} ${vars} -in sdpd-polymer-run.lmp
+${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
