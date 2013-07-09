@@ -169,10 +169,10 @@ void ComputeMesoDiffAtom::compute_peratom()
 	double wfd;
 	if (domain->dimension == 3) {
 	  double r = sqrt(rsq) * ih;
-	  wfd = ker->sph_dw_quintic3d(r) * ih * ih * ih * ih;
+	  wfd = ker->dw3d(r) * ih * ih * ih * ih;
 	} else {
 	  double r = sqrt(rsq) * ih;
-	  wfd = ker->sph_dw_quintic2d(r) * ih * ih * ih;
+	  wfd = ker->dw2d(r) * ih * ih * ih;
 	}
 	int jtype = type[j];
 	double eij[domain->dimension];
