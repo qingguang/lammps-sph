@@ -81,7 +81,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
   int *ilist, *jlist, *numneigh, **firstneigh;
   double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, ihsq, velx, vely, velz;
-  double rsq, tmp, delVdotDelR, deltaE;
+  double rsq, delVdotDelR;
 
   if (eflag || vflag)
     ev_setup(eflag, vflag);
@@ -93,7 +93,10 @@ void PairSDPD::compute(int eflag, int vflag) {
   double **f = atom->f;
   double *rho = atom->rho;
   double *mass = atom->mass;
-  double *de = atom->de;
+  // TODO: I "reuse" atom->e and atom->de to update volume of the atom
+  double *Vol  = atom->e;
+  double *dVol = atom->de;
+
   double *drho = atom->drho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
@@ -218,25 +221,21 @@ void PairSDPD::compute(int eflag, int vflag) {
           }
         }
 	fpair = - (imass*imass*fi/(rho[i]*rho[i]) + jmass*jmass*fj/(rho[j]*rho[j])) * wfd;
-        /// TODO: energy is wrong
-        deltaE = -0.5 *(fpair * delVdotDelR + fvisc * (velx*velx + vely*vely + velz*velz));
-	//modify force pair
-
 	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
 	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
 	if (ndim ==3 ) {
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	}
    
-        // change in thermal energy
-        de[i] += deltaE;
+        // change volume
+	dVol[i] += Vol[j] * delVdotDelR * wfd;
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (domain->dimension ==3 ) {
 	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
 	  }
-	  de[j] += deltaE;
+	  dVol[j] += Vol[i] * delVdotDelR * wfd;
         }
         //modify until this line
         if (evflag)
