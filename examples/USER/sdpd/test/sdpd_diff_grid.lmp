@@ -59,7 +59,6 @@ variable           dA           atom   2*PI/${Lx}/${lambda}*cos(2*PI*x/${Lx}/${l
 
 compute            sph_diff all meso_diff/atom ${h} v_A
 variable           dAsphx           atom c_sph_diff[1]
-
 variable           dA_err       atom abs(v_dA-v_dAsphx)/${maxD}
 compute            cave         all reduce ave v_dA_err
 
