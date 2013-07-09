@@ -17,6 +17,7 @@
 #include "string.h"
 #include "pair_sdpd.h"
 #include "sph_kernel_quintic.h"
+#include "sph_kernel_lucy.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -297,6 +298,8 @@ void PairSDPD::coeff(int narg, char **arg) {
   // kernel type
   if (strcmp(arg[3], "quintic") == 0) {
     ker = new SPHKernelQuintic();
+  } else if (strcmp(arg[3], "lucy") == 0) {
+    ker = new SPHKernelLucy();
   } else {
     error->all(FLERR, "Unknown kernel type in pair_style sdpd");
   }
