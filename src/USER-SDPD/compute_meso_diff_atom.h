@@ -21,6 +21,7 @@ ComputeStyle(meso_diff/atom,ComputeMesoDiffAtom)
 #define LMP_COMPUTE_MESO_DIFF_ATOM_H
 
 #include "compute.h"
+#include "sph_kernel.h"
 
 namespace LAMMPS_NS {
 
@@ -43,6 +44,7 @@ class ComputeMesoDiffAtom : public Compute {
   int    ivariable;
   double **diffVector;
   double *varVector;
+  SPHKernel* ker;
 };
 
 }

@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <math.h>
 #include "stdlib.h"
+#include "string.h"
 #include "pair_sdpd.h"
 #include "sph_kernel_quintic.h"
 #include "atom.h"
@@ -48,7 +49,9 @@ void PairSDPD::init_style()
 
 PairSDPD::PairSDPD(LAMMPS *lmp) :
   Pair(lmp), 
-  wiener(domain->dimension) {
+  wiener(domain->dimension),
+  ker(NULL)
+{
   first = 1;
 }
 
@@ -65,6 +68,7 @@ PairSDPD::~PairSDPD() {
     memory->destroy(sdpd_gamma);
     memory->destroy(viscosity);
   }
+  delete ker;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -157,10 +161,10 @@ void PairSDPD::compute(int eflag, int vflag) {
 	double wfd;
         if (ndim == 3) {
           // Quintic spline
-	  wfd = sph_dw_quintic3d(sqrt(rsq)*ih);
+	  wfd = ker->sph_dw_quintic3d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-	  wfd = sph_dw_quintic2d(sqrt(rsq)*ih);
+	  wfd = ker->sph_dw_quintic2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
@@ -281,27 +285,29 @@ void PairSDPD::settings(int narg, char **arg) {
    set coeffs for one or more type pairs
    ------------------------------------------------------------------------- */
 void PairSDPD::coeff(int narg, char **arg) {
-  if ( (narg != 8) && (narg != 9) )
+  if (narg != 10)
     error->all(FLERR,
-               "Incorrect args for pair_style sdpd coefficients: 6 or 7 parameters are required");
+               "Incorrect args for pair_style sdpd coefficients: 8 parameters are required");
   if (!allocated)
     allocate();
 
   int ilo, ihi, jlo, jhi;
   force->bounds(arg[0], atom->ntypes, ilo, ihi);
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
-  double rho0_one = force->numeric(FLERR,arg[2]);
-  double soundspeed_one = force->numeric(FLERR,arg[3]);
-  double viscosity_one = force->numeric(FLERR,arg[4]);
-  double cut_one = force->numeric(FLERR,arg[5]);
-  double sdpd_temp_one = force->numeric(FLERR,arg[6]);
-  double sdpd_gamma_one = force->numeric(FLERR,arg[7]);
-  double sdpd_background_one;
-  if (narg>8) {
-    sdpd_background_one = force->numeric(FLERR,arg[8]);
+  double cut_one = force->numeric(FLERR,arg[2]);
+  // kernel type
+  if (strcmp(arg[3], "quintic") == 0) {
+    ker = new SPHKernelQuintic();
   } else {
-    sdpd_background_one = 1.0;
+    error->all(FLERR, "Unknown kernel type in pair_style sdpd");
   }
+  
+  double rho0_one = force->numeric(FLERR,arg[4]);
+  double soundspeed_one = force->numeric(FLERR,arg[5]);
+  double viscosity_one = force->numeric(FLERR,arg[6]);
+  double sdpd_temp_one = force->numeric(FLERR,arg[7]);
+  double sdpd_gamma_one = force->numeric(FLERR,arg[8]);
+  double sdpd_background_one = force->numeric(FLERR,arg[9]);
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
