@@ -19,10 +19,10 @@
 namespace LAMMPS_NS {
   class SPHKernelQuintic : public SPHKernel {
   public:
-    virtual double sph_kernel_quintic3d (double r);
-    virtual double sph_kernel_quintic2d (double r);
-    virtual double sph_dw_quintic3d (double r);
-    virtual double sph_dw_quintic2d (double r);
+    virtual double w3d (double r);
+    virtual double w2d (double r);
+    virtual double dw3d (double r);
+    virtual double dw2d (double r);
   };
 }
 #endif
