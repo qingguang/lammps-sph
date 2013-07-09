@@ -27,7 +27,7 @@ dR(A, B):= block([del, dmin, d],
 h: 6.5e-5$
 cutoff: h$
 load ("sph-kernel.mac");
-define_kernel(ndim, cutoff, 'quintic, w, dwdr);
+define_kernel(ndim, cutoff, 'lucy, 'w, 'dwdr);
 
 r: makelist([], i, 1, npart);
 v: makelist([], i, 1, npart);

@@ -15,6 +15,7 @@
 #include "stdlib.h"
 #include "pair_sdpd_rhosum.h"
 #include "sph_kernel_quintic.h"
+#include "sph_kernel_lucy.h"
 #include "string.h"
 #include "atom.h"
 #include "force.h"
@@ -223,6 +224,8 @@ void PairSDPDRhoSum::coeff(int narg, char **arg) {
   // kernel type
   if (strcmp(arg[3], "quintic") == 0) {
     ker = new SPHKernelQuintic();
+  } else if (strcmp(arg[3], "lucy") == 0) {
+    ker = new SPHKernelLucy();
   } else {
     error->all(FLERR, "Unknown kernel type in pair_style sdpd/rhosum");
   }
