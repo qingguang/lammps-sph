@@ -173,10 +173,12 @@ void ComputeMesoDiffAtom::compute_peratom()
 	if (domain->dimension == 3) {
 	  eij[2]= delz/sqrt(rsq);
 	}
-	diffVector[i][0] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[0];
-	diffVector[i][1] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[1];
+	double diff = mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]);
+	//double diff = mass[jtype] * wfd * varVector[j]/rho[j]);
+	diffVector[i][0] += diff * eij[0];
+	diffVector[i][1] += diff * eij[1];
 	if (domain->dimension == 3) {
-	  diffVector[i][2] += mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]) * eij[2];
+	  diffVector[i][2] += diff * eij[2];
 	}
       }
     } // jj loop
