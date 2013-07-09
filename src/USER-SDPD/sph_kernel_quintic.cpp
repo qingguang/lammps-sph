@@ -14,7 +14,7 @@
 #include "math.h"
 #include "sph_kernel_quintic.h"
 
-double LAMMPS_NS::SPHKernelQuintic::sph_kernel_quintic3d(double r) {
+double LAMMPS_NS::SPHKernelQuintic::w3d(double r) {
   double norm3d = 0.0716197243913529;
   double s = 3.0*r;
   if (s<1.0) {
@@ -27,7 +27,7 @@ double LAMMPS_NS::SPHKernelQuintic::sph_kernel_quintic3d(double r) {
   return 0.0;
 }
 
-double LAMMPS_NS::SPHKernelQuintic::sph_kernel_quintic2d(double r) {
+double LAMMPS_NS::SPHKernelQuintic::w2d(double r) {
   double norm2d = 0.04195297663091802;
   double s = 3.0*r;
   if (s<1.0) {
@@ -40,7 +40,7 @@ double LAMMPS_NS::SPHKernelQuintic::sph_kernel_quintic2d(double r) {
   return 0.0;
 }
 
-double LAMMPS_NS::SPHKernelQuintic::sph_dw_quintic3d(double r) {
+double LAMMPS_NS::SPHKernelQuintic::dw3d(double r) {
   double norm3d = 3.0*0.0716197243913529;
   double s = 3.0*r;
   double wfd;
@@ -56,7 +56,7 @@ double LAMMPS_NS::SPHKernelQuintic::sph_dw_quintic3d(double r) {
   return norm3d*wfd;
 }
 
-double LAMMPS_NS::SPHKernelQuintic::sph_dw_quintic2d(double r) {
+double LAMMPS_NS::SPHKernelQuintic::dw2d(double r) {
   double norm2d = 3.0*0.04195297663091802;
   double s = 3.0*r;
   double wfd;

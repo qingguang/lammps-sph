@@ -124,9 +124,9 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
 
         h = cut[itype][itype];
         if (domain->dimension == 3) {
-          wf = ker->sph_kernel_quintic3d(0.0) / (h * h * h);
+          wf = ker->w3d(0.0) / (h * h * h);
         } else {
-          wf = ker->sph_kernel_quintic2d(0.0) / (h * h);
+          wf = ker->w2d(0.0) / (h * h);
         }
         rho[i] = wf;
       } // ii loop
@@ -157,10 +157,10 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
             ih = 1.0 / h;
             if (domain->dimension == 3) {
               r = sqrt(rsq) * ih;
-              wf = ker->sph_kernel_quintic3d(r) * ih * ih * ih;
+              wf = ker->w3d(r) * ih * ih * ih;
             } else {
               r = sqrt(rsq) * ih;
-              wf = ker->sph_kernel_quintic2d(r) * ih * ih ;
+              wf = ker->w2d(r) * ih * ih ;
             }
 
             rho[i] += wf;
