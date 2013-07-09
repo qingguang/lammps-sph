@@ -22,6 +22,8 @@ variable           lambda       equal 1.0
 variable           maxD         equal 2*PI*${Lx}/${lambda}
 variable           A            atom   sin(2*PI*x/${Lx}/${lambda})
 variable           dA           atom   2*PI/${Lx}/${lambda}*cos(2*PI*x/${Lx}/${lambda})
+#variable           A              atom 1.0
+#variable           dA             atom 0.0
 compute            sph_diff all meso_diff/atom ${h} v_A
 variable           dAsphx           atom c_sph_diff[1]
 variable           dA_err       atom abs(v_dA-v_dAsphx)/${maxD}
@@ -60,10 +62,10 @@ timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-variable           nstep equal round(1.0/${dt})
+variable           nstep equal round(0.06/${dt})
 run                ${nstep}
 
-pair_coeff         * * sdpd     ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${h} 0.0 ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd     ${sdpd_rho0} ${sdpd_c} 0.0 ${h} 0.0 ${sdpd_gamma} ${sdpd_background}
 
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
