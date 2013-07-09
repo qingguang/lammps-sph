@@ -19,23 +19,21 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     norm[3]: 2.088908628081126,
     n      : 1,
     wexpr: (1+3*s)*(1-s)^3,
-    wvect(s):= if s<cutoff then (1+3*s)*(1-s)^3 else 0,
-    dwvect(s):= ''(diff(wexpr, s))
+    dwexpr: diff(wexpr, s),
+    wvect(s):= if s<1 then (1+3*s)*(1-s)^3 else 0,
+    dwvect(g):= subst(s=g, dwexpr)
     ),
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
-  define(funmake(dwdr, [R]), 3*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
+  define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
 
 /*
 ndim: 3;
-cutoff: 1.0;
-define_kernel(ndim, cutoff, 'lucy, wl, dwl)$
-define_kernel(ndim, cutoff, 'quintic, wq, dwq)$
-dwdr(0.1);
-w(0.1);
-plot2d([wl, wq], [x, 0, 2.0*cutoff]);
+cutoff: 0.1;
+define_kernel(ndim, cutoff, 'lucy, 'wl, 'dwl)$
+define_kernel(ndim, cutoff, 'quintic, 'wq, 'dwq)$
+plot2d([dwl, dwq], [x, 0, cutoff]);
 
 infunq(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wq(x));
 infunl(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wl(x));
-quad_qags(x, x, 0, cutoff);
 quad_qags(infunl, x, 0, cutoff);
 */
