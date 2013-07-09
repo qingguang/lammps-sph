@@ -17,5 +17,6 @@ variable           dt_factor equal 1.0
 variable           sdpd_temp equal 1.0/${kb}
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal 3.0*${dx}
+variable           ktype string quintic
 variable           Nfreq equal 1000
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}
