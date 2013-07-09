@@ -21,6 +21,7 @@ PairStyle(sdpd/rhosum,PairSDPDRhoSum)
 #define LMP_PAIR_SDPD_RHOSUM_H
 
 #include "pair.h"
+#include "sph_kernel.h"
 
 namespace LAMMPS_NS {
 
@@ -40,7 +41,7 @@ class PairSDPDRhoSum : public Pair {
  protected:
   double **cut;
   int nstep, first;
-
+  SPHKernel* ker;
   void allocate();
 };
 

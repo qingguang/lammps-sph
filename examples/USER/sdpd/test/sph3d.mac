@@ -23,24 +23,11 @@ dR(A, B):= block([del, dmin, d],
   dr
   );
 
-/* 
-[Lx, Ly, Lz]: [1, 2, 3];
-print(dR( [0.5, 0.5, 0.5], [0.6, 0.6, 0.6]));
-print(dR( [0.5, 0.5, 0.1], [0.6, 0.6, 2.9]));
-print(dR( [0.1, 0.1, 0.1], [0.9, 1.9, 2.95]));
-*/
-  
-
 /* smoothing length */
 h: 6.5e-5$
 cutoff: h$
-
-/*load("quintic-kernel.mac");*/
 load ("sph-kernel.mac");
 define_kernel(ndim, cutoff, 'quintic, w, dwdr);
-
-
-/* load("quadric-kernel.mac");*/
 
 r: makelist([], i, 1, npart);
 v: makelist([], i, 1, npart);
@@ -48,7 +35,7 @@ v: makelist([], i, 1, npart);
 /* mass */
 m: makelist(1.7e-7, i, 1, npart);
 /* viscosity */
-nu: makelist(1, i, 1, npart);
+nu: makelist(1.0, i, 1, npart);
 
 /* sound speed */
 c: 0.1$
@@ -76,7 +63,7 @@ Fc(i, j):= block([pi, pj, rabs],
   pi: p(rho[i]),
   pj: p(rho[j]),
   rabs: vabs(dR(r[i], r[j])),
-  - m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdr(rabs)) * unitvector(dR(r[i], r[j]))$
+  m[j]*m[i] * (pi/rho[i]^2 + pj/rho[j]^2) * dwdr(rabs)) * unitvector(dR(r[i], r[j]))$
 
 /* dissipative force */
 Fd(i, j):= block([rabs],
@@ -98,4 +85,3 @@ dA(i):= sum(if i=j then 0 else dAc(i, j), j, 1, npart);
 
 float(rho);
 float(F(1));
-float(dA(1));

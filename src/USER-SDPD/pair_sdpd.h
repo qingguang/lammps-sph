@@ -21,6 +21,7 @@ PairStyle(sdpd,PairSDPD)
 #define LMP_PAIR_SDPD_H
 
 #include "pair.h"
+#include "sph_kernel.h"
 #include "wiener.h"
 
 namespace LAMMPS_NS {
@@ -54,6 +55,7 @@ class PairSDPD : public Pair {
 		     double delx, double dely, double delz);
 
   Wiener wiener;
+  SPHKernel* ker;
   };
 
  double sdpd_equation_of_state(double rho,   double rho0, double c,

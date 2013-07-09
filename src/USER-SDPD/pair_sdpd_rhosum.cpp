@@ -15,6 +15,7 @@
 #include "stdlib.h"
 #include "pair_sdpd_rhosum.h"
 #include "sph_kernel_quintic.h"
+#include "string.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -31,7 +32,9 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-PairSDPDRhoSum::PairSDPDRhoSum(LAMMPS *lmp) : Pair(lmp)
+PairSDPDRhoSum::PairSDPDRhoSum(LAMMPS *lmp) : 
+  Pair(lmp),
+  ker(NULL)
 {
   restartinfo = 0;
 
@@ -121,9 +124,9 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
 
         h = cut[itype][itype];
         if (domain->dimension == 3) {
-          wf = sph_kernel_quintic3d(0.0) / (h * h * h);
+          wf = ker->sph_kernel_quintic3d(0.0) / (h * h * h);
         } else {
-          wf = sph_kernel_quintic2d(0.0) / (h * h);
+          wf = ker->sph_kernel_quintic2d(0.0) / (h * h);
         }
         rho[i] = wf;
       } // ii loop
@@ -154,10 +157,10 @@ void PairSDPDRhoSum::compute(int eflag, int vflag) {
             ih = 1.0 / h;
             if (domain->dimension == 3) {
               r = sqrt(rsq) * ih;
-              wf = sph_kernel_quintic3d(r) * ih * ih * ih;
+              wf = ker->sph_kernel_quintic3d(r) * ih * ih * ih;
             } else {
               r = sqrt(rsq) * ih;
-              wf = sph_kernel_quintic2d(r) * ih * ih ;
+              wf = ker->sph_kernel_quintic2d(r) * ih * ih ;
             }
 
             rho[i] += wf;
@@ -207,8 +210,8 @@ void PairSDPDRhoSum::settings(int narg, char **arg) {
  ------------------------------------------------------------------------- */
 
 void PairSDPDRhoSum::coeff(int narg, char **arg) {
-  if (narg != 3)
-    error->all(FLERR,"Incorrect number of args for sph/rhosum coefficients");
+  if (narg != 4)
+    error->all(FLERR,"Incorrect number of args for sdpd/rhosum coefficients");
   if (!allocated)
     allocate();
 
@@ -217,6 +220,12 @@ void PairSDPDRhoSum::coeff(int narg, char **arg) {
   force->bounds(arg[1], atom->ntypes, jlo, jhi);
 
   double cut_one = force->numeric(FLERR,arg[2]);
+  // kernel type
+  if (strcmp(arg[3], "quintic") == 0) {
+    ker = new SPHKernelQuintic();
+  } else {
+    error->all(FLERR, "Unknown kernel type in pair_style sdpd/rhosum");
+  }
 
   int count = 0;
   for (int i = ilo; i <= ihi; i++) {
