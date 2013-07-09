@@ -11,18 +11,17 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#ifndef LMP_SPH_KERNEL_QUINTIC_H
-#define LMP_SPH_KERNEL_QUINTIC_H
-
-#include "sph_kernel.h"
-
+#ifndef LMP_SPH_KERNEL_H
+#define LMP_SPH_KERNEL_H
 namespace LAMMPS_NS {
-  class SPHKernelQuintic : public SPHKernel {
+  class SPHKernel {
   public:
-    virtual double sph_kernel_quintic3d (double r);
-    virtual double sph_kernel_quintic2d (double r);
-    virtual double sph_dw_quintic3d (double r);
-    virtual double sph_dw_quintic2d (double r);
+    SPHKernel() {};
+    virtual double sph_kernel_quintic3d (double r) = 0;
+    virtual double sph_kernel_quintic2d (double r) = 0;
+    virtual double sph_dw_quintic3d (double r) = 0;
+    virtual double sph_dw_quintic2d (double r) = 0;
+    ~SPHKernel() {};
   };
 }
 #endif
