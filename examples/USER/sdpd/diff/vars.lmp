@@ -1,9 +1,10 @@
-variable           dim equal 2
 variable           kb  equal 1.3806503e-23
 
-variable           dx   equal 1.2/15.0
-variable           Ly  equal 15*${dx}
-variable           Lx  equal 15*${dx}
+variable           Lx  equal 1.2
+variable           Ly  equal ${Lx}
+if "${ndim}==3" then "variable           Lz  equal ${Lx}"
+
+variable           dx   equal ${Lx}/${nx}
 
 variable           sdpd_rho equal  1.0
 variable           sdpd_rho0 equal 1.0
@@ -18,4 +19,4 @@ variable           sdpd_temp equal 1.0/${kb}
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal 3.0*${dx}
 variable           Nfreq equal 1000
-variable           sdpd_mass equal ${sdpd_rho}*${dx}^${dim}
+variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}

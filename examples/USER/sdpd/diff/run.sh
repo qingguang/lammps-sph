@@ -12,12 +12,14 @@ fi
 
 nproc=1
 ndim=2
-sdpd_eta=25.0
+sdpd_eta=8.0
 sdpd_background=0.0
-sdpd_c=1e3
-dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}gamma
+sdpd_c=8e2
+nx=60
+dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}
 
-vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
+vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
+      -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
 
 mkdir -p ${dname}
 ${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
