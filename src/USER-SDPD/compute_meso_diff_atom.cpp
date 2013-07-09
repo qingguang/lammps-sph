@@ -35,17 +35,25 @@ using namespace LAMMPS_NS;
 ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg),
   diffVector(NULL),
-  varVector(NULL)
+  varVector(NULL),
+  ker(NULL)
 {
-  if (narg != 5) error->all(FLERR,"Illegal compute meso_rho/atom command");
+  if (narg != 6) error->all(FLERR,"Illegal compute meso_rho/atom command");
   if (atom->rho_flag != 1) error->all(FLERR,"compute meso_rho/atom command requires atom_style with density (e.g. meso)");
 
   cutoff = force->numeric(FLERR,arg[3]);
   cutsq  = cutoff*cutoff;
 
-  int iarg = 4;
+  // kernel type
+  if (strcmp(arg[4], "quintic") == 0) {
+    ker = new SPHKernelQuintic();
+  } else {
+    error->all(FLERR, "Unknown kernel type in pair_style sdpd");
+  }
+
+  int iarg = 5;
   if (strncmp(arg[iarg],"v_",2) !=  0) {
-    error->warning(FLERR," Illegal command meso_diff/atom, 4th argument must be a variable (v_*) ");    
+    error->warning(FLERR," Illegal command meso_diff/atom, 5th argument must be a variable (v_*) ");    
   }
   int n = strlen(arg[iarg]);
   char *suffix = new char[n];
@@ -69,6 +77,7 @@ ComputeMesoDiffAtom::~ComputeMesoDiffAtom()
 {
   memory->destroy(diffVector);
   memory->destroy(varVector);
+  delete ker;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -89,7 +98,6 @@ void ComputeMesoDiffAtom::init()
   neighbor->requests[irequest]->half = 0;
   neighbor->requests[irequest]->full = 1;
   neighbor->requests[irequest]->occasional = 0;
-
 }
 
 void ComputeMesoDiffAtom::init_list(int id, NeighList *ptr)
@@ -161,10 +169,10 @@ void ComputeMesoDiffAtom::compute_peratom()
 	double wfd;
 	if (domain->dimension == 3) {
 	  double r = sqrt(rsq) * ih;
-	  wfd = sph_dw_quintic3d(r) * ih * ih * ih * ih;
+	  wfd = ker->sph_dw_quintic3d(r) * ih * ih * ih * ih;
 	} else {
 	  double r = sqrt(rsq) * ih;
-	  wfd = sph_dw_quintic2d(r) * ih * ih * ih;
+	  wfd = ker->sph_dw_quintic2d(r) * ih * ih * ih;
 	}
 	int jtype = type[j];
 	double eij[domain->dimension];
