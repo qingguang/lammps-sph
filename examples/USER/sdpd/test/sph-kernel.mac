@@ -20,20 +20,39 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     n      : 1,
     wexpr: (1+3*s)*(1-s)^3,
     dwexpr: diff(wexpr, s),
-    wvect(s):= if s<1 then (1+3*s)*(1-s)^3 else 0,
-    dwvect(g):= subst(s=g, dwexpr)
-    ),
+    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
+    dwvect(g):= subst(s=g, dwexpr))
+  else if ktype='wendland4 then (
+    norm[2]: 9/%pi,
+    norm[3]: 495/(32*%pi),
+    n      : 1,
+    wexpr: (1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s),
+    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
+    dwvect(g):= subst(s=g, dwexpr))
+  else if ktype='wendland6 then (
+    norm[2]: 78/(7*%pi),
+    norm[3]: 1365/(64*%pi),
+    n      : 1,
+    wexpr: (1-s)^8*(1+8*s+25*s^2+32*s^3),
+    dwexpr: diff(wexpr, s),
+    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
+    dwvect(g):= subst(s=g, dwexpr)),
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
   define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
 
 /*
-ndim: 3;
+ndim: 2;
 cutoff: 0.1;
+define_kernel(ndim, cutoff, 'wendland4, 'w4, 'dw4)$
+define_kernel(ndim, cutoff, 'wendland6, 'w6, 'dw6)$
 define_kernel(ndim, cutoff, 'lucy, 'wl, 'dwl)$
 define_kernel(ndim, cutoff, 'quintic, 'wq, 'dwq)$
-plot2d([dwl, dwq], [x, 0, cutoff]);
+plot2d([wl, wq, w4, w6], [x, 0, cutoff]);
 
 infunq(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wq(x));
 infunl(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wl(x));
-quad_qags(infunl, x, 0, cutoff);
+infunw4(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*w4(x));
+infunw6(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*w6(x));
+quad_qags(infunw6, x, 0, cutoff);
 */
