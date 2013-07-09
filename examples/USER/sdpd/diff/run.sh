@@ -10,16 +10,18 @@ else
     exit -1
 fi
 
-nproc=1
+nproc=8
 ndim=2
 sdpd_eta=8.0
 sdpd_background=0.0
-sdpd_c=8e2
-nx=60
-dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}
+sdpd_c=1e3
+nx=30
+n=4.0
+dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
-      -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
+      -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background} \
+      -var  n   ${n}"
 
 mkdir -p ${dname}
 ${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
