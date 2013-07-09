@@ -16,7 +16,7 @@ sdpd_eta=8.0
 sdpd_background=0.0
 sdpd_c=1e3
 nx=30
-n=4.0
+n=6.0
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
