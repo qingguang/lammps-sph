@@ -14,6 +14,7 @@
 #include "string.h"
 #include "compute_meso_diff_atom.h"
 #include "sph_kernel_quintic.h"
+#include "sph_kernel_lucy.h"
 #include "atom.h"
 #include "input.h"
 #include "variable.h"
@@ -47,6 +48,8 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
   // kernel type
   if (strcmp(arg[4], "quintic") == 0) {
     ker = new SPHKernelQuintic();
+  } else if (strcmp(arg[4], "lucy") == 0) {
+    ker = new SPHKernelLucy();
   } else {
     error->all(FLERR, "Unknown kernel type in pair_style sdpd");
   }
