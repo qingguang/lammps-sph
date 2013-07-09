@@ -160,11 +160,10 @@ void PairSDPD::compute(int eflag, int vflag) {
         ih = 1.0 / h;
 	double wfd;
         if (ndim == 3) {
-          // Quintic spline
-	  wfd = ker->sph_dw_quintic3d(sqrt(rsq)*ih);
+	  wfd = ker->dw3d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih * ih / sqrt(rsq);
         } else {
-	  wfd = ker->sph_dw_quintic2d(sqrt(rsq)*ih);
+	  wfd = ker->dw2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
