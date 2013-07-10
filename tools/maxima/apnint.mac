@@ -1,0 +1,237 @@
+/* apnint.mac
+   arbitrary precision quadrature
+   Nov. 16, 2012
+   
+   loads tsquad.mac, dequad.mac.
+   
+   You must load nint.mac package
+   first, since these arbitrary
+   precision functions use some to
+   the utility functions defined in
+   that package.
+   
+   functions defined here: apnint, apquad
+   
+   see example section at end.
+   
+   */
+   
+/************************************************************************
+    apnint.mac is a software file which accompanies Chapter 8 of
+    Maxima by Example, Numerical Integration
+    
+    Copyright (C) 2009, 2012  
+    Edwin L Woollett,  woollett@charter.net
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/   
+   
+load("tsquad.mac")$
+
+load("dequad.mac")$   
+   
+  
+/******** apnint(e,x,x1,x2,rp,wp)  *****************/   
+/** apnint first tries integrate, if feasible, and if not
+     successful, then tries either tsquad or dequad,
+     depending on the domain.
+     
+     For the numerical approximation case, and with
+        x1 = finite:
+        
+     apnint(e,x,x1,inf,rp,wp) calls dequad.
+     apnint(e,x,x1,x2,rp,wp),with x2 finite, 
+        calls tsquad.
+ **/
+   
+apnint(ape,apx,apx1,apx2,aprp,apwp) ::=
+block([simp:false,wwint,tryint1:true],
+   if debug then print("apnint"),
+   nargL : [],
+   noutL : [],
+   /*  try integrate first */
+   wwint : apply ('int1_filter,[ape,apx,apx1,apx2] ),
+   block([simp:true],
+      if wwint = false 
+          then (/* print("case wwint = false"), */ tryint1:false, return()),
+      if member(nounify(integrate),listofops(wwint))
+          then (/* print("case op(wwint) = integrate"), */ tryint1:false, 
+                return()),
+      /* can we get a bfloat from the symbolic integral? */      
+      wwint : cbfloat(wwint,apwp)),
+      
+   /* outside block */
+   if debug then print("after integrate try, wwint = ",wwint),
+   
+   if tryint1 = false then go(trynumerical),
+   
+   /* if successful, apint returns a bfloat */
+   if complex_number_p (wwint) then
+       (noutL : [integrate,wwint],
+        if method then print (" integrate"),
+        return(wwint)),
+   
+   trynumerical,
+   
+   block([simp:true],
+      if debug then print("simp = ",simp),
+   
+   /* can we get a bfloat value from the integrand? */
+   
+      if apx2 = inf then
+          (if debug then print("case apx2 = inf"),
+            wwint : ev(cbfloat(subst(apx=bfloat(apx1 + 12.3),ape),16),nouns),
+            if debug then print("wwint = ",wwint))
+   else   
+       ( if debug then print ("case else"),
+         wwint : ev(cbfloat(subst(apx=bfloat((apx2-apx1)/2),ape),16),nouns),
+         if debug then print ("wwint = ",wwint))),
+       
+   if debug then print("in trynumerical, wwint = ",wwint),
+   
+   if not complex_number_p(wwint) then 
+      (print("apnint: cannot obtain bfloat value from integrand"),
+       return (false)),
+       
+   /* tsquad and dequad accept complex expr.      
+      should we use gensyms?    */    
+      
+    block([simp:true],          
+       if apx2 = inf then dequad(ape,apx,apx1,apx2,aprp,apwp)
+       else tsquad(ape,apx,apx1,apx2,aprp,apwp)))$
+       
+ /*****   apquad(e,x,x1,x2,rp,wp )        ***************/      
+ /****
+    forces use of numerical approximation to integral.
+    For x1 finite,
+    apquad(e,x,x1,inf,rp,wp) calls dequad.
+    apquad(e,x,x1,x2,rp,wp),with x2 finite, 
+        calls tsquad.
+  ***/
+      
+      
+apquad(ape,apx,apx1,apx2,aprp,apwp) ::=
+block([wwint],
+   if debug then print("apquad"),      
+   /* can we get a bfloat value from the integrand? */
+   
+   if apx2 = inf then
+          (if debug then print("case apx2 = inf"),
+            wwint : ev(cbfloat(subst(apx=bfloat(apx1 + 12.3),ape),16),nouns),
+            if debug then print("wwint = ",wwint))
+   else   
+       ( if debug then print ("case else"),
+         wwint : ev(cbfloat(subst(apx=bfloat((apx2-apx1)/2),ape),16),nouns),
+         if debug then print ("wwint = ",wwint)),       
+     
+   if not complex_number_p(wwint) then 
+      (print("apquad: cannot obtain bfloat value from integrand"),
+       return (false)),
+       
+   /* tsquad and dequad accept complex expr.  */          
+    
+   if apx2 = inf then dequad(ape,apx,apx1,apx2,aprp,apwp)
+   else tsquad(ape,apx,apx1,apx2,aprp,apwp))$
+       
+ /*** end apquad  ***/      
+      
+      
+      
+      
+      
+/* 
+   examples of use:
+   
+using apquad forces use of numerical method
+expr can be complex.
+
+(%i2) apquad(sin(x)*exp(%i*x),x,0,2,20,30);
+ construct _yw%[kk,fpprec] array for kk = 
+  8  and fpprec =  30   ...working... 
+(%o2) 1.18920062382698206284315977363b0*%i+4.13410905215902978659792045774b-1
+
+whereas this can be done using integrate:
+
+(%i4) method:true$
+(%i5) apnint(sin(x)*exp(%i*x),x,0,2,20,30);
+ integrate 
+(%o5) 1.18920062382698206284315977363b0*%i+4.13410905215902978659792045774b-1
+
+non-finite integral with complex integrand; force use of numerical
+method with apquad:
+
+(%i7) apquad(exp(-x +%i*x),x,0,inf,20,30);
+dequad 
+(%o7) 5.0b-1*%i+5.0b-1
+
+but using apnint produces answer from integrate:
+
+(%i8) apnint(exp(-x +%i*x),x,0,inf,20,30);
+ integrate 
+(%o8) 5.0b-1*%i+5.0b-1
+
+Example of integrand which does not have bfloat values:
+
+(%i9) apnint(bessel_j(1,x)*exp(-x),x,0,inf,20,30);
+apnint: cannot obtain bfloat value from integrand 
+(%o9) false
+
+(%i10) apquad(bessel_j(1,x)*exp(-x),x,0,inf,20,30);
+apquad: cannot obtain bfloat value from integrand 
+(%o10) false
+
+sqrt and log in integrand causes apnint to bypass integrate:
+
+(%i11) apnint(log(1/x)/sqrt(%i*x),x,0,1,20,30);
+tsquad 
+(%o11) 2.82842712474619009760337744842b0-2.82842712474619009760337744842b0*%i
+
+(%i12) apquad(log(1/x)/sqrt(%i*x),x,0,1,20,30);
+tsquad 
+(%o12) 2.82842712474619009760337744842b0-2.82842712474619009760337744842b0*%i
+
+a case in which apnint cannot do part of a calculation with a complex integrand:
+(however, quadpack can get an answer)
+
+(%i1) load(nint);
+   _kmax% =  8   _epsfac% =  2 
+(%o1) "c:/work2/nint.mac"
+(%i2) method:true$
+(%i3) quad(log(-3+%i*x),x,-2,3);
+   quad_qag 
+   quad_qags 
+(%o3) 2.449536971144524*%i+6.02070929514083
+(%i4) quad(realpart(log(-3+%i*x)),x,-2,3);
+   quad_qag 
+(%o4) 6.02070929514083
+(%i5) quad(imagpart(log(-3+%i*x)),x,-2,3);
+   quad_qags 
+(%o5) 2.449536971144524
+(%i6) apnint(log(-3+%i*x),x,-2,3,20,30);
+ construct _yw%[kk,fpprec] array for kk = 
+  8  and fpprec =  30   ...working... 
+quad_ts: vdiffnew > vdiffold before vdiff < eps0 reached 
+quad_ts: abort calc. 
+(%o6) false
+(%i7) apnint(realpart(log(-3+%i*x)),x,-2,3,20,30);
+tsquad 
+(%o7) 6.02070929514083135694888711387b0
+(%i8) apnint(imagpart(log(-3+%i*x)),x,-2,3,20,30);
+quad_ts: vdiffnew > vdiffold before vdiff < eps0 reached 
+quad_ts: abort calc. 
+(%o8) false
+(%i9) imagpart(log(-3+%i*x));
+(%o9) atan2(x,-3)
+
+*/
+

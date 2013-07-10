@@ -1,0 +1,4 @@
+Take 2D integral of SPH kernel.
+
+nint.mac and supproting files are from
+http://www.csulb.edu/~woollett/

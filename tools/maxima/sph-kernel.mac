@@ -12,8 +12,8 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     dfsim: diff(fsim, s),
     wexpr: pw([-1,fsim[1],1,fsim[2],2,fsim[3], 3, 0, inf], s),
     dwexpr: pw([-1,dfsim[1],1,dfsim[2],2,dfsim[3], 3, 0, inf], s),
-    wvect(g):= subst(s=g, wexpr),
-    dwvect(g):= subst(s=g, dwexpr))
+    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
+    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
   else if ktype='lucy then (
     norm[2]: 1.591549430918954,
     norm[3]: 2.088908628081126,
@@ -21,7 +21,7 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     wexpr: (1+3*s)*(1-s)^3,
     dwexpr: diff(wexpr, s),
     wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, dwexpr))
+    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
   else if ktype='wendland4 then (
     norm[2]: 9/%pi,
     norm[3]: 495/(32*%pi),
@@ -29,7 +29,7 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     wexpr: (1-s)^6*(1+6*s+35/3*s^2),
     dwexpr: diff(wexpr, s),
     wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, dwexpr))
+    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
   else if ktype='wendland6 then (
     norm[2]: 78/(7*%pi),
     norm[3]: 1365/(64*%pi),
@@ -37,7 +37,10 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     wexpr: (1-s)^8*(1+8*s+25*s^2+32*s^3),
     dwexpr: diff(wexpr, s),
     wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, dwexpr)),
+    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
+  else (
+    error("unknown kernel type")
+    ),
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
   define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
 
