@@ -101,10 +101,9 @@ void PairSDPD::compute(int eflag, int vflag) {
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
-  const int ndim = domain->dimension;
-  const double sqrtdt = sqrt(update->dt);
+  int ndim = domain->dimension;
+  double sqrtdt = sqrt(update->dt);
   
-  double smimj, smjmi;
   /// Boltzmann constant
   const double k_bltz= 1.3806503e-23;
   double eij[ndim];
@@ -194,11 +193,10 @@ void PairSDPD::compute(int eflag, int vflag) {
 	    eij[2]= delz/sqrt(rsq);
 	  }
  
-        smimj = sqrt(imass/jmass); smjmi = 1.0/smimj;
-        wiener.get_wiener_Espanol(sqrtdt);
         double fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
         fvisc *= imass * jmass * wfd;
         //define random force
+        wiener.get_wiener_Espanol(sqrtdt);
         for (int di=0;di<ndim;di++) {
            random_force[di]=0;          
          for (int dj=0;dj<ndim;dj++)
@@ -232,7 +230,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
-	  if (domain->dimension ==3 ) {
+	  if (ndim ==3 ) {
 	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
 	  }
 	  dVol[j] += Vol[i] * delVdotDelR * wfd;
