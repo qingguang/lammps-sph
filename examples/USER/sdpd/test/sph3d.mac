@@ -34,12 +34,17 @@ v: makelist([], i, 1, npart);
 
 /* mass */
 m: makelist(1.7e-7, i, 1, npart);
+
 /* viscosity */
 nu: makelist(1.0, i, 1, npart);
+
+/* initial volume of the particles */
+V: makelist(1.0, i, 1, npart);
 
 /* sound speed */
 c: 0.1$
 
+/* postivion and velocity of the particles */
 r[1]: [Lx/2.0, Lx/2.0, Lx/2.0]$
 v[1]: [0.0, 0.0, 0.0]$
 
@@ -51,7 +56,6 @@ v[3]: [1.0, 0.0, 0.0]$
 
 /* equation of state */
 rho_0: 1.0;
-/* p(rho):= c^2*rho_0/7*( (rho/rho_0)^7 - 1 )$ */
 p(rho):= c^2*rho$
 
 rho: makelist(
