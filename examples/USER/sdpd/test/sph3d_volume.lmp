@@ -34,7 +34,7 @@ group        scd id == 3
 velocity     scd set 1.0 0.0 0.0 units box
 
 
-pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_style         hybrid/overlay sdpd/rhofromv 1 sdpd
 
 variable           rho0 equal 1.0
 variable              c equal 0.1
@@ -42,8 +42,9 @@ variable           eta  equal 1.0
 variable           temp equal 0.0
 variable           gamma equal 1.0
 variable           rho_background equal 0.0
-pair_coeff         * * sdpd     ${rho0} ${c} ${eta} ${h} ${temp} ${gamma} ${rho_background}
-pair_coeff         * * sdpd/rhosum   ${h}
+variable           ktype string wendland6
+pair_coeff         * * sdpd     ${h} ${ktype} ${rho0} ${c} ${eta} ${temp} ${gamma} ${rho_background}
+pair_coeff         * * sdpd/rhofromv
 
 # do full time integration
 fix                integrate_fix_full all  meso

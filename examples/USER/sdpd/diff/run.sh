@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=2
 sdpd_eta=8.0
 sdpd_background=0.0
