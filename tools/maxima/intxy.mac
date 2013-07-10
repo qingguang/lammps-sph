@@ -1,0 +1,36 @@
+define_variable(cutoff, 0.24, float);
+define_variable(ndim, 2, integer);
+define_variable(finput, "data.xy", any);
+define_variable(foutput, "d.xy", any);
+define_variable(ktype, 'wendland6, any);
+define_variable(expr,  sin(2*%pi*x/1.2), any);
+
+xy: read_nested_list(finput);
+
+load("sph-kernel.mac");
+define_kernel(2, cutoff, ktype, 'w, 'dw);
+wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
+dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
+
+A(x, y):= ''expr;
+load("nint.mac");
+F(x0, y0):=block([x, y],
+  nint(wxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+
+dF(x0, y0):=block([x, y],
+  nint(-dwxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+
+dexpr: diff(expr, 'x);
+dA(x, y):= ''dexpr;
+res: map(lambda([el],
+        block([x: el[1],
+         y: el[2]],
+         [x, y, dF(x, y), dA(x, y)])), xy);
+
+write_data(float(res), foutput);
+ 
+/* 
+ysmoth: map(lambda([x], dF(x, 0.0)), x)$
+plot2d([[discrete, x, abs(ysmoth-dy)]])$
+plot2d([[discrete, x, dy], [discrete, x, ysmoth]])$
+*/
