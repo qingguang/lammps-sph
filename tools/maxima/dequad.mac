@@ -1,0 +1,552 @@
+/* dequad.mac
+    nov. 16, 2012
+    */
+
+
+/************************************************************************
+    dequad.mac is a software file which accompanies Chapter 8 of
+    Maxima by Example, Numerical Integration
+    
+    Copyright (C) 2009, 2012  
+    Edwin L Woollett,  woollett@charter.net
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.
+************************************************************************/
+
+
+
+
+
+/* file dequad.mac functions integrate over [a,inf] using a
+    [a,inf] domain double exponential method. After transforming
+    to [0,inf] the transformation from x to u is
+    x = exp(u - exp(-u) ) suitable for integrands which
+    already have some kind of exponential decay in their
+    integrands.
+    functions defined in this file
+     1. de_sum(%%g,kk)
+
+     2. idek(%fg,a,kk,fp)
+
+     3. fdf (%ff, %xx, %dfp)
+     
+     4. idek_e(%fg,a,kk,fp)
+
+     5. ide(%fg,a,rp,fp)
+
+     6. quad_de(%%fg,a,rp,fp)
+     
+     7. ide_test(%fg,a,rp,fp)
+     
+     8. bfprint(bf,fpp)
+     
+     9. dequad(e,x,x1,x2,rp,wp)
+
+    
+     */
+
+/********************************************/
+
+ /* de_sum(f,k) does sums needed for integration
+    of f over [0,inf] using h:1/k. 
+     de_sum(f,k ) should be called by a function which
+       has set fpprec.              
+  de_sum adds up contributions for a given
+     level k, skipping every other grid point
+     unless k = 1,  and stops when abs(newterm) <= eps1 
+        */
+    
+
+de_sum(%%g,kk ) :=
+ block([fp,h,jstep,eps1,jmax:500,u,a,
+          x,w,asum,nt,ant ],
+    fp:fpprec,
+   
+   if kk = 1 then jstep:1 else jstep:2,   
+   
+   h : 1/2^kk,
+   eps1: bfloat(10^(-fpprec)),
+   
+   asum : 0.0b0,
+   
+       /* sum first over negative u values */
+    
+    for j:1 step jstep thru (jmax+4) do 
+     (  block([fpprec],
+          fpprec : fp + 40,    
+          u: bfloat(-h*j),    
+          a:exp(-u),
+          x:exp(u-a)),
+          
+       w:exp(-a) + x,
+       nt :bfloat( %%g(x)) * w ,        
+       asum: asum + nt ,        
+       
+       if listp(nt) then ant:abs(first(nt)) else ant:abs(nt),       
+       
+       if j = jmax then 
+         (print("j = jmax limit reached"),return(done)),
+             
+        if ant < eps1  then return(done)  ), 
+        
+
+     
+     /* now sum over positive values of u  */
+    
+
+    
+    
+    for j:1 step jstep thru (jmax+4) do 
+     ( u: bfloat(h*j),    
+       a:exp(-u),
+       x:exp(u-a),
+       w:exp(-a)+x,
+       nt :bfloat( %%g(x)) * w ,        
+       asum: asum + nt ,
+       if listp(nt) then ant:abs(first(nt)) else ant:abs(nt),                    
+              
+       if j = jmax then 
+         (print("j = jmax limit reached"),return(done)),
+         
+        if ant < eps1  then return(done)  ),
+        
+
+
+     asum  )$  
+     
+
+/* idek(f,a,kk,fp) computes integral of
+    f over [a,inf] using h :1/kk, and with
+    fpprec set to fp. This functions calls
+    de_sum(f,k) for k = 1,2,...,kk.
+    */
+
+
+     
+idek(%fg,a,kk,fp) :=
+ block(  [fpprec,asum,h ], local(%ft),   
+ 
+     if rp > fp then
+          (print(" rp should be less than fp"), return(done) ),
+     fpprec:fp,
+     h : 1/2^kk,
+     
+     /* convert to integration over [0,inf] */
+     
+     block([fpprec,beta],
+       fpprec : fp + 20,         
+       beta:bfloat(a),    
+       define (%ft(x), %fg(x + beta) )),
+       
+      /* contribution from u = 0 */
+      asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,
+      for k:1 thru kk do
+        asum : asum + de_sum(%ft,k),
+      bfloat(h*asum) )$
+      
+        
+/*  idek_e(f,a,k,fp) uses fdf(f,x,dfp) to 
+    return [value-of-integral, estimate-of-error-due-to-floating-point-setting]
+    based on Richard Fateman's code
+    */
+
+ 
+idek_e(%fg,a,kk,fp) :=
+ block(  [fpprec,asum,h,x0,w0 ], local(%ft),   
+ 
+     if rp > fp then
+          (print(" rp should be less than fp"), return(done) ),
+     fpprec:fp,
+     h : 1/2^kk,
+     
+     /* convert to integration over [0,inf] */
+     
+     block([fpprec,beta],
+       fpprec : fp + 20,         
+       beta:bfloat(a),    
+       define (%ft(x), %fg(x + beta) )),
+       
+      /* contribution from u = 0 */
+      
+      x0 : bfloat(exp(-1)),
+      w0 : 2*x0,
+      asum : bfloat( fdf(%ft,x0,10)*w0 ),
+      
+      /* asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,*/
+      
+      for k:1 thru kk do
+        asum : asum + de_sum(lambda([%z],fdf(%ft,%z,10)),k),
+      bfloat(h*asum) )$      
+      
+/* ide(f,a,rp,fp) integrates f over [a,inf] with
+   requested precision rp and  with fpprec : fp
+   calls de_sum(f,k) for sums due to contributions
+   from levels k = 1,2,...,kmax. Search ends when
+   the absolute value of the difference of the 
+   integral value found is less than
+   10^(-rp).
+   */      
+
+
+ide(%fg,a,rp,fp):= 
+  block([fpprec,fpprintprec,eps0,asum,h, oldval,newval,kmax,
+       vdiff,vdiffold  ], local(%ft),
+       
+     if rp > fp then
+          (print(" rp should be less than fp"), return(done) ),
+     fpprec:fp,
+     
+     /* convert to integration over [0,inf] */
+     
+     block([fpprec,beta],
+       fpprec : fp + 20,         
+       beta:bfloat(a),    
+       define (%ft(x), %fg(x + beta) )),
+     
+     eps0:bfloat(10^(-rp)),
+     fpprintprec:8,
+     kmax : 8,
+     
+     /* asum from u = 0 */
+     
+     asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,
+     /* print("in ide, asum u = 0  = ",asum ), */
+     
+     print("  "),
+     print("      rprec = ",rp," fpprec = ",fpprec ),
+     
+     /* start with k = 1, h = 1/2 value */
+     h : 1/2,
+          
+     asum : asum + de_sum(%ft,1),      
+         
+     
+     oldval : bfloat(asum*h),
+     
+     
+     print(" k     value           vdiff  "),
+     print("  "),
+     printf(true,"~2d    ~14a  ~%",1,string(oldval) ), 
+     
+     vdiff : 1.0b0,
+     vdiffold : 2.0b0,     
+
+     for k:2 thru (kmax+2) do
+      ( if k > kmax then 
+            (print("k limit reached"),return(done) ),
+        h : h/2,
+        asum : asum + de_sum(%ft,k),                    
+        newval:bfloat(asum*h),       
+        vdiff : abs(newval - oldval),        
+        printf(true,"~2d    ~14a ~14a  ~%",k,string( expand(newval) ),string(vdiff) ),
+        oldval : newval,
+        if vdiff > vdiffold then
+         ( print("vdiff > vdiffold"), return(done)),
+        if vdiff <= eps0 then return(done),
+        vdiffold : vdiff ),
+        print(" ") )$   
+        
+        
+ /* quad_de based on quad_de1 and ide */
+ 
+  /*    
+disp("quad_de(f,a,rp,fp) follows the same route
+        as ide(f,a,rp,fp), but instead of printing
+        a table, just returns the list [ newval, k-final, vdiff]
+         containing the end result. ")$
+ */
+ 
+ 
+ /* quad_de version 11/12/2012
+ 
+     assumes integrand is real  */
+ 
+ quad_de(%%fg,a,rp,fp):= 
+  block([fpprec,eps0:bfloat(10^(-rp)),oldval,newval,kval,kmax:8,
+          asum,h:1/2, vdiff,vdiffold ], local(%ft),
+     if debug then display(a,rp,fp),     
+     fpprec:fp,
+     block([fpprec,beta],
+        fpprec : fp + 20,
+        beta:bfloat(a),  
+        define (%ft(x), %%fg(x + beta) )),       
+     if debug then display(fp,%ft(y)),               
+     asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,
+     asum : asum + de_sum(%ft,1),       
+     oldval : expand(bfloat(asum*h)),
+     
+     vdiff : 1.0b0,
+     vdiffold : 2.0b0,     
+
+     for k:2 thru (kmax+2) do
+      ( if k > kmax then 
+            (print("k limit reached"),return(done) ),
+        kval : k,
+        h : h/2,
+        asum : asum + de_sum(%ft,k),                    
+        newval: expand(bfloat(asum*h)),       
+        vdiff : abs(newval - oldval),                
+        if vdiff > vdiffold then
+         ( if debug then print("quad_de: vdiffnew > vdiffold before vdiff < eps0 reached"),
+           if debug then print("quad_de: abort calc. "),
+           newval:oldval,vdiff:vdiffold,kval:kval-1, return(done)),
+        if vdiff <= eps0 then return(done),        
+        oldval : newval,
+        vdiffold : vdiff ),
+        
+        [ newval, kval,vdiff] )$   
+          
+    
+    
+ /* 
+ 
+      version quad_de up till 11/6/2012         
+quad_de(%%fg,a,rp,fp):= 
+  block([fpprec,eps0,oldval,newval,kval,kmax,asum,h,
+       vdiff,vdiffold ], local(%ft),
+       /* display(a,rp,fp), */
+       
+     if rp > fp then
+          (print(" rp should be less than fp"), return(done) ),
+     fpprec:fp,
+     block([fpprec,beta],
+       fpprec : fp + 20,         
+       beta:bfloat(a),    
+       define (%ft(x), %%fg(x + beta) )),
+       
+       /* display(fp,%ft(y)), */
+     
+     eps0:bfloat(10^(-rp)),
+     kmax : 8,
+     asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,
+     h : 1/2,          
+     asum : asum + de_sum(%ft,1),       
+     oldval : bfloat(asum*h),
+     
+     vdiff : 1.0b0,
+     vdiffold : 2.0b0,     
+
+     for k:2 thru (kmax+2) do
+      ( if k > kmax then 
+            (print("k limit reached"),return(done) ),
+        kval : k,
+        h : h/2,
+        asum : asum + de_sum(%ft,k),                    
+        newval:bfloat(asum*h),       
+        vdiff : abs(newval - oldval),                
+        if vdiff > vdiffold then
+         ( print(" vdiffnew > vdiffold before vdiff < eps0 reached"),
+           print(" return previous level result "),
+           newval:oldval,vdiff:vdiffold,kval:kval-1, return(done)),
+        if vdiff <= eps0 then return(done),        
+        oldval : newval,
+        vdiffold : vdiff ),
+        
+        [ newval, kval,vdiff] )$   
+ */
+        
+        
+  /*  end quad_de  */
+  
+
+/*  dequad(expr,x,a,b,rp,fp) calls quad_de for
+    integration over the interval (a,inf).
+    expr can be complex
+    version: 11/12/2012
+  */  
+  
+dequad(ddee,dev,dea,deb,derp,defp) :=
+block ( [desmall:bfloat(10^(-derp)),dee,deL,rans:0.0b0,cex],
+    local(deff),    
+     if debug then print("dequad"),
+     if debug then print("ddee = ",ddee),    
+    if member(dea,[minf,inf]) then
+       (print(" the lower limit must be finite."),
+        return(false)),
+    if debug then print("desmall = ",desmall), 
+    dee : ev(ddee,nouns,simp),
+    if debug then print("dee = ",dee),
+    /* overflow checks of integrand: see quad1d */
+    
+    if overflowb(dee,dev,dea,deb) then
+         (print("dequad: overflow error return from xmax "),          
+          return(false)),  
+   
+    if overflowa(dee,dev,dea,deb) then
+          (print("dequad: overflow error return from xmin  "),
+           return(false)),  
+           
+    /* case real expression     */
+    
+    if ( isequal(dee,realpart(dee)) or
+                   imagpart(dee) = 0 or
+                   isreal(dee,dev,dea,deb,500)) then                   
+         (define (deff(dev),dee),
+          deL : quad_de(deff,dea,derp,defp),
+          if debug then print("deL = ",deL),
+          if third(deL) <= desmall then 
+               (if method then print("dequad"),
+                return(first(deL)))
+          else return(false)),
+          
+    /* case pure imaginary expression    */ 
+
+    if ( isequal(expand(dee/%i), imagpart(dee)) or 
+             realpart(dee) = 0  or
+             isreal(dee/%i,dev,dea,deb,500)) then        
+         (define (deff(dev),imagpart(dee)),
+          deL : quad_de(deff,dea,derp,defp),
+          if debug then print("deL = ",deL),
+          if third(deL) <= desmall then 
+               (if method then print("dequad"),
+                return(%i*first(deL)))
+          else return(false)),
+                
+     /*  case neither real nor pure imaginary */
+           /* real part calculation */
+     cex : realpart(dee),
+     if float(cex) = 0.0 then go(doimagpart),
+     define (deff(dev),cex ),
+     deL : quad_de(deff,dea,derp,defp),
+     if debug then print("deL = ",deL),
+     if third(deL) <= desmall then 
+         rans : first(deL)
+      else return(false),
+     if debug then print("rans = ",rans),
+     
+     doimagpart,
+    
+          /* imag part calculation */
+                       
+     cex : imagpart(dee),
+     if float(cex) = 0.0 then
+        (if method then print("dequad"),
+          return(rans)),
+     define (deff(dev),cex),
+     deL : quad_de(deff,dea,derp,defp),
+     if debug then print("deL = ",deL),
+     if third(deL) <= desmall then 
+           (if method then print("dequad"),
+                rans + %i*first(deL))
+      else false)$
+     
+ /**** end dequad ********/
+  
+
+      
+        
+     
+/* ide_test(f,a,rp,fp) follows ide(f,a,rp,fp)
+    but adds to the table the error compared
+    with the true value which must be bound
+    to the global symbol tval.
+   */    
+     
+ide_test(%fg,a,rp,fp):= 
+  block([fpprec,fpprintprec,eps0,asum,h, oldval,newval,kmax,
+       vdiff,vdiffold  ], local(%ft),
+       
+     if rp > fp then
+          (print(" rp should be less than fp"), return(done) ),
+     fpprec:fp,
+     
+     /* convert to integration over [0,inf] */
+     
+     block([fpprec,beta],
+       fpprec : fp + 20,         
+       beta:bfloat(a),    
+       define (%ft(x), %fg(x + beta) )),
+     
+     eps0:bfloat(10^(-rp)),
+     fpprintprec:8,
+     kmax : 8,
+     
+     /* asum from u = 0 */
+     
+     asum : bfloat(%ft(exp(-1))*2*exp(-1)) ,
+     /* print("in ide, asum u = 0  = ",asum ), */
+     
+     print("  "),
+     print("      rprec = ",rp," fpprec = ",fpprec ),
+     
+     /* start with k = 1, h = 1/2 value */
+     h : 1/2,
+          
+     asum : asum + de_sum(%ft,1),      
+         
+     
+     oldval : bfloat(asum*h),
+
+     
+     verr : abs(oldval - tval),
+     print(" k     value           vdiff            verr  "),
+     print("  "),
+     printf(true,"~2d    ~14a ~14a   ~14a  ~%",1,string(oldval),"              ",string(verr)), 
+     
+     vdiff : 1.0b0,
+     vdiffold : 2.0b0,     
+
+     for k:2 thru (kmax+2) do
+      ( if k > kmax then 
+            (print("k limit reached"),return(done) ),
+        h : h/2,
+        asum : asum + de_sum(%ft,k),                    
+        newval:bfloat(asum*h),       
+        vdiff : abs(newval - oldval),        
+        verr : block([fpprec:fp+3],abs(newval - tval)),
+           
+        printf(true,"~2d    ~14a ~14a   ~14a  ~%",k,string( expand(newval) ),string(vdiff),string(verr)),        
+        
+        
+        oldval : newval,
+        if vdiff > vdiffold then
+         ( print("vdiff > vdiffold"), return(done)),
+        if vdiff <= eps0 then return(done),
+        vdiffold : vdiff ),
+        print(" ") )$   
+        
+
+
+/***********************************************/     
+
+   
+/*
+disp(" fdf(f,x,dfp) finds the absolute value
+       of the difference of f(x) at the current
+     value of fpprec and at the value (fpprec+dfp),
+     and returns [f(x), df(x)].
+     This code is adapted from Richard
+     Fateman's uncert(f,x) function. ")$
+ */
+ 
+     
+fdf (%ff, %xx, %dfp) :=
+   block([fv1,fv2,df],
+    fv1:bfloat(%ff(bfloat(%xx))),
+    block([fpprec:fpprec + %dfp ],
+     fv2:  bfloat(%ff(bfloat(%xx))),
+     df: abs(fv2 - fv1) ),
+   [bfloat(fv2),bfloat(df)] )$     
+   
+/******************************************/     
+   
+ 
+                
+        
+bfprint(bf,fpp):=
+  block([fpprec, fpprintprec ],
+        fpprec : fpp+2,
+        fpprintprec:fpp,
+        print("   number of digits = ",fpp),
+        print("  ",bf) )$
+        

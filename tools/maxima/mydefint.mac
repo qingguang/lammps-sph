@@ -1,0 +1,268 @@
+/* mydefint.mac 
+   Oct. 31, 2012
+   
+    mydefint.mac is a package of Maxima functions which 
+    contains code for using integrate with the nint package
+    of Maxima by Example, Ch. 8, Numerical Integration.
+    This file loads nint.lisp, available on the author's
+    webpage. This code should work with Maxima ver. 5.28.0.
+    
+    Copyright (C) 2012,  Edwin L. Woollett  <woollett@charter.net>       
+    http://www.csulb.edu/~woollett
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU GENERAL PUBLIC LICENSE, Version 2, June 1991,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details. You should have received a
+    copy of the GNU General Public License along with this program.
+    If not, see http://www.fsf.org/licensing/.   
+   
+  macros or functions defined here:
+     
+mydefint1
+
+symbolic
+mydefint2   
+
+mdefint
+ndefint   
+   
+   
+*/
+
+
+
+load("unwind_protect.lisp")$
+load("nint.lisp")$
+
+
+/*   
+   the macro mydefint1 prevents evaluation,
+   but can use:
+   e1 : ev(e1),
+   to force evaluation inside macro.
+   
+   note that expand(e1,0,0) would cause 
+   re-simplification of e1; e1 would 
+   not be reevaluated.
+   
+ */
+ 
+ /* a version of mydefint1 which uses neither
+    gensym nor ?stripdollar 
+    will have the bug that if globally
+    one has assume(x<0), then an expression
+    containing abs(x) will be simplified
+    to -x by integrate. Using a macro (prevents
+    evaluation) with simp:false prevents
+    both evaluation and simplification, 
+    (although using ev(..) forces an evaluation)
+    allowing us to change the variable of
+    integration from that supplied before
+    we set simp:true and pass the integrand
+    and variable of integration to integrate.  */
+    
+    
+ 
+ 
+ 
+ /* version of mydefint1 using  gg : gensym("x")   */
+ /* new version may 6, update may 25.
+    if xxlo and/or xxhi are symbolic, then the assumption
+    is made that xxlo < x < xxhi and xxlo < xxhi */
+ 
+mydefint1(_expr%,xx,xxlo,xxhi) ::= 
+block([domain:complex,simp : false, gg : gensym("x"),xxlo1,xxhi1,qxmin,qxmax,
+                  ee1, cntx : gensym("c"),rmd1],
+   if debug then print(" mydefint1 args and gg: "),
+   if debug then display(_expr%,xx,xxlo,xxhi,gg),
+   ee1 : ev(_expr%),   
+   ee1 : subst(xx=gg, ee1),   
+   if debug then display(ee1,gg),
+   block([simp : true],
+      ee1 : ev(ee1),
+      ee1 : ratsimp(ee1),
+      xxlo1 : ev (xxlo),
+      xxhi1 : ev (xxhi),            
+      qxmin : min(xxlo1,xxhi1),
+      qxmax : max(xxlo1,xxhi1),
+      if debug then display(ee1,gg,xxlo1,xxhi1,qxmin,qxmax),
+      unwind_protect((
+          cntx : apply('supcontext, [cntx]),
+          if symbolic(xxlo1,xxhi1)
+             then assume (xxlo1 < xxhi1,xxlo1 < gg, gg < xxhi1)
+             else assume(qxmin < gg, gg < qxmax),
+          if debug then print("mydefint1: ready for integrate call"),
+          if debug then display(ee1,gg,xxlo1,xxhi1),
+          rmd1 : errcatch(integrate(ee1,gg,xxlo1,xxhi1))), 
+          if debug then display(rmd1),
+          if rmd1 = [] then rmd1:false else rmd1 : first(rmd1),
+          if debug then display(rmd1),
+          /* print(" mydefint1 = ",rmd1), */
+          killcontext(cntx)),
+          rmd1))$
+      
+/********* end mydefint1 ********************/
+
+symbolic(aa,bb) :=
+block(
+   if (not member(aa,[minf,inf])) and  (numberp(float(aa)) = false) then true
+   else if (not member(bb,[minf,inf])) and (numberp(float(bb)) = false) then true
+   else false)$
+   
+
+/*  may 14 gensym version of mydefint2 macro  */
+
+
+mydefint2(e2,xL,yL) ::=
+block([domain:complex,simp : false,x2,x21,x22,y2,y21,y22,e22, 
+           qxmin,qxmax,xsign,resl0,resg0,symb_flag:false,
+           gx : gensym("x"),gy : gensym("y"),rint2,
+           cntxy : gensym("c")],
+           
+       if debug then print(" mydefint2 "),
+       if debug then display(e2,xL,yL,gx,gy,cntxy),
+           
+      [x2,x21,x22] : xL,
+      [y2,y21,y22] : yL,
+      
+      if debug then display(x2,x21,x22,y2,y21,y22),
+      
+      if member(y2,listofvars([x21,x22])) then 
+          (print("the outer integral limits should not depend on your chosen
+             inner integral variable of integration ",y2),
+           return(false)),
+           
+      e22 : ev(e2,eval),
+      e22 : substitute(gx,x2, e22),
+      if debug then display(e22),
+      y21 : ev(y21),
+      y21 : substitute(gx,x2,y21),
+      y22 : ev(y22),
+      y22 : substitute(gx,x2,y22),
+      e22 : substitute(gy,y2,e22),  
+      if debug then display(e22,y21,y22,x21,x22),
+      
+  block([simp:true],
+  
+      e22 : ev(e22),
+      e22 : ratsimp(e22),
+      x21 : ev(x21),
+      x22 : ev(x22),
+      if debug then display(e22,x21,x22),
+      
+      symb_flag: symbolic(x21,x22),
+      if debug then display(symb_flag),
+      
+      if symb_flag then
+           /* case symbolic outer integral limits:
+               assume x21 < gx < x22  */
+          (if debug then print(" case symbolic outer limits "),
+          
+          unwind_protect((
+             cntxy : apply('supcontext, [cntxy]),
+             assume(x21 < x22, x21 < gx, gx < x22), 
+           /* assume(min(x21,x22) < gx, gx < max(x21,x22)), */
+             assume(min(y21,y22) < gy, gy < max(y21,y22)),
+             if debug then display(e22,gy,y21,y22,gx,x21,x22),
+             rint2:errcatch(integrate(integrate(e22,gy,y21,y22),gx,x21,x22)),
+             if debug then display(rint2),
+             if rint2 = [] then rint2:false else rint2:first(rint2)),
+             killcontext(cntxy)),
+          return()),
+          
+          /* case numerical outer integral limits */
+          
+      qxmin : min(x21,x22),
+      qxmax : max(x21,x22),
+      if qxmin = x22 then xsign:-1 else xsign:1,
+      if debug then display(qxmin,qxmax,xsign),
+      
+          /* case outer integration var doesn't change sign  */
+    
+      if (qxmin >= 0 or qxmax <= 0) then 
+          (if debug then print(" case no change in sign"),      
+           unwind_protect((
+              cntxy : apply('supcontext, [cntxy]),
+              assume(qxmin < gx, gx < qxmax),        
+              assume(min(y21,y22) < gy, gy < max(y21,y22)),
+              rint2:errcatch(integrate(integrate(e22,gy,y21,y22),gx,x21,x22)),
+              if rint2 = [] then rint2:false else rint2: xsign*first(rint2)),          
+              killcontext(cntxy)),
+           return()),
+      
+      
+         /* case outer integration var does change sign: split into
+               two integrals: (qxmin,0) + (0,qxmax)   */ 
+      if debug then print(" case outer var changes sign"),
+            
+      
+      unwind_protect((
+         cntxy : apply('supcontext, [cntxy]),
+         assume(qxmin < gx, gx < 0),        
+         assume(min(y21,y22) < gy, gy < max(y21,y22)),
+         resl0 : errcatch(integrate(integrate(e22,gy,y21,y22),gx,qxmin,0)),
+         if resl0 = [] then resl0:false else resl0 : first(resl0),      
+         if debug then print("resl0 = ",resl0),
+         forget(qxmin < gx, gx < 0),
+         assume(gx > 0 , gx < qxmax),
+         resg0 : errcatch(integrate(integrate(e22,gy,y21,y22),gx,0,qxmax)),
+         if resg0 = [] then resg0:false else resg0 : first(resg0),      
+         if debug then print("resg0 = ",resg0)),
+         killcontext(cntxy)),
+      if (resl0=false or resgo=false) then rint2:false
+        else rint2 : xsign*(resl0 + resg0)),  /* end of block simp = true  */
+      
+      rint2)$     
+  
+/*********  end mydefint2 ********************/
+
+            
+
+/******** ndefint macro *******************/
+/*  ndefint first calls mdefint for symbolic
+    integral result, then calls fbfloat to
+    reduce to a numerical value using bigfloat
+    methods. (fbfloat is part of nint package,
+    so ndefint will not work without loading
+    nint, or separately defining fbfloat.)
+    */
+
+ndefint([sint]) ::=
+block([simp:false,nsint,rnsint],
+   if debug then print(" ndefint"),
+   if debug then display(sint),
+   nsint : apply('mdefint,sint),
+   if debug then print ("back in ndefint"),
+   if debug then display(nsint),
+   block([simp:true],
+       if nsint = false then rnsint:false
+       else if integrate_noun(nsint) then rnsint:false
+       /* else if member(nounify(integrate),listofops(nsint))
+           then  rnsint:false */
+       else rnsint : fbfloat(nsint,32)),
+   rnsint)$
+   
+
+
+   /**********  mdefint  macro
+      calls either mydefint1 or mydefint2
+      returns symbolic integral result  ************/
+      
+mdefint([mint]) ::=
+block([simp:false],
+    if debug then print(" mdefint"),
+    if debug then display(mint),
+    if listp(second(mint)) then apply('mydefint2,mint)
+     else apply('mydefint1,mint))$
+     
+
+/*  display2d:false$  */
+
+/*  ratsimp:false$  */
+
+

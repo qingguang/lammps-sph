@@ -1,4 +1,12 @@
 /* A maxima file for SPH/SDPD */
+lmp_maxima_path: "../../../../tools/maxima/";
+
+file_search_maxima: append (file_search_maxima,
+  [concat(lmp_maxima_path, "###.mac")]);
+
+file_search_lisp: append (file_search_lisp,
+  [concat(lmp_maxima_path, "###.lisp")]);
+
 load ("vector");
 load ("eigen");
 
