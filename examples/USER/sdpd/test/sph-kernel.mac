@@ -50,9 +50,13 @@ define_kernel(ndim, cutoff, 'lucy, 'wl, 'dwl)$
 define_kernel(ndim, cutoff, 'quintic, 'wq, 'dwq)$
 plot2d([wl, wq, w4, w6], [x, 0, cutoff]);
 
-infunq(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wq(x));
-infunl(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*wl(x));
-infunw4(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*w4(x));
-infunw6(x):= ''(2^(ndim-1)*%pi*x^(ndim-1)*w6(x));
+infunq(x):= 2^(ndim-1)*%pi*x^(ndim-1)*wq(x);
+infunl(x):= 2^(ndim-1)*%pi*x^(ndim-1)*wl(x);
+infunw4(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w4(x);
+infunw6(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w6(x);
 quad_qags(infunw6, x, 0, cutoff);
+
+A(r) := sin(r[1]);
+integrate(   A(r)
+
 */
