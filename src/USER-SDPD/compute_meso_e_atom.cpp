@@ -12,7 +12,7 @@
 ------------------------------------------------------------------------- */
 
 #include "string.h"
-#include "compute_meso_rho_atom.h"
+#include "compute_meso_e_atom.h"
 #include "atom.h"
 #include "update.h"
 #include "modify.h"
@@ -25,63 +25,63 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-ComputeMesoRhoAtom::ComputeMesoRhoAtom(LAMMPS *lmp, int narg, char **arg) :
+ComputeMesoEAtom::ComputeMesoEAtom(LAMMPS *lmp, int narg, char **arg) :
   Compute(lmp, narg, arg)
 {
-  if (narg != 3) error->all(FLERR,"Illegal compute meso_rho/atom command");
-  if (atom->rho_flag != 1) error->all(FLERR,"compute meso_rho/atom command requires atom_style with density (e.g. meso)");
+  if (narg != 3) error->all(FLERR,"Number of arguments for compute meso_e/atom command != 3");
+  if (atom->e_flag != 1) error->all(FLERR,"compute meso_e/atom command requires atom_style with energy (e.g. meso)");
 
   peratom_flag = 1;
   size_peratom_cols = 0;
 
   nmax = 0;
-  rhoVector = NULL;
+  evector = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
 
-ComputeMesoRhoAtom::~ComputeMesoRhoAtom()
+ComputeMesoEAtom::~ComputeMesoEAtom()
 {
-  memory->sfree(rhoVector);
+  memory->sfree(evector);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void ComputeMesoRhoAtom::init()
+void ComputeMesoEAtom::init()
 {
 
   int count = 0;
   for (int i = 0; i < modify->ncompute; i++)
-    if (strcmp(modify->compute[i]->style,"rhoVector/atom") == 0) count++;
+    if (strcmp(modify->compute[i]->style,"evector/atom") == 0) count++;
   if (count > 1 && comm->me == 0)
-    error->warning(FLERR,"More than one compute rhoVector/atom");
+    error->warning(FLERR,"More than one compute evector/atom");
 }
 
 /* ---------------------------------------------------------------------- */
 
-void ComputeMesoRhoAtom::compute_peratom()
+void ComputeMesoEAtom::compute_peratom()
 {
   invoked_peratom = update->ntimestep;
 
-  // grow rhoVector array if necessary
+  // grow evector array if necessary
 
   if (atom->nlocal > nmax) {
-    memory->sfree(rhoVector);
+    memory->sfree(evector);
     nmax = atom->nmax;
-    rhoVector = (double *) memory->smalloc(nmax*sizeof(double),"atom:rhoVector");
-    vector_atom = rhoVector;
+    evector = (double *) memory->smalloc(nmax*sizeof(double),"evector/atom:evector");
+    vector_atom = evector;
   }
 
-  double *rho = atom->rho;
+  double *e = atom->e;
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
     for (int i = 0; i < nlocal; i++) {
       if (mask[i] & groupbit) {
-              rhoVector[i] = rho[i];
+              evector[i] = e[i];
       }
       else {
-              rhoVector[i] = 0.0;
+              evector[i] = 0.0;
       }
     }
 }
@@ -90,7 +90,7 @@ void ComputeMesoRhoAtom::compute_peratom()
    memory usage of local atom-based array
 ------------------------------------------------------------------------- */
 
-double ComputeMesoRhoAtom::memory_usage()
+double ComputeMesoEAtom::memory_usage()
 {
   double bytes = nmax * sizeof(double);
   return bytes;
