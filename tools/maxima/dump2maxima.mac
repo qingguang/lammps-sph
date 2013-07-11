@@ -1,0 +1,34 @@
+parse_dump(fname):=block([s, l, tmp_data, colnames, q], 
+    s: openr(fname),
+    l: "",
+    /* search for time step */
+    while ssearch("ITEM: TIMESTEP", l)=false do (l: readline(s), print(l)),
+    lmp_data['timestep]: eval_string(readline(s)),
+    while ssearch("ITEM: NUMBER OF ATOMS", l)=false do (l: readline(s), print(l)),
+    lmp_data['natoms]: eval_string(readline(s)),
+    while ssearch("ITEM: BOX BOUNDS", l)=false do (l: readline(s), print(l)),
+    [lmp_data['xmin], lmp_data['xmax]]: map('eval_string, split(readline(s), " ")),
+    [lmp_data['ymin], lmp_data['ymax]]: map('eval_string, split(readline(s), " ")),
+    [lmp_data['zmin], lmp_data['zmax]]: map('eval_string, split(readline(s), " ")),
+    /* search for atoms */
+    while ssearch("ITEM: ATOMS", l)=false do (l: readline(s), print(l)),
+    /* read atoms data */
+    tmp_data: read_nested_list(s),
+    colnames: split(l, " "),
+    load("basic"),
+    /* remove ITEM: ATOMS */
+    pop(colnames),
+    pop(colnames),
+    for q: 1 thru length(colnames) do
+    (
+      atom_data[eval_string(colnames[q])]: map( lambda([x], x[q]), tmp_data)
+      ),
+    close(s),
+    [lmp_data, atom_data]);
+
+/*
+[lmp_data, atom_data]: parse_dump("dump00040000.dat");
+lmp_data['xmax] - lmp_data['xmin];
+plot2d([discrete, atom_data['x], atom_data['y]], [style, points]);
+*/
+
