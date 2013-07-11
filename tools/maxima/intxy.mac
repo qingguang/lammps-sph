@@ -1,11 +1,28 @@
-define_variable(cutoff, 0.24, float);
-define_variable(ndim, 2, integer);
-define_variable(finput, "data.xy", any);
-define_variable(foutput, "d.xy", any);
-define_variable(ktype, 'wendland6, any);
-define_variable(expr,  sin(2*%pi*x/1.2), any);
+kill(all);
+lmp_maxima_path: "../../../../tools/maxima/";
 
-xy: read_nested_list(finput);
+file_search_maxima: append (file_search_maxima,
+  [concat(lmp_maxima_path, "###.mac")]);
+
+file_search_lisp: append (file_search_lisp,
+  [concat(lmp_maxima_path, "###.lisp")]);
+
+define_variable(cutoff, 0.24/6.0*4.0, float);
+define_variable(ndim, 2, integer);
+define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n4.0/dump00000000.dat", any);
+
+load("dump2maxima.mac");
+[lmp_data, atom_data]: parse_dump(finput);
+
+define_variable(ktype, 'wendland6, any);
+Lx: lmp_data['xmax] - lmp_data['xmin];
+
+/* expression to estimate deriviative: diff(expr, x) */
+define_variable(expr,  sin(2*%pi*x/Lx), any);
+
+/* the number of points to sample, 0 means use all points in the dump
+file */
+define_variable(np, 70, integer);
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
@@ -15,18 +32,31 @@ dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
 A(x, y):= ''expr;
 load("nint.mac");
 F(x0, y0):=block([x, y],
-  nint(wxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+  quad(wxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
 
 dF(x0, y0):=block([x, y],
-  nint(-dwxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+  quad(-dwxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
 
 dexpr: diff(expr, 'x);
 dA(x, y):= ''dexpr;
-res: map(lambda([el],
-        block([x: el[1],
-         y: el[2]],
-         [x, y, dF(x, y), dA(x, y)])), xy);
 
+xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx]))$
+kill(atom_data);
+
+/* select randomly np points, if np=0 select all points */
+if np>0 then block([per], 
+  per: random_permutation( makelist(i, i, length(xy_data))),
+  per: sublist_indices(per, lambda([id], id<=np)),
+  xy_data:  map( lambda([id], xy_data[id]), per));
+
+q: 0$
+res: map(lambda([el],
+        block([xx: el[1], yy: el[2], dAsphx: el[3]],
+         q: q+1,
+         print(q, "/", length(xy_data)),
+         [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx])), xy_data);
+
+foutput: concat(finput, ".smothed");
 write_data(float(res), foutput);
  
 /* 
