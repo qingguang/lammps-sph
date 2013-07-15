@@ -21,6 +21,7 @@ PairStyle(sdpd,PairSDPD)
 #define LMP_PAIR_SDPD_H
 
 #include "pair.h"
+#include "wiener.h"
 
 namespace LAMMPS_NS {
 
@@ -41,6 +42,7 @@ class PairSDPD : public Pair {
   // SDPD temperature
   double **sdpd_temp;
   double *sdpd_background;
+  double *sdpd_gamma;
   int first;
 
   void allocate();
@@ -50,7 +52,12 @@ class PairSDPD : public Pair {
 		     double evdwl, double ecoul, 
 		     double fcompx, double fcompy, double fcompz,
 		     double delx, double dely, double delz);
+
+  Wiener wiener;
   };
+
+ double sdpd_equation_of_state(double rho,   double rho0, double c,
+			       double gamma, double rbackground);
 
 }
 

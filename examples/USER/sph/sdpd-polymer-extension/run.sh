@@ -14,11 +14,16 @@ rm -rf dum* im* poly* log.lammps
 
 nproc=2
 ndim=2d
+<<<<<<< HEAD
 Nbeads=32
 nx=48
+=======
+nx=32
+Nbeads=16
+>>>>>>> 64f38e51be648c771e9d59c9dca93913d801a401
 Nsolvent=3456 #${nx}*${nx}*7/2-${nx}*7/2-${Nbeads}
-Force=1e-4
-eta=3e-3
+Force=3e-4
+eta=1e-2
 H0=0.01
 R0=4
 Delta=1
@@ -27,8 +32,8 @@ Delta=1
 restart=0
 restart_file=initial/nb16ns16H0.01R04.dat
 
-#dname=fene-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
-dname=feex-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-eta${eta}
+#dname=fene--nb${Nbeads}-ns${Nsolvent}-nx${nx}-H0.4-bg1.0-f${Force}-eta${eta}
+dname=feex-run2-nb${Nbeads}-ns${Nsolvent}-nx${nx}-H${H0}-R0${R0}-D${Delta}-f${Force}-eta${eta}
 #vars="-var nx ${nx} -var Nbeads ${Nbeads} -var Nsolvent ${Nsolvent} -var ndim ${ndim} -var dname ${dname} -var force ${Force}"
 vars="-var nx ${nx} -var ndim ${ndim} -var dname ${dname} \ 
       -var force ${Force} -var eta ${eta} \

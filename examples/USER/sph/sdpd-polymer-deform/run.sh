@@ -11,11 +11,11 @@ else
 fi
 
 
-nproc=1
-ndim=3d
-Nbeads=20
-Nsolvent=0
-nx=10
+nproc=4
+ndim=2d
+Nbeads=2
+Nsolvent=200
+nx=20
 Force=0
 etas=3e-2
 rate=4e2

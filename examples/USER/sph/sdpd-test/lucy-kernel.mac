@@ -12,8 +12,11 @@ wvect(s):= (1+3*s)*(1-s)^3$
 dwall(x):= ''(diff(wvect(x), x))$
 w(x):= norm[ndim]*wvect(vabs(x)/h)$
 dwdx(x):= norm[ndim]/h*dwall(vabs(x)/h)$
+
 infun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x);
 infun_dw(x):= 2^(ndim-1)*%pi*x^(ndim-1)*dwdx(x);
 
 /* check normalization of the kernel*/
+h: 1e-5;
+cutoff: h;
 quad_qags(infun(x), x, 0, cutoff);

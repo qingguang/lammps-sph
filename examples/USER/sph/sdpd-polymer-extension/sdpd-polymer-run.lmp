@@ -9,8 +9,8 @@ communicate        single cutoff ${cc} vel yes
 # create simulation box
 
 #3D box
-read_data           poly3d.txt
-#read_restart         sdpd.restart.1000000
+#read_data           poly3d.txt
+read_restart         sdpd.restart.1000000
 special_bonds   lj 1 1 1
 
 
@@ -28,9 +28,9 @@ fix                integrate_fix_full all meso
 include            ${ndim}-image.lmp
 
 #### begin prerun ####
-restart     ${Nprerun}  ${dname}/sdpd.restart.tem
-include           in.prerun
-restart     0
+#restart     ${Nprerun}  ${dname}/sdpd.restart.tem
+#include           in.prerun
+#restart     0
 #### end of prerun ####
 
 
@@ -78,13 +78,13 @@ timestep           ${dt}
 
 restart 1000000    ${dname}/sdpd.restart
 
-fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
-fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
+#fix force_head head addforce ${N_A_kol}*${solvent_mass} 0.0 0.0
+#fix force_tail tail addforce ${A_kol}*${solvent_mass} 0.0 0.0
 
-run 1000
+#run 1000000
 
-unfix force_head
-unfix force_tail
+#unfix force_head
+#unfix force_tail
 
 fix endend exten print 1000 "${vtime} ${dpos}" file ${dname}/extenfree.dat screen no
 run 100000000

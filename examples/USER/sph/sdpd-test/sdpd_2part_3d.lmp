@@ -4,8 +4,9 @@ units              si
 atom_modify map array sort 0.0 0.0
 atom_style         meso
 boundary          p p p
+communicate        single vel yes
 # create simulation box
-#3D box
+#2D box
 # domain size
 variable          Lx equal 1.000e-3
 # the center of the domain
@@ -13,7 +14,7 @@ variable          xcenter equal 0.5*${Lx}
 # smothing length
 variable          h equal 6.5e-5
 
-region             box block 0.0000e-3 ${Lx} 0.0000e-3 ${Lx} 0.0 ${Lx} units box
+region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
 create_box         1 box
 mass               1 1.7e-7
 
@@ -25,29 +26,29 @@ velocity     fst set 0.0 0.0 0.0 units box
 # create atom with id=2
 variable          x2pos equal ${xcenter}+0.5*${h}
 create_atoms 1 single ${x2pos} ${xcenter} ${xcenter} units box
-group        scd id == 1
+group        scd id == 2
 velocity     scd set 1.0 0.0 0.0 units box
 
-# use Tait's EOS in combination with Morris' laminar viscosity.
-# We set rho_0 = 50 kg/m^3, c = 0.1 m/s, h = 6.5e-5 m.
-# The dynamic viscosity is set to 1.0e-3 Pa s, corresponding to a kinematic viscosity of 1.0e-6 m^2/s
-#The temperature is set to 1e5C.
-pair_style         hybrid/overlay sph/rhosum 1 sdpd
-pair_coeff         * * sdpd     50.0 0.0 1.0 ${h} 0.0
-pair_coeff         * * sph/rhosum   ${h}
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+
+variable           rho0 equal 50.0
+variable              c equal 0.0
+variable           eta  equal 1.0
+variable           temp equal 0.0
+variable           rho_background equal 0.0
+pair_coeff         * * sdpd     ${rho0} ${c} ${eta} ${h} ${temp} ${rho_background}
+pair_coeff         * * sdpd/rhosum   ${h}
 
 # do full time integration
 fix                integrate_fix_full all  meso
 
-neighbor           3.0e-6 bin
+neighbor           0 bin
 timestep           1e-19
 
-variable           force_sdpd equal fx[1]
-
+variable           force_sdpd_fx equal fx[1]
+variable           force_sdpd_fy equal fy[1]
 compute            rho_peratom all meso_rho/atom
-dump               dump_id all custom 1 dump*.dat id type x y z vx vy vz c_rho_peratom
-run                3
-
-print              "f: ${force_sdpd}"
-
+dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_peratom
 run                1
+
+print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
