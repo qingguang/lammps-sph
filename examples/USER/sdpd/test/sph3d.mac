@@ -1,12 +1,3 @@
-/* A maxima file for SPH/SDPD */
-lmp_maxima_path: "../../../../tools/maxima/";
-
-file_search_maxima: append (file_search_maxima,
-  [concat(lmp_maxima_path, "###.mac")]);
-
-file_search_lisp: append (file_search_lisp,
-  [concat(lmp_maxima_path, "###.lisp")]);
-
 load ("vector");
 load ("eigen");
 
@@ -32,10 +23,9 @@ dR(A, B):= block([del, dmin, d],
   );
 
 /* smoothing length */
-h: 6.5e-5$
-cutoff: h$
+h: 2.5e-5$
 load ("sph-kernel.mac");
-define_kernel(ndim, cutoff, 'wendland6, 'w, 'dwdr);
+define_kernel(ndim, h, 'wendland6, 'w, 'dwdr);
 
 r: makelist([], i, 1, npart);
 v: makelist([], i, 1, npart);
@@ -44,7 +34,7 @@ v: makelist([], i, 1, npart);
 m: makelist(1.7e-7, i, 1, npart);
 
 /* viscosity */
-nu: makelist(1.0, i, 1, npart);
+nu: makelist(0.1, i, 1, npart);
 
 /* initial volume of the particles */
 V: makelist(1.0, i, 1, npart);
@@ -62,9 +52,14 @@ v[2]: [1.0, 0.0, 0.0]$
 r[3]: [Lx/2.0, Lx/2.0+0.5*h, Lx/2.0]$
 v[3]: [1.0, 0.0, 0.0]$
 
+
 /* equation of state */
-rho_0: 1.0;
 p(rho):= c^2*rho$
+
+load("expr2lmp.mac");
+block([nu: nu[1]],
+  expr2file([ndim, npart, Lx, h, c, nu], "sph3d-vars.lmp"));
+
 
 rho: makelist(
   m[i]*sum(w(vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
