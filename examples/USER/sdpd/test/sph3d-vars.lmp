@@ -1,0 +1,6 @@
+variable ndim equal 3
+variable npart equal 3
+variable Lx equal 0.001
+variable h equal 2.5000000000000001E-5
+variable c equal 0.1
+variable nu equal 0.1

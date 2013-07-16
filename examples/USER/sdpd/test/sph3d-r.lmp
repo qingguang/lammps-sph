@@ -8,29 +8,7 @@ atom_style         meso
 boundary          p p p
 communicate        single vel yes
 
-variable          xcenter equal 0.5*${Lx}
-
-region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
-create_box         1 box
-mass               1 1.7e-7
-
-# create atom with id=1
-
-create_atoms 1 single ${xcenter} ${xcenter} ${xcenter} units box
-group        fst id == 1
-velocity     fst set 0.0 0.0 0.0 units box
-
-# create atom with id=2
-variable          x2pos equal ${xcenter}+0.5*${h}
-create_atoms 1 single ${x2pos} ${xcenter} ${xcenter} units box
-group        scd id == 2
-velocity     scd set 1.0 0.0 0.0 units box
-
-create_atoms 1 single ${xcenter} ${x2pos} ${xcenter} units box
-group        scd id == 3
-velocity     scd set 1.0 0.0 0.0 units box
-
-
+read_data         sph3d.dat
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 
 variable           rho0 equal 1.0
@@ -56,4 +34,3 @@ dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_perato
 run                1
 
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
-write_restart     dump.0.rst
