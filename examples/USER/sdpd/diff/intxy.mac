@@ -1,14 +1,13 @@
 kill(all);
 
-lmp_maxima_path: "../../../../tools/maxima/";
-file_search_maxima: append (file_search_maxima,
-  [concat(lmp_maxima_path, "###.mac")]);
-file_search_lisp: append (file_search_lisp,
-  [concat(lmp_maxima_path, "###.lisp")]);
-
 define_variable(cutoff, 0.24/6.0*4.0, float);
 define_variable(ndim, 2, integer);
-define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n4.0/dump00000000.dat", any);
+define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n6.0/dump00000000.dat", any);
+
+/*
+if file is not found run script lammps-sdpd/tools/maxima/setupt.sh
+from lammps-sdpd/tools/maxima/ directory
+*/
 
 load("dump2maxima.mac");
 [lmp_data, atom_data]: parse_dump(finput);
@@ -40,7 +39,6 @@ dexpr: diff(expr, 'x);
 dA(x, y):= ''dexpr;
 
 xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx]))$
-kill(atom_data);
 
 /* select randomly np points, if np=0 select all points */
 if np>0 then block([per], 
