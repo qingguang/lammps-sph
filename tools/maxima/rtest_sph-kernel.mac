@@ -1,0 +1,16 @@
+(kill(all),0);
+0$
+
+(kill(all),
+ load("sph-kernel.mac"),
+ load("nint.mac"),
+   0);
+0$
+
+(ndim: 2,
+ cutoff: 1/2,
+ define_kernel(ndim, cutoff, 'wendland6, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x),
+ nint(intfun, x, 0, 2*cutoff)
+);
+1.0$

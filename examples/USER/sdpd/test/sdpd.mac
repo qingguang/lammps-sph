@@ -1,0 +1,17 @@
+kill(all);
+define_variable(py_python, "python", any)$
+define_variable(py_file_output, "out.txt", any)$
+define_variable(py_file_in, "in.py", any)$
+
+read_file():= block([l, fl],
+  fl: openr(py_file_output),
+  l: readline(fl),
+  close(fl),
+  parse_string(l));
+
+
+lmp_file(fname):= block([cmd: concat(py_python, " ", py_file_in,  " > ",  py_file_output)],
+  with_stdout(py_file_in, print("preved")),
+  disp(cmd));
+
+lmp_file("preved");

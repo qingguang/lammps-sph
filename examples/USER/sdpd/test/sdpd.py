@@ -1,6 +1,6 @@
 from lammps import lammps
 lmp = lammps()
-lmp.file("sdpd_3part_3d.lmp")
+lmp.file("sph3d.lmp")
 
 # equal style variable
 h=lmp.extract_variable("h", None, 0)
