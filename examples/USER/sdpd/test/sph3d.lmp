@@ -1,18 +1,16 @@
 echo               both
-dimension          3
+include           sph3d-vars.lmp
+
+dimension          ${ndim}
 units              si
 atom_modify map array sort 0 0
 atom_style         meso
 boundary          p p p
 communicate        single vel yes
-# create simulation box
-#2D box
-# domain size
-variable          Lx equal 1.000e-3
-# the center of the domain
+
 variable          xcenter equal 0.5*${Lx}
-# smothing length
-variable          h equal 6.5e-5
+
+
 
 region             box block 0 ${Lx} 0 ${Lx} 0 ${Lx} units box
 create_box         1 box
@@ -43,7 +41,7 @@ variable           temp equal 0.0
 variable           gamma equal 1.0
 variable           rho_background equal 0.0
 variable           ktype string wendland6
-pair_coeff         * * sdpd     ${h} ${ktype} ${rho0} ${c} ${eta} ${temp} ${gamma} ${rho_background}
+pair_coeff         * * sdpd     ${h} ${ktype} ${rho0} ${c} ${nu} ${temp} ${gamma} ${rho_background}
 pair_coeff         * * sdpd/rhosum ${h} ${ktype}
 
 # do full time integration
@@ -59,3 +57,4 @@ dump               dump_id all custom 1 dump*.dat id type x y vx vy c_rho_perato
 run                1
 
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
+write_restart     dump.0.rst
