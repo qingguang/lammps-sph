@@ -252,6 +252,7 @@ class Data {
   tagint *tag;
   int *type,*mask,*image;
   int *molecule;
+  double *rho, *e, *cv, *vestx, *vesty, *vestz;
   double *q,*mux,*muy,*muz,*mul,*radius,*density,*vfrac,*rmass;
   double *s0,*x0x,*x0y,*x0z;
   double *shapex,*shapey,*shapez;
@@ -1181,8 +1182,26 @@ int atom_line(double *buf, Data &data, int iatoms)
 
 int atom_meso(double *buf, Data &data, int iatoms)
 {
-  fprintf(stderr,"Support for atom style meso is not fully implemented\n");
-  exit(1);
+  int m = 1;
+  data.x[iatoms] = buf[m++];
+  data.y[iatoms] = buf[m++];
+  data.z[iatoms] = buf[m++];
+  data.tag[iatoms] = static_cast<int> (buf[m++]);
+  data.type[iatoms] = static_cast<int> (buf[m++]);
+  data.mask[iatoms] = static_cast<int> (buf[m++]);
+  data.image[iatoms] = static_cast<int> (buf[m++]);
+  data.vx[iatoms] = buf[m++];
+  data.vy[iatoms] = buf[m++];
+  data.vz[iatoms] = buf[m++];
+
+  data.rho[iatoms]=buf[m++];
+  data.e[iatoms]=buf[m++];
+  data.cv[iatoms]=buf[m++];
+  data.vestx[iatoms]=buf[m++];
+  data.vesty[iatoms]=buf[m++];
+  data.vestz[iatoms]=buf[m++];
+
+  return m;
 }
 
 int atom_molecular(double *buf, Data &data, int iatoms)
@@ -1463,8 +1482,12 @@ void allocate_line(Data &data)
 
 void allocate_meso(Data &data)
 {
-  fprintf(stderr,"support for atom style meso is not fully implemented\n");
-  exit(1);
+  data.rho = new double[data.natoms];
+  data.e = new double[data.natoms];
+  data.cv = new double[data.natoms];
+  data.vestx = new double[data.natoms];
+  data.vesty = new double[data.natoms];
+  data.vestz = new double[data.natoms];
 }
 
 void allocate_tri(Data &data)
@@ -2508,7 +2531,8 @@ void pair(FILE *fp, Data &data, char *style, int flag)
       }
 
   } else if (strcmp(style,"sw") == 0) {
-
+  } else if (strcmp(style,"sdpd") == 0) {
+  } else if (strcmp(style,"sdpd/rhosum") == 0) {
   } else if (strcmp(style,"table") == 0) {
 
     int tabstyle = read_int(fp);
@@ -3986,8 +4010,8 @@ void Data::write_atom_line(FILE *fp, int i, int ix, int iy, int iz)
 
 void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
 {
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
+	  tag[i],type[i],rho[i],e[i],cv[i],x[i],y[i],z[i],ix,iy,iz);
 }
 
 void Data::write_atom_molecular(FILE *fp, int i, int ix, int iy, int iz)
@@ -4066,8 +4090,7 @@ void Data::write_atom_line_extra(FILE *fp, int i)
 
 void Data::write_atom_meso_extra(FILE *fp, int i)
 {
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp," %-1.16e %-1.16e %-1.16e",rho[i],e[i],cv[i]);
 }
 
 void Data::write_atom_molecular_extra(FILE *fp, int i)
@@ -4146,8 +4169,7 @@ void Data::write_vel_line(FILE *fp, int i)
 
 void Data::write_vel_meso(FILE *fp, int i)
 {
-  fprintf(stderr,"support for atom style meso is not yet complete\n");
-  exit(1);
+  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
 }
 
 void Data::write_vel_molecular(FILE *fp, int i)
