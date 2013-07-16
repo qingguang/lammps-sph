@@ -1,4 +1,6 @@
 Take 2D integral of SPH kernel.
 
-nint.mac and supproting files are from
-http://www.csulb.edu/~woollett/
+- [[nint/]] :: 1d and 2d quadrature for maxima by Ted Woollett
+	  http://www.csulb.edu/~woollett
+
+- [[setput.sh]] :: add directoreis to maxima search path

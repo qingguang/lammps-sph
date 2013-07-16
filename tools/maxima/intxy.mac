@@ -1,9 +1,8 @@
 kill(all);
-lmp_maxima_path: "../../../../tools/maxima/";
 
+lmp_maxima_path: "../../../../tools/maxima/";
 file_search_maxima: append (file_search_maxima,
   [concat(lmp_maxima_path, "###.mac")]);
-
 file_search_lisp: append (file_search_lisp,
   [concat(lmp_maxima_path, "###.lisp")]);
 

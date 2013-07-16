@@ -1,0 +1,41 @@
+(kill(all),0);
+0$
+
+(kill(all),
+ load("dump2maxima.mac"),
+   0);
+0$
+
+block([x: 10],
+ [lmp_data, atom_data]: parse_dump("dump00040000.dat"),
+ length(atom_data['y]));
+900$
+
+([lmp_data, atom_data]: parse_dump("dump00040000.dat"),
+ lmp_data['natoms]);
+900$
+
+
+values;
+['lmp_data, 'atom_data]$
+
+lmp_data['timestep];
+40000$
+
+lmp_data['xmax];
+1.2$
+
+lmp_data['zmax];
+0.012$
+
+lmp_data['bounds];
+["pp", "pp", "pp"]$
+
+atom_data['x][1];
+1.1265$
+
+length(atom_data['x]);
+900$
+
+atom_data['vy][900];
+-0.00618342$
