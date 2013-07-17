@@ -10,7 +10,7 @@ from lammps-sdpd/tools/maxima/ directory
 */
 
 load("dump2maxima.mac");
-[lmp_data, atom_data]: parse_dump(finput);
+[lmp_data, atom_data]: dump2maxima(finput);
 
 define_variable(ktype, 'wendland6, any);
 Lx: lmp_data['xmax] - lmp_data['xmin];

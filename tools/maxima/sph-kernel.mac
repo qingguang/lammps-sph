@@ -1,6 +1,5 @@
 define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwexpr],
   if ktype='quintic then (
-    load("pw.mac"),
     norm[2]: 63/(478*%pi),
     norm[3]: 9/(40*%pi),
     n:       3,
@@ -10,37 +9,31 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
     (3 - s)^5
     ],
     dfsim: diff(fsim, s),
-    wexpr: pw([-1,fsim[1],1,fsim[2],2,fsim[3], 3, 0, inf], s),
-    dwexpr: pw([-1,dfsim[1],1,dfsim[2],2,dfsim[3], 3, 0, inf], s),
-    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
+    wexpr: buildq([fsim], if s<1 then fsim[1] else if s<2 then fsim[2] else if s<3 then fsim[3] else 0),
+    dwexpr: buildq([fsim], if s<1 then dfsim[1] else if s<2 then dfsim[2] else if s<3 then dfsim[3] else 0))
   else if ktype='lucy then (
-    norm[2]: 1.591549430918954,
-    norm[3]: 2.088908628081126,
+    norm[2]: 5/%pi,
+    norm[3]: 105/(16*%pi),
     n      : 1,
     wexpr: (1+3*s)*(1-s)^3,
-    dwexpr: diff(wexpr, s),
-    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
+    dwexpr: diff(wexpr, s))
   else if ktype='wendland4 then (
     norm[2]: 9/%pi,
     norm[3]: 495/(32*%pi),
     n      : 1,
     wexpr: (1-s)^6*(1+6*s+35/3*s^2),
-    dwexpr: diff(wexpr, s),
-    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
+    dwexpr: diff(wexpr, s))
   else if ktype='wendland6 then (
     norm[2]: 78/(7*%pi),
     norm[3]: 1365/(64*%pi),
     n      : 1,
     wexpr: (1-s)^8*(1+8*s+25*s^2+32*s^3),
-    dwexpr: diff(wexpr, s),
-    wvect(g):= subst(s=g, if s<1 then wexpr else 0),
-    dwvect(g):= subst(s=g, if s<1 then dwexpr else 0))
+    dwexpr: diff(wexpr, s))
   else (
     error("unknown kernel type")
     ),
+  wvect(g):= subst(s=g, if s<n then wexpr else 0),
+  dwvect(g):= subst(s=g, if s<n then dwexpr else 0),
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
   define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim));
 

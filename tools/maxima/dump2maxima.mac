@@ -1,4 +1,4 @@
-parse_dump(fname):=block([s, l, tmp_data, colnames, q, bs],
+dump2maxima(fname):=block([s, l, tmp_data, colnames, q, bs],
     s: openr(fname),
     l: "",
     /* search for time step */
