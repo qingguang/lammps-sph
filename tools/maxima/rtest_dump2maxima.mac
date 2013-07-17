@@ -7,11 +7,11 @@
 0$
 
 block([x: 10],
- [lmp_data, atom_data]: parse_dump("dump00040000.dat"),
+ [lmp_data, atom_data]: dump2maxima("dump00040000.dat"),
  length(atom_data['y]));
 900$
 
-([lmp_data, atom_data]: parse_dump("dump00040000.dat"),
+([lmp_data, atom_data]: dump2maxima("dump00040000.dat"),
  lmp_data['natoms]);
 900$
 
