@@ -57,3 +57,4 @@ run                1
 
 print              "f: ${force_sdpd_fx} ${force_sdpd_fy}"
 write_restart     dump.0.rst
+write_data        dump.0.data

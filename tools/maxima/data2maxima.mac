@@ -1,0 +1,54 @@
+data2maxima(fname):=block([s, l, colnames, tmp_data, tmp_data, tmp_vel, vellist, tmp_atom, lmp_data, atom_data],
+    s: openr(fname),
+    l: "",
+    while ssearch(" atoms", l)=false do (l: readline(s)),
+    lmp_data['natoms]: eval_string(first(split(l))),
+    l: "",
+    while ssearch(" atom types", l)=false do (l: readline(s)),
+    lmp_data['ntypes]: eval_string(first(split(l))),
+    l: "",
+    while ssearch(" xlo xhi", l)=false do (l: readline(s)),
+    lmp_data['xlo]: eval_string(first(split(l))),
+    lmp_data['xhi]: eval_string(second(split(l))),
+    l: "",
+    while ssearch(" ylo yhi", l)=false do (l: readline(s)),
+    lmp_data['ylo]: eval_string(first(split(l))),
+    lmp_data['yhi]: eval_string(second(split(l))),
+    l: "",
+    while ssearch(" zlo zhi", l)=false do (l: readline(s)),
+    lmp_data['zlo]: eval_string(first(split(l))),
+    lmp_data['zhi]: eval_string(second(split(l))),
+    l: "",
+    while ssearch("Masses", l)=false do (l: readline(s)),
+    readline(s),
+    lmp_data['mass]: makelist(eval_string(second(split(readline(s)))), lmp_data['ntypes]),
+    l: "",
+    while ssearch("Atoms", l)=false do (l: readline(s)),
+    readline(s),
+    tmp_data: read_nested_list(s),
+    colnames: ['tag, 'types, 'rho, 'e, 'cv, 'x, 'y, 'z, 'ix, 'iy, 'iz],
+    tmp_atom: rest(tmp_data, - (lmp_data['natoms]+3)),
+    tmp_vel:  rest(tmp_data,    lmp_data['natoms]+3),
+    for q: 1 thru length(colnames) do
+    (
+      atom_data[colnames[q]]: map( lambda([x], x[q]), tmp_atom)
+      ),
+    vellist: ['tag, 'vx, 'vy, 'vz],
+    for q: 2 thru length(vellist) do
+    (
+      atom_data[vellist[q]]: map( lambda([x], x[q]), tmp_vel)
+      ),
+    close(s),
+    [lmp_data, atom_data]);
+
+[lmp_data, atom_data]: data2maxima("dump.0.data");
+lmp_data['natoms];
+lmp_data['ntypes];
+lmp_data['xhi];
+lmp_data['xlo];
+lmp_data['zhi];
+lmp_data['zlo];
+lmp_data['mass];
+atom_data['x];
+atom_data['vx];
+atom_data['tag];

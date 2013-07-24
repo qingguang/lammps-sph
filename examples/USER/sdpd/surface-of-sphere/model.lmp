@@ -1,0 +1,3 @@
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}

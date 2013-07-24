@@ -1,0 +1,30 @@
+/* m4prime */
+fsim: [
+1 - 5*s^2/2 + 3*s^3/2,
+1/2*(2-s)^2*(1-s)
+];
+n: 2;
+
+/* cubic */
+/*
+fsim: [
+(1-s)^3 - 4*(1/2-s)^3,
+(1-s)^3
+];
+n: 1;
+*/
+
+norm[2]: 80/(7*%pi);
+norm[3]: 16/%pi;
+ndim: 3;
+I: 2^(ndim-1)*%pi * (integrate(s^(ndim-1)*fsim[1], s, 0, n/2) + integrate(s^(ndim-1)*fsim[2], s, n/2, n));
+
+ft: integrate(sin(k*s)*s*fsim[1], s, 0, n/2) + integrate(sin(k*s)*s*fsim[2], s, n/2, n);
+
+fpos(k):= block([aux: 4*%pi*norm[ndim]*ft/k], if aux>0 then aux else 1e-7);
+fneg(k):= block([aux: 4*%pi*norm[ndim]*ft/k], if aux<0 then -aux else 1e-7);
+
+plot2d([fpos(k), fneg(k)], [k, 0.1, 11*%pi], [y, 1e-6, 1], [logy]);
+
+
+
