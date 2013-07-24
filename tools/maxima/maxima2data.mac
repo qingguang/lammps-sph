@@ -1,0 +1,33 @@
+maxima2data(lmp_data, atom_data, fname):= block(
+  [hstring: "LAMMPS data file from restart file: timestep = 1, procs = 1"],
+  s: openw(fname),
+  printf(s, "~a~%~%", hstring),
+  printf(s, "~d atoms~%~%", lmp_data['natoms]),
+  printf(s, "~d atom types~%~%", lmp_data['ntypes]),
+  printf(s, "~-1,16e ~-1,16e xlo xhi~%", lmp_data['xlo],  lmp_data['xhi]),
+  printf(s, "~-1,16e ~-1,16e ylo yhi~%", lmp_data['ylo],  lmp_data['yhi]),
+  printf(s, "~-1,16e ~-1,16e zlo zhi~%", lmp_data['zlo],  lmp_data['zhi]),
+  printf(s, "~%Masses~%~%"),
+  for i thru length(lmp_data['mass]) do
+      printf(s, "~d ~e~%", i, lmp_data['mass][i]),
+  printf(s, "~%Atoms~%~%"),
+  colnames: ['tag, 'types, 'rho, 'e, 'cv, 'x, 'y, 'z, 'ix, 'iy, 'iz],
+  printformat: "~d ~d ~-1,16e ~-1,16e ~-1,16e ~-1,16e ~-1,16e ~-1,16e ~d ~d ~d",
+  for q thru lmp_data['natoms] do (
+    out_lst: map( lambda([v], atom_data[v][q]), colnames),
+    apply( 'printf, append( [s, printformat], out_lst )),
+    newline(s)
+    ),
+  printf(s, "~%Velocity~%~%"),
+  vellist: ['tag, 'vx, 'vy, 'vz],
+  printformat: "~d ~-1,16e ~-1,16e ~-1,16e",
+  for q thru lmp_data['natoms] do (
+    out_lst: map( lambda([v], atom_data[v][q]), vellist),
+    apply( 'printf, append( [s, printformat], out_lst )),
+    newline(s)
+    ),
+  close(s));
+  
+[lmp_data, atom_data]: data2maxima("dump.0.data");
+maxima2data(lmp_data, atom_data, "test.dat");
+

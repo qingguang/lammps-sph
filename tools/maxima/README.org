@@ -1,5 +1,9 @@
 Take 2D integral of SPH kernel.
 
+Run tests with the following commands in maxima shell
+batch("rtest_dump2maxima.mac", 'test);
+batch("rtest_sph-kernel.mac", 'test);
+
 - [[nint/]] :: 1d and 2d quadrature for maxima by Ted Woollett
 	  http://www.csulb.edu/~woollett
 

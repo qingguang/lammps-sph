@@ -9,18 +9,16 @@ dump2maxima(fname):=block([s, l, tmp_data, colnames, q, bs],
     while ssearch("ITEM: BOX BOUNDS", l)=false do (l: readline(s)),
     bs: split(l, " "),
     lmp_data['bounds]: [bs[4], bs[5], bs[6]],
-    [lmp_data['xmin], lmp_data['xmax]]: map('eval_string, split(readline(s), " ")),
-    [lmp_data['ymin], lmp_data['ymax]]: map('eval_string, split(readline(s), " ")),
-    [lmp_data['zmin], lmp_data['zmax]]: map('eval_string, split(readline(s), " ")),
+    [lmp_data['xlo], lmp_data['xhi]]: map('eval_string, split(readline(s), " ")),
+    [lmp_data['ylo], lmp_data['yhi]]: map('eval_string, split(readline(s), " ")),
+    [lmp_data['zlo], lmp_data['zhi]]: map('eval_string, split(readline(s), " ")),
     /* search for atoms */
     while ssearch("ITEM: ATOMS", l)=false do (l: readline(s)),
     /* read atoms data */
     tmp_data: read_nested_list(s),
     colnames: split(l, " "),
-    load("basic"),
     /* remove ITEM: ATOMS */
-    pop(colnames),
-    pop(colnames),
+    colnames: rest(colnames, 2),
     for q: 1 thru length(colnames) do
     (
       atom_data[eval_string(colnames[q])]: map( lambda([x], x[q]), tmp_data)

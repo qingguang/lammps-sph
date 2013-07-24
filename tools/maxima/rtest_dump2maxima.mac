@@ -22,10 +22,13 @@ values;
 lmp_data['timestep];
 40000$
 
-lmp_data['xmax];
+lmp_data['xlo];
+0$
+
+lmp_data['xhi];
 1.2$
 
-lmp_data['zmax];
+lmp_data['zhi];
 0.012$
 
 lmp_data['bounds];

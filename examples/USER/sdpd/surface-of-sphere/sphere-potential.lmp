@@ -1,0 +1,22 @@
+variable   sphere_r1             equal ${Lx}/2.0-2*${dx}
+variable   sphere_r2             equal ${Lx}/2.0-2*${dx}
+variable   sphere_force_constant equal 100.0
+
+variable   x0 equal ${Lx}/2
+variable   y0 equal ${Ly}/2
+variable   z0 equal ${Lz}/2
+
+variable   particle_r    atom  sqrt((x-${x0})^2+(y-${y0})^2+(z-${z0})^2)
+
+variable   sf1x  atom  ${sphere_force_constant}*(x-${x0})/v_particle_r*(v_particle_r<${sphere_r1})
+variable   sf1y  atom  ${sphere_force_constant}*(y-${y0})/v_particle_r*(v_particle_r<${sphere_r1})
+variable   sf1z  atom  ${sphere_force_constant}*(z-${z0})/v_particle_r*(v_particle_r<${sphere_r1})
+
+variable   sf2x  atom  -${sphere_force_constant}*(x-${x0})/v_particle_r*(v_particle_r>${sphere_r2})
+variable   sf2y  atom  -${sphere_force_constant}*(y-${y0})/v_particle_r*(v_particle_r>${sphere_r2})
+variable   sf2z  atom  -${sphere_force_constant}*(z-${z0})/v_particle_r*(v_particle_r>${sphere_r2})
+
+fix       f1sphere all addforce v_sf1x v_sf1y v_sf1z
+fix       f2sphere all addforce v_sf2x v_sf2y v_sf2z
+
+
