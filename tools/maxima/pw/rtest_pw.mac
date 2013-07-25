@@ -1,0 +1,691 @@
+(kill(all),load(pw),extra_integration_methods:[], extra_definite_integration_methods:[],0);
+0;
+
+pwint(signum(x^5+x^4+x^3+9),x);
+'integrate(signum(9 + x^3 + x^4 + x^5),x);
+
+linearfunc(a*(x-y)+b, x-y);
+[a,b];
+
+linearfunc(a*sin(c)+b,sin(c));
+[a,b];
+
+linearfunc(a*sin(c)^2+b,sin(c));
+false;
+
+linearfunc(a*sin(x-v)*c-b,sin(x-v));
+[a*c, - b];
+
+quadraticfunc(a*(x-b)^2+b*x+c,x-b);
+[a, 0, b*x + c];
+
+quadraticfunc(a*(x-b)^3+b*x+c,x-b);
+false;
+
+pwint(pwdelta(x)*between(x,0,3),x);
+(signum(x)+1)/4;
+ 
+pwint(pwdelta(x)*between(x,0,3),x,-3,4);
+1/2;
+
+pwint(pwdelta(x-3)*between(x,0,3),x,-3,4);
+1/2;
+ 
+pwint(pwdelta(x-3)*between(x,0,3,'closed),x,-3,4);
+1;
+ 
+pwint(pwdelta(x-3)*x^2*between(x,0,3,'closed),x,-3,4);
+9;
+ 
+pwint(pwdelta(x-3)*x^2*between(x,0,3,'lclosed),x,-3,4);
+0;
+ 
+pwint(pwdelta(x-3)*x^2*between(x,0,3,'rclosed),x,-3,4);
+9;
+ 
+pwint(pwdelta(x-3)*x^2*between(x,0,3,'open),x,-3,4);
+0;
+ 
+pwint(pwdelta(x)*x^2*between(x,0,3,'open),x,-3,4);
+0;
+ 
+pwint(pwdelta(x-2)*x^2*between(x,2,3,'open),x,-3,4);
+0;
+ 
+pwint(pwdelta(x-2)*x^2*between(x,2,3),x,-3,4);
+2;
+ 
+pwint(pwdelta(x-2)*x^2*between(x,2,3),x,3,4);
+0;
+
+pwint(pwdelta(x-2)*x^2*between(x,2,3),x,-7,-4);
+0;
+
+pwint(diff_pwdelta(2,x-2)*cos(x),x,minf,inf);
+-cos(2);
+ 
+pwint(pwdelta(x-2)*x^2*between(x,2,3),x,-7,3);
+2;
+
+pwint(x^3*diff_pwdelta(1,x-5),x,minf,inf);
+-75;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5),x,5,inf);
+125/4;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5),x,minf,inf);
+125/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'open),x,minf,inf);
+0;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'closed),x,minf,inf);
+125;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'closed),x,5,inf);
+125/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'closed),x,minf,5);
+125/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'closed),x,minf,inf);
+125;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5,'closed),x);
+125*(signum(x-5)+1)/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,10,'closed),x);
+125*(signum(x-5)+1)/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,10),x);
+125*(signum(x-5)+1)/2;
+
+pwint(x^3*pwdelta(x-5)*between(x,0,5),x);
+125*(signum(x-5)+1)/4;
+
+pwint(signum(x^2-a^2),x);
+signum(x-a)*((x+a)*signum(x+a)-2*a*signum(a));
+
+pwint(x^2*abs(x-3),x);
+((x^4-4*x^3)/4+27/4)*signum(x-3);
+ 
+signum2abs(%);
+(x^3*abs(x-3)-x^2*abs(x-3)-3*x*abs(x-3)-9*abs(x-3))/4;
+ 
+diff(%,x);
+(3*x^2*abs(x-3)-2*x*abs(x-3)-3*abs(x-3)+x^3*signum(x-3)-x^2*signum(x-3)-3*x*signum(x-3)-9*signum(x-3))/4;
+ 
+abs2signum(%);
+(x^3*signum(x-3)+3*(x-3)*x^2*signum(x-3)-x^2*signum(x-3)-2*(x-3)*x*signum(x-3)-3*x*signum(x-3)-3*(x-3)*signum(x-3)-9*signum(x-3))/4;
+
+factor(%);
+(x-3)*x^2*signum(x-3);
+ 
+signum2abs(%);
+x^2*abs(x-3);
+
+facsum(pwint(max(x^5,x^4,x^3,x^2,x,1),x),operator('signum)),factor_signum=all;
+(3*(x+1)^2*(x^3-2*x^2+3*x-4)*signum(x-1)*signum(x+1)-3*(x+1)^2*(x^3-2*x^2+3*x-4)*signum(x+1)+(5*x^6-3*x^5-15*x+37)*signum(x-1)+x*(5*x^5+3*x^4+15))/60;
+
+pw([a,x,a],x);
+x*unit_spike(x-a);
+ 
+pw([a,1,a],x);
+unit_spike(x-a);
+ 
+pw([a,[1],a],x);
+pwdelta(x-a);
+ 
+pw([a,[x^5],a],x);
+x^5*pwdelta(x-a);
+
+pwint(%,x,a-1,a+1);
+a^5;
+
+pw([a,[3,x^5],a],x);
+diff_pwdelta(3,x-a)*x^5;
+
+pw([a,[0,x^5],a],x);
+diff_pwdelta(0,x-a)*x^5;
+
+pw([a,[x^5],a],x);
+x^5*pwdelta(x-a);
+
+pw([a,[1,x^5],a],x);
+diff_pwdelta(1,x-a)*x^5;
+
+pw([a,[2,x^5],a],x);
+diff_pwdelta(2,x-a)*x^5;
+
+s:pwint(x*sin(x)*signum(x)*between(x,a,b),x);
+(signum(b-a)+1)*(signum(b)*(sin(b)-b*cos(b))*(signum(x-b)+1)/2+signum(a)*(sin(a)-a*cos(a))*(1-signum(x-a))/2)/2
+ +signum(x)*(sin(x)-x*cos(x))*between(x,a,b,halfopen);
+
+t:diff(s,x);
+x*signum(x)*sin(x)*between(x,a,b,halfopen);
+
+simp_given(s,a>b);
+0;
+
+simp_given(t,a>b);
+0;
+
+(remvalue(s,t),0);
+0;
+
+use_between;
+false;
+
+pw([-10,y^2,0,-y^2,10],y);
+y^2*(signum(y+10)-signum(y))/2-y^2*(signum(y)-signum(y-10))/2;
+
+pw([-10,y^2,0,-y^2,10],y,'between);
+y^2*between(y,-10,0,halfopen)-y^2*between(y,0,10,halfopen);
+
+use_between:true;
+true;
+
+pw([-10,y^2,0,-y^2,10],y);
+y^2*between(y,-10,0,halfopen)-y^2*between(y,0,10,halfopen);
+ 
+pw([-10,y^2,0,-y^2,10],y,'signum);
+y^2*(signum(y+10)-signum(y))/2-y^2*(signum(y)-signum(y-10))/2;
+ 
+s:pw([-10,y^2,0,-y^2,10],y,'signum,'closed);
+y^2*(signum(y+10)+unit_spike(y+10)-signum(y)+unit_spike(y))/2-y^2*(signum(y)+unit_spike(y)-signum(y-10)+unit_spike(y-10))/2;
+
+s,y=10;
+-100;
+ 
+s,y=-10;
+100;
+ 
+s,y=0;
+0;
+ 
+s,y=2;
+-4;
+ 
+s,y=-2;
+4;
+ 
+t:pw([-10,y^2,0,-y^2,10],y,'closed);
+y^2*between(y,-10,0,closed)-y^2*between(y,0,10,closed);
+
+t,y=10;
+-100;
+ 
+t,y=-10;
+100;
+ 
+t,y=2;
+-4;
+ 
+t,y=-2;
+4;
+
+t,y=0;
+0;
+
+u:pwint(s,y);
+(y^3/3+1000/3)*signum(y+10)/2-y^3*signum(y)/3+(y^3/3-1000/3)*signum(y-10)/2;
+ 
+v:pwint(t,y);
+-500*(1-signum(y+10))/3-y^3*between(y,0,10,halfopen)/3+y^3*between(y,-10,0,halfopen)/3-500*(signum(y-10)+1)/3;
+
+pwsimp(s-t,y);
+0;
+
+u:pwint(s,y);
+(y^3/3+1000/3)*signum(y+10)/2-y^3*signum(y)/3+(y^3/3-1000/3)*signum(y-10)/2;
+ 
+v:pwint(t,y);
+-500*(1-signum(y+10))/3-y^3*between(y,0,10,halfopen)/3+y^3*between(y,-10,0,halfopen)/3-500*(signum(y-10)+1)/3;
+ 
+ratsimp(pwsimp(u-v,y));
+1000/3;
+
+(remvalue(s,t,u,v),0);
+0;
+
+assume(a>0,b<0,c>0);
+[a > 0,b < 0,c > 0];
+ 
+(define(p(x),(((3*b*x^2+3*c)*(signum(x+a)-signum(x-a))/2/(6*a*c+2*a^3*b)))),
+	define(dc(x), ratsimp(pwint(p(p)*p(x-p),p,minf,inf))),
+	for i : 1 thru 2 do define(dc(x), ratsimp(pwint(dc(p)*p(x-p),p,minf,inf))),
+	0);
+0;
+ 
+ratsimp((pwint(dc(x)*x^2,x,minf,inf)-pwint(dc(x)*x,x,minf,inf)^2)/(pwint(p(x)*x^2,x,minf,inf)-pwint(p(x)*x,x,minf,inf)^2));
+4;
+
+(forget(a>0,b<0,c>0),remfunction(p,dc),0);
+0;
+
+polydeg(x^5-x,x);
+5;
+
+polydeg(x^5-1/x,x);
+false;
+
+polydeg((x^5-x)/(x^2+1),x);
+false;
+
+polydeg(factor(x^5-x^4)/(x-1),x);
+4;
+
+pwint(pw([minf,x^2,0,-x^2,inf],x)+pwdelta(x-10),x);
+(signum(x-10)+1)/2-x^3*signum(x)/3;
+
+pwint(pw([minf,x^2,0,-x^2,inf],x)+x^2*diff_pwdelta(1,x-10),x);
+-2*10*(signum(x-10)+1)/2-x^3*signum(x)/3;
+
+pwint(pw([minf,x^2,0,-x^2,inf],x,iif)+x^2*diff_pwdelta(2,x-10),x);
+signum(x - 10) -  x^3 * signum(x)/3;
+
+pwint(pw([minf,x^2,0,-x^2,inf],x)+x*pwdelta(x-10),x);
+10*(signum(x-10)+1)/2-x^3*signum(x)/3;
+
+ratsimp(pwlimit(signum(a*x^5-b*x),x,inf));
+signum(a)-unit_spike(a)*signum(b);
+ 
+pwlimit(signum(a*x^5-b*x)*x,x,inf);
+inf * (signum(a) - unit_spike(a) * signum(b));
+
+ratsimp(pwlimit(signum(a*x^5-b*x),x,inf));
+signum(a)-unit_spike(a)*signum(b);
+ 
+pwlimit(signum(a*x^5-b*x),x,minf);
+unit_spike(a)*signum(b)-signum(a);
+ 
+pwlimit(signum(a*x^5-b*x)-signum(x^5),x,minf);
+unit_spike(a)*signum(b)-signum(a)+1;
+ 
+pwlimit(signum(a*x^5-b*x)-signum(a*x^5),x,minf);
+unit_spike(a)*signum(b);
+ 
+simp_given(pwlimit(signum(a*x^5-b*x)-signum(a*x^5),x,minf),notequal(a,0));
+0;
+ 
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),notequal(a,0));
+0;
+ 
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),notequal(a,0));
+0;
+
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5-x))*x,x,minf),equal(a,0),b>0);
+0;
+ 
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5-x))*x,x,minf),equal(a,0),b<0);
+inf;
+ 
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),equal(a,0));
+minf*signum(b);
+
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,inf),equal(a,0),b>0);
+minf;
+
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),equal(a,0),b<0);
+inf;
+ 
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),equal(a,0),notequal(b,0));
+minf*signum(b);
+
+simp_given(pwlimit((signum(a*x^5-b*x)-signum(a*x^5))*x,x,minf),equal(a,0),equal(b,0));
+0;
+
+(use_between:false, 0)$
+0;
+
+(gen_deltas(true), 0)$
+0;
+
+s:x+3*pwdelta(-x);
+x+3*pwdelta(-x);
+
+t:pwint(s,x);
+3*(signum(x)-1)/2+x^2/2;
+
+diff(t,x);
+3*pwdelta(x)+x;
+ 
+(s:x+3*pwdelta(-45*x));
+3*pwdelta(-45*x)+x;
+ 
+t:pwint(s,x);
+x^2/2-(1-signum(x))/30;
+ 
+diff(t,x);
+pwdelta(x)/15+x;
+
+s:pwdelta(3*x-5)*x+4*x^2;
+x*pwdelta(3*x-5)+4*x^2;
+
+t:pwint(s,x);
+5*(signum(3*x-5)+1)/18+4*x^3/3;
+
+diff(t,x);
+5*pwdelta(3*x-5)/3+4*x^2;
+
+(remvalue(s,t),0);
+0;
+
+(gen_deltas(false), 0)$
+0;
+
+pwint((x-z)^75645*pwdelta(x-a),x,'minf,'inf)$
+(a-z)^75645;
+ 
+pwint((x-z)^75645*diff_pwdelta(0,x-a),x,'minf,'inf)$
+(a-z)^75645;
+ 
+pwint((x-z)^75645*diff_pwdelta(1,x-a),x,minf,inf)$
+-75645*(a-z)^75644;
+
+pwint((x-z)^75645*diff_pwdelta(2,x-a),x,minf,inf)$
+5722090380*(a-z)^75643;
+
+pwint((x-z)^75645*diff_pwdelta(20,x-a),x,minf,inf)$
+37541672695872526522360296602820205567478596209363027200950254066533864344378404948336504176640000*(a-z)^75625;
+
+pwint(a^7*c^4*pwdelta(x),x,minf,inf)$
+a^7*c^4;
+ 
+pwint(a^7*c^4*pwdelta(x-c),x,minf,inf)$
+a^7*c^4;
+ 
+pwint(a^7*c^4*pwdelta(x-a),x,minf,inf)$
+a^7*c^4;
+ 
+pwint(a^7*c^4*diff_pwdelta(1,x-c),x,minf,inf)$
+0;
+ 
+pwint(a^7*c^4*x*diff_pwdelta(1,x-c),x,minf,inf)$
+-a^7*c^4;
+
+pwint(a^7*c^4*x^2*diff_pwdelta(1,x-c),x,minf,inf)$
+-2*a^7*c^5;
+
+pwint(unit_step(x-a)*unit_step(x-b),x);
+(x-max(a,b))*signum(x-max(a,b))/2+x/2;
+
+pwint(unit_step(x-a)*unit_step(x-b)*unit_step(x-c),x);
+(x-max(a,b,c))*signum(x-max(a,b,c))/2+x/2;
+
+pwint(max(x^3,iif(x > 0,x,x^2)),x,-1,4);
+775/12;
+
+pwlimit(at((x^2*(signum(x-3)-signum(x-4))+x*(signum(x-4)-signum(x-6)))/2,[x=4+1/p]),p,inf);
+4;
+
+pwlimit(at((x^2*(signum(x-3)-signum(x-4))+x*(signum(x-4)-signum(x-6)))/2,[x=4+1/p]),p,minf);
+16;
+
+simpsignum(signum((x-a)*(s-x)));
+-signum(x-a)*signum(x-s);
+
+simpsignum(signum((x^2-2*a*x+a^2)*(p-x)));
+-signum(x - a)^2*signum(x - p);
+
+simpsignum(signum(x^2-b*x-a*x+a*b));
+signum(x - a) * signum(x - b);
+
+simpsignum(signum((c*x-a)^7*(s-x)));
+-signum(x-s)*signum(c*x-a)^7;
+
+linearize(%);
+-signum(x-s)*signum(c*x-a);
+ 
+simpsignum(signum((c*x-a)^7*(s-x)*(s-x)));
+signum(x-s)^2*signum(c*x-a)^7;
+ 
+simpsignum(signum((c*x-a)^7*(s-x)*(t-x)));
+signum(x-s)*signum(x-t)*signum(c*x-a)^7;
+ 
+linearize(%);
+signum(x-s)*signum(x-t)*signum(c*x-a);
+ 
+simpsignum(signum((c*x-a)^7*(s-x)*(t-x)*(c*x-a)));
+signum(x-s)*signum(x-t)*signum(c*x-a)^8;
+ 
+linearize(%);
+signum(x-s)*signum(x-t);
+
+(gen_deltas(false), 0)$
+0;
+
+pullinif(%if(x>0,f,t)*x+%if(c>0,h,j));
+%if(x > 0,%if(c > 0,f*x+h,f*x+j),%if(c > 0,t*x+h,t*x+j));
+
+pullinif(%if(x>0,f,t)*x+x*%if(c>0,h,j));
+%if(x > 0,%if(c > 0,h*x+f*x,j*x+f*x),%if(c > 0,t*x+h*x,t*x+j*x));
+ 
+pullinif(%if(x>0,f,t)*x+y*%if(c>0,h,j));
+%if(c > 0,%if(x > 0,h*y+f*x,h*y+t*x),%if(x > 0,j*y+f*x,j*y+t*x));
+ 
+pullinif(%if(x>0,f,t)*x+x*%if(c>0,h,j)*x);
+%if(x > 0,%if(c > 0,h*x^2+f*x,j*x^2+f*x),%if(c > 0,h*x^2+t*x,j*x^2+t*x));
+
+pullinif(sin(x*%if(c>0,h,j)*x) + %if(x > 0, f, t)/u*x);
+%if(x > 0,%if(c > 0,sin(h*x^2)+f*x/u,sin(j*x^2)+f*x/u),%if(c > 0,sin(h*x^2)+t*x/u,sin(j*x^2)+t*x/u));
+
+radcan(if2sum(pullinif(%if(x>0,f,t)*x+sin(x*%if(c>0,h,j)*x)/u))-((-signum(x)+unit_spike(x)+1)*((-signum(c)+unit_spike(c)+1)*(sin(j*x^2)/u+t*x)/2+(signum(c)-unit_spike(c)+1)*(sin(h*x^2)/u+t*x)/2)/2
+ +(signum(x)-unit_spike(x)+1)*((-signum(c)+unit_spike(c)+1)*(sin(j*x^2)/u+f*x)/2+(signum(c)-unit_spike(c)+1)*(sin(h*x^2)/u+f*x)/2)/2));
+0;
+ 
+zerospikes(if2sum(pullinif(sin(x*%if(x>5, x*log(x), x)*x)+%if(x>0,x/log(x), log(x))*x)));
+(signum(x-5)+1)*((1-signum(x))*(sin(x^3*log(x))+x*log(x))/2+(signum(x)+1)*(sin(x^3*log(x))+x^2/log(x))/2)/2
+ +(1-signum(x-5))*((1-signum(x))*(sin(x^3)+x*log(x))/2+(signum(x)+1)*(sin(x^3)+x^2/log(x))/2)/2;
+
+s:sin(atan(%if(x>1,1/x,x)));
+%if(x > 1,1/x,x)/sqrt(%if(x > 1,1/x,x)^2+1);
+
+ratsimp(pwint(pullinif(s),x)-(-((-sqrt(2)*signum(x-1)-sqrt(2))*log((abs(x)+sqrt(x^2+1))/abs(x))+(sqrt(2)*signum(x-1)+sqrt(2))*log((sqrt(x^2+1)-abs(x))/abs(x))
+  +sqrt(x^2+1)*(2^(3/2)*signum(x-1)-2^(3/2))+(sqrt(2)*log(sqrt(2)+1)-sqrt(2)*log(sqrt(2)-1)-4)*signum(x-1))/2^(5/2)));
+0;
+
+s:between2iif(x^2*sin(2*x)*between(x,a,b));
+x^2*sin(2*x)*iif(x > a,iif(x < b,1,iif(equal(x,b),1/2,0)),iif(equal(x,a),iif(b > a,1/2,0),0));
+
+pulliniif(s);
+iif(x > a,iif(x < b,x^2*sin(2*x),iif(equal(x,b),x^2*sin(2*x)/2,0)),iif(equal(x,a),iif(b > a,x^2*sin(2*x)/2,0),0));
+
+s:between2iif(x^2*sin(2*x)*between(x,a,b,closed));
+x^2*sin(2*x)*iif(x >= a,iif(x <= b,1,0),0);
+
+pulliniif(s);
+iif(x >= a,iif(x <= b,x^2*sin(2*x),0),0);
+
+pw([minf,-y,0,y,inf],y,'iif);
+iif(y < 0, - y, 0) + iif(y > 0, y, 0);
+
+pulliniif(%);
+iif(y < 0, - y, iif(y > 0, y, 0));
+
+s:pw([-10,x,0,-x^2,5,x^3,10],x,'closed);
+x*(signum(x+10)+unit_spike(x+10)-signum(x)+unit_spike(x))/2-x^2*(signum(x)+unit_spike(x)-signum(x-5)+unit_spike(x-5))/2
+ +x^3*(signum(x-5)+unit_spike(x-5)-signum(x-10)+unit_spike(x-10))/2;
+														   
+t:pw([-10,x,0,-x^2,5,x^3,10],x,'rclosed);
+x*(signum(x+10)-unit_spike(x+10)-signum(x)+unit_spike(x))/2-x^2*(signum(x)-unit_spike(x)-signum(x-5)+unit_spike(x-5))/2
+ +x^3*(signum(x-5)-unit_spike(x-5)-signum(x-10)+unit_spike(x-10))/2;
+
+pwsimp(s-t,x);
+125*unit_spike(x - 5) - 10*unit_spike(x + 10);
+
+s:pw([-10,x,0,-x^2,5,x^3,10],x,'closed,'iif);
+iif(x >= 5,iif(x <= 10,x^3,0),0)+iif(x >= 0,iif(x <= 5,-x^2,0),0)+iif(x >= -10,iif(x <= 0,x,0),0);
+
+t:pw([-10,x,0,-x^2,5,x^3,10],x,'rclosed,'iif);
+iif(x > 5,iif(x <= 10,x^3,0),0)+iif(x > 0,iif(x <= 5,-x^2,0),0)+iif(x > -10,iif(x <= 0,x,0),0);
+
+pwsimp(s-t,x);
+125*unit_spike(x - 5) - 10*unit_spike(x + 10);
+
+s:pw([-10,x,0,-x^2,5,x^3,10],x,'closed,'between);
+x^3*between(x, 5, 10, closed) - x^2 * between(x, 0, 5, closed) + x * between(x, - 10, 0, closed);
+
+t:pw([-10,x,0,-x^2,5,x^3,10],x,'rclosed,'between);
+x^3*between(x, 5, 10, rclosed) - x^2 * between(x, 0, 5, rclosed) + x * between(x, - 10, 0, rclosed);
+
+pwsimp(s-t,x);
+125*unit_spike(x - 5) - 10*unit_spike(x + 10);
+
+simpspikes(linearizesignum(facsum((p*signum(x-2)^6+p*unit_spike(x-2))^5,operator('signum))));
+p^5;
+
+signum2abs(simpspikes(iif2sum(pulliniif(signum2iif(abs2signum(x*abs(x)+1))))));
+x*abs(x)+1;
+
+signum2abs(simpspikes(iif2sum(pulliniif(signum2iif(abs2signum(iif(x>0,x^2,-x^2)+1))))));
+x*abs(x)+1;
+
+signum2abs(simpspikes(iif2sum(pulliniif(signum2iif(x*signum(x)+1)))));
+abs(x)+1;
+
+pwint(x*sin(abs(x)),x);
+signum(x) * (sin(x) - x * cos(x));
+
+between(x,a,inf,'closed);
+(signum(x-a)+unit_spike(x-a)+1)/2;
+
+between(x,minf,a,'lclosed);
+(-signum(x-a)-unit_spike(x-a)+1)/2;
+
+s:if2sum(%if(x>a and x<b, sin(x), cos(x)));
+sin(x) * between(x, a, b, open) + cos(x) * (1 - between(x, a, b, open));
+
+simp_given(s,a>b);
+cos(x);
+
+(remvalue(s,a,b,x),0);
+0$
+
+pwint(unit_step(x^5+x^4+x^3+9),x);
+'integrate(unit_step(9 + x^3 + x^4 + x^5),x);
+
+s:abs2iif(x*sin(abs(x-a))*sin(abs(x-b)));  /* can not integrate this directly but you can convert to iif and . . . */
+x*sin(iif(x-a > 0,x-a,a-x))*sin(iif(x-b > 0,x-b,b-x))$
+
+s:pulliniif(s);   /* . . . call this function to pull everything inside the iif body and . . . */
+iif(x-b > 0,iif(x-a > 0,x*sin(x-a)*sin(x-b),-x*sin(x-a)*sin(x-b)),iif(x-a > 0,-x*sin(x-a)*sin(x-b),x*sin(x-a)*sin(x-b)))$
+
+pwint(s,x);  /* . . . now try pwint . . . */
+signum(x-a)*(signum(x-b)*((2*b*sin(b-a)-2*b^2*cos(b-a)+cos(b-a))/8-(2*x*sin(2*x-b-a)+cos(2*x-b-a)-2*cos(b-a)*x^2)/8)
+   +signum(b-a)*((2*b*sin(b-a)-2*b^2*cos(b-a)+cos(b-a))/8-(-2*a*sin(b-a)-2*a^2*cos(b-a)+cos(b-a))/8))$
+
+(remvalue(a,b),0);
+0;
+
+s:pw([-5,-x^2,0,x^2,5],x,'connect);
+(25-x^2)*(signum(x+5)-signum(x))/2+(x^2+25)*(signum(x)-signum(x-5))/2;
+
+(r:(-x^3/3+25*x+250/3)*(2*unit_step(x+5)-1)/2+(x^3/3+25*x)*(2*unit_step(x)-1)/2-(25*x-x^3/3)*(2*unit_step(x)-1)/2-(x^3/3+25*x-500/3)*(2*unit_step(x-5)-1)/2,0);
+0;
+
+ratsimp(deltaint(s,x)-r);
+0;
+
+simp_iif(iif(x>0, iif(x>0,y,x), iif(x<=1,y,x)));
+y;
+
+(remvalue(c,d,s,t,r,x),assume(c>0),0);
+0;
+
+pwlimit(pwint(pwdelta(x-c)*sin(d*x)*%e^(-s*x),x,1/e,inf),e,minf);
+sin(c*d)*%e^-(c*s);
+
+pwint(sqrt(x^2-2*a*x+a^2),x);
+(x^2/2-a*x+a^2/2)*signum(x-a);
+
+pwint(sqrt(x^2+2*x+1)*sqrt(x^2-4*x+4),x);
+signum(x-2)*(((2*x^3-3*x^2-12*x)/6-7/6)*signum(x+1)+9/2);
+
+pwint(1/(sqrt(x^2-2*x+1)+1),x);
+signum(x-1)*log(x)/2+log(x)/2+log(2-x)*signum(x-1)/2-log(2-x)/2;
+
+pwint(1/(sqrt(x^2-2*x+1)+1),x,-1,3);
+2*log(3);
+
+pwint(exp(-x*signum(x)), x);
+-(%e^(-x)/2)+%e^x/2+(1-%e^-x)*signum(x)/2-((%e^x-1)*signum(x)/2);
+
+pwint(sum(between(x,i,inf,lclosed),i,1,n),x);
+('sum((x-i)*signum(x-i)+x,i,1,n))/2;
+
+pwint(x*sum(between(x,i,inf),i,1,n),x);
+('sum((x^2/2-i^2/2)*signum(x-i)+x^2/2,i,1,n))/2;
+
+pwint(sum(between(x,i,inf)/x,i,1,n),x);
+('sum((log(x)-log(i))*signum(x-i)+log(x),i,1,n))/2;
+
+pwint(sum(x*between(x,i,inf),i,1,n),x);
+('sum((x^2/2-i^2/2)*signum(x-i)+x^2/2,i,1,n))/2;
+
+deltaint(sum(x*between(x, i, inf), i, 1, n), x);
+('sum((x^2/2-i^2/2)*(2*unit_step(x-i)-1)+x^2/2,i,1,n))/2;
+
+(define(p(x), between(x,0,inf)*a^6/120*x^5*exp(-a*x)), define(dc(x),pwint(p(x-t)*p(t),t,minf,inf)), define(dc(x), pwint(dc(x-t)*p(t),t,minf,inf)), coeff_action:'factor, 
+facsum(pwint(p(x-t)*dc(t),t,minf,inf),x));
+a^24*x^23*%e^-(a*x)*(signum(x)+1)/51704033477769953280000;
+
+pwint(signum(unit_step(x)),x);
+x/2 + x*signum(x)/2; 
+
+pwint(signum(x+unit_step(x)),x);
+x*signum(x);
+
+pwint(unit_step(unit_step(unit_step(x))),x);
+x/2+x*signum(x)/2;
+
+pwint(unit_step(unit_step(x)),x);
+x/2+x*signum(x)/2;
+
+pwint(unit_step(x*unit_step(x)),x);
+x/2+x*signum(x)/2;
+
+pwint(unit_step(x*signum(x)),x);
+x;
+
+pwint(x^2*unit_pulse(x*signum(x)+8),x);
+'integrate(x^2*unit_pulse(x*signum(x)+8),x);
+
+pwint(x^2*signum(unit_step(x-a) - unit_step(x-b)),x);
+'integrate(x^2*signum(unit_step(x-a) - unit_step(x-b)),x);
+
+pwint(sum(pwdelta(x-a),a,1,n)+sum(pwdelta(x-a),a,minf,0)*x,x);
+('sum(a*(signum(x-a)+1),a,minf,0))/2+('sum(signum(x-a)+1,a,1,n))/2;
+
+pwint(sum(signum(x-a),a,1,u)+x^4,x);
+'sum((x-a)*signum(x-a),a,1,u)+x^5/5;
+
+(s:pw([-8,x^3/64,-4,x^2/16,-2,x,2,x,5,x^2,10],x)*pw([-9,x^2/3,-7,x^3/5,-3,x,-1,-x,2,x^2/x^3,4],x)*pw([-10,x,-7,x^2,-3,1/x,-1,x,1,1/x,4,x^2,8],x)*pw([-10, -(x^2-25)/15, -5,  -5*sin(3*x), 1/10, x^2/6, 5, -(8*x-65)/6, 10],x),0);
+0;
+
+(t:pwsimp(s, x,'pulse), pwsimp(s-t,x));
+0;
+
+ratsimp(zerospikes(pwsimp(diff(pwint(t,x),x)-t,x))); /* speed test */
+0;
+
+simpspikes(a/(x+a)*unit_spike(x));
+unit_spike(x);
+
+
+pwint(x^7*diff_pwdelta(2,c*x-p),x,minf,inf)$
+42*p^5/c^8;
+
+pwint(cos(d*y)^2*y^4*diff_pwdelta(2,c*y-p),y,minf,inf)$
+(2*d^2*p^4*sin(d*p/c)^2/c^4-16*d*p^3*cos(d*p/c)*sin(d*p/c)/c^3-2*d^2*p^4*cos(d*p/c)^2/c^4+12*p^2*cos(d*p/c)^2/c^2)/c^3;
+
+(_f:facts(), simp_given(signum(a),abs(a)>0,a>0), _fa:facts(), is(equal(_f,_fa)));
+true;
+
+(_f:facts(), (a : b, b : c, c : d, d : e), simp_given(1, a<b), _fa:facts(), is(equal(_f,_fa)));
+true;
+
+
+(forget(c>0), remvalue(a,b,c,d,s,t,_f,_fa), 0);
+0;
+

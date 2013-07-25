@@ -1,0 +1,3 @@
+Fixed in version 6.3.  diff_pwdelta(n,a*x+b) did not integrate correctly.
+Changed in version 6.4.  gen_pwdeltas(), pwdelta() and diff_pwdelta() have been renamed to gen_deltas(), delta() and diff_delta().
+Fixed a fact leak problem in simp_given();
