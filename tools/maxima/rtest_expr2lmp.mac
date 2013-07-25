@@ -1,0 +1,29 @@
+(kill(all),0);
+0$
+
+(kill(all),
+ load("expr2lmp.mac"),
+   0);
+0$
+
+expr2lmp(a);
+"${a}"$
+
+expr2lmp(a+aa);
+"${aa}+${a}"$
+
+expr2lmp(a^2^b);
+"pow(${a},pow(2,${b}))"$
+
+block([s: a^2], expr2var(s));
+"variable s equal pow(${a},2)"$
+
+block([a: 10, l: ['a, 'b]], apply('expr2var, [l]));
+["variable a equal 10","variable b equal ${b}"]$
+
+block([a: 10, l: ['a, 'b]], apply('expr2file, [l, "exp_test.lmp"]), 0);
+0$
+
+
+
+

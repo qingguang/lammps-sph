@@ -10,9 +10,9 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=3
-sdpd_eta=100.0
+sdpd_eta=5.0
 sdpd_background=0.0
 sdpd_c=1e2
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}gamma
@@ -20,4 +20,4 @@ dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}gam
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
 
 mkdir -p ${dname}
-${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
+${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent-restart.lmp

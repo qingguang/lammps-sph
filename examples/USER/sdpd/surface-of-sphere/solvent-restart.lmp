@@ -8,14 +8,10 @@ communicate        single vel yes
 
 #3D box
 include            vars.lmp
-# create fluid particles
-include            ${ndim}d-lattice.lmp
-create_atoms       1 region box
-mass               *  ${sdpd_mass}
-#read_data          ${dname}/poly3d.txt
 
-mass               * ${sdpd_mass}
-set                group all meso_rho ${sdpd_rho}
+# create fluid particles
+# maxima -b ../../../../tools/maxima/example_gensphere.mac
+read_data          test.data
 
 include            model.lmp
 

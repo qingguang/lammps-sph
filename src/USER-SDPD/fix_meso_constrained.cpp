@@ -112,11 +112,27 @@ void FixMesoConstrained::initial_integrate(int vflag) {
       v[i][1] += dtfm * f[i][1];
       v[i][2] += dtfm * f[i][2];
 
+      /// particles must stay on the surface of the sphere
       x[i][0] += dtv * v[i][0];
       x[i][1] += dtv * v[i][1];
       x[i][2] += dtv * v[i][2];
+      back_to_surface(&x[i][0], &x[i][1], &x[i][2]);
     }
   }
+}
+
+double LAMMPS_NS::back_to_surface(double* x, double* y, double* z) {
+  double x0 = 0.6;
+  double y0 = 0.6;
+  double z0 = 0.6;
+  double R = 0.44;
+  double dx = *x - x0;
+  double dy = *y - y0;
+  double dz = *z - z0;
+  double r = sqrt(dx*dx + dy*dy + dz*dz);
+  *x = x0 + dx/r*R;
+  *y = y0 + dy/r*R;
+  *z = z0 + dz/r*R;
 }
 
 /* ---------------------------------------------------------------------- */

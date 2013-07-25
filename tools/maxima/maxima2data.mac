@@ -27,7 +27,8 @@ maxima2data(lmp_data, atom_data, fname):= block(
     newline(s)
     ),
   close(s));
-  
+
+/*
 [lmp_data, atom_data]: data2maxima("dump.0.data");
 maxima2data(lmp_data, atom_data, "test.dat");
-
+*/
