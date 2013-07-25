@@ -1,0 +1,2742 @@
+/* Copyright (C) 2008-2011 by Richard V. Hennessy, rich.hennessy@verizon.net
+ *
+ * This file ("this code" or "software") is released under the terms of the GNU General Public License,
+ * version 2.
+ * The user of this code assumes all risk for its use. This software has NO WARRANTY,
+ * not even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This software is registered and copyrighted with www.copyright.gov.
+
+-----------------------------------------------------------------------------------------------------------
+ */
+
+put('pw, 6.5, 'version);
+put('pw, "Richard Hennessy", 'author);
+put('pw, "rtest_pw.mac", 'test_suite);
+put('pw, "Copyright - Richard Hennessy, 2008-2012", 'copyright);
+
+pwinfo([_package]):=
+block(
+	disp("package name: pw.mac (c)"),
+	disp("author: Richard V. Hennessy"),
+	disp("revision: 6.5"),
+	disp("Test suite : rtest_pw.mac"),
+	disp("Recommended location: share/contrib"),
+	disp("last update: June, 2012"),
+	disp("")
+)$
+
+(
+	load("opsubst"),
+	load("unwind_protect"),
+	load("simplifying.lisp"),
+	load("abs_integrate.mac")
+);
+
+
+simp_given(__e, [__fcts]) ::=
+buildq
+  (
+	[__e,__fcts], 
+	block
+	(
+		[_fct, _otherfacts:facts()],
+		unwind_protect
+		(
+			(
+				apply(assume, __fcts), 
+				expand(__e, 0, 0)
+			), 
+			for _fct in facts() do 
+			(
+				if not member(_fct, _otherfacts) then
+					apply('forget, ['_fct])
+			)		
+		)
+	)
+);
+
+_usepwdelta:false;
+global:true$
+use_between:false;
+
+/* default is not to generate delta's in the output from diff */
+gradef(unit_step(__x), 0)$
+gradef(signum(__x), 0)$
+gradef(unit_spike(__x), 0)$
+gradef(abs(x), signum(x))$
+gradef(between(__x,__a,__b,__c), 0, und, und, und)$
+gradef(unit_pulse(__x), 0)$
+
+gen_deltas([_v]):=block
+(
+	if listp(_v) and not emptyp(_v) and is(first(_v) = false) then
+	(
+		_usepwdelta:false,
+		gradef(unit_step(__x), 0),
+		gradef(signum(__x), 0),
+		gradef(unit_pulse(__x), 0),
+		gradef(between(__x,__a,__b,__c), 0, und, und)
+	)
+	elseif listp(_v) and not emptyp(_v) and is(first(_v) = true) then
+	(
+		_usepwdelta:true,
+		gradef(unit_step(__x), pwdelta(__x)),
+		gradef(signum(__x), 2*pwdelta(__x)),
+		gradef(unit_pulse(__x), pwdelta(__x)-pwdelta(__x-1)),
+		gradef(between(__x,__a,__b,__c), (1-unit_spike(__b-__a)+signum(__b-__a))/2*(pwdelta(__x-__a)-pwdelta(__x-__b)), und, und, und)
+	),
+	if _usepwdelta then
+		"pwdeltas() will be used"
+	else
+		"no pwdeltas() will be used"
+)$
+
+_useabsint:true;
+
+_eim:copy(extra_integration_methods);
+_edim:copy(extra_definite_integration_methods);
+
+use_absint([_v]):=block
+(
+	if listp(_v) and not emptyp(_v) and is(first(_v) = false) then
+	(
+		extra_integration_methods:[],
+		extra_definite_integration_methods:[],
+		_useabsint:false
+	)
+	elseif listp(_v) and not emptyp(_v) and is(first(_v) = true) then
+	(
+		extra_integration_methods:copy(_eim),
+		extra_definite_integration_methods:copy(_edim),
+		_useabsint:true
+	),
+	if _useabsint then
+		"additional integration methods from abs_integrate.mac will be used"
+	else
+		"additional integration methods from abs_integrate.mac will not be used"
+)$
+
+
+gradef(pwdelta(__x), diff_pwdelta(1,__x))$
+gradef(diff_pwdelta(__nn,__x), und, diff_pwdelta(__nn+1,__x))$
+
+inpargs(__e) := block([inflag : true], if mapatom(__e) then [__e] else substinpart("[",__e,0))$
+freeofall(__vlist,__e) := block([_ans], _ans:true, for _v in __vlist while _ans do if not freeof(_v, __e) then _ans : false, _ans)$
+
+/* iif stuff, be careful about this.  This is new code and it may have bugs in it.  */
+not_op(__e):= psubst(['notequal='equal, 'equal='notequal, ">"="<=", ">="="<", "<"=">=", "<="=">"],__e);
+
+simp_iif(__e) :=
+block(
+[_done:false,inflag:true],
+	while not _done do (
+		if is(equal(isimp(__e),__e)) # true then
+			__e : isimp(__e)
+		else
+		_done:true),
+__e);
+
+isimp(__e):=
+block(
+	[opsubst:true, inflag:true],
+	simp_given(subst(iif =
+	lambda([__cnd,__a,__b],
+	if is(equal(__a,__b))=true then
+		__a
+    elseif safe_op(__cnd) = 'equal then
+	(
+		iif(__cnd, ratsubst(inpart(__cnd, 2), inpart(__cnd, 1), __a), __b)
+	)
+    elseif safe_op(__cnd) = 'notequal then
+	(
+		iif(__cnd, __a, ratsubst(inpart(__cnd, 2), inpart(__cnd, 1), __b))
+	)
+	else
+		iif(__cnd, __a, __b)
+	), __e))
+);
+
+simpiif(__cnd, __a, __b):=
+block(
+	[prederror:false],
+	if not member(safe_op(__cnd), [">", "<", ">=", "<=", 'equal, 'notequal]) then
+		error("The only operators allowed are >, <, >=, <=, equal() and notequal().")
+	elseif is(__cnd)=true then
+		__a
+	elseif is(__cnd)=false then
+		__b
+	else
+		simpfuncall('iif, __cnd, simp_given(__a, __cnd), simp_given(__b, not_op(__cnd)))
+)$
+
+simpunitspike(__x):=
+block(
+	[prederror:false],
+	if is(equal(__x,0))=true then
+		1
+	elseif is(notequal(__x,0))=true then
+		0
+	else
+		simpfuncall('unit_spike,__x)
+)$
+
+
+simpunitpulse(__x):=
+block(
+	[prederror:false],
+	if is(__x>0 and __x<1)=true then
+		1
+	elseif is(equal(__x,0))=true then
+		1/2
+	elseif is(equal(__x,1))=true then
+		1/2
+	elseif is(__x<0 or __x>1)=true then
+		0
+	else
+		simpfuncall('unit_pulse,__x)
+)$
+
+simppwdelta([__e]):=
+block(
+	[prederror:false],
+	if length(__e) # 1 then
+		error("Error : pwdelta takes one argument.")
+	elseif numberp(first(__e)) and is(notequal(first(__e),0))=true then
+		0
+	elseif numberp(first(__e)) and is(equal(first(__e),0))=true then
+		'inf
+	else
+		simpfuncall('pwdelta, first(__e))
+)$
+
+simpdiffpwdelta([__e]):=
+block(
+	[prederror:false],
+	if length(__e) # 2 then
+		error("Error : diff_pwdelta takes two arguments.")
+	elseif numberp(second(__e)) and is(notequal(second(__e),0))=true then
+		0
+	elseif numberp(second(__e)) and is(equal(second(__e),0))=true then
+		'und
+	else
+		simpfuncall('diff_pwdelta, first(__e), second(__e))
+)$
+
+simpbetween(__x,__a,__b, [__option]):=
+block(
+	[prederror:false,compxa:false,compxb:false],
+	__x:rationalize(__x),
+	__a:rationalize(__a),
+	__b:rationalize(__b),
+	if length(__option) > 1 then
+		error(concat("No version of between() takes ", length(__option)+3, " arguments"))
+	elseif is(__a >= __b)=true then
+		0
+	elseif emptyp(__option) or first(__option) = 'halfopen then
+		if (compxa:sign(__x - __a)) = 'pos and (compxb:sign(__x - __b)) = 'neg  then
+			1
+		elseif compxa = 'neg or compxb = 'pos then
+			0
+		elseif compxa = 'zero or compxb = 'zero then
+			1/2
+		elseif __b = 'inf then
+		(
+			(1 + signum(__x - __a))/2
+		)
+		elseif __a = 'minf then
+		(
+			(1 - signum(__x - __b))/2
+		)
+		else
+			(simpfuncall('between, __x, __a, __b, 'halfopen))
+	elseif first(__option) = 'closed then
+		if member(compxa:sign(__x - __a), '[pos,pz,zero]) and member(compxb:sign(__x - __b),'[neg,nz,zero]) then
+			1
+		elseif compxa='neg or compxb='pos then
+			0
+		elseif __b = 'inf then
+		(
+			(1 + signum(__x - __a) + unit_spike(__x - __a))/2
+		)
+		elseif __a = 'minf then
+		(
+			(1 - signum(__x - __b) + unit_spike(__x - __b))/2
+		)
+		else
+			(simpfuncall('between, __x, __a, __b, first(__option)))
+	elseif first(__option) = 'open then
+		if (compxa:sign(__x - __a)) = 'pos and (compxb:sign(__x - __b)) = 'neg then
+			1
+		elseif member(compxa, '[neg,nz,zero]) or member(compxb,'[pos,pz,zero]) then
+			0
+		elseif __b = 'inf then
+		(
+			(1 + signum(__x - __a) - unit_spike(__x - __a))/2
+		)
+		elseif __a = 'minf then
+		(
+			(1 - signum(__x - __b) - unit_spike(__x - __b))/2
+		)
+		else
+			(simpfuncall('between, __x, __a, __b, first(__option)))
+	elseif first(__option) = 'rclosed then
+		if (compxa:sign(__x - __a)) = 'pos and member(compxb:sign(__x - __b),'[neg,nz,zero]) then
+			1
+		elseif member(compxa, '[neg,nz,zero]) or compxb = 'pos then
+			0
+		elseif __b = 'inf then
+		(
+			(1 + signum(__x - __a) - unit_spike(__x-__a))/2
+		)
+		elseif __a = 'minf then
+		(
+			(1 - signum(__x - __b) + unit_spike(__x - __b))/2
+		)
+		else
+			(simpfuncall('between, __x, __a, __b, first(__option)))
+	elseif first(__option) = 'lclosed then
+		if member(compxa:sign(__x - __a), '[pos,pz,zero]) and (compxb:sign(__x - __b)) = 'neg then
+			1
+		elseif compxa='neg or member(compxb, '[pos,pz,zero]) then
+			0
+		elseif __b = 'inf then
+		(
+			(1 + signum(__x - __a) + unit_spike(__x - __a))/2
+		)
+		elseif __a = 'minf then
+		(
+			(1 - signum(__x - __b) - unit_spike(__x - __b))/2
+		)
+		else
+			(simpfuncall('between, __x, __a, __b, first(__option)))
+	else
+		(simpfuncall('between, __x, __a, __b, first(__option)))
+)$
+
+simplifying(iif, simpiif)$
+simplifying(unit_spike, simpunitspike)$
+simplifying(unit_pulse, simpunitpulse)$
+simplifying(between, simpbetween)$
+simplifying(pwdelta, simppwdelta)$
+simplifying(diff_pwdelta, simpdiffpwdelta)$
+
+linearfunc(__e, __x):=
+block
+(
+	[inflag : true, ratprint:false, _a, _b, _retval],
+	errcatch
+	(
+		_b:subst(0, __x, __e),
+		_a:subst(1, __x, __e) - _b,
+		if is(equal(radcan(_a*__x + _b-__e),0))=true then
+			_retval : [_a, _b]
+		else
+			_retval : false
+	),
+	if %% = false or emptyp(%%) then
+		false
+	else
+		_retval
+)$
+
+quadraticfunc(__e, __x):=
+block
+(
+	[inflag : true, algebraic:true, ratprint:false, _p, _q, _r, _retval],
+	errcatch
+	(
+		_p:subst(0, __x, __e),
+		_q:subst(1, __x, __e),
+		_r:subst(2, __x, __e),
+		if is(equal(radcan((_r-2*_q+_p)/2*__x^2 + (4*_q-_r-3*_p)/2*__x + _p - __e),0))=true then
+			_retval : radcan([(_r-2*_q+_p)/2, (4*_q-_r-3*_p)/2, _p])
+		else
+		   _retval : false
+	),
+	if %% = false or emptyp(%%) then
+		false
+	else
+		_retval
+)$
+
+list_remove(__l,__n,__m):=
+block
+(
+	[partswitch:true, _retval : "error occurred"],
+	if listp(__l) then
+	(
+		errcatch
+		(
+			if __n > length(__l) then
+				__retval : __l
+			elseif length(__l) > __n+__m-2 and __m >= 0 then
+			(
+				if __n > 0 then
+				(
+					_retval : append(rest(__l,__n-1-length(__l)),rest(__l,__n+__m-1))
+				)
+			)
+			elseif __m >= 0 then
+			(
+				if __n > 0 then
+				(
+					_retval : rest(__l,__n-1-length(__l))
+				)
+			)
+		),
+		if %% = [] then
+			_retval : ["Something went wrong"]
+	)
+	else
+		_retval : ["L is not a list"],
+	_retval
+)$
+
+
+factor_signum:true;
+
+/* pwint() only requires that the function be piecewise continuous except at a countable number of points.
+ * pwint() does not compute principle values.
+ */
+
+pwint(__e, __x, [__v]):=
+block
+(
+	[inflag : true, _f : __e, _retval, _funcs, _scnmp : false, _p, _args, _l, _funcs, _go : false],
+	if mapatom(__x) then
+	(
+		if length(__v) = 2 then
+			apply('pwdefint, flatten([_f, __x, __v]))
+		elseif length(__v) = 0 then
+		(
+
+			if not freeof('signum, gatherargs(unitstep2signum(_f), 'signum)) then
+			(
+				_f : pwsimp(_f, __x),
+				_f : zerospikes(_f),
+				if freeof('signum, gatherargs(unitstep2signum(_f), 'signum)) then
+				(
+					_go : true
+				)
+			)
+			else
+			(
+				_go : true
+			),
+			_args : gatherargs(_f, "^"),
+			for _p in _args do (
+				if is(equal(second(_p), 1/2)) = true then
+					_scnmp : true
+			),
+			if _scnmp = true then _f : scanmap('factor, _f),
+			_f : maxmin2iif(_f),
+			_f : if2sum(_f),
+			_f : iif2sum(_f),
+			_f : abs2signum(_f),
+			_f : hstep2signum(_f),
+			_f : charfun2sum(_f),
+			_f : simpunitstep(_f, __x),
+			_f : unitstep2signum(_f),
+			if member(factor_signum, ['true,'all]) then _f : simpsignum(_f),
+			if factor_signum = 'all then _f : simpsignumargs(_f,__x),
+			_f : zerospikes(_f),
+			_f : expandwrt(_f, 'signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse),
+			if _go then
+			(
+				_retval : _pwint(_f, __x),
+				if not freeof('integrate, _retval) then
+					funmake(nounify('integrate), [__e, __x])
+				else
+					_retval : zeroconstterms(_retval, __x)
+			)
+			else
+			(
+				funmake(nounify('integrate), [__e, __x])
+			)
+		)
+		else
+		(
+			error("Wrong number of arguments to pwint.")
+		)
+	)
+	else
+		error("Variable of integration must be a symbol.")
+)$
+
+_pwint(__e, __x):=
+block
+(
+	[inflag : true, _sum : 0, _op, _q],
+	_op : if not mapatom(__e) then op(__e) else false,
+	if _op = "+" then
+	(
+		for _q in __e do (
+			_sum : _sum + intterm(_q, __x)
+		),
+		_sum
+	)
+	elseif _op = "*" then
+	(
+		intterm(__e, __x)
+	)
+	elseif _op = "^" then
+	(
+		if safe_op(expandwrt(__e, 'signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse)) # "^" then
+			pwint((expandwrt(__e, 'signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse)), __x)
+		else
+			intterm(__e, __x)
+	)
+	elseif _op = 'signum then
+	(
+		intterm(__e, __x)
+	)
+	elseif _op = 'unit_pulse then
+	(
+		intterm(__e, __x)
+	)
+	elseif _op = 'between then
+	(
+		intbetween(__e, __x)
+	)
+	elseif _op = 'pwdelta then
+	(
+		intpwdelta(__e, __x)
+	)
+	elseif _op = 'sum then
+	(
+		intterm(__e,__x)
+	)
+	elseif not freeof('sum, __e) and not emptyp(gatherargs(__e, 'sum))
+		and length(gatherargs(__e, 'sum)) = 1  then
+	(
+		intterm(__e,__x)
+	)
+	elseif _op = 'diff_pwdelta then
+	(
+		intdiffpwdelta(__e, __x)
+	)
+	elseif freeof('signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse, __e) then
+		integrate(__e,__x)
+	else
+		funmake(nounify('integrate), [__e, __x])
+)$
+
+__pwint(__e, __x):=
+block
+(
+	[inflag : true],
+	__e : zerospikes(__e),
+	__e : expandwrt(__e, 'signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse),
+	if freeof('signum, gatherargs(__e, 'signum)) then
+		_pwint(__e, __x)
+	else
+		funmake(nounify('integrate), [__e, __x])
+)$
+
+___pwint(__e, __x):=
+block
+(
+	[inflag : true],
+	__e : abs2signum(__e),
+	__e : zerospikes(__e),
+	__e : expandwrt(__e, 'signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse),
+	if freeof('signum, gatherargs(__e, 'signum)) then
+		_pwint(__e, __x)
+	else
+		funmake(nounify('integrate), [__e, __x])
+)$
+
+intterm(__e, __x):=
+block
+(
+	[inflag : true, _t, _sum : 0, _tmpt, _tmp1, _tmp2, _t1, _t2, _errflag : false, _op],
+	_op : if not mapatom(__e) then op(__e) else false,
+	if _op = "*" then
+	(
+		_t1 : xreduce("*", sublist(args(__e), lambda([_z], freeof(__x, _z)))),
+		_t2 : xreduce("*", sublist(args(__e), lambda([_z], not freeof(__x, _z))))
+	)
+	elseif _op = "^" then
+	(
+		_t1 : _t2 : 1,
+		if freeof(__x, __e) then
+			_t1 : __e
+		else
+			_t2 : __e
+	)
+	elseif _op = "+" then
+	(
+		print("Not a term")
+	)
+	elseif not freeof('sum, __e) then
+	(
+		if safe_op(__e) = "*" then
+		(
+			_t1 : xreduce("*", sublist(args(__e), lambda([_z], freeof(__x, _z)))),
+			_t2 : xreduce("*", sublist(args(__e), lambda([_z], not freeof(__x, _z))))
+		)
+		elseif not freeof('sum, __e) and not emptyp(gatherargs(__e, 'sum))
+			and length(gatherargs(__e, 'sum)) = 1 then
+		(
+			_t1 : 1,
+			_t2 : __e
+		)
+		else
+			print("Not a Term")
+	)
+	else
+	(
+		_t1 : _t2 : 1,
+		if freeof(__x, __e) then
+			_t1 : __e
+		else
+			_t2 : __e
+	),
+	if not freeof('sum, _t2) then
+	(
+		_tmp1 : gatherargs(_t2, 'sum),
+		if length(_tmp1) = 1 then
+		(
+			_tmp1 : first(_tmp1),
+			_tmp2 : _t2/apply('sum, [first(_tmp1), second(_tmp1), third(_tmp1), fourth(_tmp1)]),
+			_tmpt : pwint(first(_tmp1)*_tmp2,__x),
+			_t1*apply('sum, [_tmpt, second(_tmp1), third(_tmp1), fourth(_tmp1)])
+		)
+		else
+		(
+			funmake(nounify('integrate), [__e, __x])
+		)
+	)
+	elseif not freeof('pwdelta, _t2) then
+		_t1*intpwdelta(_t2, __x)
+	elseif not freeof('diff_pwdelta, _t2) then
+		_t1*intdiffpwdelta(_t2, __x)
+	elseif not freeof('between, _t2) then
+	(
+		_t : betweencheck(_t2),
+		if _t = false then
+			funmake(nounify('integrate), [__e, __x])
+		else
+			_t1*intbetween(_t, __x)
+	)
+	elseif not freeof('unit_pulse, _t2) then
+	(
+		_t : pulsecheck(_t2),
+		if _t = false then
+			funmake(nounify('integrate), [__e, __x])
+		else
+			_t1*intpulse(_t, __x)
+	)
+	elseif not freeof('signum, _t2) then
+	(
+		_t : signumcheck(_t2),
+		if _t = false then
+		(
+			_tmpt : (pwsimp(_t2, __x, 'signum)),
+			_t : signumcheck(_tmpt),
+			if _t = 'false then
+				integrate(_t1 * _tmpt, __x)
+			else
+			(
+				if freeof('signum, _t) then
+					_t1 * integrate(_t, __x)
+				else
+				(
+					if safe_op(_t) = 'signum or safe_op(_t) = "*" or safe_op(_t) = "^" then
+					(
+						_t1 * intsignum(_t, __x)
+					)
+					else
+						_t1 * pwint(_t, __x)
+				)
+			)
+		)
+		else
+		(
+			if freeof('signum, _t) then
+				_t1*integrate(_t, __x)
+			else
+			(
+				if safe_op(_t) = 'signum or safe_op(_t) = "*" or safe_op(_t) = "^" then
+				(
+					(_t1 * intsignum(_t, __x))
+				)
+				else
+					_t1 * pwint(_t, __x)
+			)
+		)
+	)
+	elseif freeof('signum, 'pwdelta, 'diff_pwdelta, 'between, 'unit_pulse, __e) then
+	(
+		integrate(__e,__x)
+	)
+	else
+		funmake(nounify('integrate), [__e, __x])
+)$
+
+
+
+intpwdelta(__term, __x):=
+block
+(
+	[inflag:true, _a, _s, _ans, _lans, _z],
+	_a : block([_s], _s:gatherargs(__term, 'pwdelta), _s),
+	_a : flatten(_a),
+	_s : pwdelta(first(_a)),
+	if listp((_lans : linearfunc(first(_a), __x))) and listp((linearfunc(__term, _s))) then
+	(
+		_ans : -second(_lans)/first(_lans),
+		_z : at(1/first(_lans)*__term/_s, [__x = _ans]) * (signum(first(_a)) + 1) / 2
+	)
+	else
+		funmake(nounify('integrate), [__term, __x])
+)$
+
+intdiffpwdelta(__term, __x):=
+block
+(
+	[inflag:true, _a, _s, _ans, _lans, _z],
+	_a : block([_s], _s:gatherargs(__term, 'diff_pwdelta), _s),
+	_s : diff_pwdelta(first(first(_a)), second(first(_a))),
+	if listp((_lans : linearfunc(second(first(_a)), __x))) and nonnegintegerp(first(first(_a))) and listp((linearfunc(__term, _s))) then
+	(
+		_ans : -second(_lans)/first(_lans),
+		_z: at(diff(((-1)^(first(first(_a)))*__term/_s),__x, first(first(_a))), [__x = _ans])/first(_lans)^(first(first(_a))+1) *
+			(signum(second(first(_a))) + 1) / 2
+	)
+	else
+		funmake(nounify('integrate), [__term, __x])
+)$
+
+intsignum(__term, __x):=
+block
+(
+	[inflag : true, _a, _z, __retval : 0, _s, _t, _ans, _tmp],
+	_a : flatten(listify(setify(gatherargs(__term, 'signum)))),
+	_s : signum(first(_a)),
+	if listp(_ans : linearfunc((first(_a)), __x)) then
+	(
+		_ans : -second(_ans)/first(_ans),
+		if not mapatom(__term) and op(__term) = 'signum then
+		(
+			_z : subst(1, _s, __term),
+			_z : integrate(_z, __x),
+			_t : errcatch(_z : (_z - at(_z,[__x=_ans])) * _s),
+			if _t = [] then
+				_z : _z * _s
+		)
+		else
+		(
+			_z : subst(1, _s, __term),
+			if freeof('abs, 'signum, 'between, _z) then
+			(
+				_z : integrate(_z,__x)
+			)
+			else
+			(
+				_z : (pwint(_z, __x))
+			),
+			_t : errcatch(_z : (_z - at(_z,[__x=_ans])) * _s),
+			if _t = [] then
+				_z : _z * _s
+		),
+		_z
+	)
+	elseif freeof('abs, 'signum, 'pwdelta, 'diff_pwdelta, 'between, __term) then
+		integrate(__term, __x)
+	else
+		funmake(nounify('integrate), [__term, __x])
+)$
+
+intpulse(__term, __x):=
+block
+(
+	[inflag : true, _x, _a, _b, _o, _z, _t, _ans_a, _ans_b, _op, _l],
+	between2unitpulse(intbetween(zerospikes(unitpulse2between(__term)),__x))
+)$
+
+intbetween(__term, __x):=
+block
+(
+	[inflag : true, _x, _a, _b, _o, _z, _t, _ans_a, _ans_b, _op, _l],
+	_op : if not mapatom(__term) then op(__term) else false,
+ 	_l : listify(setify(gatherargs(__term, 'between))),
+	_l : first(_l),	_x : first(_l),	_a : second(_l), _b : third(_l),
+	_t : between(_x, _a, _b, fourth(_l)),
+	if length(_l) > 0 and listp(_ans_a : linearfunc(_x - _a, __x))	and listp(_ans_b : linearfunc(_x - _b, __x)) then
+	(
+		_ans_a : -second(_ans_a)/first(_ans_a),
+		_ans_b : -second(_ans_b)/first(_ans_b),
+		if _op = 'between then
+		(
+			_z : __term/_t,
+			_z : integrate(_z, __x),
+			_z : _z * between(_x,_a,_b) +
+				(signum(_b-_a) + 1)/2 * (at(_z, [__x=_ans_b]) * (1 + signum(_x - _b))/2	+ at(_z, [__x=_ans_a]) * (1 - signum(_x - _a))/2)
+		)
+		elseif member(_t, args(__term)) then
+		(
+			_z : __term/_t,
+			if freeof('abs, 'signum, 'between, _z) then
+			(
+				_z : integrate(_z, __x)
+			)
+			else
+			(
+				_z : pwint(_z, __x)
+			),
+			_z : _z * between(_x,_a,_b) +
+				(signum(_b-_a) + 1)/2 * (at(_z, [__x = _ans_b]) * (1 + signum(_x - _b))/2 + at(_z, [__x = _ans_a]) * (1 - signum(_x - _a))/2)
+		)
+		else
+			_z : funmake(nounify('integrate), [__term, __x]),
+		_z
+	)
+	elseif freeof('abs, 'signum, 'pwdelta, 'diff_pwdelta, 'between, __term) then
+		integrate(__term, __x)
+	else
+		funmake(nounify('integrate), [__term, __x])
+)$
+
+linearize(__e):=
+block
+(
+	[inflag:true, _f : __e],
+	if not mapatom(__e) and op(__e) = "+" then
+		xreduce("+", map(lambda([_z], linearize(_z)), inpargs(__e)))
+	elseif not mapatom(__e) and op(__e) = "*" then
+		betweencheck(signumcheck(__e))
+	elseif not mapatom(__e) and op(__e) = "^" then
+		betweencheck(signumcheck(__e))
+	else
+		_f,
+	if not freeof('false, %%) then
+		_f
+	else
+		%%
+)$
+
+
+linearizesignum(__e):=
+block
+(
+	[inflag:true, __retval, _lk, _sum : 0, _a, _p],
+	__e : expandwrt(__e, 'signum),
+	if not mapatom(__e) and op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + linearizesignum(_p)
+		),
+		_sum
+	)
+	else
+	(
+		__retval : __e,
+		_a : gatherargs(__e, "^"),
+		map(lambda([_lk],
+			if not mapatom(first(_lk)) and op(first(_lk)) = 'signum and oddp(second(_lk)) then
+				__retval : subst(first(_lk), first(_lk)^second(_lk), __retval)
+			elseif not mapatom(first(_lk)) and op(first(_lk)) = 'signum and evenp(second(_lk)) then
+				__retval : subst(1-unit_spike(first(args(first(_lk)))), first(_lk)^second(_lk), __retval)
+			),
+			_a
+		),
+		__retval
+	)
+);
+
+signumcheck(__e):=
+block
+(
+	[inflag:true,__retval, _lk, _e, _q, _args, _dv, _go : true, _sum : 0, _a],
+	if not mapatom(__e) and op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + signumcheck(_p)
+		),
+		if freeof('false, _sum) then
+			_sum
+		else
+			'false
+	)
+	else
+	(
+		__retval : __e,
+		_a : gatherargs(__e, "^"),
+		map(lambda([_lk],
+			if not mapatom(first(_lk)) and op(first(_lk)) = 'signum and oddp(second(_lk)) then
+				__retval : subst(first(_lk), first(_lk)^second(_lk), __retval)
+			elseif not mapatom(first(_lk)) and op(first(_lk)) = 'signum and evenp(second(_lk)) then
+				__retval : subst(1-unit_spike(_lk), first(_lk)^second(_lk), __retval)
+			),
+			_a
+		),
+		_args : block([_s], _s:gatherargs(__retval, 'signum), flatten(listify(setify(_s)))),
+		if not freeofall(['signum, 'unit_spike], _args) then
+		(
+			__retval : false,
+			_args : []  /* I don't handle this kind of expression so return false */
+		),
+		while length(_args) > 0 do
+		(
+			_q:first(_args),
+			_args:rest(_args),
+			_dv : signum(_q),
+			if not listp(linearfunc(__retval, _dv)) then
+			(
+				__retval : false,	 /* I don't handle this kind of expression so return false */
+				_args : []
+			)
+		),
+		__retval
+	)
+)$
+
+betweencheck(__e):=
+block
+(
+	[inflag:true,__retval, _lk, _e, _q, _args, _dv, _go : true, _sum : 0, _a],
+	if not mapatom(__e) and op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + betweencheck(_p)
+		),
+		if freeof('false, _sum) then
+			_sum
+		else
+			'false
+	)
+	else
+	(
+		__retval : __e,
+		_a : gatherargs(__e, "^"),
+		map(lambda([_lk],
+			if not mapatom(first(_lk)) and op(first(_lk)) = 'between and second(_lk) > 0 then
+				__retval : subst(first(_lk), first(_lk)^second(_lk), __retval)
+			),
+			_a
+		),
+		_args : block([_s], _s:gatherargs(__retval, 'between), listify(setify(_s))),
+		while length(_args) > 0 do
+		(
+			_q:first(_args),
+			_args:rest(_args),
+			_dv : apply('between, _q),
+			if not listp(linearfunc(__retval, _dv)) then
+			(
+				__retval : false,	 /* I don't handle this kind of expression so return false */
+				_args : []
+			)
+		),
+		__retval
+	)
+)$
+
+pulsecheck(__e):=
+block
+(
+	[inflag:true,__retval, _lk, _e, _q, _args, _dv, _go : true, _sum : 0, _a],
+	if not mapatom(__e) and op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + pulsecheck(_p)
+		),
+		if freeof('false, _sum) then
+			_sum
+		else
+			'false
+	)
+	else
+	(
+		__retval : __e,
+		_a : gatherargs(__e, "^"),
+		map(lambda([_lk],
+			if not mapatom(first(_lk)) and op(first(_lk)) = 'unit_pulse and second(_lk)>0 then
+				__retval : subst(first(_lk), first(_lk)^second(_lk), __retval)
+			),
+			_a
+		),
+		_args : block([_s], _s:gatherargs(__retval, 'unit_pulse), flatten(listify(setify(_s)))),
+		if not freeof('signum, 'unit_spike, _args) then
+		(
+			__retval : false,
+			_args : []  /* I don't handle this kind of expression so return false */
+		),
+		while length(_args) > 0 do
+		(
+			_q:first(_args),
+			_args:rest(_args),
+			_dv : unit_pulse(_q),
+			if not listp(linearfunc(__retval, _dv)) then
+			(
+				__retval : false,	 /* I don't handle this kind of expression so return false */
+				_args : []
+			)
+		),
+		__retval
+	)
+)$
+
+/* pwsimp() has respect for boundary conditions now, but it does not handle the pwdelta() functions */
+pwsimp(__e, __x, [__options]) :=
+block(
+	[partswitch : true, use_between : false, inflag:true, opsubst : true, __retval : 0, _q, _t1, _t2, _sort_failed : false],
+	_f : between2iif(__e),
+	_f : maxmin2iif(_f),
+	errcatch(_f : ifthen2if(_f)),
+	_f : if2sum(_f),
+	_f : iif2sum(_f),
+	_f : charfun2sum(_f),
+	__options : flatten(__options),
+	_f : simppwdeltas(_f),
+	if not freeof('unit_step, _f) then _f : scanmap(lambda([_z], simpunitstep(_z, __x)), _f),
+	_f : convertall2signum(_f),
+	_f : unitspike2signum(_f),
+	if global = false then _f : expandwrt(_f, 'signum, 'unit_spike),
+	if global = true then
+		__retval : _nsignumsimp(_f, __x, __options)
+	else
+	(
+		if not mapatom(_f) and op(_f) = "+" then
+		(
+			for _q in args(_f) do (
+				__retval : __retval + _nsignumsimp(_q, __x, __options)
+			)
+		)
+		elseif not mapatom(_f) and op(_f) = "*" then
+		(
+			_t1 : xreduce("*", sublist(args(_f), lambda([z], freeof(__x, z)))),
+			_t2 : xreduce("*", sublist(args(_f), lambda([z], not freeof(__x, z)))),
+			__retval : _t1 * _nsignumsimp(_t2, __x, __options)
+		)
+		else
+		(
+			__retval : _nsignumsimp(_f, __x, __options)
+		)
+	),
+	if _sort_failed = true then
+		__e
+	else
+		__retval
+)$
+
+_nsignumsimp(__e, __x, __options):=
+block(
+	[inflag:true, use_between : false, _q, _ans : [], _args, _args2:[], _yesno, _lkq, _p1, _p2, _t, _tmp, _tmplist, _nothing, _done, _l, _anst, _f : __e],
+	__options : flatten(__options),
+	_args:block([_s], _s:gatherargs(_f, 'signum), _s : listify(setify(_s)), _s),
+	if not emptyp(_args) then
+	(
+		_t : [['minf, __x-'minf]],
+		while not emptyp(_args) do (
+			_q : first(_args),
+			_args : rest(_args),
+			_lkq : quadraticfunc(first(_q),__x),
+			if listp(_lkq) then
+			(
+				if is(equal(first(_lkq),0))=true and is(equal(second(_lkq),0))=true then
+				(
+					/* no roots */ 6+9
+				)
+				elseif is(equal(first(_lkq),0))=true then
+				(
+					_temp : cons(-third(_lkq)/second(_lkq), _q),
+					_t : cons(_temp, _t)
+				)
+				elseif is(equal(second(_lkq)^2-4*first(_lkq)*third(_lkq),0))=true then
+				(
+					_temp : cons(-second(_lkq)/(2*first(_lkq)), _q),
+					_t : cons(_temp, _t)
+				)
+				elseif is(second(_lkq)^2-4*first(_lkq)*third(_lkq) > 0)=true then
+				(
+					_temp : cons((-second(_lkq)+sqrt(second(_lkq)^2-4*first(_lkq)*third(_lkq)))/(2*first(_lkq)), _q),
+					_t : cons(_temp, _t),
+					_temp : cons((-second(_lkq)-sqrt(second(_lkq)^2-4*first(_lkq)*third(_lkq)))/(2*first(_lkq)), _q),
+					_t : cons(_temp, _t)
+				)
+				elseif is(second(_lkq)^2-4*first(_lkq)*third(_lkq) < 0)=true then
+				(
+					/* don't do anything */ 6+9
+				)
+				else
+				(
+					/* don't do anything */ 6+9
+				)
+			)
+			else
+			(
+				/* don't do anything */ 6+9
+			)
+		),
+		_t : cons(['inf, __x-'inf], _t),
+		if not emptyp(_t) and length(_t) > 1 then
+		(
+			_t:sort(_t,lambda([c1,c2], block([t], t:errcatch(is(is(first(c1)<first(c2))='true)),if emptyp(t) then 'false else first(%%)))),
+			_tmp:false,
+			for i : 1 thru length(_t)-1 do if is(first(_t[i]) <= first(_t[i+1]))='unknown then (_tmp : true, _sort_failed : true),
+			if equal(_tmp,true) then
+			(
+				_ans:__e
+			)
+			else
+			(
+				_tmplist:[],
+				while not emptyp(_t) and length(_t) > 1 do (
+					_tmp:_f,
+					_p1:first(_t),
+					_p2:second(_t),
+					_t:rest(_t),
+					_tmp : simp_given(_tmp, first(_p1) < __x, __x < first(_p2)),
+					errcatch(_anst : if not member(first(_p1), ['minf,'inf]) then sublis([__x=first(_p1)], ratsimp(_f))),
+					if %% = [] then _anst : 'und,
+					_tmplist : flatten(cons([_tmp, first(_p1), _anst, first(_p1)],_tmplist))
+				),
+				_tmplist: flatten(cons([first(_p2), if not member(first(_p2), ['minf,'inf]) then
+					sublis([__x=first(_p2)], ratsimp(_f)) else 'ind, first(_p2)],_tmplist)),
+				if first(_tmplist) = 'inf and third(_tmplist) = 'inf then
+					_tmplist : rest(_tmplist,2),
+				_tmplist : reverse(_tmplist),
+				if first(_tmplist) = 'minf and third(_tmplist) = 'minf then
+					_tmplist : rest(_tmplist,2),
+				for i : 1 thru length(__options) do
+				(
+					if member(__options[i], ['connect])=true then
+					(
+						__options : list_remove(__options, i, 1),
+						i : length(__options)+100^100
+					)
+				),
+				for i : 1 thru length(__options) do
+				(
+					if member(__options[i], ['closed, 'open, 'lclosed, 'rclosed, 'halfopen])=true then
+					(
+						__options : list_remove(__options, i, 1),
+						i : i - 1
+					)
+				),
+				if member('list,__options) then
+					_ans: _tmplist
+				elseif member('iif,__options) then
+					_ans : simp_iif(pw(_tmplist, __x, cons('open, __options)))
+				else
+					_ans : simpspikes(pw(_tmplist, __x, cons('open, __options)))
+			)
+		)
+		else
+			_ans:__e
+	)
+	else
+		_ans:__e,
+	_ans
+)$
+
+pw(__L, __x, [__options]):=
+block
+(
+    [__M, __k, _options:[], __rslt, __ans : [], _ls, _rs, _c],
+
+	__options:flatten(__options),
+
+	_ls:"<",
+	_rs:">",
+	if member('array, __options) then
+		_options:cons('array, _options)
+	elseif member('between, __options) then
+	(
+		_options:cons('between, _options)
+	)
+	elseif member('signum, __options) then
+		_options:cons('signum, _options),
+	if member('lclosed, __options) then
+	(
+		_ls: "[",
+		_rs: ")",
+		_options:cons('lclosed, _options)
+	)
+	elseif member('rclosed, __options) then
+	(
+		_ls: "(",
+		_rs: "]",
+		_options:cons('rclosed, _options)
+	)
+	elseif member('open, __options) then
+	(
+		_ls: "(",
+		_rs: ")",
+		_options:cons('open, _options)
+	)
+	elseif member('closed, __options) then
+	(
+		_ls: "[",
+		_rs: "]",
+		_options:cons('closed, _options)
+	)
+	elseif member('halfopen, __options) then
+	(
+		_options:cons('halfopen, _options)
+	)
+	else
+		false,
+
+	if listp(__L) and not emptyp(__L) then
+	(
+		if listp(__L[1]) and length(__L[1]) = 3 then
+	    (
+			if member('connect, __options) and __L[1][1] # 'minf then
+				__L[1][3] : __L[1][3] - limit(__L[1][3], __x, __L[1][1], 'plus),
+			__M:matrix(["If", __x, "in", %if(is(equal(__L[1][1], __L[1][2])), "[", %if(is(equal(__L[1][1],'minf)), "(", _ls)), __L[1][1], ",",
+				__L[1][2], %if(is(equal(__L[1][1], __L[1][2])), "]", %if(is(equal(__L[1][2],'inf)), ")", _rs)), "then", __L[1][3]]),
+			for __k: 2 thru length(__L) do (
+				if listp(__L[__k]) then
+					if length(__L[__k])=3 then
+					(
+						__L[__k+1][3] : __L[__k+1][3] +
+						if member('connect, __options) then
+							limit(__L[__k][3],__x,__L[__k][2],'minus) - limit(__L[__k+1][3],__x,__L[__k+1][1],'plus)
+						else
+							0,
+						__M:addrow(__M,["If", __x, "in", %if(is(equal(__L[__k][1], __L[__k][2])), "[", _ls), __L[__k][1], ",", __L[__k][2],
+							%if(is(equal(__L[__k][1], __L[__k][2])), "]", %if(is(equal(__L[__k][2],'inf)), ")", _rs)), "then", __L[__k][3]])
+					)
+			)
+	    )
+		elseif length(__L) > 2 and oddp(length(__L)) then
+		(
+			if member('connect, __options) and __L[1] # 'minf then
+				__L[2] : __L[2] - limit(__L[2], __x, __L[1], 'plus),
+			__M:matrix(["If", __x, "in", %if(is(equal(__L[1], __L[3])), "[", %if(is(equal(__L[1],'minf)), "(", _ls)), __L[1], ",", __L[3],
+				%if(is(equal(__L[1], __L[3])), "]", _rs), "then", __L[2]]),
+			for __k:2 thru length(__L)-3 step 2 do
+			(
+				if member('connect, __options) then
+					__L[__k+2] : __L[__k+2] + limit(__L[__k], __x, __L[__k+1], 'minus) - limit(__L[__k+2], __x, __L[__k+1], 'plus),
+				__M:addrow(__M,["If", __x, "in", %if(is(equal(__L[__k+1], __L[__k+3])), "[", _ls), __L[__k+1], ",", __L[__k+3],
+					%if(is(equal(__L[__k+1], __L[__k+3])), "]", %if(is(equal(__L[__k+3],'inf)), ")", _rs)), "then", __L[__k+2]])
+			)
+		)
+		elseif length(__L) = 1 then
+			__M:matrix(["If", __x, "in", "(", minf, ",", inf, ")", "then", __L[1]])
+		else
+			error("Error : List has an even number of terms and it is the simple type."),
+		if __ans # 'inconsistent then
+		(
+			if member('array, _options) then
+			(
+				disp(" "),
+				disp(__M),
+				__ans : "Done"
+			)
+			elseif member('ifthen, __options) then
+				__ans : iif2ifthen(pwiifify(__M, _options))
+			elseif member('iif, __options) then
+				__ans : simp_iif(pwiifify(__M, _options))
+			elseif member('%if, __options) then
+				__ans : pw%ifify(__M, _options)
+			elseif member('between, __options) then
+				__ans : pwsumifybetween(__M, _options)
+			elseif member('pulse, __options) then
+				__ans : between2unitpulse(pwsumifybetween(__M, _options))
+			elseif member('signum, __options) then
+				__ans : pwsumifysignum(__M, _options)
+			elseif member('unitstep, __options) then
+				__ans : negunitstep(signum2unitstep(pwsumifysignum(__M, _options)),__x)
+			elseif member('abs, __options) then
+				__ans : signum2abs(pwsumifysignum(__M, _options))
+			elseif use_between = 'true then
+				__ans : pwsumifybetween(__M, _options)
+			elseif use_between = 'false then
+				__ans : pwsumifysignum(__M, _options)
+			elseif use_between = 'pulse then
+				__ans : between2unitpulse(pwsumifybetween(__M, _options))
+			else
+				__ans : pwsumifysignum(__M, _options)
+		)
+		else
+			[__ans]
+	)
+	else
+		error("First argument must be a list and not an empty list.")
+)$
+
+piecewise(__L,__x,[__options]):=pw(__L,__x,__options)$
+
+pwsumifybetween(__M, [__options]):=block
+(
+    [__i,__retval:0, _option, _tmp:[]],
+
+	__options:flatten(__options),
+
+	if member('rclosed, __options) then
+		(_option : 'rclosed)
+	elseif member('open, __options) then
+		(_option : 'open)
+	elseif member('lclosed, __options) then
+		(_option : 'lclosed)
+	elseif member('closed, __options) then
+		(_option : 'closed)
+	elseif member('halfopen, __options) then
+		(_option : 'halfopen)
+	else
+		(_option : 'none),
+
+	/* inf * unit_spike(x-a) is NOT equivilent to pwdelta(x-a) */
+
+    if matrixp(__M) and length(__M[1]) = 10 then
+	(
+		for __i: 1 thru length(__M) do (
+			if is(equal(__M[__i,5],__M[__i,7]))=true and listp(__M[__i,10]) then
+			(
+				__retval : __retval +
+				if length(__M[__i,10]) = 2 then
+					second(__M[__i,10]) * diff_pwdelta(first(__M[__i,10]), __M[__i,2] - __M[__i,5])
+				elseif length(__M[__i,10]) = 1 or (length(__M[__i,10]) = 2 and first(__M[__i,10]) = 0) then
+					first(__M[__i,10]) * pwdelta(__M[__i,2] - __M[__i,5])
+				else
+				(
+					_tmp : 'inconsistent
+				)
+			)
+			elseif is(equal(__M[__i,5],__M[__i,7]))=true and not listp(__M[__i,10]) then
+				__retval : __retval + __M[__i,10] * unit_spike(__M[__i,2] - __M[__i,5])
+			elseif listp(__M[__i,10]) and is(equal(__M[__i,5],__M[__i,7]))=false then
+				__retval : ['inconsistent]
+			elseif not listp(__M[__i,10]) then
+				if _option = 'none then
+					__retval : __retval + __M[__i,10] * between(__M[__i,2], __M[__i,5], __M[__i,7])
+				else
+					__retval : __retval + __M[__i,10] * between(__M[__i,2], __M[__i,5], __M[__i,7], _option)
+
+			else
+			(
+				__retval : ['inconsistent]
+			)
+		)
+	)
+	else
+		error("This is not a user function."),
+	if _tmp # 'inconsistent then
+		__retval
+	else
+		[_tmp]
+)$
+
+pw%ifify(__M, [__options]):=block
+(
+    [__i,__retval:0, _option, _tmp:[]],
+
+	__options:flatten(__options),
+
+	if member('rclosed, __options) then
+		(_option : 'rclosed)
+	elseif member('open, __options) then
+		(_option : 'open)
+	elseif member('lclosed, __options) then
+		(_option : 'lclosed)
+	elseif member('closed, __options) then
+		(_option : 'closed)
+	elseif member('halfopen, __options) then
+		(_option : 'halfopen)
+	else
+		(_option : 'none),
+
+	/* inf * unit_spike(x-a) is NOT equivilent to pwdelta(x-a) */
+
+    if matrixp(__M) and length(__M[1]) = 10 then
+	(
+		for __i: 1 thru length(__M) do (
+			if is(equal(__M[__i,5],__M[__i,7]))=true and listp(__M[__i,10]) then
+			(
+				__retval : __retval +
+				if length(__M[__i,10]) = 2 then
+					second(__M[__i,10]) * diff_pwdelta(first(__M[__i,10]), __M[__i,2] - __M[__i,5])
+				elseif length(__M[__i,10]) = 1 or (length(__M[__i,10]) = 2 and first(__M[__i,10]) = 0) then
+					first(__M[__i,10]) * pwdelta(__M[__i,2] - __M[__i,5])
+				else
+				(
+					_tmp : 'inconsistent
+				)
+			)
+			elseif is(equal(__M[__i,5],__M[__i,7]))=true and not listp(__M[__i,10]) then
+				__retval : __retval + __M[__i,10] * unit_spike(__M[__i,2] - __M[__i,5])
+			elseif listp(__M[__i,10]) and is(equal(__M[__i,5],__M[__i,7]))=false then
+				__retval : ['inconsistent]
+			elseif not listp(__M[__i,10]) then
+				if _option = 'closed then
+					__retval : __retval + %if(__M[__i,2] >= __M[__i,5], %if(__M[__i,2] <= __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'lclosed then
+					__retval : __retval + %if(__M[__i,2] >= __M[__i,5], %if(__M[__i,2] < __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'rclosed then
+					__retval : __retval + %if(__M[__i,2] > __M[__i,5], %if(__M[__i,2] <= __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'open then
+					__retval : __retval + %if(__M[__i,2] > __M[__i,5], %if(__M[__i,2] < __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'halfopen then
+					__retval : __retval +
+						%if(__M[__i,2] > __M[__i,5], %if(__M[__i,2] < __M[__i,7], __M[__i,10],
+						%if(__M[__i,2] = __M[__i,7], __M[__i,10]/2, 0)), %if(__M[__i,2] = __M[__i,5], __M[__i,10]/2, 0))  /* this line tested okay 08-20-10 */
+				else
+					__retval : __retval +
+						%if(__M[__i,2] > __M[__i,5], %if(__M[__i,2] < __M[__i,7], __M[__i,10],
+						%if(__M[__i,2] = __M[__i,7], __M[__i,10]/2, 0)), %if(__M[__i,2] = __M[__i,5], __M[__i,10]/2, 0))  /* this line tested okay 08-20-10 */
+			else
+			(
+				__retval : ['inconsistent]
+			)
+		)
+	)
+	else
+		error("This is not a user function."),
+	if _tmp # 'inconsistent then
+		__retval
+	else
+		[_tmp]
+)$
+
+pwiifify(__M, [__options]):=block
+(
+    [__i,__retval:0, _option, _tmp:[]],
+
+	__options:flatten(__options),
+
+	if member('rclosed, __options) then
+		(_option : 'rclosed)
+	elseif member('open, __options) then
+		(_option : 'open)
+	elseif member('lclosed, __options) then
+		(_option : 'lclosed)
+	elseif member('closed, __options) then
+		(_option : 'closed)
+	elseif member('halfopen, __options) then
+		(_option : 'halfopen)
+	else
+		(_option : 'none),
+
+	/* inf * unit_spike(x-a) is NOT equivilent to pwdelta(x-a) */
+
+    if matrixp(__M) and length(__M[1]) = 10 then
+	(
+		for __i: 1 thru length(__M) do (
+			if is(equal(__M[__i,5],__M[__i,7]))=true and listp(__M[__i,10]) then
+			(
+				__retval : __retval +
+				if length(__M[__i,10]) = 2 then
+					second(__M[__i,10]) * diff_pwdelta(first(__M[__i,10]), __M[__i,2] - __M[__i,5])
+				elseif length(__M[__i,10]) = 1 or (length(__M[__i,10]) = 2 and first(__M[__i,10]) = 0) then
+					first(__M[__i,10]) * pwdelta(__M[__i,2] - __M[__i,5])
+				else
+				(
+					_tmp : 'inconsistent
+				)
+			)
+			elseif is(equal(__M[__i,5],__M[__i,7]))=true and not listp(__M[__i,10]) then
+				__retval : __retval + __M[__i,10] * iif(equal(__M[__i,2],  __M[__i,5]), 1, 0)
+			elseif listp(__M[__i,10]) and is(equal(__M[__i,5],__M[__i,7]))=false then
+				__retval : ['inconsistent]
+			elseif not listp(__M[__i,10]) then
+				if _option = 'closed then
+					__retval : __retval + iif(__M[__i,2] >= __M[__i,5], iif(__M[__i,2] <= __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'lclosed then
+					__retval : __retval + iif(__M[__i,2] >= __M[__i,5], iif(__M[__i,2] < __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'rclosed then
+					__retval : __retval + iif(__M[__i,2] > __M[__i,5], iif(__M[__i,2] <= __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'open then
+					__retval : __retval + iif(__M[__i,2] > __M[__i,5], iif(__M[__i,2] < __M[__i,7], __M[__i,10], 0), 0)
+				elseif _option = 'halfopen then
+					__retval : __retval +
+						iif(__M[__i,2] > __M[__i,5], iif(__M[__i,2] < __M[__i,7], __M[__i,10],
+						iif(equal(__M[__i,2], __M[__i,7]), __M[__i,10]/2, 0)), iif(equal(__M[__i,2], __M[__i,5]), __M[__i,10]/2, 0))
+				else
+					__retval : __retval +
+						iif(__M[__i,2] > __M[__i,5], iif(__M[__i,2] < __M[__i,7], __M[__i,10],
+						iif(equal(__M[__i,2], __M[__i,7]), __M[__i,10]/2, 0)), iif(equal(__M[__i,2], __M[__i,5]), __M[__i,10]/2, 0))
+			else
+			(
+				__retval : ['inconsistent]
+			)
+		)
+	)
+	else
+		error("This is not a user function."),
+	if _tmp # 'inconsistent then
+		__retval
+	else
+		[_tmp]
+)$
+
+pwsumifysignum(__M, [options]):=block
+(
+    [__i,__retval:0,__num1:0,__num2:0,_options, _tmp:[]],
+
+	_options:flatten(options),
+
+	if member('lclosed, _options) then
+		(__num1:-1,__num2:-1)
+	elseif member('open, _options) then
+		(__num1:1,__num2:-1)
+	elseif member('rclosed, _options) then
+		(__num1:1,__num2:1)
+	elseif member('closed, _options) then
+		(__num1:-1,__num2:1)
+	else
+		(__num1:0,__num2:0),
+
+	/* inf * unit_spike(x-a) is NOT equivilent to pwdelta(x-a) */
+
+    if matrixp(__M) and length(__M[1]) = 10 then
+	(
+		for __i: 1 thru length(__M) do (
+			if is(equal(__M[__i,5],__M[__i,7]))=true and listp(__M[__i,10]) then
+				__retval : __retval +
+			(
+				if length(__M[__i,10]) = 2 then
+					second(__M[__i,10]) * diff_pwdelta(first(__M[__i,10]), __M[__i,2] - __M[__i,5])
+				elseif length(__M[__i,10]) = 1 or (length(__M[__i,10]) = 2 and first(__M[__i,10]) = 0) then
+					first(__M[__i,10]) * pwdelta(__M[__i,2] - __M[__i,5])
+				else
+				(
+					_tmp : 'inconsistent,
+					0
+				)
+			)
+			elseif is(equal(__M[__i,5],__M[__i,7]))=true and not listp(__M[__i,10]) then
+				__retval : __retval + __M[__i,10] * unit_spike(__M[__i,2] - __M[__i,5])
+			elseif listp(__M[__i,10]) and is(equal(__M[__i,5],__M[__i,7]))=false then
+				__retval : ['inconsistent]
+			elseif not listp(__M[__i,10]) then
+				__retval : __retval + __M[__i,10] * (1+signum(__M[__i,7]-__M[__i,5]))/2*(signum(__M[__i,2] - __M[__i,5]) - signum(__M[__i,2] - __M[__i,7])
+					+ signum(__M[__i,5] - __M[__i,7]) * __num1 * unit_spike(__M[__i,2] - __M[__i,5])
+					- signum(__M[__i,5] - __M[__i,7]) * __num2 * unit_spike(__M[__i,2] - __M[__i,7]))/2
+			else
+			(
+				__retval : ['inconsistent]
+			)
+		)
+	)
+	else
+		error("This is not a user function."),
+	if _tmp # 'inconsistent then
+		__retval
+	else
+		[_tmp]
+)$
+
+
+pwifify(__M, [__options]):=block
+(
+    [__i, __retval, _L1:[], __num1:0, __num2:0, _options, _tmp:[]],
+	_options : flatten(__options),
+    if matrixp(__M) and length(__M[1]) = 10 then
+	(
+		for __i: 1 thru length(__M) do (
+			if is(equal(__M[__i, 5],__M[__i, 7]))=true and listp(__M[__i, 10]) then
+			(
+				if length(__M[__i,10]) = 2 then
+					_L1 : append(_L1, [equal(__M[__i,2],__M[__i,5])], [second(__M[__i,10]) * diff_pwdelta(first(__M[__i,10]), __M[__i,2] - __M[__i,5])])
+				elseif length(__M[__i,10]) = 1 or (length(__M[__i,10]) = 2 and first(__M[__i,10]) = 0) then
+					_L1 : append(_L1, [equal(__M[__i,2],__M[__i,5])], [first(__M[__i,10]) * pwdelta(__M[__i,2] - __M[__i,5])])
+				else
+				(
+					_tmp : 'inconsistent
+				)
+			)
+			elseif is(equal(__M[__i,5],__M[__i,7]))=true and not listp(__M[__i,10]) then
+				_L1 : append(_L1,[equal(__M[__i,2],__M[__i,5])],[__M[__i,10] * unit_spike(__M[__i,2] - __M[__i,5])])
+			elseif listp(__M[__i,10]) and is(equal(__M[__i,5],__M[__i,7]))=false then
+				__retval : ['inconsistent]
+			elseif not listp(__M[__i,10]) then
+			(
+				if member('lclosed, _options) then
+				(
+					_L1 : append(_L1, [between(__M[__i,2], __M[__i,5], __M[__i,7], 'lclosed)>0], [__M[__i,10]])
+				)
+				elseif member('open, _options) then
+				(
+					_L1 : append(_L1, [between(__M[__i,2], __M[__i,5], __M[__i,7], 'open)>0], [__M[__i,10]])
+				)
+				elseif member('rclosed, _options) then
+				(
+					_L1 : append(_L1, [between(__M[__i,2], __M[__i,5], __M[__i,7], 'rclosed)>0], [__M[__i,10]])
+				)
+				elseif member('closed, _options) then
+				(
+					_L1 : append(_L1, [between(__M[__i,2], __M[__i,5], __M[__i,7], 'closed)>0], [__M[__i,10]])
+				)
+				else
+				(
+					_L1 : append(_L1, [between(__M[__i,2], __M[__i,5], __M[__i,7])>0], [__M[__i,10]])
+				)
+			)
+			else
+			(
+				__retval : ['inconsistent]
+			)
+		),
+		_L1 : append(_L1, [true],[0]),
+		__retval : apply("if", _L1)
+	)
+	else
+		error("This is not a user function."),
+	if _tmp # 'inconsistent then
+		__retval
+	else
+		[_tmp]
+)$
+
+simpsignum(__e) :=
+block(
+	[opsubst : true, inflag : true],
+	subst(
+		'signum =
+		lambda
+		(
+			[_z],
+			block
+			(
+				[_s, _e, _t],
+				_t : 1,
+				_s : factor(_z),
+				if not mapatom(_s) and op(_s) = "*" then
+				(
+					for _e in _s do
+					(
+						if not mapatom(_e) and op(_e) = "^" then
+							_t : signum(first(first(gatherargs(_e,"^"))))^second(first(gatherargs(_e,"^")))*_t
+						else
+							_t : signum(_e)*_t
+					)
+				)
+				elseif not mapatom(_s) and op(_s) = "^" then
+					_t : signum(first(first(gatherargs(_s,"^"))))^second(first(gatherargs(_s,"^")))
+				else
+					_t : signum(_s),
+			_t
+			)
+		),
+		__e
+	)
+)$
+
+simpsignumargs(__e, __x) :=
+block
+(
+	[opsubst : true],
+	subst('signum =
+		lambda
+		(
+			[__s],
+			block
+			(
+				[_t, _rv, _err, _start:1, _p],
+				_t : linearfunc(__s, __x),
+				if listp(_t) and is(first(_t) # 0) then
+					_rv : signum(first(_t))*signum(__x+second(_t)/first(_t))
+				else
+				(
+					_rv : signum(__s),
+					_t : quadraticfunc(__s, __x),
+					if listp(_t) and is(first(_t) # 0) and is(second(_t)^2-4*first(_t)*third(_t) > 0) then
+					(
+						_rv : signum(__x-(-second(_t)+sqrt(second(_t)^2-4*first(_t)*third(_t)))/(2*first(_t)))
+							* signum(__x-(-second(_t)-sqrt(second(_t)^2-4*first(_t)*third(_t)))/(2*first(_t)))
+					)
+					elseif listp(_t) and is(first(_t) # 0) and is(equal(second(_t)^2-4*first(_t)*third(_t),0)) then
+					(
+						_rv : at(signum(__s),[__x=(-second(_t)+sqrt(second(_t)^2-4*first(_t)*third(_t)))/(2*first(_t))+1])-
+							unit_spike(__x-(-second(_t))/(2*first(_t)))
+					)
+					elseif listp(_t) and is(first(_t) # 0) and is(second(_t)^2-4*first(_t)*third(_t)<0) = true then
+					(
+						_rv : at(signum(__s), __x=0)
+					)
+					else
+					(
+						_err : errcatch(_t : realroots(__s)),
+						if _err # [] then
+						(
+							for _p in _t do (
+								_start : signum(__x - rhs(_p)) * _start
+							),
+							_rv : _start
+						)
+						else
+							_rv : signum(__s)
+					)
+				),
+				_rv
+			)
+		),
+		__e
+	)
+)$
+
+negunitstep(__e, __x) :=
+block
+(
+	[opsubst : true, inflag : true],
+	subst('unit_step =
+		lambda
+		(
+			[s],
+			block
+			(
+				[_t],
+				_t : linearfunc(s,__x),
+				if listp(_t) and first(_t) < 0 then
+				(
+					1 - unit_step(-s) - unit_spike(-s)
+				)
+				else
+					unit_step(s)
+			)
+		),
+		__e
+	)
+)$
+
+simpunitstep(__e, __x):=
+block
+(
+	[inflag:true, _cnt : 0, _args:[], _ans, _roots1:[], _roots2:[], _maxval, _minval, __retval:0, _tmp],
+	__e : expandwrt(__e, 'unit_step, 'signum, 'pwdelta, 'diff_pwdelta),
+	if not mapatom(__e) and safe_op(__e) = "*" then
+	(
+		if length(gatherargs(__e, 'unit_step)) > 1 then
+		(
+			__retval : 1,
+			for lk in __e do (
+				if not mapatom(lk) and op(lk) = 'unit_step then
+				(
+					_args : first(gatherargs(lk, 'unit_step)),
+					_ans : linearfunc(first(_args),__x),
+					if listp(_ans) then
+					(
+						if first(_ans) > 0 then
+						(
+							_roots1 : cons(-second(_ans)/first(_ans), _roots1)
+						)
+						elseif first(_ans) < 0 then
+						(
+							_roots2 : cons(-second(_ans)/first(_ans), _roots2)
+						)
+						else
+							__retval : __retval * lk
+					)
+					else
+						__retval : __retval * lk
+				)
+				elseif not mapatom(lk) and op(lk)="^" then
+				(
+					_tmp : simpunitstep(lk,__x),
+					if not mapatom(_tmp) and op(_tmp) = 'unit_step then
+					(
+						_args : first(gatherargs(_tmp, 'unit_step)),
+						_ans : linearfunc(first(_args),__x),
+						if listp(_ans) then
+						(
+							if first(_ans) > 0 then
+							(
+								_roots1 : cons(-second(_ans)/first(_ans), _roots1)
+							)
+							elseif first(_ans) < 0 then
+							(
+								_roots2 : cons(-second(_ans)/first(_ans), _roots2)
+							)
+							else
+								__retval : __retval * lk
+						)
+						else
+							__retval : __retval * lk
+					)
+					else
+						__retval : __retval * lk
+				)
+				else
+					__retval : __retval * lk
+			),
+			_maxval : apply('max, _roots1),
+			_minval : apply('min, _roots2),
+			__retval : __retval * unit_step(__x-_maxval) * unit_step(-__x+_minval)
+		)
+		elseif not mapatom(__e) and op(__e)="^" then
+			__retval : simpunitstep(__e,__x)
+		else
+			__retval : __e
+	)
+	elseif not mapatom(__e) and safe_op(__e) = "+" then
+	(
+		for lk in __e do (
+			__retval : simpunitstep(lk, __x) + __retval
+		)
+	)
+	else
+		__retval : __e,
+	__retval
+)$
+
+periodic(__expr,__x,__a,__b):=
+block
+(
+    if not is(__b>__a)=false then subst(__x - __a, __x, subst((__b - __a)*(__x/(__b - __a) - floor(__x/(__b - __a))) + __a, __x, __expr)) else error("a>b")
+)$
+
+intperiodic(__expr,__x,__a,__b):=
+block
+(
+	if not is(__b>__a)=false then ((__x-__a)-(__b-__a )* ((__x-__a)/(__b-__a) - floor((__x-__a)/(__b-__a))))/(__b-__a) * pwint(__expr,__x,__a,__b)
+		+ periodic(pwint(__expr,__x),__x,__a,__b) else error("a>b")
+)$
+
+pwdefint(__e, __x, __a, __b):=
+block
+(
+	[_s, _ans, _c, _d, _p, _t, _done : false, algebraic : true],
+	_s : pwint(__e, __x),
+	if freeof(__x, __e) then
+		_ans : __e * (__b - __a)
+	elseif freeof('integrate, _s) and freeof('pwint, _s) then
+	(
+		_t : errcatch(_ans : at(_s,[__x=__b]) - at(_s,[__x=__a])),
+		if _t = [] then
+			_ans : funmake(nounify('integrate), [__e, __x, __a, __b])
+		else
+		(
+			if freeof('und, 'inf, 'minf, _ans) then
+			(
+				_ans,
+				_done : true
+			),
+			if not _done and not freeof('und, 'inf, 'minf, 'signum, 'between, _ans) then
+			(
+				_ans : ratsimp(_ans),
+				if not freeof('und, 'inf, 'minf, _ans) then
+				(
+					_done : false
+				)
+				else
+					_done : true
+			),
+			if not _done and (__b = 'inf or __a = 'minf) then
+			(
+				if __b = 'inf and __a = 'minf then
+				(
+					_ans : pwlimit(pwlimit(at(_s,[__x=_d]) - at(_s,[__x=_c]), _d, 'inf), _c, 'minf)
+				)
+				elseif __b = 'inf then
+				(
+					_ans : pwlimit(at(_s,[__x=_d]) - at(_s,[__x=__a]), _d, 'inf)
+				)
+				elseif __a = 'minf then
+				(
+					_ans : pwlimit(at(_s,[__x=__b]) - at(_s,[__x=_c]), _c, 'minf)
+				)
+				else
+				(
+					_ans
+				)
+			)
+		)
+	)
+	else
+		_ans : funmake(nounify('integrate), [__e, __x, __a, __b]),
+	_ans
+)$
+
+/* This is the limit at inf or minf for any polynomial degree >= 0 argument to signum()
+It is not needed most of the time and it also could be a lot better but alas I do not have time. */
+pwlimit(__e, __x, __value):=
+block
+(
+	[inflag : true, _tmp, __retval:0, _q, _args, _thelim],
+	if is(__value = 'inf) = true or is(__value = 'minf) = true then
+	(
+		__retval : iif2sum(abs2iif(between2iif(__e))),
+		_args : flatten(gatherargs(__retval, 'signum)),
+		while length(_args) > 0 do
+		(
+			_q : first(_args),
+			_args : rest(_args),
+			if numberp(polydeg(_q,__x)) then
+			(
+				_thelim : polysignum(_q, __x, __value),
+				__retval : subst(_thelim, signum(_q), __retval)
+			)
+		),
+		__retval : facsum(__retval, __x),
+		if safe_op(__retval) = "*" and not freeof('signum, __retval) then
+		(
+			_tmp : xreduce("*", sublist(args(__retval), lambda([_arg], freeof(__x, _arg)))),
+			__retval : _tmp * limit(__retval / _tmp, __x, __value)
+		)
+		else
+		(
+			/* this does not always work, pwlimit in general needs more work but it is good enough for pw.mac as it is rarely called */
+			__retval : apply('simp_given, cons(limit(__retval, __x, __value), map(lambda([_s], if __value = 'inf then __x > _s else __x < _s),
+			listofvars(__retval))))
+		)
+	)
+	else
+		error("Third argument must be inf or minf."),
+	__retval
+)$
+
+polysignum(__p, __x, __value):=
+block
+(
+	[_p,_degree:polydeg(__p, __x),_sign_x],
+	if (__value < 0) then _sign_x : -1 else _sign_x : 1,
+	if numberp(_degree) and _degree # false then
+	(
+		if is(equal(_degree,0))=true then
+			signum(__p)
+		elseif is(oddp(_degree))=true then
+		(
+			_p:__p-ratcoeff(__p,__x,_degree)*__x^_degree,
+			_sign_x * signum(ratcoeff(__p,__x,_degree)) + unit_spike(ratcoeff(__p,__x,_degree))*polysignum(_p,__x,__value)
+		)
+		elseif is(evenp(_degree))=true then
+		(
+			_p:__p-ratcoeff(__p,__x,_degree)*__x^_degree,
+			signum(ratcoeff(__p,__x,_degree)) + unit_spike(ratcoeff(__p,__x,_degree))*polysignum(_p,__x,__value)
+		)
+		else
+			signum(__p)
+	)
+	else
+	(
+		signum(__p)
+	)
+)$
+
+/* get polynomial degree unless not a polynomial */
+polydeg(__p,__x):=
+block
+(
+	[_deg:-1,_okay,_ans],
+	_okay : polynomialp(__p,[__x],
+		lambda([_l], freeof(__x,_l)),
+		lambda([_l], nonnegintegerp(_l))
+	),
+	if _okay then
+		_deg : hipow(__p,__x)
+	else
+		false
+)$
+
+zerospikes(__e):=block([opsubst : true], subst('unit_spike = lambda([z], 0), __e))$
+zeropwdeltas(__e):=block([opsubst : true], subst('pwdelta = lambda([z], 0), __e))$
+zerodiffpwdeltas(__e):=block([opsubst : true], subst('diff_pwdelta = lambda([z1,z2], 0), __e))$
+zeropwdeltas(__e):=zeropwdeltas(zerodiffpwdeltas(__e))$
+
+convertall2signum(__ex) := block(
+	__ex : maxmin2abs(__ex),
+	__ex : abs2signum(__ex),
+	__ex : unitpulse2signum(__ex),
+	__ex : unitstep2signum(__ex),
+	__ex : simpsignum(__ex)
+)$
+
+
+signum2abs(__e) :=
+block(
+	[__l],
+	__e : simpsignum(__e),
+	__l : flatten(gatherargs(__e,'signum)),
+	for lk in __l do (
+		__e : ratsubst(abs(lk)/lk, signum(lk),__e)),
+  __e
+)$
+
+deltaint(__e, __x, [__v]):=
+block(
+	[inflag: true],
+	if length(__v) = 0 then
+		zerospikes(negunitstep(signum2unitstep(pwint(__e,__x)),__x))
+	elseif length(__v) = 2 then
+		apply('pwint, flatten([__e, __x, __v]))
+	else
+		print("wrong number of arguments to deltaint")
+)$
+
+zeroconstterms(__e, __x) :=
+block
+(
+	[inflag : true],
+	if (not mapatom(__e)) and (op(__e) = "+") then
+		xreduce("+", sublist(args(__e), lambda([z], not freeof(__x, z))))
+	else
+		__e
+)$
+
+/* max2abs() and min2abs() are based on code in abs_integrate and are due to Barton Willis and are used with his permission */
+max2abs(__e) := block([opsubst : true], subst('max = lambda([[__x]], xreduce(lambda([_%a,_%b], (_%a+_%b+abs(_%a-_%b))/2),__x)),__e))$
+min2abs(__e) := block([opsubst : true], subst('min = lambda([[__x]], xreduce(lambda([_%a,_%b], (_%a+_%b-abs(_%a-_%b))/2),__x)),__e))$
+maxmin2abs(__e):= max2abs(min2abs(__e))$
+
+/* not exact */
+between2signum(__e):= block([opsubst:true], subst('between = lambda([__x,__a,__b, __o], (1+signum(__b-__a))/2*(signum(__x-__a)-signum(__x-__b))/2), __e))$
+between2unitstep(__e):= block([opsubst:true], subst('between = lambda([__x,__a,__b, __o], unit_step(__x-__a)-unit_step(__x-__b)), __e))$
+charfun2signum(__e):= block([opsubst:true], subst('charfun2 = lambda([__x,__a,__b], (signum(__x-__a)-signum(__x-__b))/2), __e))$
+
+/* exactly true transformations from here on.  Not to say everything before here is not exact. signum2abs() has a divide by zero problem, so there
+is also signum2abs2() below which does not have this problem.  That advantage is gained at the price of not being able to express the answer in terms of the abs() function. 
+zeroconstterms(), zerospikes(), signum2abs(), zeropwdeltas() and some diff()'s are not exact at singular points all the time which is by design */
+
+between2unitpulse(__e):= block([opsubst : true],
+	subst('between = lambda([__x,__a,__b, [__o]],
+			block
+			(
+				[_n1, _n2],
+				if member('lclosed, __o) then
+					(_n1:1/2, _n2:-1/2)
+				elseif member('open, __o) then
+					(_n1:-1/2, _n2:-1/2)
+				elseif member('rclosed, __o) then
+					(_n1:-1/2, _n2:1/2)
+				elseif member('closed, __o) then
+					(_n1:1/2, _n2:1/2)
+				else
+					(_n1:0, _n2:0),
+				(1+signum(__b-__a))/2 * (unit_pulse(__x/(__b-__a)+__a/(__a-__b)) + _n1 * unit_spike(__x - __a) + _n2 * unit_spike(__x - __b))
+			)
+		),
+	__e
+	)
+)$
+
+
+simppwdeltas(__e) :=
+block(
+	[inflag : true, _l, _m, _q, _p, lk, _sum : 0, _ans],
+	__e : expandwrt(__e, 'pwdelta),
+	if safe_op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + simppwdeltas(_p)
+		),
+		_sum
+	)
+	else
+	(
+		_m : gatherargs(__e, "^"),
+		_l1 : flatten(gatherargs(__e, 'pwdelta)),
+		for lk in _l1 do (
+			__e : ratsubst(0, lk * pwdelta(lk),__e),
+			__e : ratsubst(0, signum(lk) * pwdelta(lk),__e),
+			__e : ratsubst(0, sin(lk) * pwdelta(lk),__e),
+			__e : ratsubst(0, tan(lk) * pwdelta(lk),__e),
+			while not emptyp(_m) do (
+				_p : first(_m),
+				_m : rest(_m),
+				_q : second(_p),
+				if _q > 0 then
+				(
+					__e : ratsubst(0, lk ^_q * pwdelta(lk),__e),
+					__e : ratsubst(0, sin(lk) ^_q * pwdelta(lk),__e),
+					__e : ratsubst(0, sin(lk ^_q) * pwdelta(lk),__e),
+					__e : ratsubst(0, tan(lk) ^_q * pwdelta(lk),__e),
+					__e : ratsubst(0, tan(lk ^_q) * pwdelta(lk),__e)
+				)
+			)
+		),
+		__e
+	)
+)$
+
+simpspikes(__e) :=
+block(
+	[inflag : true, use_between:false, _l, _m, _q, _p, lk, _sum : 0, _done : false, _most1, _most2, _tmp, _tmp1, _stop, _ans],
+	__e : expandwrt(__e, 'unit_spike),
+	if safe_op(__e) = "+" then
+	(
+		for _p in __e do (
+			_sum : _sum + simpspikes(_p)
+		),
+		_sum
+	)
+	else
+	(
+		_m : gatherargs(__e, "^"),
+		for lk in _m do (
+			if nonnegintegerp(second(lk)) and safe_op(first(lk)) = 'unit_spike then
+				__e : ratsubst(first(lk), first(lk)^second(lk),__e)
+		),
+		_l : listify(setify(flatten(gatherargs(__e, 'unit_spike)))),
+		for lk in _l do (
+			__e : subst(0, lk * unit_spike(lk),__e),
+			__e : subst(0, signum(lk) * unit_spike(lk),__e),
+			__e : subst(0, sin(lk) * unit_spike(lk),__e),
+			__e : subst(0, tan(lk) * unit_spike(lk),__e)
+		),
+		_l : listify(setify(flatten(gatherargs(__e, 'unit_spike)))),
+		while not emptyp(_l) do (
+			_p : first(_l),
+			_l : rest(_l),
+			_l2 : listify(setify(flatten(gatherargs(__e, 'unit_spike)))),
+			while not emptyp(_l2) do (
+				_q : first(_l2),
+				_l2 : rest(_l2),
+				if is(notequal(_p,_q))=true then
+					__e : ratsubst(0, unit_spike(_p) * unit_spike(_q),__e)
+			)
+		),
+		_l : flatten(gatherargs(__e, 'unit_spike)),
+		if not emptyp(_l) then
+		(
+			_tmp : __e,
+			while not emptyp(_l) do (
+				_p : first(_l),
+				_l : rest(_l),
+				_tmp : subst(1, unit_spike(_p), _tmp)
+			),
+			_most1 : reverse(countvars(_tmp)),
+			_l : flatten(gatherargs(__e, 'unit_spike)),
+			_most2 : reverse(countvars(_l)),
+			_stop : false,
+			if not emptyp(_most1) and not emptyp(_most2) and is(equal(first(first(_most1)),first(first(_most2)))) then
+			(
+				_x : first(first(_most1))
+			)
+			elseif emptyp(_most1) and emptyp(_most2) then
+			(
+				_stop : true
+			)
+			else
+			(
+				_x : first(first(_most2))
+			),
+			if not _stop then
+			(
+				_expr : first(_l),
+				if listp(_ans:linearfunc(_expr,_x)) then
+				(
+					if is(notequal(first(_ans),0))=true then
+					(
+						_ans : -second(_ans)/first(_ans),
+						_tmp : subst(1, unit_spike(_expr), __e),
+						_t : errcatch(_tmp1 : sublis([_x = _ans], ratsimp(_tmp))),
+						if _t = [] then
+						(
+							__e
+						)
+						else
+						(
+						   __e : _tmp1  * unit_spike(_expr)
+						)
+					)
+				)
+			)
+		),
+		__e
+	)
+)$
+
+/* needs more work */
+if2sum(__e) := block(
+	[opsubst : true, inflag:true],
+	subst('%if =
+		lambda(
+			[__s,__a,__b],
+			block
+			(
+				[_p:safe_op(__s),_q:safe_op(inpart(__s,1)),_r:safe_op(inpart(__s,2)),
+				_a:rhs(inpart(__s,1)), _b:rhs(inpart(__s,2)), _x:lhs(inpart(__s,1)), _x1:lhs(inpart(__s,1)), _x2:lhs(inpart(__s,2))],
+				if safe_op(__s) = ">" then
+				(
+					(signum(lhs(__s))+1-unit_spike(lhs(__s)))/2 * __a + (1-signum(lhs(__s))+unit_spike(lhs(__s)))/2 * __b
+				)
+				elseif safe_op(__s) = "=" then
+				(
+					unit_spike(lhs(__s)) * __a + (1-unit_spike(lhs(__s))) * __b
+				)
+				elseif safe_op(__s) = "#" then
+				(
+					unit_spike(lhs(__s)) * __b + (1-unit_spike(lhs(__s))) * __a
+				)
+				elseif apply(_p, [true,false,false]) = true
+					and apply(_p, [false, false, false]) = false and _q = "=" and _r = ">" and _x1 = _x2 then
+				(
+					 __a * (signum(_x) + unit_spike(_x)+1)/2 + __b * (1-signum(_x)-unit_spike(_x))/2
+				)
+				elseif apply(_p, [true,false,false]) = true
+					and apply(_p, [false, false, false]) = false and _q = ">" and _r = "=" and _x1 = _x2 then
+				(
+					(signum(_x) + unit_spike(_x)+1)/2 * __a + (1-signum(_x)-unit_spike(_x))/2 * __b
+				)
+				elseif apply(_p, [true,true,true]) = true and _x1 = _x2 and apply(_p, [false, true, true]) = false
+					and _q = ">" and _r = "<" then
+				(
+					__a * between(_x,_a,_b,'open) + __b * (1-between(_x, _a, _b, 'open))
+				)
+				else
+					%if(__s, __a, __b))),
+		__e)
+)$
+
+pushoutiif(__e):=sum2iif(((iif2sum(__e))));
+
+iif2sum(__e) := block(
+	[opsubst : true, inflag:true,__s,__a,__b],
+	subst('iif =
+		lambda(
+			[__s,__a,__b],
+			block
+			(
+				[_op,_p,_q,_r,_a,_b,_x,_x1,_x2],
+				_op:safe_op(__s),
+				_p : lhs(__s),
+				_q : rhs(__s),
+				_p : _p - _q,
+				if _op = ">" then
+					__s : _p > 0
+				elseif _op = "<" then
+					__s : _p < 0
+				elseif _op = ">=" then
+					__s : _p >= 0
+				elseif _op = "<=" then
+					__s : _p <= 0,
+				_p:safe_op(__s),
+				_q:safe_op(inpart(__s,1)),
+				_r:safe_op(inpart(__s,2)),
+				_a:rhs(inpart(__s,1)),
+				_b:rhs(inpart(__s,2)),
+				_x:lhs(inpart(__s,1)),
+				_x1:lhs(inpart(__s,1)),
+				_x2:lhs(inpart(__s,2)),
+				if safe_op(__s) = ">" then
+					(signum(lhs(__s))+1-unit_spike(lhs(__s)))/2 * __a + (1-signum(lhs(__s))+unit_spike(lhs(__s)))/2 * __b
+				elseif safe_op(__s) = "<" then
+					(1-signum(lhs(__s))-unit_spike(lhs(__s)))/2 * __a + (signum(lhs(__s))+unit_spike(lhs(__s))+1)/2 * __b
+				elseif safe_op(__s) = ">=" then
+					(signum(lhs(__s))+1+unit_spike(lhs(__s)))/2 * __a + (1-signum(lhs(__s))-unit_spike(lhs(__s)))/2 * __b
+				elseif safe_op(__s) = "<=" then
+					(1-signum(lhs(__s))+unit_spike(lhs(__s)))/2 * __a + (signum(lhs(__s))-unit_spike(lhs(__s))+1)/2 * __b
+				elseif safe_op(__s) = 'equal then
+					unit_spike(first(args(__s))-second(args(__s))) * __a + (1-unit_spike(first(args(__s))-second(args(__s)))) * __b
+				elseif safe_op(__s) = 'notequal then
+					unit_spike(first(args(__s))-second(args(__s))) * __b + (1-unit_spike(first(args(__s))-second(args(__s)))) * __a
+				else
+					iif(__s, __a, __b))),
+		__e)
+)$
+
+sum2iif(__e):= signum2iif((unitspike2iif(between2iif(unitpulse2between(__e)))));
+
+/* pulliniif() (and especially pullinif()) are slow so I do not recommend their use for very complicated piecewise functions
+	but they can be useful for extending integrate() for simple cases and simplification is other cases. */
+
+pullinif(__e):=
+block(
+	[_done:false, _a, inflag:true],
+	while not _done do (
+	_a : _pull_in_if(__e),
+	if _a = __e then
+		_done : 'true,
+		__e : _a
+	),
+	_a
+)$
+
+_pull_in_if(__e) :=
+block(
+	[opsubst : 'true, inflag : 'true, %a, %__b, _a, _b, _sum:0, _pod:1, _exp, _op, _args, _p],
+	if mapatom(__e) then
+		__e
+	elseif safe_op(__e) = "+" and not freeof('%if, args(__e)) then
+	(
+		for _p in __e do (_sum : add_it_if(_sum, _pull_in_if(_p))),
+		_sum
+	)
+	elseif safe_op(__e) = "*" and not freeof('%if, args(__e)) then
+	(
+		for _p in __e do (_pod : mult_it_if(_pod, _pull_in_if(_p))),
+		_pod
+	)
+	elseif safe_op(__e) = "^" and not freeof('%if, args(__e)) then
+	(
+		_pull_in_if(exp_it_if(_pull_in_if(first(__e)),_pull_in_if(second(__e))))
+	)
+	elseif length(args(__e)) = 1 and not freeof('%if, args(__e)) then
+	(
+		_op : safe_op(__e),
+		%a:_pull_in_if(first(args(__e))),
+		if safe_op(%a) = '%if then
+			apply('%if, [inpart(%a, 1), _pull_in_if(_op(_pull_in_if(inpart(%a,2)))), _pull_in_if(_op(_pull_in_if(inpart(%a,3))))])
+		else
+			_pull_in_if(_op(_pull_in_if(%a)))
+	)
+	elseif safe_op(__e) = '%if and not freeof('%if, args(__e)) then
+	(
+		%a:args(__e),
+		apply('%if, [inpart(%a, 1), _pull_in_if(inpart(%a,2)), _pull_in_if(inpart(%a,3))])
+	)
+	elseif freeof('%if, args(__e)) then
+		__e
+	else
+	(
+		__e
+	)
+)$
+
+add_it_if(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = '%if then
+		%if(inpart(%b,1), _pull_in_if(%a+inpart(%b,2)), _pull_in_if(%a+inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = '%if then
+			%if(inpart(%a,1), _pull_in_if(%b+inpart(%a,2)), _pull_in_if(%b+inpart(%a,3)))
+		else
+		(
+			%a+%b
+		)
+	)
+)$
+
+mult_it_if(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = '%if then
+		%if(inpart(%b,1), _pull_in_if(%a*inpart(%b,2)), _pull_in_if(%a*inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = '%if then
+			%if(inpart(%a,1), _pull_in_if(%b*inpart(%a,2)), _pull_in_if(%b*inpart(%a,3)))
+		else
+		(
+			%a*%b
+		)
+	)
+)$
+
+exp_it_if(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = '%if then
+		%if(inpart(%b,1), _pull_in_if(%a^inpart(%b,2)), _pull_in_if(%a^inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = '%if then
+			%if(inpart(%a,1), _pull_in_if(inpart(%a,2)^%b), _pull_in_if(inpart(%a,3)^%b))
+		else
+		(
+			%a^%b
+		)
+	)
+)$
+
+pulliniif(__e):=
+block(
+	[_done:false, _a, inflag:true],
+	while not _done do (
+	_a : _pull_in_iif(__e),
+	if _a = __e then
+		_done : 'true,
+		__e : _a
+	),
+	_a
+)$
+
+_pull_in_iif(__e) :=
+block(
+	[opsubst : 'true, inflag : 'true, %a, %b, _a, _b, _sum:0, _pod:1, _exp, _op, _args, _p],
+	if mapatom(__e) then
+		__e
+	elseif safe_op(__e) = "+" and not freeof('iif, args(__e)) then
+	(
+		for _p in __e do (_sum : add_it_iif(_sum, _pull_in_iif(_p))),
+		_sum
+	)
+	elseif safe_op(__e) = "*" and not freeof('iif, args(__e)) then
+	(
+		for _p in __e do (_pod : mult_it_iif(_pod, _pull_in_iif(_p))),
+		_pod
+	)
+	elseif safe_op(__e) = "^" and not freeof('iif, args(__e)) then
+	(
+		_pull_in_iif(exp_it_iif(_pull_in_iif(first(__e)),_pull_in_iif(second(__e))))
+	)
+	elseif length(args(__e)) = 1 and not freeof('iif, args(__e)) then
+	(
+		_op : safe_op(__e),
+		%a : _pull_in_iif(first(args(__e))),
+		if safe_op(%a) = 'iif then
+			apply('iif, [inpart(%a, 1), _pull_in_iif(_op(_pull_in_iif(inpart(%a,2)))), _pull_in_iif(_op(_pull_in_iif(inpart(%a,3))))])
+		else
+			_pull_in_iif(_op(_pull_in_iif(%a)))
+	)
+	elseif safe_op(__e) = 'iif and not freeof('iif, args(__e)) then
+	(
+		%a:args(__e),
+		apply('iif, [inpart(%a, 1), _pull_in_iif(inpart(%a,2)), _pull_in_iif(inpart(%a,3))])
+	)
+	elseif freeof('iif, args(__e)) then
+		__e
+	else
+	(
+		__e
+	)
+)$
+
+add_it_iif(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = 'iif then
+		iif(inpart(%b,1), _pull_in_iif(%a+inpart(%b,2)), _pull_in_iif(%a+inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = 'iif then
+			iif(inpart(%a,1), _pull_in_iif(%b+inpart(%a,2)), _pull_in_iif(%b+inpart(%a,3)))
+		else
+		(
+			%a+%b
+		)
+	)
+)$
+
+mult_it_iif(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = 'iif then
+		iif(inpart(%b,1), _pull_in_iif(%a*inpart(%b,2)), _pull_in_iif(%a*inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = 'iif then
+			iif(inpart(%a,1), _pull_in_iif(%b*inpart(%a,2)), _pull_in_iif(%b*inpart(%a,3)))
+		else
+		(
+			%a*%b
+		)
+	)
+)$
+
+exp_it_iif(%a,%b):=
+block(
+	[inflag:true],
+	if not mapatom(%b) and op(%b) = 'iif then
+		iif(inpart(%b,1), _pull_in_iif(%a^inpart(%b,2)), _pull_in_iif(%a^inpart(%b,3)))
+	else
+	(
+		if not mapatom(%a) and op(%a) = 'iif then
+			iif(inpart(%a,1), _pull_in_iif(inpart(%a,2)^%b), _pull_in_iif(inpart(%a,3)^%b))
+		else
+		(
+			%a^%b
+		)
+	)
+)$
+
+if2iif(__e) := block(
+	[opsubst : true, inflag:true],
+	subst('%if =
+		lambda(
+			[__s,__a,__b],
+			block
+			(
+				[_p:safe_op(__s),_q:safe_op(inpart(__s,1)),_r:safe_op(inpart(__s,2)),
+				_a:rhs(inpart(__s,1)), _b:rhs(inpart(__s,2)), _x:lhs(inpart(__s,1)), _x1:lhs(inpart(__s,1)), _x2:lhs(inpart(__s,2))],
+				if member(safe_op(__s), [">", ">=", "<", "<=", 'equal, 'notequal]) then
+				(
+					simp_iif(iif(__s, __a, __b))
+				)
+				elseif apply(_p, [true,false,false]) = true
+					and apply(_p, [false, false, false]) = false and _q = "=" and _r = ">" and _x2 = _x1 and length(args(__s)) = 2 then
+				(
+						simp_iif(iif(_x >= _a, __a, __b))
+				)
+				elseif apply(_p, [true,false,false]) = true
+					and apply(_p, [false, false, false]) = false and _q = ">" and _r = "=" and _x1 = _x2 and length(args(__s)) = 2 then
+				(
+					simp_iif(iif(_x >= _a, __a, __b))
+				)
+				elseif apply(_p, [true,true,true]) = true and apply(_p, [false, true, true]) = false
+					and member(_q,   [">", ">=", "<", "<="]) and member(_r , [">", ">=", "<", "<="]) and _x1 = _x2 and length(args(__s)) = 2 then
+				(
+					simp_iif(iif(apply(_q, [_x, _a]), iif(apply(_r, [_x, _b]), __a, __b), __b))
+				)
+				else
+					%if(__s, __a, __b)
+			)
+		),
+	__e)
+)$
+
+signum2abs2(__e):=
+block(
+	[__l],
+	__e : simpsignum(__e),
+	__l : flatten(gatherargs(__e,'signum)),
+	for lk in __l do (
+		__e : ratsubst(abs(lk), lk*signum(lk),__e)),
+  __e
+)$
+
+between2if(__e):=
+block(
+	[opsubst : true, inflag : true],
+	subst('between =
+		lambda([__x,__a,__b,__o],
+		[_a],
+		if __o = 'lclosed  then /* okay */
+			%if(__x>=__a and __x<__b, 1, 0)
+		elseif __o = 'closed then /* okay */
+			%if(__x>=__a and __x<=__b, 1, 0)
+		elseif __o = 'rclosed then /* okay */
+			%if(__x>__a and __x<=__b, 1, 0)
+		elseif __o = 'open then /* okay */
+			%if(__x>__a and __x<__b, 1, 0)
+		elseif __o = 'halfopen then /* okay */
+			%if(__x>__a, %if(__x<__b, 1, %if(__x = __b, 1/2, 0)), %if(__x = __a, %if(__b>__a, 1/2, 0), 0))
+		else /* okay */
+			%if(__x>__a, %if(__x<__b, 1, %if(__x = __b, 1/2, 0)), %if(__x = __a, %if(__b>__a, 1/2, 0), 0))
+		),
+		__e)
+)$
+
+between2iif(__e):=
+block(
+	[opsubst : true, inflag : true],
+	subst('between =
+		lambda([__x,__a,__b,__o],
+		[_a],
+		if __o = 'lclosed  then /* okay */
+			iif(__x>=__a, iif(__x<__b, 1, 0), 0)
+		elseif __o = 'closed then /* okay */
+			iif(__x>=__a, iif(__x<=__b, 1, 0), 0)
+		elseif __o = 'rclosed then /* okay */
+			iif(__x>__a, iif(__x<=__b, 1, 0), 0)
+		elseif __o = 'open then /* okay */
+			iif(__x>__a, iif(__x<__b, 1, 0), 0)
+		elseif __o = 'halfopen then /* okay */
+			iif(__x>__a, iif(__x<__b, 1, iif(equal(__x,__b), 1/2, 0)), iif(equal(__x,__a), iif(__b>__a, 1/2, 0), 0))
+		else /* okay */
+			iif(__x>__a, iif(__x<__b, 1, iif(equal(__x,__b), 1/2, 0)), iif(equal(__x,__a), iif(__b>__a, 1/2, 0), 0))
+		),
+		__e)
+)$
+
+unitpulse2between(__e):=block([opsubst : true], subst('unit_pulse = lambda([_s], between(_s,0,1)), __e))$
+if2ifthen(__e) := block([opsubst : true], subst('%if = lambda([_cnd, __a, __b], if _cnd then __a else __b), __e))$
+iif2ifthen(__e) := block([opsubst : true], subst('iif = lambda([_cnd, __a, __b], if _cnd then __a else __b), __e))$
+unitspike2if(__e) := block([opsubst : true], subst('unit_spike = lambda([__s], %if(equal(__s,0), 1, 0)), __e))$
+unitspike2iif(__e) := block([opsubst : true], subst('unit_spike = lambda([__s], iif(equal(__s,0), 1, 0)), __e))$
+signum2if(__e) := block([opsubst : true, inflag : true], subst('signum = lambda([__s], %if(__s > 0, 1, %if(__s < 0, -1, 0))), __e))$
+signum2iif(__e) := block([opsubst : true, inflag : true], subst('signum = lambda([__s], iif(__s > 0, 1, iif(__s < 0, -1, 0))), __e))$
+abs2iif(__e) := block([opsubst : true, inflag : true], subst('abs = lambda([__s], %if(__s > 0, __s, -__s)), __e))$
+abs2iif(__e) := block([opsubst : true, inflag : true], subst('abs = lambda([__s], iif(__s > 0, __s, -__s)), __e))$
+unitstep2if(__e) := block([opsubst : true], subst('unit_step = lambda([__s], %if(__s > 0, 1, 0)), __e))$
+unitstep2iif(__e) := block([opsubst : true], subst('unit_step = lambda([__s], iif(__s > 0, 1, 0)), __e))$
+charfun2between(_e):= block([opsubst:true], subst('charfun2 = lambda([__x,__a,__b], between(__x,__a,__b, 'lclosed)), _e))$
+charfun2sum(_e):= block([opsubst:true], subst('charfun2 = lambda([__x,__a,__b], iif2sum(between2iif(between(__x,__a,__b, 'lclosed)))), _e))$
+unitspike2unitstep(__e) := block([opsubst : true], subst('unit_spike = lambda([__s], -unit_step (__s)+2*unit_step(-__s)*unit_step(__s)-unit_step(-__s)+1), __e))$
+unitpulse2unitstep(__e) := block([opsubst : true], subst('unit_pulse = lambda([__s], (unit_step(__s)-unit_step(-__s)-unit_step(__s-1)+unit_step(1-__s))/2), __e))$
+abs2unitstep(__e) := block([opsubst : true], subst('abs = lambda([__s], __s * unit_step(__s) - __s * unit_step(-__s)), __e))$
+signum2unitstep(__e) := block([opsubst : true], subst('signum = lambda([__s], (unit_step(__s)-unit_step(-__s))), __e))$
+unitpulse2signum(__e) := block([opsubst : true], subst('unit_pulse = lambda([__s], (signum(__s) - signum(__s - 1))/2), __e))$
+abs2signum(__e) := block([opsubst : true], subst('abs = lambda([__s], __s * signum(__s)), __e));
+unitspike2signum(__e) := block([opsubst : true], subst('unit_spike = lambda([__s], 1-signum(__s)^2), __e))$
+unitstep2signum(__e) := block([opsubst : true], subst('unit_step = lambda([__s], (signum(__s)+1-unit_spike(__s))/2), __e))$
+unitspike2signum(__e) := block([opsubst : true], subst('unit_spike = lambda([__s], 1-signum(__s)^2), __e))$
+iif2if(__e) := block([opsubst : true], subst('iif = lambda([_cnd, __a, __b], %if(_cnd, __a , __b)), __e))$
+if2iif(__e) := block([opsubst : true], subst('%if = lambda([_cnd, __a, __b], iif(_cnd, __a , __b)), __e))$
+hstep2signum(__e):=block([opsubst : true], subst('hstep = lambda([_s], (1+signum(_s))/2), __e))$
+signum2hstep(__e):=block([opsubst : true], subst('signum = lambda([_s], 2*hstep(_s)-1), __e))$
+
+
+ifthen2if(__e):=block(
+	[opsubst:true],
+	subst("if"=lambda
+	([[_v]],
+	restofif(_v))
+	,__e)
+);
+
+restofif(__l) := block(
+	[_retval:0],
+	if length(__l) # 0 and __l[1] # true then
+		%if(__l[1], __l[2], restofif(rest(__l, 2)))
+	elseif __l[1] = true then
+		__l[2]
+);
+
+
+ifthen2iif(__e):=block(
+	[opsubst:true],
+	subst("if"=lambda
+	([[_v]],
+	restofiif(_v))
+	,__e)
+);
+
+restofiif(__l) := block(
+	[_retval:0],
+	if length(__l) # 0 and __l[1] # true then
+		iif(__l[1], __l[2], restofiif(rest(__l, 2)))
+	elseif __l[1] = true then
+		__l[2]
+);
+
+
+bffind_root(__expr, __f, __x, __low, __high, __digits):=
+block
+(
+	[fpprec:fpprec+__digits+20, _side, _fb, _ft, _fn, _b, _t, _n, _retval:'unknown, _theaccuracy:10^-__digits],
+	_b : bfloat(__low),
+	_t : bfloat(__high),
+    _fb : at(__expr,__x=_b),
+    _ft : at(__expr,__x=_t),
+	_fb : apply('ev, flatten(append([_fb], [__f]))),
+	_ft : apply('ev, flatten(append([_ft], [__f]))),
+	if sign(_ft) = sign(_fb) then
+		print("Expression must not have same sign at both endpoints")
+	else
+	(
+		_side : 0,  /* Falsi method */
+		for i : 1 thru 10000 do (
+			_n : (_fb*_t - _ft*_b) / (_fb - _ft),
+			if (abs(_t-_b) < _theaccuracy * abs(_t+_b)) then
+			(
+				i : 10^6,
+				fpprec:__digits,
+				_retval : bfloat(_n)
+			)
+			else
+			(
+				_fn : at(__expr,__x=_n),
+				_fn : apply('ev, flatten(append([_fn], [__f]))),
+				if (_fn * _ft > 0) then
+				(
+				  _t : _n,
+				  _ft : _fn,
+				  if (_side = -1) then _fb : _fb / 2,
+				  _side : -1
+				)
+				elseif (_fb * _fn > 0) then
+				(
+				  _b : _n,
+				  _fb : _fn,
+				  if (_side = 1) then _ft : _ft / 2,
+				  _side : 1
+				)
+				else
+				(
+					i : 10^6,
+					fpprec:__digits,
+					_retval : bfloat(_n)
+				)
+			)
+		)
+	),
+	_retval
+)$
+
+countvars(__e):=
+block
+(
+	[inflag : true, _vars:[], _undupedvars:[],_retvals:[], _cnt, _i, _j],
+	scanatoms(block([__z], lambda([__z], if not numberp(__z) and not member(__z, [%pi,%phi,%e,%i,'inf,'minf]) then _vars:cons(__z, _vars))), __e),
+	_undupedvars:listify(setify(_vars)),
+	for _i in _undupedvars do
+	(
+		_cnt : 0,
+		for _j in _vars do
+		(
+			if is(_i=_j)=true then
+			(
+				_cnt : _cnt+1
+			)
+		),
+		_retvals:cons([_i,_cnt],_retvals)
+	),
+	_retvals:sort(_retvals, lambda([__z1,__z2], if is(second(__z1) < second(__z2))=true then true else false))
+)$
+
+
+scanatoms(__f, __e):=
+block(
+	[inflag : true, _retval : true, _p, _done],
+	if safe_op(__e) # false then
+	(
+		for _p in __e do (
+			scanatoms(__f, _p)
+		)
+	)
+	elseif safe_op(__e) # false and length(args(__e)) > 0 then
+	(
+		for _p in args(__e) do (
+			scanatoms(__f, _p)
+		)
+	)
+	elseif mapatom(__e) then
+	(
+		apply(__f,[__e])
+	)
+	else
+	(
+		apply(__f,[__e])
+	),
+	_done
+)$
+
+scanex(__f,__e):=
+block
+(
+	[inflag : true, _p],
+	if safe_op(__e) # false then  /* _p is an op() */
+	(
+		apply(__f, [__e]),
+		for _p in __e do (
+			if safe_op(_p) # false then  /* _p is an op() */
+			(
+				scanex(__f, _p),
+				apply(__f, [_p])
+			)
+			else
+				apply(__f, [_p])
+
+		)
+	)
+	else
+		apply(__f, [_p])
+
+)$
+
+
+max2iif(__e):=
+block
+(
+	[inflag:true, opsubst:true, _retval : 0],
+	_retval :
+	subst('max = lambda([[_z]], apply('_listiifs1, _z)), __e)
+)$
+
+_listiifs1([_z]):=
+block
+(
+	[inflag:true, opsubst:true, _len:length(_z), _iifs:[], _retval : 0],
+	if length(_z) > 1 then
+		_retval : simp_iif(iif(first(_z) > second(_z), apply('_listiifs1, list_remove(_z, 2, 1)), apply('_listiifs1, rest(_z))))
+	else
+		first(_z)
+)$
+
+min2iif(__e):=
+block
+(
+	[inflag:true, opsubst:true, _retval : 0],
+	_retval :
+	subst('min = lambda([[_z]], apply('_listiifs2, _z)), __e)
+)$
+
+_listiifs2([_z]):=
+block
+(
+	[inflag:true, opsubst:true, _len:length(_z), _iifs:[], _retval : 0],
+	if length(_z) > 1 then
+		_retval : simp_iif(iif(first(_z) < second(_z), apply('_listiifs2, list_remove(_z, 2, 1)), apply('_listiifs2, rest(_z))))
+	else
+		first(_z)
+)$
+
+maxmin2iif(__e):=max2iif(min2iif(__e));
+

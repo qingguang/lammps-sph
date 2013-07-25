@@ -2,7 +2,8 @@
 # add directoreis to maxima search path
 
 minitfile=${HOME}/.maxima/maxima-init.mac
-lmp_maxima_path="[\"$(pwd)\", 
+lmp_maxima_path="[\"$(pwd)\",
+                  \"$(pwd)/pw\",
                   \"$(pwd)/nint\"]"
 
 # append content to maxima-init.mac file
