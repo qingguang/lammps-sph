@@ -14,9 +14,10 @@ variable           dt_factor equal 1.0
 #variable           sdpd_eta equal  20.0
 
 #variable           sdpd_background equal 0.9
-variable           sdpd_temp  equal 1.0/${kb}
+#variable           sdpd_temp  equal 1.0/${kb}
+variable           sdpd_temp  equal 0.0
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
-variable           h equal 3.0*${dx}
-variable           ktype string quintic
-variable           Nfreq equal 1
+variable           h equal 5.0*${dx}
+variable           ktype string wendland6
+variable           Nfreq equal 10
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}

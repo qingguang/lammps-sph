@@ -43,6 +43,7 @@ class FixMesoConstrained : public Fix {
   class Pair *pair;
 };
 
+ double back_to_surface(double* x, double* y, double* z);
 }
 
 #endif

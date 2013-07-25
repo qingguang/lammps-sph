@@ -1,0 +1,52 @@
+/*
+Generate particles on the surface of the sphere
+*/
+
+
+load("distrib");
+alias(rnd, random_continuous_uniform);
+Lx: 1.2;
+nx: 15;
+sdpd_rho0: 1.0;
+npoints: nx^3;
+dx: Lx/nx;
+sdpd_mass: sdpd_rho0*dx^3;
+
+x0: Lx/2;
+y0: Lx/2;
+z0: Lx/2;
+r0: Lx/2-2*dx;
+
+s2xyz(r, p, t):=[r*cos(p)*cos(t), r*sin(p)*cos(t), r*sin(t)] - [x0, y0, z0];
+
+
+lmp_data['natoms]: npoints;
+lmp_data['xlo]: 0; lmp_data['ylo]: 0; lmp_data['zlo]: 0;
+lmp_data['xhi]: Lx; lmp_data['yhi]: Lx; lmp_data['zhi]: Lx;
+lmp_data['mass]: [sdpd_mass];
+lmp_data['ntypes]: 1;
+
+atom_data['tag]: makelist(i, i, npoints)$
+atom_data['types]: makelist(1, npoints)$
+atom_data['rho]: makelist(sdpd_rho0, npoints)$
+atom_data['e]: makelist(0, npoints)$
+atom_data['cv]: makelist(1, npoints)$
+
+lst: makelist(s2xyz(r0, rnd(0, 2*%pi), rnd(-%pi/2, %pi/2)), npoints)$
+atom_data['x]: create_list(r[1], r, lst)$
+atom_data['y]: create_list(r[2], r, lst)$
+atom_data['z]: create_list(r[3], r, lst)$
+
+atom_data['ix]: makelist(0, npoints)$
+atom_data['iy]: makelist(0, npoints)$
+atom_data['iz]: makelist(0, npoints)$
+
+atom_data['vx]: makelist(0, npoints)$
+atom_data['vy]: makelist(0, npoints)$
+atom_data['vz]: makelist(0, npoints)$
+
+load("maxima2data.mac");
+maxima2data(lmp_data, atom_data, "test.data");
+
+load("expr2lmp.mac");
+expr2file([dx, sdpd_mass, sdpd_rho0], "example_gensphere.lmp");
