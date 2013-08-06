@@ -42,6 +42,12 @@ wkernel(ndim, ktype, w, dw):= block([expr, C],
     expr: (1-2*r)*(2-2*r)^2*between(2*r,1,2,open)/2
          +(12*r^3-10*r^2+1)*between(2*r,0,1,open)
     )
+  else if ktype='laguerre_gaussian then (
+    C[1]: 1,
+    C[2]: 27/%pi,
+    C[3]: 1,
+    expr: (1 - 3^2*r^2 + 3^4*r^4/6)*exp(-3^2*r^2)
+    )
   else (
     throw('unknown_kernel_type)
     ),
@@ -49,27 +55,30 @@ wkernel(ndim, ktype, w, dw):= block([expr, C],
   define(funmake(dw, [r]), C[ndim]*diff(expr, r))
   );
 
-ndim: 3;
-wkernel(ndim, 'wendland2, 'w, 'dw);
+ndim: 2;
+wkernel(ndim, 'laguerre_gaussian, 'w, 'dw);
 
 intfun(ndim, f)::= buildq([ndim, f],
   if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
 
 I: 1/pwint( intfun(ndim, w(r)), r, 0, 1);
-plot2d([w(r)], [r, 0, 1]);
+plot2d([w(r), -dw(r)/3], [r, 0, 1]);
 
 H: 1.0;
-sigma: pwint( intfun(ndim, w(r)*r^2)/ndim, r, 0, 1);
+sigma: pwint( intfun(ndim, w(r)*r^2)/ndim, r, 0, +inf);
 h: 2*sqrt(abs(sigma));
-float(H/h);
-
-ft(k):= ''(fullratsimp(4*%pi/k*pwint(sin(k*r)*w(r)*r, r, 0, H)))$
-
 if h=0 then h: 1;
+
+ft(k):= ''(fullratsimp(4*%pi/k*pwint(sin(k*r)*w(r)*r, r, 0, 2)))$
+ftexp(k):= realpart(expand(float(ft(k))));
+
+/*
 plot2d([
-  ['parametric, h*t, block([aux: ft(t)], if aux>0 then abs(aux) else 1e-7)],
-  ['parametric, h*t, block([aux: ft(t)], if aux<0 then abs(-aux) else 1e-7)]
+  ['parametric, h*t, block([aux: ftexp(t)], if aux>0 then abs(aux) else 1e-7)],
+  ['parametric, h*t, block([aux: ftexp(t)], if aux<0 then abs(-aux) else 1e-7)]
   ],
-  [t, 0.1, 9*%pi], [nticks, 1000], [logy], [y, 1e-6, 1]);
+  [t, 0.1, 9*%pi], [nticks, 1000], [logy], [y, 1e-6, 10]);
+*/
 
-
+plot2d([['parametric, h*t, ftexp]],
+  [t, 0.1, 3*%pi], [nticks, 100], [logy], [y, 1e-4, 10]);
