@@ -13,45 +13,50 @@
 
 #include "math.h"
 #include "math_const.h"
-#include "sph_kernel_wendland6.h"
+#include "sph_kernel_laguerregaussian.h"
 
-double LAMMPS_NS::SPHKernelWendland6::w3d(double r) {
-  const double norm3d = 1365.0/(64.0*MathConst::MY_PI);
+double LAMMPS_NS::SPHKernelLaguerreGaussian::w3d(double r) {
+  const double norm3d = 216*pow(MathConst::MY_PI,-3.0/2.0);
   if (r<1.0) {
-    return norm3d * ( pow(1-r,8)*(32*pow(r,3)+25*pow(r,2)+8*r+1) );
+    return norm3d * (
+		     (27*pow(r,4)/2-9*pow(r,2)+1)*exp(-9*pow(r,2))
+		     );
   } else {
     return 0.0;
   }
 }
 
-double LAMMPS_NS::SPHKernelWendland6::w2d(double r) {
-  const double norm2d = 78.0/(7.0*MathConst::MY_PI);
+double LAMMPS_NS::SPHKernelLaguerreGaussian::w2d(double r) {
+  const double norm2d = 27.0/MathConst::MY_PI;
   if (r<1.0) {
-    return norm2d * ( pow(1-r,8)*(32*pow(r,3)+25*pow(r,2)+8*r+1) );
+    return norm2d * (
+		     (27*pow(r,4)/2-9*pow(r,2)+1)*exp(-9*pow(r,2))
+		     );
   } else {
     return 0.0;
   }
 }
 
-double LAMMPS_NS::SPHKernelWendland6::dw3d(double r) {
-  const double norm3d = 1365.0/(64.0*MathConst::MY_PI);
+double LAMMPS_NS::SPHKernelLaguerreGaussian::dw3d(double r) {
+  const double norm3d = 216*pow(MathConst::MY_PI,-3/2);
   if (r<1) {
     return  norm3d* (  
-		     352*pow(r,10)-2310*pow(r,9)+6336*pow(r,8)-9240*pow(r,7)+7392*pow(r,6)
-		     -2772*pow(r,5)+264*pow(r,3)-22*r 
+		     (54*pow(r,3)-18*r)*exp(-9*pow(r,2))-18*r*(27*pow(r,4)/2-9*pow(r,2)+1)
+                                       *exp(-9*pow(r,2))
 		       );
   } else {
     return 0.0;
   }
 }
 
-double LAMMPS_NS::SPHKernelWendland6::dw2d(double r) {
-  const double norm2d = 78.0/(7.0*MathConst::MY_PI);
+double LAMMPS_NS::SPHKernelLaguerreGaussian::dw2d(double r) {
+  const double norm2d = 27.0/MathConst::MY_PI;
   if (r<1) {
     return  norm2d* (  
-		     352*pow(r,10)-2310*pow(r,9)+6336*pow(r,8)-9240*pow(r,7)+7392*pow(r,6)
-		     -2772*pow(r,5)+264*pow(r,3)-22*r 
+		     (54*pow(r,3)-18*r)*exp(-9*pow(r,2))-18*r*(27*pow(r,4)/2-9*pow(r,2)+1)
+		     *exp(-9*pow(r,2))
 		       );
+
   } else {
     return 0.0;
   }
