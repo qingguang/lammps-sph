@@ -15,6 +15,7 @@
 #include "compute_meso_diff_atom.h"
 #include "sph_kernel_quintic.h"
 #include "sph_kernel_wendland6.h"
+#include "sph_kernel_laguerregaussian.h"
 #include "sph_kernel_lucy.h"
 #include "atom.h"
 #include "input.h"
@@ -53,6 +54,8 @@ ComputeMesoDiffAtom::ComputeMesoDiffAtom(LAMMPS *lmp, int narg, char **arg) :
     ker = new SPHKernelLucy();
   } else if (strcmp(arg[4], "wendland6") == 0) {
     ker = new SPHKernelWendland6();
+  } else if (strcmp(arg[4], "laguerregaussian") == 0) {
+    ker = new SPHKernelLaguerreGaussian();
   } else {
     error->all(FLERR, "Unknown kernel type in pair_style sdpd");
   }

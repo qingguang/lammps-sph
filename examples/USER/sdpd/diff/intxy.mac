@@ -2,7 +2,7 @@ kill(all);
 
 define_variable(cutoff, 0.24/6.0*4.0, float);
 define_variable(ndim, 2, integer);
-define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n6.0/dump00000000.dat", any);
+define_variable(finput, "c5e2-ndim2-eta8.0-sdpd_background0.0-nx30-n4.0/dump00006000.dat", any);
 
 /*
 if file is not found run script lammps-sdpd/tools/maxima/setupt.sh
@@ -12,8 +12,8 @@ from lammps-sdpd/tools/maxima/ directory
 load("dump2maxima.mac");
 [lmp_data, atom_data]: dump2maxima(finput);
 
-define_variable(ktype, 'wendland6, any);
-Lx: lmp_data['xmax] - lmp_data['xmin];
+define_variable(ktype, 'laguerregaussian, any);
+Lx: lmp_data['xhi] - lmp_data['xlo];
 
 /* expression to estimate deriviative: diff(expr, x) */
 define_variable(expr,  sin(2*%pi*x/Lx), any);
@@ -25,15 +25,12 @@ define_variable(np, 70, integer);
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
 wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
-dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
+dwxy(xp, yp):= block([r: sqrt(xp^2+yp^2)], dw(r) * xp/r);
+
 
 A(x, y):= ''expr;
 load("nint.mac");
-F(x0, y0):=block([x, y],
-  quad(wxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
-
-dF(x0, y0):=block([x, y],
-  quad(-dwxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+dF(x0, y0):=quad(wxy(x-x0, y-y0)*A('x, 'y), ['x, x0-cutoff, x0+cutoff], ['y, y0-cutoff, y0+cutoff]);
 
 dexpr: diff(expr, 'x);
 dA(x, y):= ''dexpr;
@@ -48,10 +45,10 @@ if np>0 then block([per],
 
 q: 0$
 res: map(lambda([el],
-        block([xx: el[1], yy: el[2], dAsphx: el[3]],
-         q: q+1,
-         print(q, "/", length(xy_data)),
-         [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx])), xy_data);
+        block([xx: el[1], yy: el[2], dAsphx: el[3], d],
+          q: q + 1,
+          print(q, "/", length(xy_data)),
+          [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx])), xy_data);
 
 foutput: concat(finput, ".smothed");
 write_data(float(res), foutput);
