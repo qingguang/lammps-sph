@@ -1,8 +1,8 @@
 kill(all);
 
-define_variable(cutoff, 0.04*  1.0, float);
+define_variable(cutoff, 1.2/30.0 * 6.0, float);
 define_variable(ndim, 2, integer);
-define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n4.0-ktypewendland6/dump00000000.dat", any);
+define_variable(finput, "c1e3-ndim2-eta8.0-sdpd_background0.0-nx30-n6.0-ktypewendland6/dump00000000.dat", any);
 
 /*
 if file is not found run script lammps-sdpd/tools/maxima/setupt.sh
@@ -20,20 +20,18 @@ define_variable(expr,  sin(2*%pi*x/Lx), any);
 
 /* the number of points to sample, 0 means use all points in the dump
 file */
-define_variable(np, 30, integer);
+define_variable(np, 20, integer);
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
 wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
-dwxy(xp, yp):= block([r: sqrt(xp^2+yp^2)], dw(r) * xp/r);
-
+dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
 
 A(x, y):= ''expr;
 load("nint.mac");
-translate(w);
-translate(dw);
-translate(wxy);
-translate(dwxy);
+F(x0, y0):=block([x, y],
+  quad(wxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
+
 dF(x0, y0):=block([x, y],
   quad(-dwxy(x-x0, y-y0)*A(x, y), [x, x0-cutoff, x0+cutoff], [y, y0-cutoff, y0+cutoff]));
 
