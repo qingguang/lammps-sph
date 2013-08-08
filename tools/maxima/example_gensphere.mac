@@ -2,7 +2,6 @@
 Generate particles on the surface of the sphere
 */
 
-
 load("distrib");
 alias(rnd, random_continuous_uniform);
 Lx: 1.2;
