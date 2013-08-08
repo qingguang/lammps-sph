@@ -16,8 +16,9 @@
 #include "sph_kernel_laguerregaussian.h"
 
 double LAMMPS_NS::SPHKernelLaguerreGaussian::w3d(double r) {
-  const double norm3d = 216*pow(MathConst::MY_PI,-3.0/2.0);
-  if (r<1.0) {
+  r = r*n;
+  const double norm3d = 216*pow(MathConst::MY_PI,-3.0/2.0)    *     n*n*n;
+  if (r<n) {
     return norm3d * (
 		     (27*pow(r,4)/2-9*pow(r,2)+1)*exp(-9*pow(r,2))
 		     );
@@ -27,8 +28,9 @@ double LAMMPS_NS::SPHKernelLaguerreGaussian::w3d(double r) {
 }
 
 double LAMMPS_NS::SPHKernelLaguerreGaussian::w2d(double r) {
-  const double norm2d = 27.0/MathConst::MY_PI;
-  if (r<1.0) {
+  r = r*n;
+  const double norm2d = 27.0/MathConst::MY_PI                  *    n*n;
+  if (r<n) {
     return norm2d * (
 		     (27*pow(r,4)/2-9*pow(r,2)+1)*exp(-9*pow(r,2))
 		     );
@@ -38,8 +40,9 @@ double LAMMPS_NS::SPHKernelLaguerreGaussian::w2d(double r) {
 }
 
 double LAMMPS_NS::SPHKernelLaguerreGaussian::dw3d(double r) {
-  const double norm3d = 216*pow(MathConst::MY_PI,-3/2);
-  if (r<1) {
+  r = r*n;
+  const double norm3d = 216*pow(MathConst::MY_PI,-3/2)          *    n*n*n*n;
+  if (r<n) {
     return  norm3d* (  
 		     (54*pow(r,3)-18*r)*exp(-9*pow(r,2))-18*r*(27*pow(r,4)/2-9*pow(r,2)+1)
                                        *exp(-9*pow(r,2))
@@ -50,8 +53,9 @@ double LAMMPS_NS::SPHKernelLaguerreGaussian::dw3d(double r) {
 }
 
 double LAMMPS_NS::SPHKernelLaguerreGaussian::dw2d(double r) {
-  const double norm2d = 27.0/MathConst::MY_PI;
-  if (r<1) {
+  r = r*n;
+  const double norm2d = 27.0/MathConst::MY_PI                   *    n*n*n;
+  if (r<n) {
     return  norm2d* (  
 		     (54*pow(r,3)-18*r)*exp(-9*pow(r,2))-18*r*(27*pow(r,4)/2-9*pow(r,2)+1)
 		     *exp(-9*pow(r,2))
@@ -61,4 +65,3 @@ double LAMMPS_NS::SPHKernelLaguerreGaussian::dw2d(double r) {
     return 0.0;
   }
 }
-

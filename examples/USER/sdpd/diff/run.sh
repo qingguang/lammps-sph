@@ -10,14 +10,15 @@ else
     exit -1
 fi
 
-nproc=1
+nproc=8
 ndim=2
 sdpd_eta=8.0
 sdpd_background=0.0
-sdpd_c=5e3
+sdpd_c=1e3
 nx=30
-n=6.0
-ktype=laguerregaussian
+n=4.0
+ktype=wendland6
+
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \

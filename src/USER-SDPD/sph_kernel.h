@@ -22,6 +22,7 @@ namespace LAMMPS_NS {
     virtual double dw3d (double r) = 0;
     virtual double dw2d (double r) = 0;
     ~SPHKernel() {};
+    static const double n = 1.2;
   };
 }
 #endif
