@@ -58,13 +58,14 @@ wkernel(ndim, ktype, w, dw):= block([expr, C],
 ndim: 2;
 wkernel(ndim, 'laguerre_gaussian, 'w, 'dw);
 wkernel(ndim, 'quintic, 'ww, 'dww);
+wkernel(ndim, 'wendland2, 'ww2, 'dw2);
 
 intfun(ndim, f)::= buildq([ndim, f],
   if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
 
 I: 1/pwint( intfun(ndim, w(r)), r, 0, +inf);
 float(I);
-plot2d([w(r), ww(r)], [r, 0, 1.0]);
+plot2d([w(r)*r^2, ww(r)*r^2, ww2(r)*r^2], [r, 0, 1.4]);
 
 H: 1.0;
 sigma: pwint( intfun(ndim, w(r)*r^2)/ndim, r, 0, +inf);
