@@ -40,6 +40,22 @@ true$
 true$
 
 (ndim: 3,
+ cutoff: 1/2,
+ define_kernel(ndim, cutoff, 'laguerrewendland4, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x),
+ is(abs(nint(intfun, x, 0, 2*cutoff) - 1.0) < 1e-8)
+);
+true$
+
+(ndim: 2,
+ cutoff: 1/2,
+ define_kernel(ndim, cutoff, 'laguerrewendland4, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x),
+ is(abs(nint(intfun, x, 0, 2*cutoff) - 1.0) < 1e-8)
+);
+true$
+
+(ndim: 3,
  cutoff: 1/8,
  define_kernel(ndim, cutoff, 'laguerregaussian, 'w, 'dw),
  intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x),

@@ -20,6 +20,7 @@
 #include "sph_kernel_wendland6.h"
 #include "sph_kernel_lucy.h"
 #include "sph_kernel_laguerregaussian.h"
+#include "sph_kernel_laguerrewendland4.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -303,6 +304,8 @@ void PairSDPD::coeff(int narg, char **arg) {
     ker = new SPHKernelWendland6();
   } else if (strcmp(arg[3], "laguerregaussian") == 0) {
     ker = new SPHKernelLaguerreGaussian();
+  } else if (strcmp(arg[3], "laguerrewendland4") == 0) {
+    ker = new SPHKernelLaguerreWendland4();
   } else {
     error->all(FLERR, "Unknown kernel type in pair_style sdpd");
   }

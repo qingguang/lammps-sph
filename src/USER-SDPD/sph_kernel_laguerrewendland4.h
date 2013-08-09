@@ -11,13 +11,13 @@
    See the README file in the top-level LAMMPS directory.
 ------------------------------------------------------------------------- */
 
-#ifndef LMP_SPH_KERNEL_LAGUERREGAUSSIAN_H
-#define LMP_SPH_KERNEL_LAGUERREGAUSSIAN_H
+#ifndef LMP_SPH_KERNEL_LAGUERREWENDLAND4_H
+#define LMP_SPH_KERNEL_LAGUERREWENDLAND4_H
 
 #include "sph_kernel.h"
 
 namespace LAMMPS_NS {
-  class SPHKernelLaguerreGaussian : public SPHKernel {
+  class SPHKernelLaguerreWendland4 : public SPHKernel {
   public:
     virtual double w3d (double r);
     virtual double w2d (double r);
