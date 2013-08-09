@@ -55,8 +55,13 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, fsim, dfsim, wexpr, dwe
   else (
     error(printf(false, "unknown kernel type: ~a~%", ktype))
     ),
-  wvect(g):= subst(s=abs(g), if s<n then wexpr else 0),
-  dwvect(g):= subst(s=abs(g), if s<n then dwexpr else 0),
+  if ktype='laguerregaussian then (
+    wvect(g):=subst(s=abs(g), wexpr),
+    dwvect(g):=subst(s=abs(g), dwexpr))
+  else (
+    wvect(g):= subst(s=abs(g), if s<n then wexpr else 0),
+    dwvect(g):= subst(s=abs(g), if s<n then dwexpr else 0)
+    ),
   define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
   define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim),
   'done);

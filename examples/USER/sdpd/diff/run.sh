@@ -10,14 +10,14 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=2
 sdpd_eta=8.0
 sdpd_background=0.0
 sdpd_c=1e3
 nx=30
 n=4.0
-ktype=wendland6
+ktype=quintic
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
