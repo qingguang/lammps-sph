@@ -52,7 +52,7 @@ wkernel(ndim, ktype, w, dw):= block([expr, C],
     C[1]: 1,
     C[2]: 1287/(47*%pi),
     C[3]: 9009/(64*%pi),
-    expr: (1 - 3^2*r^2 + 3^4*r^4/6)*plusfun(1-r)^6*(1+6*r+35/3*r^2)  
+    expr: (1 - 3^2*r^2 + 3^4*r^4/6)*plusfun(1-r)^6*(1+6*r+35/3*r^2)
     )
   else (
     throw('unknown_kernel_type)
