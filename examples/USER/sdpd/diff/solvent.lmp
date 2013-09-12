@@ -62,7 +62,7 @@ timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-variable           nstep equal round(0.06/${dt})
+variable           nstep equal round(0.20/${dt})
 run                ${nstep}
 
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
