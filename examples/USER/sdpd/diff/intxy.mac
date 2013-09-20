@@ -1,6 +1,5 @@
-kill(all);
-
-define_variable(cutoff, 1.2/30.0 * 3.5, float);
+define_variable(n, 3.0, float);
+define_variable(cutoff, 1.2/30.0 * n, float);
 define_variable(ndim, 2, integer);
 define_variable(finput, "c2e1-ndim2-eta8.0-sdpd_background0.0-nx30-n3.5-ktypelaguerrewendland4/dump00016000.dat", any);
 
@@ -12,7 +11,7 @@ from lammps-sdpd/tools/maxima/ directory
 load("dump2maxima.mac");
 [lmp_data, atom_data]: dump2maxima(finput);
 
-define_variable(ktype, 'laguerrewendland4, any);
+define_variable(ktype, 'quintic, any);
 Lx: lmp_data['xhi] - lmp_data['xlo];
 
 /* expression to estimate deriviative: diff(expr, x) */
