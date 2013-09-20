@@ -14,9 +14,9 @@ nproc=1
 ndim=2
 sdpd_eta=8.0
 sdpd_background=0.0
-sdpd_c=$1
+sdpd_c=1.00e+01
 nx=30
-n=$2
+n=3.0
 ktype=quintic
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
