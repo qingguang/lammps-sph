@@ -12,12 +12,12 @@ fi
 
 nproc=1
 ndim=2
-sdpd_eta=8.0
-sdpd_background=0.0
+sdpd_eta=0.01
+sdpd_background=1.0
 sdpd_c=1.00e+01
-nx=30
-n=3.0
-ktype=quintic
+nx=50
+n=4.0
+ktype=laguerrewendland4
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
