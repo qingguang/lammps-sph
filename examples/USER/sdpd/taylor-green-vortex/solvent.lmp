@@ -30,7 +30,7 @@ compute            cave         all reduce ave v_dA_err
 # ***********************
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd     ${h} quintic ${sdpd_rho0} ${sdpd_c} 0.2 0.0 ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd     ${h} quintic ${sdpd_rho0} ${sdpd_c} 0.1 0.0 ${sdpd_gamma} ${sdpd_background}
 pair_coeff         * * sdpd/rhosum   ${h} quintic
 
 compute            rho_peratom all meso_rho/atom
@@ -58,10 +58,10 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 10000 ${dname}/sdpd.restart
+#restart 10000 ${dname}/sdpd.restart
 
-variable           nprerun equal round(0.5/${dt})
-variable           nstep equal ${nprerun}
+variable           nprerun equal round(2.0/${dt})
+variable           nstep equal 10*${nprerun}
 # run with temperature
 run              ${nprerun}
 
