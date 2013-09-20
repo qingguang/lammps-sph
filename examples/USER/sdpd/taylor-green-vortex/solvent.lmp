@@ -67,7 +67,7 @@ run                0.0
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
 variable           vx_tg        atom cos(2*PI*x)*sin(2*PI*y)
 variable           vy_tg        atom sin(2*PI*x)*cos(2*PI*x)
-velocity           all set      ${vx_tg} ${vy_tg} 0 units box
+velocity           all set      v_vx_tg v_vy_tg 0 units box
 
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
