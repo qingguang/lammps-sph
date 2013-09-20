@@ -10,8 +10,9 @@ communicate        single vel yes
 include            vars.lmp
 # create fluid particles
 include            ${ndim}d-lattice.lmp
-create_atoms       1 region box
-#create_atoms        1 random 900 12345678 box
+#create_atoms       1 region box
+variable            Nrandom equal ${nx}^${ndim}
+create_atoms        1 random ${Nrandom} 12345678 box
 mass               *  ${sdpd_mass}
 
 mass               * ${sdpd_mass}
@@ -29,8 +30,8 @@ compute            cave         all reduce ave v_dA_err
 # ***********************
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
-pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+pair_coeff         * * sdpd     ${h} quintic ${sdpd_rho0} ${sdpd_c} 0.2 0.0 ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} quintic
 
 compute            rho_peratom all meso_rho/atom
 compute            ke all ke
@@ -54,22 +55,31 @@ thermo             100
 neighbor           0.0 bin
 neigh_modify       every 1
 
-
 include            settimestep.lmp
 timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-variable           nstep equal round(1.0/${dt})
+variable           nprerun equal round(0.5/${dt})
+variable           nstep equal ${nprerun}
 # run with temperature
-run                0.0
+run              ${nprerun}
 
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
-variable           vx_tg        atom cos(2*PI*x)*sin(2*PI*y)
-variable           vy_tg        atom sin(2*PI*x)*cos(2*PI*x)
+pair_coeff       * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
+pair_coeff       * * sdpd/rhosum   ${h} ${ktype}
+run              ${nprerun}
+
+variable           vx_tg        atom -cos(2*PI*x/${Lx})*sin(2*PI*y/${Lx})
+variable           vy_tg        atom sin(2*PI*x/${Lx})*cos(2*PI*y/${Lx})
 velocity           all set      v_vx_tg v_vy_tg 0 units box
 
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
-run                ${nstep}
 
+variable           vel   atom sqrt(vx^2+vy^2)
+compute            cMax  all reduce max v_vel
+variable           vMax  equal c_cMax
+variable           time equal dt*(step-${nprerun}-${nprerun})
+
+fix extra all      print 1 "${time} ${vMax}" file ${dname}/vmax.dat screen no
+run                ${nstep}
