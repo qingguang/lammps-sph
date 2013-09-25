@@ -62,9 +62,8 @@ wkernel(ndim, ktype, w, dw, [p]):= block([expr, C, eps],
   define(funmake(dw, [r]), C[ndim]*diff(expr, r))
   );
 
-ndim: 3;
+ndim: 2;
 
-wkernel(ndim, 'wendland4_laguerre, 'w3, 'dw3, 3);
 /* eps2d: sqrt(2)*sqrt(sqrt(2370)+180)/sqrt(33); */
 eps[2]: sqrt(2)*sqrt(180-sqrt(2370))/sqrt(33);
 eps[3]: sqrt(2)*sqrt(170-sqrt(3910))/sqrt(35);
@@ -75,9 +74,9 @@ intfun(ndim, f)::= buildq([ndim, f],
   if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
 
 I: fullratsimp(1/pwint( intfun(ndim, w3(r)), r, 0, 1));
-I: fullratsimp(1/pwint( intfun(ndim, wlg(r)), r, 0, 1));
-grind(I);
-plot2d([w(r)*3, wlg(r), w3(r)], [r, 0, 1.0], [legend, ["w(eps=eps0)", "wlg(r)", "w(eps=3)"]]);
+wkernel(ndim, 'wendland4_laguerre, 'w2, 'dw2, 2);
+wkernel(ndim, 'wendland4_laguerre, 'w3, 'dw3, 3);
+plot2d([w2(r), w3(r), w(r)], [r, 0, 1.0], [legend, ["w2", "w3", "w(eps)"]]);
 
 H: 1.0;
 mom2: pwint( intfun(ndim, w(r)*r^2)/ndim, r, 0, 1);

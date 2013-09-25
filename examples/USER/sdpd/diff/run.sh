@@ -17,7 +17,7 @@ sdpd_background=0.0
 sdpd_c=$1
 nx=30
 n=$2
-ktype=quintic
+ktype=laguerrewendland4eps
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 

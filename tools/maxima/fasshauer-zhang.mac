@@ -23,7 +23,7 @@ reset();
 load("pw.mac");
 w(r):=(1 - eps^2*r^2 + eps^4*r^4/6)*plusfun(1-r)^6*(1+6*r+35/3*r^2);
 
-ndim: 3;
+ndim: 2;
 intfun(ndim, f)::= buildq([ndim, f],
   if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
 
