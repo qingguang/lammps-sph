@@ -1,0 +1,39 @@
+kill(all);
+
+simpsum: true;
+n: 3;
+s: 2;
+el(k):= (-1)^k*(n+s/2)!/(n!*(k+s/2)!)*binomial(n, k)*r^(2*k);
+
+phi(r):=''(sum(el(k), k, 0, n)*exp(-r^2));
+
+plot2d(phi(r), [r, 0, 3]);
+
+intfun(ndim, f)::= buildq([ndim, f],
+  if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
+
+integrate(intfun(s, phi(r)), r, 0, +inf);
+integrate(intfun(s, phi(r)*r^2), r, 0, +inf);
+integrate(intfun(s, phi(r)*r^4), r, 0, +inf);
+integrate(intfun(s, phi(r)*r^6), r, 0, +inf);
+integrate(intfun(s, phi(r)*r^8), r, 0, +inf);
+
+kill(all);
+reset();
+load("pw.mac");
+w(r):=(1 - eps^2*r^2 + eps^4*r^4/6)*plusfun(1-r)^6*(1+6*r+35/3*r^2);
+
+ndim: 3;
+intfun(ndim, f)::= buildq([ndim, f],
+  if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
+
+plusfun(x)::= (signum(x) + 1)/2 * x;
+I: 1/pwint( intfun(ndim, w(r)), r, 0, 1);
+
+m2: pwint( intfun(ndim, w(r)*r^2), r, 0, 1);
+m4: pwint( intfun(ndim, w(r)*r^4), r, 0, 1);
+float(solve(m2, eps));
+float(solve(m4, eps));
+
+float(rhs(solve(m2, eps)[4]));
+grind(rhs(solve(m2, eps)[4]));
