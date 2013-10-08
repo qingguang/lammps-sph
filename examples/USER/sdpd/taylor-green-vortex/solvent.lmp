@@ -61,7 +61,7 @@ timestep           ${dt}
 #restart 10000 ${dname}/sdpd.restart
 
 variable           nprerun equal round(2.0/${dt})
-variable           nstep equal 10*${nprerun}
+variable           nstep equal 2*${nprerun}
 # run with temperature
 run              ${nprerun}
 

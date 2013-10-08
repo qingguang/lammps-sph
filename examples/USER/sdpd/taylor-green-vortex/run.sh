@@ -13,11 +13,11 @@ fi
 nproc=1
 ndim=2
 sdpd_eta=0.01
-sdpd_background=0.0
+sdpd_background=0.95
 sdpd_c=$1
 nx=$3
 n=$2
-ktype=laguerrewendland4
+ktype=laguerrewendland4eps
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 

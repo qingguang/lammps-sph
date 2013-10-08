@@ -1,18 +1,18 @@
-define_variable(n, 3.0, float);
-define_variable(cutoff, 1.2/30.0 * n, float);
+define_variable(ncut, 5.0, float);
+define_variable(cutoff, 1.2/30.0 * ncut, float);
 define_variable(ndim, 2, integer);
-define_variable(finput, "c2e1-ndim2-eta8.0-sdpd_background0.0-nx30-n3.5-ktypelaguerrewendland4/dump00016000.dat", any);
+define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any);
+define_variable(ktype, 'laguerrewendland4, any);
 
 /*
-if file is not found run script lammps-sdpd/tools/maxima/setupt.sh
-from lammps-sdpd/tools/maxima/ directory
+if file dump2maxima.mac is not found run script
+lammps-sdpd/tools/maxima/setupt.sh from lammps-sdpd/tools/maxima/
+directory
 */
-
 load("dump2maxima.mac");
 [lmp_data, atom_data]: dump2maxima(finput);
-
-define_variable(ktype, 'quintic, any);
 Lx: lmp_data['xhi] - lmp_data['xlo];
+Ly: lmp_data['yhi] - lmp_data['ylo];
 
 /* expression to estimate deriviative: diff(expr, x) */
 define_variable(expr,  sin(2*%pi*x/Lx), any);
@@ -35,6 +35,24 @@ dexpr: diff(expr, 'x);
 dA(x, y):= ''dexpr;
 
 xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx]))$
+r: transpose(matrix(atom_data['x], atom_data['y]));
+
+npart: lmp_data['natoms];
+m: makelist(1.0, i, 1, npart)$
+rho: makelist(
+  m[i]*sum(w(vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
+  );
+
+vabs(R):= sqrt(R.R);
+dR(A, B):= block([del, dmin, d, dV],
+  dmin: +inf,
+  for del in map(lambda([idx], idx*[Lx, Ly]), listify(cartesian_product( {-1, 0, 1}, {-1, 0, 1}))) do (
+    dV: B - (A+del),
+    d: vabs(dV),
+    if d<dmin then (dmin: d, dr: dV)
+    ),
+  dr
+  );
 
 /* select randomly np points, if np=0 select all points */
 if np>0 then block([per], 
@@ -49,7 +67,7 @@ res: map(lambda([el],
           print(q, "/", length(xy_data)),
           [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx])), xy_data)$
 
-foutput: concat(finput, ".smothed")$
+foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
 write_data(float(res), foutput)$
 print(foutput);
  
