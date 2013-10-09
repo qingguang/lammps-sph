@@ -1,8 +1,8 @@
-define_variable(ncut, 5.0, float);
-define_variable(cutoff, 1.2/30.0 * ncut, float);
-define_variable(ndim, 2, integer);
-define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any);
-define_variable(ktype, 'laguerrewendland4, any);
+define_variable(ncut, 3.0, float)$
+define_variable(cutoff, 1.2/30.0 * ncut, float)$
+define_variable(ndim, 2, integer)$
+define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
+define_variable(ktype, 'quintic, any)$
 
 /*
 if file dump2maxima.mac is not found run script
@@ -10,16 +10,16 @@ lammps-sdpd/tools/maxima/setupt.sh from lammps-sdpd/tools/maxima/
 directory
 */
 load("dump2maxima.mac");
-[lmp_data, atom_data]: dump2maxima(finput);
-Lx: lmp_data['xhi] - lmp_data['xlo];
-Ly: lmp_data['yhi] - lmp_data['ylo];
+[lmp_data, atom_data]: dump2maxima(finput)$
+Lx: lmp_data['xhi] - lmp_data['xlo]$
+Ly: lmp_data['yhi] - lmp_data['ylo]$
 
 /* expression to estimate deriviative: diff(expr, x) */
-define_variable(expr,  sin(2*%pi*x/Lx), any);
+define_variable(expr,  sin(2*%pi*x/Lx), any)$
 
 /* the number of points to sample, 0 means use all points in the dump
 file */
-define_variable(np, 40, integer);
+define_variable(np, 40, integer)$
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
@@ -34,27 +34,56 @@ dF(x0, y0):=quad(-dwxy('x-x0, 'y-y0)*A('x, 'y), ['x, x0-cutoff, x0+cutoff], ['y,
 dexpr: diff(expr, 'x);
 dA(x, y):= ''dexpr;
 
-xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx]))$
-r: transpose(matrix(atom_data['x], atom_data['y]));
+r: transpose(matrix(atom_data['x], atom_data['y]))$
 
 npart: lmp_data['natoms];
-m: makelist(1.0, i, 1, npart)$
-rho: makelist(
-  m[i]*sum(w(vabs(dR(r[i], r[j]))), j, 1, npart), i, 1, npart
-  );
+sdpd_mass: 1.0*(1.2/30.0)^2;
 
 vabs(R):= sqrt(R.R);
 dR(A, B):= block([del, dmin, d, dV],
   dmin: +inf,
   for del in map(lambda([idx], idx*[Lx, Ly]), listify(cartesian_product( {-1, 0, 1}, {-1, 0, 1}))) do (
-    dV: B - (A+del),
+    dV: A - (B+del),
     d: vabs(dV),
     if d<dmin then (dmin: d, dr: dV)
     ),
   dr
   );
 
+/* create cell lists */
+nselect: npart;
+cell_lst: makelist([], i, 1, nselect)$
+for i: 1 thru nselect do (
+  print(i),
+  for j: 1 thru npart do block([
+    rr: vabs(dR(r[i], r[j]))],
+      if rr<cutoff then cell_lst[i]: cons(j, cell_lst[i])
+      )
+  )$
+
+/* get masses */
+m: makelist(sdpd_mass, i, 1, npart)$
+rho: makelist(
+  (print(i),
+    m[i]*lsum(w(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
+    i, 1, nselect
+  )$
+
+/* get dirivatives with respect to `x' */
+di: makelist(
+  (print(i),
+    lsum(
+      if i=j then 0 else
+      block([rr: dR(r[i], r[j]),
+        ee: dR(r[i], r[j])/vabs(dR(r[i], r[j]))],
+        float(m[j]*dw(vabs(rr))*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])),
+      j, cell_lst[i])
+    ),
+  i, 1, npart
+  )$
+
 /* select randomly np points, if np=0 select all points */
+xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx], di, rho))$
 if np>0 then block([per], 
   per: random_permutation( makelist(i, i, length(xy_data))),
   per: sublist_indices(per, lambda([id], id<=np)),
@@ -62,14 +91,14 @@ if np>0 then block([per],
 
 q: 0$
 res: map(lambda([el],
-        block([xx: el[1], yy: el[2], dAsphx: el[3], d],
+        block([xx: el[1], yy: el[2], dAsphx: el[3], dA_local: el[4], rho_local: el[5], d],
           q: q + 1,
           print(q, "/", length(xy_data)),
-          [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx])), xy_data)$
+          [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
 
 foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
 write_data(float(res), foutput)$
-print(foutput);
+print(foutput)$
  
 /* 
 ysmoth: map(lambda([x], dF(x, 0.0)), x)$
