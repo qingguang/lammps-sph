@@ -7,7 +7,7 @@ for d in $(ls -d c*ktypequintic); do
     finput="\"${f}\""
 
     if [ ! -f "${f}.smothed" ]; then
-	maxima -r "n: ${n}$ finput: ${finput}$ batchload(\"intxy.mac\")$"	
+	maxima -r "n: ${n}$ finput: ${finput}$ batchload(\"intxy.mac\")$"
     fi
 done
 
