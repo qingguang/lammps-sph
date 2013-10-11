@@ -2,7 +2,7 @@ define_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, 'laguerrewendland4eps, any)$
+define_variable(ktype, 'laguerre2wendland4eps, any)$
 
 /*
 if file dump2maxima.mac is not found run script
@@ -52,20 +52,27 @@ dR(A, B):= block([del, dmin, d, dV],
 
 /* create cell lists */
 nselect: npart;
-cell_lst: makelist([], i, 1, nselect)$
-for i: 1 thru nselect do (
-  print(i),
-  for j: 1 thru npart do block([
-    rr: vabs(dR(r[i], r[j]))],
+
+getcell():= block([i, j, cell_lst], 
+  cell_lst: makelist([], i, 1, nselect),
+  for i: 1 thru nselect do (
+    print(i),
+    for j: 1 thru npart do block([
+      rr: vabs(dR(r[i], r[j]))],
       if rr<cutoff then cell_lst[i]: cons(j, cell_lst[i])
       )
-  )$
+    ),
+  cell_lst);
+
+cellfile: sconcat(finput, ".cell.n", ncut);
+if emptyp(errcatch(load(cellfile))) then
+  (cell_lst: getcell(),
+    save(cellfile, cell_lst));
 
 /* get masses */
 m: makelist(sdpd_mass, i, 1, npart)$
 rho: makelist(
-  (print(i),
-    m[i]*lsum(w(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
+  (m[i]*lsum(w(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
     i, 1, nselect
   )$
 
@@ -90,11 +97,12 @@ if np>0 then block([per],
   xy_data:  map( lambda([id], xy_data[id]), per))$
 
 q: 0$
+/* dF(xx, yy) */
 res: map(lambda([el],
         block([xx: el[1], yy: el[2], dAsphx: el[3], dA_local: el[4], rho_local: el[5], d],
           q: q + 1,
           print(q, "/", length(xy_data)),
-          [xx, yy, dF(xx, yy), dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
+          [xx, yy, 1.0, dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
 
 foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
 write_data(float(res), foutput)$

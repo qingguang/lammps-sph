@@ -53,6 +53,20 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     n      : 1,
     wexpr: (1 - eps^2*s^2 + eps^4*s^4/6)*(1-s)^6*(1+6*s+35/3*s^2),
     dwexpr: diff(wexpr, s))
+  else if ktype='laguerre1wendland4eps then (
+    if ndim=2 then eps: 455/192 else eps: 32/15,
+    norm[2]: -495/(16*%pi*eps-55*%pi),
+    norm[3]: -1485/(35*%pi*eps-96*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s)*(1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
+  else if ktype='laguerre2wendland4eps then (
+    if ndim=2 then eps: 91/18 else eps: 21/5,
+    norm[2]: -594/(7*%pi*eps-66*%pi),
+    norm[3]: -6435/(64*%pi*eps-416*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s^2)*(1-s)^6*(1+6*s+35/3*s^2),
+    dwexpr: diff(wexpr, s))
   else if ktype='laguerregaussian then (
     norm[2]: 8.619364207093854,
     norm[3]: 39.90874017042539,
