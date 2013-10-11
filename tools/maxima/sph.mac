@@ -1,0 +1,30 @@
+/* aux sph functions */
+
+load("dump2maxima.mac");
+ndim: 2;
+[lmp_data, atom_data]: dump2maxima("dump00040000.dat");
+Lx: lmp_data['xhi] - lmp_data['xlo];
+Ly: lmp_data['yhi] - lmp_data['ylo];
+
+r: if ndim=2 then
+transpose(matrix(atom_data['x], atom_data['y]))
+else
+transpose(matrix(atom_data['x], atom_data['y], atom_data['z]));
+
+vabs(A):= sqrt(A.A);
+dR(A, B):= block([del, dmin, d, dV, dset, L],
+  dmin: +inf,
+  dset: if ndim=2 then
+  cartesian_product( {-1, 0, 1}, {-1, 0, 1}) else
+  cartesian_product( {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}),
+  L: if ndim=2 then [Lx, Ly] else [Lx, Ly, Lz],
+  for del in map(lambda([idx], idx*L), listify(dset)) do (
+    dV: A - (B+del),
+    d: vabs(dV),
+    if d<dmin then (dmin: d, dr: dV)
+    ),
+  dr
+  );
+
+rn: map( lambda([aux], [aux[1], aux[2], if vabs(dR(r[100], [aux[1], aux[2]]))<0.3 then 1 else 0]), r);
+write_data(rn, "test.dat");
