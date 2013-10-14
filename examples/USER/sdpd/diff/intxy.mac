@@ -2,7 +2,7 @@ efine_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, 'laguerre4wendland6eps, any)$
+define_variable(ktype, 'laguerre2wendland4eps, any)$
 
 /*
 if file dump2maxima.mac is not found run script
@@ -23,6 +23,7 @@ define_variable(np, 40, integer)$
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
+define_kernel(2, cutoff, 'quintic, 'wq, 'dwq);
 wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
 dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
 
@@ -72,18 +73,19 @@ if emptyp(errcatch(load(cellfile))) then
 /* get masses */
 m: makelist(sdpd_mass, i, 1, npart)$
 rho: makelist(
-  (m[i]*lsum(w(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
+  (m[i]*lsum(wq(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
     i, 1, nselect
   )$
 
 /* get dirivatives with respect to `x' */
 di: makelist(
-  (print(i),
+  (if mod(i, 100)=0 then print(i),
     lsum(
       if i=j then 0 else
       block([rr: dR(r[i], r[j]),
         ee: dR(r[i], r[j])/vabs(dR(r[i], r[j]))],
-        float(m[j]*dw(vabs(rr))*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])),
+        float(m[j]*dw(vabs(rr))*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])
+        ),
       j, cell_lst[i])
     ),
   i, 1, npart
@@ -104,7 +106,7 @@ res: map(lambda([el],
           print(q, "/", length(xy_data)),
           [xx, yy, 1.0, dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
 
-foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
+foutput: printf(false, "~a.n~f.ktype~a.smoothd.rhoquintic", finput, ncut, ktype)$
 write_data(float(res), foutput)$
 print(foutput)$
  

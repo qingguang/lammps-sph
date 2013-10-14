@@ -1,0 +1,29 @@
+load("nint.mac");
+load("pw.mac");
+
+w(s):=(1 - eps^2*s^2 + eps^4*s^4/6)*(1-s)^8*(1+8*s+25*s^2+32*s^3);
+
+grind(solve(integrate(w(s)*s * s^2, s, 0, 1), eps));
+grind(solve(integrate(w(s)*s^2 * s^2, s, 0, 1), eps));
+
+intfun(ndim, f)::= buildq([ndim, f],
+  if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
+
+
+ndim: 2;
+I: fullratsimp(1/pwint( intfun(ndim, w(r)), r, 0, 1));
+grind(I);
+
+ndim: 3;
+I: fullratsimp(1/pwint( intfun(ndim, w(r)), r, 0, 1));
+
+kill(all);
+load("sph-kernel.mac");
+/* define_kernel(2, 1, laguerre2wendland6eps, 'w, 'dw); */
+define_kernel(2, 1, quintic, 'w, 'dw);
+
+assume(s<1);
+assume(s>2/3);
+
+dw(s):=''(diff(w(s), s, 5));
+dw(1);
