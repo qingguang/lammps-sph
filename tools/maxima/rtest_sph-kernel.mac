@@ -219,3 +219,28 @@ true$
  is(abs(nint(intfun, x, 0, 2*cutoff)) < 1e-8)
 );
 true$
+
+(ndim: 3,
+ cutoff: 1/8,
+ define_kernel(ndim, cutoff, 'blincomb, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x) * x^2,
+ is(abs(nint(intfun, x, 0, 2*cutoff)) < 1e-8)
+);
+true$
+
+(ndim: 2,
+ cutoff: 1/8,
+ define_kernel(ndim, cutoff, 'blincomb, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x) * x^2,
+ is(abs(nint(intfun, x, 0, 2*cutoff)) < 1e-8)
+);
+true$
+
+/* chech if the second moment is zero */
+(ndim: 2,
+ cutoff: 1/8,
+ define_kernel(ndim, cutoff, 'blincomb, 'w, 'dw),
+ intfun(x):= 2^(ndim-1)*%pi*x^(ndim-1)*w(x) * x^2,
+ is(abs(nint(intfun, x, 0, 2*cutoff)) < 1e-8)
+);
+true$

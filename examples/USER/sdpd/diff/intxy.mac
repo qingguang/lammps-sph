@@ -2,7 +2,7 @@ efine_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, 'laguerre2wendland4eps, any)$
+define_variable(ktype, 'blincomb, any)$
 
 /*
 if file dump2maxima.mac is not found run script
@@ -23,7 +23,7 @@ define_variable(np, 40, integer)$
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
-define_kernel(2, cutoff, 'quintic, 'wq, 'dwq);
+define_kernel(2, cutoff, ktype, 'wq, 'dwq);
 wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
 dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
 
@@ -106,7 +106,7 @@ res: map(lambda([el],
           print(q, "/", length(xy_data)),
           [xx, yy, 1.0, dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
 
-foutput: printf(false, "~a.n~f.ktype~a.smoothd.rhoquintic", finput, ncut, ktype)$
+foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
 write_data(float(res), foutput)$
 print(foutput)$
  
