@@ -77,12 +77,12 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     load("pw.mac"),
     dwexpr: diff(wexpr, s))
   else if ktype='wcomb then (
-    if ndim=2 then eps: 0 else eps: 22,
+    if ndim=2 then eps: 4096/35 else eps: 955/3,
     load("pw.mac"),
     plusfun(x)::= (signum(x) + 1)/2 * x,
-    ww(x)::= plusfun(1-abs(s))^6*(1+6*abs(s)+35/3*(s)^2),
-    norm[2]: 465/(37*%pi),
-    norm[3]: 243/(14*%pi),
+    ww(s)::= plusfun(1-abs(s))^6*(1+6*abs(s)+35/3*(s)^2),
+    norm[2]: 648/(3*%pi*eps-32*%pi),
+    norm[3]: 4455/(6*%pi*eps-232*%pi),
     n      : 1,
     wexpr: 1/6*(eps*ww(2*s)-ww(2*s-1)-ww(2*s+1)),
     dwexpr: diff(wexpr, s))
