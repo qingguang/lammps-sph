@@ -2,7 +2,7 @@ efine_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, 'blincomb, any)$
+define_variable(ktype, 'wcomb, any)$
 
 /*
 if file dump2maxima.mac is not found run script

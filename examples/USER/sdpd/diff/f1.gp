@@ -1,9 +1,10 @@
 set macros
 set log
-set size 0.9
+set size 1.0
 set xlabel "dx/cutoff"
 set ylabel "L2(SPH-exact)"
 set xtics (3.0, 4.0, 5.0, 6.0)
+set key left bottom
 
 ux='1:2'
 plot [2.8:6.2][1e-4:10] \
@@ -13,11 +14,8 @@ plot [2.8:6.2][1e-4:10] \
      "<bash hm.sh relaxed laguerre1wendland4eps" u @ux w lp  t  "relaxed, laguerre1wendland4eps", \
      "<bash hm.sh relaxed quintic" u @ux w lp t  "relaxed, quintic", \
      "<bash hm.sh relaxed wendland4" u @ux w lp t  "relaxed, wendland4", \
-     "<bash hm.sh grid laguerrewendland4eps" u @ux w lp  t  "grid, laguerrewendland4eps", \
-     "<bash hm.sh grid laguerre2wendland4eps" u @ux w lp  t  "grid, laguerre2wendland4eps", \
-     "<bash hm.sh grid laguerre2wendland6eps" u @ux w lp  t  "grid, laguerre2wendland6eps", \
-     "<bash hm.sh grid laguerre1wendland4eps" u @ux w lp  t  "grid, laguerre1wendland4eps", \
-     "<bash hm.sh grid quintic" u @ux w lp  t  "grid, quintic", \
+     "<bash hm.sh relaxed wcomb" u @ux w lp t  "relaxed, wcomb", \
+     "<bash hm.sh relaxed blincomb" u @ux w lp t  "relaxed, blincomb", \
      10*x**(-6) t "-6"
 call "~/google-svn/gnuplot/saver.gp" "f1"
 
