@@ -1,0 +1,20 @@
+kill(all);
+
+/* Eq. (3.16), page 55 */
+
+L[g, k](y):=exp(y)*y^(-g)/k!*diff(exp(-y)*y^(k+g), y, k);
+expand(fullratsimp(L[1, 2])(y^2)/3);
+
+kill(eps);
+f(y):=''(expand(fullratsimp(L[0, 1])((eps*y)^2)/4)  *  (1-y)^6*(1+6*y+35/3*y^2) );
+gau(y):=''(expand(fullratsimp(L[0, 1])((eps*y)^2)/4)  *  exp(-(eps*y)^2));
+
+eq: integrate(f(y)*y * y^2, y, 0, 1);
+
+load(to_poly_solve)$
+ro: dfloat(eigenvalues(polytocompanion(eq,eps))[1]);
+plot2d([(eps: ro[2], f(abs(s))),
+  (eps: ro[2], f(abs(s))),
+  (eps: ro[2], gau(abs(s)))
+  ],
+  [s, -1.2, 1.2]);
