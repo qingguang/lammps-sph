@@ -1,0 +1,17 @@
+kill(all);
+
+load("pw.mac");
+plusfun(x):= (signum(x) + 1)/2 * x;
+b(s)::= plusfun(1-abs(s))^6*(1+6*abs(s)+35/3*s^2);
+
+eps: 6.0;
+c(x):=1/6*(eps*b(x)-b(x-1)-b(x+1));
+
+plot2d(b(x), [x, -1, 1]);
+
+intfun(ndim, f)::= buildq([ndim, f],
+  if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*r else if ndim=3 then 4*%pi*f*r^2);
+
+ndim: 2;
+load("nint.mac");
+pwint(intfun(ndim, b(r)*r^(ndim-1) * r^2), r, 0, 1);

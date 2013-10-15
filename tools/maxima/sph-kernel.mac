@@ -1,4 +1,4 @@
-define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr, dwexpr],
+define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr, dwexpr, b, ww],
   if ktype='quintic then (
     norm[2]: 63/(478*%pi),
     norm[3]: 9/(40*%pi),
@@ -59,6 +59,32 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     norm[3]: -1485/(35*%pi*eps-96*%pi),
     n      : 1,
     wexpr: (1 - eps*s)*(1-s)^6*(1+6*s+35/3*s^2),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  else if ktype='blincomb then (
+    if ndim=2 then eps: 841/62 else eps: 22,
+    b(x)::=1/12*(
+      +  abs(x+2)^3
+      -4*abs(x+1)^3
+      +6*abs(x)^3
+      -4*abs(x-1)^3
+      +  abs(x-2)^3
+      ),
+    norm[2]: 465/(37*%pi),
+    norm[3]: 243/(14*%pi),
+    n      : 3,
+    wexpr: 1/6*(eps*b(s)-b(s-1)-b(s+1)),
+    load("pw.mac"),
+    dwexpr: diff(wexpr, s))
+  else if ktype='wcomb then (
+    if ndim=2 then eps: 0 else eps: 22,
+    load("pw.mac"),
+    plusfun(x)::= (signum(x) + 1)/2 * x,
+    ww(x)::= plusfun(1-abs(s))^6*(1+6*abs(s)+35/3*(s)^2),
+    norm[2]: 465/(37*%pi),
+    norm[3]: 243/(14*%pi),
+    n      : 1,
+    wexpr: 1/6*(eps*ww(2*s)-ww(2*s-1)-ww(2*s+1)),
     dwexpr: diff(wexpr, s))
   else if ktype='laguerre2wendland4eps then (
     if ndim=2 then eps: 91/18 else eps: 21/5,
