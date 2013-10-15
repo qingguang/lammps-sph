@@ -1,8 +1,12 @@
-efine_variable(ncut, 3.0, float)$
+define_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, 'wcomb, any)$
+define_variable(ktype, [laguerrewendland4eps, 2], any)$
+
+load(interpol)$
+rdf: read_matrix(sconcat(finput, ".rdf"))$
+g(x):= if x>cutoff then 1 else ''(cspline(rdf, d1=0, dn=0))$
 
 /*
 if file dump2maxima.mac is not found run script
@@ -73,9 +77,13 @@ if emptyp(errcatch(load(cellfile))) then
 /* get masses */
 m: makelist(sdpd_mass, i, 1, npart)$
 rho: makelist(
-  (m[i]*lsum(wq(vabs(dR(r[i], r[j]))), j, cell_lst[i])),
+    m[i]*lsum(block(
+        [dist: vabs(dR(r[i], r[j]))],
+        wq(dist)),
+      j, cell_lst[i]),
     i, 1, nselect
   )$
+float([apply('min, rho), apply('max, rho)]);
 
 /* get dirivatives with respect to `x' */
 di: makelist(
@@ -84,7 +92,7 @@ di: makelist(
       if i=j then 0 else
       block([rr: dR(r[i], r[j]),
         ee: dR(r[i], r[j])/vabs(dR(r[i], r[j]))],
-        float(m[j]*dw(vabs(rr))*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])
+        float(m[j]*dw(vabs(rr))/g(dist)*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])
         ),
       j, cell_lst[i])
     ),
@@ -106,7 +114,7 @@ res: map(lambda([el],
           print(q, "/", length(xy_data)),
           [xx, yy, 1.0, dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
 
-foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, ktype)$
+foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, if listp(ktype) then first(ktype) else ktype)$
 write_data(float(res), foutput)$
 print(foutput)$
  

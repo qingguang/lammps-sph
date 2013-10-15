@@ -1,4 +1,5 @@
-define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr, dwexpr, b, ww],
+define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr, dwexpr, b, ww, par: []],
+  if listp(ktype) then (par: rest(ktype), ktype: first(ktype)),
   if ktype='quintic then (
     norm[2]: 63/(478*%pi),
     norm[3]: 9/(40*%pi),
@@ -47,7 +48,11 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     wexpr: (1 - 3^2*s^2 + 3^4*s^4/6)*(1-s)^6*(1+6*s+35/3*s^2),
     dwexpr: diff(wexpr, s))
   else if ktype='laguerrewendland4eps then (
-    if ndim=2 then eps: sqrt(2)*sqrt(180-sqrt(2370))/sqrt(33) else eps: sqrt(2)*sqrt(170-sqrt(3910))/sqrt(35),
+    if emptyp(par) then (
+      if ndim=2 then eps: sqrt(2)*sqrt(180-sqrt(2370))/sqrt(33) else eps: sqrt(2)*sqrt(170-sqrt(3910))/sqrt(35)
+      ) else (
+      eps: par[1]
+      ),
     norm[2]: 7722/(%pi*(3*eps^4-91*eps^2+858)),
     norm[3]: 405405/(160*%pi*eps^4-4032*%pi*eps^2+26208*%pi),
     n      : 1,
