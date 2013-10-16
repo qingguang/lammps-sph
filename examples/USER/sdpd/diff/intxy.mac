@@ -2,11 +2,13 @@ define_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
 define_variable(finput, "c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat", any)$
-define_variable(ktype, [laguerre2wendland4eps, 2], any)$
+define_variable(ktype, ['blincombshift, 2], any)$
 
+/*
 load(interpol)$
 rdf: read_matrix(sconcat(finput, ".rdf"))$
 g(x):= if x>cutoff then 1 else ''(cspline(rdf, d1=0, dn=0))$
+*/
 
 /*
 if file dump2maxima.mac is not found run script
@@ -62,7 +64,7 @@ getcell():= block([i, j, cell_lst],
   cell_lst: makelist([], i, 1, nselect),
   for i: 1 thru nselect do (
     print(i),
-    for j: 1 thru npart do block([
+     for j: 1 thru npart do block([
       rr: vabs(dR(r[i], r[j]))],
       if rr<cutoff then cell_lst[i]: cons(j, cell_lst[i])
       )
@@ -77,17 +79,29 @@ if emptyp(errcatch(load(cellfile))) then
 /* get masses */
 m: makelist(sdpd_mass, i, 1, npart)$
 rho: makelist(
+  block([],
+    if mod(i, 100)=0 then print("calculating rho: ", i),
     m[i]*lsum(block(
         [dist: vabs(dR(r[i], r[j]))],
         wq(dist)),
-      j, cell_lst[i]),
+      j, cell_lst[i])),
     i, 1, nselect
   )$
 float([apply('min, rho), apply('max, rho)]);
 
+nden: makelist(
+  block([],
+    if mod(i, 100)=0 then print("calculating nden: ", i),
+    lsum(block(
+        [dist: vabs(dR(r[i], r[j]))],
+        if dist<cutoff then 1 else 0),
+      j, cell_lst[i])),
+    i, 1, nselect
+  )$
+
 /* get dirivatives with respect to `x' */
 di: makelist(
-  (if mod(i, 100)=0 then print(i),
+  (if mod(i, 100)=0 then print("calculating du/dx", i),
     lsum(
       if i=j then 0 else
       block([rr: dR(r[i], r[j]),
