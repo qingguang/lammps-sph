@@ -24,7 +24,7 @@ namespace LAMMPS_NS {
     virtual double w2d (double r);
     virtual double dw3d (double r);
     virtual double dw2d (double r);
-static const double eps = 2.821103955647963;
+    static const double eps = 2.821103955647963;
       // 2D: sqrt(2.0)*sqrt(180.0-sqrt(2370.0))/sqrt(33.0);
 // 3D:  sqrt(2)*sqrt(170-sqrt(3910))/sqrt(35);
   };

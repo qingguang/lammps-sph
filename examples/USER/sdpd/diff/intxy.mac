@@ -89,6 +89,7 @@ rho: makelist(
   )$
 float([apply('min, rho), apply('max, rho)]);
 
+/*
 nden: makelist(
   block([],
     if mod(i, 100)=0 then print("calculating nden: ", i),
@@ -98,6 +99,7 @@ nden: makelist(
       j, cell_lst[i])),
     i, 1, nselect
   )$
+*/
 
 /* get dirivatives with respect to `x' */
 di: makelist(

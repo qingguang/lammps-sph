@@ -19,6 +19,17 @@ plot [2.8:6.2][1e-4:10] \
      10*x**(-6) t "-6"
 call "~/google-svn/gnuplot/saver.gp" "f1"
 
+plot [2.8:6.2][1e-4:10] \
+     "<bash hm.sh grid laguerrewendland4eps" u @ux w lp t  "grid, laguerrewendland4eps", \
+     "<bash hm.sh grid laguerre2wendland4eps" u @ux w lp  t  "grid, laguerre2wendland4eps", \
+     "<bash hm.sh grid laguerre2wendland6eps" u @ux w lp  t  "grid, laguerre2wendland6eps", \
+     "<bash hm.sh grid laguerre1wendland4eps" u @ux w lp  t  "grid, laguerre1wendland4eps", \
+     "<bash hm.sh grid quintic" u @ux w lp t  "grid, quintic", \
+     "<bash hm.sh grid wendland4" u @ux w lp t  "grid, wendland4", \
+     10*x**(-6) t "-6"
+call "~/google-svn/gnuplot/saver.gp" "fg"
+
+
 set ylabel "L2(SPH-smothed)"
 ux='1:3'
 plot [2.8:6.2][1e-4:10] \
