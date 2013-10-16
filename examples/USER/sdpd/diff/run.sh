@@ -12,7 +12,7 @@ fi
 
 nproc=1
 ndim=2
-sdpd_eta=8.0
+sdpd_eta=1.0
 sdpd_background=0.0
 sdpd_c=$1
 nx=30
