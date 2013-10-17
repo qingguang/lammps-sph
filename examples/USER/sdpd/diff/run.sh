@@ -12,12 +12,12 @@ fi
 
 nproc=1
 ndim=2
-sdpd_eta=1.0
+sdpd_eta=8.0
 sdpd_background=0.0
 sdpd_c=$1
 nx=30
 n=$2
-ktype=laguerrewendland4eps
+ktype=wendland4
 
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
