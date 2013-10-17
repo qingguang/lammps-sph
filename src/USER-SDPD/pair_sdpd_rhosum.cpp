@@ -15,10 +15,12 @@
 #include "stdlib.h"
 #include "pair_sdpd_rhosum.h"
 #include "sph_kernel_quintic.h"
+#include "sph_kernel_wendland4.h"
 #include "sph_kernel_wendland6.h"
 #include "sph_kernel_laguerregaussian.h"
 #include "sph_kernel_laguerrewendland4.h"
 #include "sph_kernel_laguerrewendland4_eps.h"
+#include "sph_kernel_laguerre2wendland4_eps.h"
 #include "sph_kernel_lucy.h"
 #include "string.h"
 #include "atom.h"
@@ -230,12 +232,16 @@ void PairSDPDRhoSum::coeff(int narg, char **arg) {
     ker = new SPHKernelQuintic();
   } else if (strcmp(arg[3], "lucy") == 0) {
     ker = new SPHKernelLucy();
+  } else if (strcmp(arg[3], "wendland4") == 0) {
+    ker = new SPHKernelWendland4();
   } else if (strcmp(arg[3], "wendland6") == 0) {
     ker = new SPHKernelWendland6();
   } else if (strcmp(arg[3], "laguerregaussian") == 0) {
     ker = new SPHKernelLaguerreGaussian();
   } else if (strcmp(arg[3], "laguerrewendland4") == 0) {
     ker = new SPHKernelLaguerreWendland4();
+  } else if (strcmp(arg[3], "laguerre2wendland4eps") == 0) {
+    ker = new SPHKernelLaguerre2Wendland4Eps();
   } else if (strcmp(arg[3], "laguerrewendland4eps") == 0) {
     ker = new SPHKernelLaguerreWendland4Eps();
   } else {

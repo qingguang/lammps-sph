@@ -8,7 +8,7 @@ variable           dx   equal ${Lx}/${nx}
 
 variable           sdpd_rho equal  1.0
 variable           sdpd_rho0 equal 1.0
-variable           sdpd_gamma equal 7.0
+variable           sdpd_gamma equal 1.0
 variable           dt_factor equal 1.0
 
 #variable           sdpd_c equal    300.0
