@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for dname in $(ls -d c*ndim*eps); do
+for dname in $(find . -type d -name 'c*'); do
     dlast=$(ls -1 ${dname}/dump*.dat  | tail -n1)
     n=$(echo ${dname} | awk -v FS="-" '{print $NF}' | tr -d n)
     err=$(awk 'NF==12{s+=$12; n++} END {print s/n}' ${dlast})
