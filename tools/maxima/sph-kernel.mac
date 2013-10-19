@@ -130,6 +130,13 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     n      : 1,
     wexpr: (1 - eps*s^2)*(1-s)^6*(1+6*s+35/3*s^2),
     dwexpr: diff(wexpr, s))
+  else if ktype='laguerre2wendland2eps then (
+    if ndim=2 then eps: 231/58 else eps: 10/3,
+    norm[2]: -420/(7*%pi*eps-52*%pi),
+    norm[3]: -630/(10*%pi*eps-51*%pi),
+    n      : 1,
+    wexpr: (1 - eps*s^2)*(1-s)^4*(1+3*s),
+    dwexpr: diff(wexpr, s))
   else if ktype='laguerre2wendland6eps then (
     if ndim=2 then eps: 68/11 else eps: 51/10,
     norm[2]: -390/(3*%pi*eps-35*%pi),
