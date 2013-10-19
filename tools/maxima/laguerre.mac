@@ -3,18 +3,22 @@ kill(all);
 /* Eq. (3.16), page 55 */
 
 L[g, k](y):=exp(y)*y^(-g)/k!*diff(exp(-y)*y^(k+g), y, k);
-expand(fullratsimp(L[1, 2])(y^2)/3);
 
-kill(eps);
-f(y):=''(expand(fullratsimp(L[0, 1])((eps*y)^2)/4)  *  (1-y)^6*(1+6*y+35/3*y^2) );
-gau(y):=''(expand(fullratsimp(L[0, 1])((eps*y)^2)/4)  *  exp(-(eps*y)^2));
+ww(y):=''(expand(fullratsimp(L[0, 3])((eps*y)^2))  *  (1-y)^6*(1+6*y+35/3*y^2) );
+wg(y):=''(expand(fullratsimp(L[0, 3])((eps*y)^2))  *  exp(-(eps*y)^2));
 
-eq: integrate(f(y)*y * y^2, y, 0, 1);
+eq: integrate(ww(y)*y * y^2, y, 0, 1);
+load("sph-kernel.mac");
+define_kernel(2, 1.0, 'quintic, 'wq, 'dwq);
 
-load(to_poly_solve)$
-ro: dfloat(eigenvalues(polytocompanion(eq,eps))[1]);
-plot2d([(eps: ro[2], f(abs(s))),
-  (eps: ro[2], f(abs(s))),
-  (eps: ro[2], gau(abs(s)))
+ro: allroots(eq);
+ro: map('rhs, ro);
+ro: sublist(ro, lambda([q], q>0));
+ro: sort(ro);
+
+plot2d([
+  (eps: ro[1], ww(abs(s))),
+  (eps: ro[1], wg(abs(s))),
+  wq
   ],
-  [s, -1.2, 1.2]);
+  [s, -1.0, 1.0]);
