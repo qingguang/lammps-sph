@@ -1,0 +1,24 @@
+kill(all);
+
+/* Eq. (3.16), page 55,  */
+L[g, k](y):=exp(y)*y^(-g)/k!*diff(exp(-y)*y^(k+g), y, k);
+
+ndim: 3;
+M:    4;
+eta(x):=%pi^(-ndim/2)*''(fullratsimp(L[ndim/2, M-1])(x^2))*exp(-x^2);
+
+intfun(ndim, f)::= buildq([ndim, f],
+  if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*x else if ndim=3 then 4*%pi*f*x^2);
+
+integrate(intfun(ndim, eta(x)), x, 0, +inf);
+
+for q: 0 thru 2*M  step 2 do (
+  I: integrate(intfun(ndim, x^q*eta(x)), x, 0, +inf),
+  print(q, I)
+);
+
+/* Eq. (2.12) */
+F(f):=(2*%pi)/t^(ndim/2-1)*integrate(f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2), r, +inf);
+
+q(r):=exp(-r^2);
+F(q);
