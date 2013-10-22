@@ -1,24 +1,51 @@
 kill(all);
-
 /* Eq. (3.16), page 55,  */
 L[g, k](y):=exp(y)*y^(-g)/k!*diff(exp(-y)*y^(k+g), y, k);
 
-ndim: 3;
-M:    4;
-eta(x):=%pi^(-ndim/2)*''(fullratsimp(L[ndim/2, M-1])(x^2))*exp(-x^2);
+define_variable(ndim, 2, all);
+define_variable(M, 3, all);
 
+eta(x):=%pi^(-ndim/2)*''(fullratsimp(L[ndim/2, M-1])(x^2)*exp(-x^2));
+eta_w_aux[eps](x):=%pi^(-ndim/2)*''(fullratsimp(L[ndim/2, M-1])((eps*x)^2)* (1-x)^6*(1+6*x+35/3*x^2));
 intfun(ndim, f)::= buildq([ndim, f],
   if ndim=1 then 2*f else if ndim=2 then 2*%pi*f*x else if ndim=3 then 4*%pi*f*x^2);
 
-integrate(intfun(ndim, eta(x)), x, 0, +inf);
+I: 1/integrate(intfun(ndim, eta_w_aux[eps](x)), x, 0, 1);
+eta_w[eps](x):= ''(I*eta_w_aux[eps](x));
+
+eq: integrate(intfun(ndim, x^2*eta_w_aux[eps](x)), x, 0, 1);
+ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
 
 for q: 0 thru 2*M  step 2 do (
   I: integrate(intfun(ndim, x^q*eta(x)), x, 0, +inf),
-  print(q, I)
+  Iw: integrate(intfun(ndim, x^q*eta_w[eps](x)), x, 0, 1),
+  print(q, I, Iw)
 );
 
-/* Eq. (2.12) */
+
+/* Eq. (2.12), Fourier transform */
 F(f):=(2*%pi)/t^(ndim/2-1)*integrate(f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2), r, +inf);
 
-q(r):=exp(-r^2);
-F(q);
+D(f, n, x0):= block([df: diff(f, x, n)], map(lambda([q], ev(df, x=q)), x0));
+w: A*eta_w[ro[1]](x) + B*eta_w[ro[2]](x);
+
+I4: integrate(intfun(ndim, x^4*w), x, 0, 1);
+load("to_poly_solve");
+sol_ab_d2: float(solve([D(w, 2, [0])[1], A+B=1], [A, B]))[1];
+sol_ab_i4: float(solve([I4, A+B=1], [A, B]))[1];
+
+/* plot2d([eta_w[ro[1]](abs(x)), block([x: abs(x)], ev(w, sol_ab_i4)), block([x: abs(x)], ev(w, sol_ab_d2))], [x, -1, 1]); */
+/* make diff(x, 2) zero */
+
+w_d2: ev(3*w, sol_ab_d2);
+float(D(w_d2, 3, [0]));
+
+load("sph-kernel.mac");
+define_kernel(2, 1, 'wendland4, 'wq, 'dwq);
+plot2d([
+  9.632685661072452,
+  5*wq(x),
+  eta_w[ro[1]](abs(x)),
+  block([x: abs(x)], ev(w, sol_ab_i4)),
+  block([x: abs(x)], ev(3*w, sol_ab_d2))],
+  [x, -1, 1]);
