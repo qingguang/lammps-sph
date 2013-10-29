@@ -1,0 +1,76 @@
+kill(all);
+
+/* returns Nth moment of the kernel */
+getkernmom(w, ndim, N):= block([wr],
+  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
+  fullratsimp(pwint(r^N*wr(r), r, 0, +inf)));
+
+/* takes a kernel function and returns a normalized version of it */
+normkern(w, ndim):= block([wr, A],
+  load("pw.mac"),
+  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
+  A: fullratsimp(1/pwint( wr(r), r, 0, +inf)),
+  buildq([g: A*w(r)], lambda([r], g)));
+
+/* returns a wendland polynom */
+wendland(ndim, k):= block([w],
+  load("pw.mac"),
+  local(plusfun, I, p, intfun),
+  plusfun(x):= x*(signum(x)+1)/2,
+  I(phi):= ''(pwint(t*phi(t), t, r, +inf)),
+  p[l]:= if l=0 then 1 else buildq([g: plusfun(1-r)^l], lambda([r], g)),
+  I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, r, 1)], lambda([r], g))
+  else I[k-1, I[1, f]],
+  w: I[k, p[floor(ndim/2)+k+1]],
+  buildq([g: pwsimp(fullratsimp(w(abs(r))), r)], lambda([r], g))
+  );
+
+/* returns a laguerre polynom */
+laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
+
+ndim: 2;
+M:    2;
+w: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
+eq: getkernmom(w, ndim, 2);
+ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
+w1: normkern(subst(ro[1], eps, w), ndim);
+w2: normkern(subst(ro[2], eps, w), ndim);
+
+dw1: diff(w1(r), r);
+dw2: diff(w2(r), r);
+plot2d([dw1, dw2], [r, -1, 1]);
+
+
+/* Eq. (2.12), Fourier transform */
+F(f, ndim):=(2*%pi)/t^(ndim/2-1)*pwint(f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2), r, 0, +inf);
+
+load("romberg");
+rombergabs: 0;
+rombergtol: 1e-5;
+Fn(f, ndim, t):= block([p: f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)], (2*%pi)/t^(ndim/2-1)*romberg(p, r, 0, 1));
+
+load("sph-kernel.mac");
+ndim: 3;
+wn: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 2)(r)], lambda([r], g));
+eq: getkernmom(wn, ndim, 2);
+ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
+wn: subst(ro[1], eps, wn);
+/*wn: wendland(ndim, 1);*/
+wn: normkern(wn, ndim);
+
+Fb(f, ndim, t):= block([p: sin(t*r)*f(r)*r], romberg(p, r, 0, 1) * 4*%pi/t);
+
+/* F(wb, 2); */
+
+ratprint: false;
+sigma: sqrt(getkernmom(lambda([u], abs(wn(u))), ndim, 2)/ndim);
+1/(2*sigma), numer;
+sigma: sqrt(1/15);
+Fb(wn, ndim, 1);
+
+plot2d(
+  [
+    [parametric, 2*sigma*u, lambda([u], abs(Fn(wn, ndim, u/(2*%pi)))), [u, 0.01, 3*%pi/(2*sigma)]],
+    [parametric, 2*sigma*u, lambda([u], abs(Fb(wn, ndim, u))), [u, 0.01, 3*%pi/(2*sigma)]]
+  ],
+  [logy], [y, 1e-6, 1]);
