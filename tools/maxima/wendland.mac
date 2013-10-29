@@ -1,76 +1,115 @@
-kill(all);
-
-/* returns Nth moment of the kernel */
-getkernmom(w, ndim, N):= block([wr],
-  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
-  fullratsimp(pwint(r^N*wr(r), r, 0, +inf)));
-
-/* takes a kernel function and returns a normalized version of it */
-normkern(w, ndim):= block([wr, A],
-  load("pw.mac"),
-  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
-  A: fullratsimp(1/pwint( wr(r), r, 0, +inf)),
-  buildq([g: A*w(r)], lambda([r], g)));
-
 /* returns a wendland polynom */
+load("pw.mac");
+load("nint");
+load("romberg");
+
+laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
+
 wendland(ndim, k):= block([w],
-  load("pw.mac"),
-  local(plusfun, I, p, intfun),
+  local(plusfun, I, p),
   plusfun(x):= x*(signum(x)+1)/2,
   I(phi):= ''(pwint(t*phi(t), t, r, +inf)),
   p[l]:= if l=0 then 1 else buildq([g: plusfun(1-r)^l], lambda([r], g)),
   I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, r, 1)], lambda([r], g))
   else I[k-1, I[1, f]],
   w: I[k, p[floor(ndim/2)+k+1]],
-  buildq([g: pwsimp(fullratsimp(w(abs(r))), r)], lambda([r], g))
+  buildq([g: fullratsimp(pwsimp(fullratsimp(w(abs(r))), r))], lambda([r], g))
   );
 
-/* returns a laguerre polynom */
-laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
+/* takes a kernel function and returns a normalized version of it */
+normkern(w, ndim, [cutoff]):= block([wr, A],
+  cutoff: if emptyp(cutoff) then +inf else first(cutoff),
+  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
+  A: fullratsimp(1/pwint( wr(r), r, 0, cutoff)),
+  buildq([g: A*w(r)], lambda([r], g)));
 
-ndim: 2;
-M:    2;
-w: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
-eq: getkernmom(w, ndim, 2);
-ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
-w1: normkern(subst(ro[1], eps, w), ndim);
-w2: normkern(subst(ro[2], eps, w), ndim);
+/* returns Nth moment of the kernel */
+getkernmom(w, ndim, N, [cutoff]):= block([wr],
+  cutoff: if emptyp(cutoff) then +inf else first(cutoff),
+  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
+  fullratsimp(pwint(r^N*wr(r), r, 0, cutoff)));
 
-dw1: diff(w1(r), r);
-dw2: diff(w2(r), r);
-plot2d([dw1, dw2], [r, -1, 1]);
+plusfun(x)::= (signum(x) + 1)/2 * x;
 
+/*
+Define b-spline function with explicit formula and via convolution
+http://sepwww.stanford.edu/public/docs/sep105/sergey2/paper_html/node5.html
+http://crsouza.blogspot.de/2010/03/kernel-functions-for-machine-learning.html#bspline
+*/
+bspline(n):= block([x],
+  buildq([
+    g: fullratsimp(pwsimp(1/n!*sum(binomial(n+1,k)*(-1)^k*plusfun((n+1)/2*x+(n+1)/2-k)^n, k, 0, n+1), x))],
+    lambda([x], g)));
 
-/* Eq. (2.12), Fourier transform */
-F(f, ndim):=(2*%pi)/t^(ndim/2-1)*pwint(f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2), r, 0, +inf);
+bspline_c(k):= block([w, n],
+  local(unitbox, I),
+  unitbox(x):= (signum(x+1/2)-signum(x-1/2))/2,
+  I[n]:= if n=0 then lambda([x], unitbox(x)) else block([f: I[n-1]],
+    buildq([g: pwsimp(pwint(f(t)*unitbox(x-t), t, -inf, +inf), x)],
+      lambda([x], g))),
+  w: I[k],
+  buildq([g: fullratsimp(pwsimp(fullratsimp(w((k+1)/2*r)), r))], lambda([r], g))
+  );
 
+matchdeclare(www, true);
+tellsimp(bessel_j(1/2, www), sqrt(2/(%pi*www))*sin(www));
 load("romberg");
+Fn(w, ndim, ifun, cutoff):= subst(
+  [p=block([], local(r, t), assume(r>0), assume(t>0), fullratsimp(w(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)/t^(ndim/2-1))),
+  integrator=ifun,
+  c=cutoff,
+  nd=ndim],
+  lambda([t],
+      (2*%pi)*integrator(p, r, 1e-10, c)));
+linspace(a,b,n) := makelist(a+(i-1)*(b-a)/(n-1), i,1,n);
+
 rombergabs: 0;
-rombergtol: 1e-5;
-Fn(f, ndim, t):= block([p: f(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)], (2*%pi)/t^(ndim/2-1)*romberg(p, r, 0, 1));
+rombergtol: 1e-3;
+keepfloat:true$
 
-load("sph-kernel.mac");
+matchdeclare(rr, true);
+matchdeclare(oo, freeof(x));
+defmatch(fsin, rr*sin(oo*x), x);
+insin(F, r, a, b):= block([m, om, f],
+  m: fsin(F, r),
+  om: assoc('oo, m),
+  f:  assoc('rr, m),
+  quad_qawo(f, r, a, b, om, sin)[1]
+  );
+
 ndim: 3;
-wn: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 2)(r)], lambda([r], g));
-eq: getkernmom(wn, ndim, 2);
+load("sph-kernel.mac");
+/* w: normkern(wendland(ndim, 3), ndim); */
+kill(wl, dwl, w);
+M: 2;
+
+wraw: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
+eq: getkernmom(wraw, ndim, 2, 1);
 ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
-wn: subst(ro[1], eps, wn);
-/*wn: wendland(ndim, 1);*/
-wn: normkern(wn, ndim);
+w:  buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g));
+w: normkern(w, ndim, 1);
 
-Fb(f, ndim, t):= block([p: sin(t*r)*f(r)*r], romberg(p, r, 0, 1) * 4*%pi/t);
+assume(r>0);
+assume(r<1);
+f: Fn(w, 3, insin, 1);
+tl: linspace(1e-5, 6, 100)$
+fl: map(f, tl);
 
-/* F(wb, 2); */
+sig2: 1/ndim*getkernmom(w, ndim, 2, 1);
+h: max(abs(2*sqrt(sig2)), 1/2);
 
-ratprint: false;
-sigma: sqrt(getkernmom(lambda([u], abs(wn(u))), ndim, 2)/ndim);
-1/(2*sigma), numer;
-sigma: sqrt(1/15);
-Fb(wn, ndim, 1);
+kill(wb);
+wb[n](k):= 3*(n/k)^(n+2)*(sin(k/n))^n*(1-(k/n)*cot(k/n));
+wbfl: map(lambda([q], wb[4](2*%pi*q)), tl);
 
-plot2d(
-  [
-    [parametric, 2*sigma*u, lambda([u], abs(Fn(wn, ndim, u/(2*%pi)))), [u, 0.01, 3*%pi/(2*sigma)]],
-    [parametric, 2*sigma*u, lambda([u], abs(Fb(wn, ndim, u))), [u, 0.01, 3*%pi/(2*sigma)]]
+plot2d([
+       [discrete, %pi*h*tl, abs(fl)],
+       [discrete, %pi*h*tl, abs(wbfl)]
   ],
-  [logy], [y, 1e-6, 1]);
+  [logy], [y, 1e-6, 1.1], [x, 0, 3*%pi]);
+
+plot2d([
+       [discrete, %pi*h*tl, abs(fl)],
+       [discrete, %pi*h*tl, abs(wbfl)]
+  ],
+  [x, 0, 3*%pi]);
