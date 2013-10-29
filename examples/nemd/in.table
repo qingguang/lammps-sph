@@ -15,15 +15,18 @@ velocity	all create 1.44 87287 loop geom
 region		slice block 4 6 INF INF INF INF
 set		region slice type 2
 
-pair_style	lj/cut 2.5
-pair_coeff	* * 1.0 1.0 1.0
-pair_write       1 1 100 r 0.5 1.0 table.txt PREVED
+#pair_style	lj/cut 2.5
+#pair_coeff	* * 1.0 1.0 1.0
+pair_style table linear 3
+pair_coeff * * morse.table MORSE_FE 2.5
+
+
 
 neighbor	0.3 bin
 neigh_modify	delay 0 every 1
 
 fix		1 all nvt/sllod temp 1.0 1.0 1.0 tchain 1
-fix		2 all deform 1 xy erate 0.00 remap v
+fix		2 all deform 1 xy erate 0.01 remap v
 
 #dump		1 all custom 5000 dump.nemd id type x y z
 
