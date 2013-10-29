@@ -1,6 +1,5 @@
 /* returns a wendland polynom */
 load("pw.mac");
-load("nint");
 load("romberg");
 
 laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
@@ -63,37 +62,31 @@ Fn(w, ndim, ifun, cutoff):= subst(
       (2*%pi)*integrator(p, r, 1e-10, c)));
 linspace(a,b,n) := makelist(a+(i-1)*(b-a)/(n-1), i,1,n);
 
-rombergabs: 0;
-rombergtol: 1e-3;
-keepfloat:true$
-
 matchdeclare(rr, true);
 matchdeclare(oo, freeof(x));
 defmatch(fsin, rr*sin(oo*x), x);
-insin(F, r, a, b):= block([m, om, f],
-  m: fsin(F, r),
+/* integrate function of the form f(t)*sin(omega*t) */
+insin(F, x, a, b):= block([m, om, f],
+  m: fsin(F, x),
   om: assoc('oo, m),
   f:  assoc('rr, m),
-  quad_qawo(f, r, a, b, om, sin)[1]
+  quad_qawo(f, x, a, b, om, sin)[1]
   );
 
-ndim: 3;
+ndim: 2;
 load("sph-kernel.mac");
 /* w: normkern(wendland(ndim, 3), ndim); */
 kill(wl, dwl, w);
 M: 2;
 
+keepfloat: true;
 wraw: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
 eq: getkernmom(wraw, ndim, 2, 1);
 ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
-w:  buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g));
-w: normkern(w, ndim, 1);
+w: normkern(buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g)), ndim);
 
-assume(r>0);
-assume(r<1);
-f: Fn(w, 3, insin, 1);
+f: Fn(w, ndim, romberg, 1);
 tl: linspace(1e-5, 6, 100)$
-fl: map(f, tl);
 
 sig2: 1/ndim*getkernmom(w, ndim, 2, 1);
 h: max(abs(2*sqrt(sig2)), 1/2);
@@ -102,14 +95,9 @@ kill(wb);
 wb[n](k):= 3*(n/k)^(n+2)*(sin(k/n))^n*(1-(k/n)*cot(k/n));
 wbfl: map(lambda([q], wb[4](2*%pi*q)), tl);
 
-plot2d([
-       [discrete, %pi*h*tl, abs(fl)],
-       [discrete, %pi*h*tl, abs(wbfl)]
+plot2d(
+  [
+      [parametric, %pi*h*t, f(t)]
   ],
+  [t, 1e-5, 6], 
   [logy], [y, 1e-6, 1.1], [x, 0, 3*%pi]);
-
-plot2d([
-       [discrete, %pi*h*tl, abs(fl)],
-       [discrete, %pi*h*tl, abs(wbfl)]
-  ],
-  [x, 0, 3*%pi]);
