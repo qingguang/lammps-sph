@@ -2,28 +2,28 @@
 load("pw.mac");
 load("romberg");
 
-laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
+laguerre(g, k):= subst(gen_laguerre(k, g, 'r), body, lambda([r], body));
 
-wendland(ndim, k):= block([w],
+wendland(ndim, k):= block([w, r],
   local(plusfun, I, p),
   plusfun(x):= x*(signum(x)+1)/2,
-  I(phi):= ''(pwint(t*phi(t), t, r, +inf)),
-  p[l]:= if l=0 then 1 else buildq([g: plusfun(1-r)^l], lambda([r], g)),
-  I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, r, 1)], lambda([r], g))
+  I(phi):= ''(pwint(t*phi(t), t, 'r, +inf)),
+  p[l]:= if l=0 then 1 else buildq([g: plusfun(1-'r)^l], lambda([r], g)),
+  I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, 'r, 1)], lambda([r], g))
   else I[k-1, I[1, f]],
   w: I[k, p[floor(ndim/2)+k+1]],
-  buildq([g: fullratsimp(pwsimp(fullratsimp(w(abs(r))), r))], lambda([r], g))
+  buildq([g: fullratsimp(pwsimp(fullratsimp(w(abs('r))), 'r))], lambda([r], g))
   );
 
 /* takes a kernel function and returns a normalized version of it */
-normkern(w, ndim, [cutoff]):= block([wr, A],
+normkern(w, ndim, [cutoff]):= block([wr, A, r],
   cutoff: if emptyp(cutoff) then +inf else first(cutoff),
-  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
+  wr: buildq([g: if ndim=1 then 2*w('r) else if ndim=2 then 2*%pi*w('r)*'r else if ndim=3 then 4*%pi*w('r)*r^2], lambda([r], g)),
   A: fullratsimp(1/pwint( wr(r), r, 0, cutoff)),
-  buildq([g: A*w(r)], lambda([r], g)));
+  buildq([g: A*w('r)], lambda([r], g)));
 
 /* returns Nth moment of the kernel */
-getkernmom(w, ndim, N, [cutoff]):= block([wr],
+getkernmom(w, ndim, N, [cutoff]):= block([wr, r],
   cutoff: if emptyp(cutoff) then +inf else first(cutoff),
   wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
   fullratsimp(pwint(r^N*wr(r), r, 0, cutoff)));
@@ -35,12 +35,12 @@ Define b-spline function with explicit formula and via convolution
 http://sepwww.stanford.edu/public/docs/sep105/sergey2/paper_html/node5.html
 http://crsouza.blogspot.de/2010/03/kernel-functions-for-machine-learning.html#bspline
 */
-bspline(n):= block([x],
+bspline(n):= block([x, r],
   buildq([
     g: fullratsimp(pwsimp(1/n!*sum(binomial(n+1,k)*(-1)^k*plusfun((n+1)/2*x+(n+1)/2-k)^n, k, 0, n+1), x))],
     lambda([x], g)));
 
-bspline_c(k):= block([w, n],
+bspline_c(k):= block([w, n, r],
   local(unitbox, I),
   unitbox(x):= (signum(x+1/2)-signum(x-1/2))/2,
   I[n]:= if n=0 then lambda([x], unitbox(x)) else block([f: I[n-1]],
@@ -52,9 +52,8 @@ bspline_c(k):= block([w, n],
 
 matchdeclare(www, true);
 tellsimp(bessel_j(1/2, www), sqrt(2/(%pi*www))*sin(www));
-load("romberg");
 Fn(w, ndim, ifun, cutoff):= subst(
-  [p=block([], local(r, t), assume(r>0), assume(t>0), fullratsimp(w(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)/t^(ndim/2-1))),
+  [p=block([], local(r), assume(r>0), assume(t>0), fullratsimp(w(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)/t^(ndim/2-1))),
   integrator=ifun,
   c=cutoff,
   nd=ndim],
@@ -72,44 +71,3 @@ insin(F, x, a, b):= block([m, om, f],
   f:  assoc('rr, m),
   quad_qawo(f, x, a, b, om, sin)[1]
   );
-
-ndim: 2;
-load("sph-kernel.mac");
-/* w: normkern(wendland(ndim, 3), ndim); */
-kill(wl, dwl, w);
-M: 2;
-
-keepfloat: true;
-wraw: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
-eq: getkernmom(wraw, ndim, 2, 1);
-ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
-
-w1: buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g));
-w2: buildq([g: subst(ro[2], eps, wraw(r))], lambda([r], g));
-
-/*  eq_ab: subst(0, r, diff(w1(r), r, 2)) + B*subst(0, r, diff(w2(r), r, 2)) = 0; */
-eq_ab: getkernmom(lambda([r], w1(r)+B*w2(r)), ndim, 4);
-Bin: rhs(float(solve(eq_ab, B)[1]));
-wbn: buildq([g: fullratsimp(w1(r) + Bin*w2(r))], lambda([r], g));
-
-w: normkern(wbn, ndim, 1);
-w1: normkern(w1, ndim, 1);
-
-f: Fn(w, ndim, romberg, 1);
-f1: Fn(w1, ndim, romberg, 1);
-
-sig2: 1/ndim*getkernmom(w, ndim, 2, 1);
-h: max(abs(2*sqrt(sig2)), 1/2);
-
-kill(wb);
-wb[n](k):= 3*(n/k)^(n+2)*(sin(k/n))^n*(1-(k/n)*cot(k/n));
-wbfl: map(lambda([q], wb[4](2*%pi*q)), tl);
-
-plot2d(
-  [
-      [parametric, %pi*h*t, f(t)],
-      [parametric, %pi*h*t, f1(t)]
-  ],
-  ['nticks, 500],
-  ['t, 1e-5, 6], 
-  ['logy], ['y, 1e-6, 1.1], ['x, 0, 3*%pi]);
