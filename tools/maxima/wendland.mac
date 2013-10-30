@@ -83,10 +83,20 @@ keepfloat: true;
 wraw: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 1)(r)], lambda([r], g));
 eq: getkernmom(wraw, ndim, 2, 1);
 ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
-w: normkern(buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g)), ndim);
+
+w1: buildq([g: subst(ro[1], eps, wraw(r))], lambda([r], g));
+w2: buildq([g: subst(ro[2], eps, wraw(r))], lambda([r], g));
+
+/*  eq_ab: subst(0, r, diff(w1(r), r, 2)) + B*subst(0, r, diff(w2(r), r, 2)) = 0; */
+eq_ab: getkernmom(lambda([r], w1(r)+B*w2(r)), ndim, 4);
+Bin: rhs(float(solve(eq_ab, B)[1]));
+wbn: buildq([g: fullratsimp(w1(r) + Bin*w2(r))], lambda([r], g));
+
+w: normkern(wbn, ndim, 1);
+w1: normkern(w1, ndim, 1);
 
 f: Fn(w, ndim, romberg, 1);
-tl: linspace(1e-5, 6, 100)$
+f1: Fn(w1, ndim, romberg, 1);
 
 sig2: 1/ndim*getkernmom(w, ndim, 2, 1);
 h: max(abs(2*sqrt(sig2)), 1/2);
@@ -97,7 +107,9 @@ wbfl: map(lambda([q], wb[4](2*%pi*q)), tl);
 
 plot2d(
   [
-      [parametric, %pi*h*t, f(t)]
+      [parametric, %pi*h*t, f(t)],
+      [parametric, %pi*h*t, f1(t)]
   ],
-  [t, 1e-5, 6], 
-  [logy], [y, 1e-6, 1.1], [x, 0, 3*%pi]);
+  ['nticks, 500],
+  ['t, 1e-5, 6], 
+  ['logy], ['y, 1e-6, 1.1], ['x, 0, 3*%pi]);
