@@ -44,7 +44,7 @@ enum{ID,MOL,TYPE,ELEMENT,MASS,
      TQX,TQY,TQZ,SPIN,ERADIUS,ERVEL,ERFORCE,
      COMPUTE,FIX,VARIABLE};
 enum{LT,LE,GT,GE,EQ,NEQ};
-enum{INT,DOUBLE,STRING};
+enum{INT,DOUBLE,STRING};    // same as in DumpCFG
 
 #define INVOKED_PERATOM 8
 
@@ -540,7 +540,8 @@ int DumpCustom::count()
         tagint *image = atom->image;
         double yprd = domain->yprd;
         for (i = 0; i < nlocal; i++)
-          dchoose[i] = x[i][1] + ((image[i] >> IMGBITS & IMGMASK) - IMGMAX) * yprd;
+          dchoose[i] = x[i][1] + 
+            ((image[i] >> IMGBITS & IMGMASK) - IMGMAX) * yprd;
         ptr = dchoose;
         nstride = 1;
       } else if (thresh_array[ithresh] == ZU) {

@@ -42,6 +42,7 @@ PairPeriLPS::PairPeriLPS(LAMMPS *lmp) : Pair(lmp)
 {
   for (int i = 0; i < 6; i++) virial[i] = 0.0;
   no_virial_fdotr_compute = 1;
+  single_enable = 0;
 
   ifix_peri = -1;
 
@@ -501,102 +502,6 @@ void PairPeriLPS::read_restart(FILE *fp)
         MPI_Bcast(&cut[i][j],1,MPI_DOUBLE,0,world);
       }
     }
-}
-
-/* ---------------------------------------------------------------------- */
-
-double PairPeriLPS::single(int i, int j, int itype, int jtype,
-                           double rsq, double factor_coul, double factor_lj,
-                           double &fforce)
-{
-  double delx0,dely0,delz0,rsq0;
-  double d_ij,r,dr,rk,vfrac_scale;
-
-  double *vfrac = atom->vfrac;
-  double **x0 = atom->x0;
-  double **r0   = ((FixPeriNeigh *) modify->fix[ifix_peri])->r0;
-  int **partner = ((FixPeriNeigh *) modify->fix[ifix_peri])->partner;
-  int *npartner = ((FixPeriNeigh *) modify->fix[ifix_peri])->npartner;
-  double *wvolume = ((FixPeriNeigh *) modify->fix[ifix_peri])->wvolume;
-
-  double lc = domain->lattice->xlattice;
-  double half_lc = 0.5*lc;
-
-  double kshort;
-
-  delx0 = x0[i][0] - x0[j][0];
-  dely0 = x0[i][1] - x0[j][1];
-  delz0 = x0[i][2] - x0[j][2];
-  int periodic = domain->xperiodic || domain->yperiodic || domain->zperiodic;
-  if (periodic) domain->minimum_image(delx0,dely0,delz0);
-  rsq0 = delx0*delx0 + dely0*dely0 + delz0*delz0;
-
-  d_ij = MIN(0.9*sqrt(rsq0),1.35*lc);
-  r = sqrt(rsq);
-
-  double energy = 0.0;
-  fforce = 0.0;
-
-  if (r < d_ij) {
-    dr = r - d_ij;
-    // kshort resembles short-range force constant of bond-based theory in 3d
-    kshort = (15.0 * 18.0 * bulkmodulus[itype][itype]) /
-             ( 3.141592653589793 * cutsq[itype][jtype] * cutsq[itype][jtype]);
-    rk = ( kshort * vfrac[j]) * (dr / sqrt(cutsq[itype][jtype]));
-    if (r > 0.0) fforce += -(rk/r);
-    energy += 0.5*rk*dr;
-  }
-
-   if (atom->nmax > nmax) {
-    memory->destroy(theta);
-    nmax = atom->nmax;
-    memory->create(theta,nmax,"pair:theta");
-  }
-
-  // Compute the dilatation on each particle
-  compute_dilatation();
-
-  // communicate dilatation (theta) of each particle
-  comm->forward_comm_pair(this);
-  // communicate wighted volume (wvolume) upon every reneighbor
-  if (neighbor->ago == 0)
-    comm->forward_comm_fix(modify->fix[ifix_peri]);
-
-  double omega_plus, omega_minus;
-
-  int jnum = npartner[i];
-  for (int jj = 0; jj < jnum; jj++) {
-    if (partner[i][jj] == 0) continue;
-    if (j < 0) continue;
-    if (j == atom->map(partner[i][jj])) {
-      dr = r - r0[i][jj];
-      if (fabs(dr) < 2.2204e-016) dr = 0.0;
-
-      // scale vfrac[j] if particle j near the horizon
-
-      if ( (fabs(r0[i][jj] - sqrt(cutsq[itype][jtype]))) <= half_lc)
-        vfrac_scale = (-1.0/(2*half_lc))*(r0[i][jj]) +
-          (1.0 + ((sqrt(cutsq[itype][jtype]) - half_lc)/(2*half_lc)));
-      else vfrac_scale = 1.0;
-
-      omega_plus  = influence_function(-1.0*delx0,-1.0*dely0,-1.0*delz0);
-      omega_minus = influence_function(delx0,dely0,delz0);
-      rk = (3.0* bulkmodulus[itype][itype] -5.0 * shearmodulus[itype][itype]) *
-        vfrac[j] * vfrac_scale  * ( (omega_plus * theta[i] / wvolume[i]) +
-                                    (omega_minus * theta[j] / wvolume[j])) *
-        r0[i][jj];
-      rk +=  15.0 * ( shearmodulus[itype][itype] * vfrac[j] * vfrac_scale ) *
-        ( (omega_plus / wvolume[i]) + (omega_minus / wvolume[j]) ) * dr;
-
-      if (r > 0.0) fforce += -(rk/r);
-        energy += 0.5 * 15 * (shearmodulus[itype][itype]/wvolume[i]) *
-          omega_plus * (  dr - theta[i]* r0[i][jj] / 3.0 ) *
-          (  dr - theta[i]* r0[i][jj] / 3.0 ) * vfrac[j] * vfrac_scale;
-
-     }
-  }
-
-  return energy;
 }
 
 /* ----------------------------------------------------------------------

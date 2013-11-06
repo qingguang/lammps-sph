@@ -593,6 +593,11 @@ int AtomVecEllipsoid::pack_border(int n, int *list, double *buf,
       }
     }
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->pack_border(n,list,&buf[m]);
+
   return m;
 }
 
@@ -657,7 +662,8 @@ int AtomVecEllipsoid::pack_border_vel(int n, int *list, double *buf,
         if (ellipsoid[j] < 0) buf[m++] = 0;
         else {
           buf[m++] = 1;
-          quat = bonus[ellipsoid[j]].quat;
+          shape = bonus[ellipsoid[j]].shape;
+          quat  = bonus[ellipsoid[j]].quat;
           buf[m++] = shape[0];
           buf[m++] = shape[1];
           buf[m++] = shape[2];
@@ -713,6 +719,11 @@ int AtomVecEllipsoid::pack_border_vel(int n, int *list, double *buf,
       }
     }
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->pack_border(n,list,&buf[m]);
+
   return m;
 }
 
@@ -779,6 +790,11 @@ void AtomVecEllipsoid::unpack_border(int n, int first, double *buf)
       nghost_bonus++;
     }
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->
+        unpack_border(n,first,&buf[m]);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -823,6 +839,11 @@ void AtomVecEllipsoid::unpack_border_vel(int n, int first, double *buf)
     angmom[i][1] = buf[m++];
     angmom[i][2] = buf[m++];
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->
+        unpack_border(n,first,&buf[m]);
 }
 
 /* ---------------------------------------------------------------------- */
