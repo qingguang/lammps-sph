@@ -85,6 +85,7 @@ Output::Output(LAMMPS *lmp) : Pointers(lmp)
   dump = NULL;
 
   restart_flag = restart_flag_single = restart_flag_double = 0;
+  restart_every_single = restart_every_double = 0;
   last_restart = -1;
   restart1 = restart2a = restart2b = NULL;
   var_restart_single = var_restart_double = NULL;
@@ -543,7 +544,8 @@ void Output::add_dump(int narg, char **arg)
       error->all(FLERR,"Reuse of dump ID");
   int igroup = group->find(arg[1]);
   if (igroup == -1) error->all(FLERR,"Could not find dump group ID");
-  if (force->inumeric(FLERR,arg[3]) <= 0) error->all(FLERR,"Invalid dump frequency");
+  if (force->inumeric(FLERR,arg[3]) <= 0) 
+    error->all(FLERR,"Invalid dump frequency");
 
   // extend Dump list if necessary
 

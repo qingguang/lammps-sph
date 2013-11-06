@@ -36,6 +36,7 @@ class FixRigid : public Fix {
   virtual void final_integrate();
   void initial_integrate_respa(int, int, int);
   void final_integrate_respa(int, int);
+  void write_restart_file(char *);
   virtual double compute_scalar();
   virtual int modify_param(int, char **) {return 0;}
   
@@ -50,7 +51,11 @@ class FixRigid : public Fix {
   int dof(int);
   void deform(int);
   void reset_dt();
-  virtual void *extract(const char*,int &);
+  void zero_momentum();
+  void zero_rotation();
+  virtual void *extract(const char*, int &);
+  double extract_ke();
+  double extract_erotational();
   double compute_array(int, int);
     
  protected:
@@ -60,14 +65,15 @@ class FixRigid : public Fix {
   int triclinic;
   double MINUSPI,TWOPI;
 
+  char *infile;             // file to read rigid body attributes from
   int rstyle;               // SINGLE,MOLECULE,GROUP
   int firstflag;            // 1 for first-time setup of rigid bodies
-  char *infile;             // file to read rigid body attributes from
 
   int dimension;            // # of dimensions
   int nbody;                // # of rigid bodies
   int *nrigid;              // # of atoms in each rigid body
   int *mol2body;            // convert mol-ID to rigid body index
+  int *body2mol;            // convert rigid body index to mol-ID
   int maxmol;               // size of mol2body = max mol-ID
 
   int *body;                // which body each atom is part of (-1 if none)
@@ -130,7 +136,8 @@ class FixRigid : public Fix {
   void no_squish_rotate(int, double *, double *, double *, double) const;
   void set_xv();
   void set_v();
-  void setup_bodies();
+  void setup_bodies_static();
+  void setup_bodies_dynamic();
   void readfile(int, double *, double **, int *);
 };
 

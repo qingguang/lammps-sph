@@ -1435,6 +1435,12 @@ void Pair::virial_fdotr_compute()
       virial[5] += f[i][2]*x[i][1];
     }
   }
+  
+  // prevent multiple calls to update the virial
+  // when a hybrid pair style uses both a gpu and non-gpu pair style
+  // or when respa is used with gpu pair styles
+
+  vflag_fdotr = 0;
 }
 
 /* ----------------------------------------------------------------------
@@ -1486,8 +1492,11 @@ void Pair::write_file(int narg, char **arg)
 
   // initialize potentials before evaluating pair potential
   // insures all pair coeffs are set and force constants
+  // also initialize neighbor so that neighbor requests are processed
+  // NOTE: might be safest to just do lmp->init()
 
   force->init();
+  neighbor->init();
 
   // if pair style = any of EAM, swap in dummy fp vector
 

@@ -65,6 +65,7 @@ void CreateAtoms::command(int narg, char **arg)
     nregion = domain->find_region(arg[2]);
     if (nregion == -1) error->all(FLERR,
                                   "Create_atoms region ID does not exist");
+    domain->regions[nregion]->init();
     iarg = 3;;
   } else if (strcmp(arg[1],"single") == 0) {
     style = SINGLE;
@@ -83,6 +84,7 @@ void CreateAtoms::command(int narg, char **arg)
       nregion = domain->find_region(arg[4]);
       if (nregion == -1) error->all(FLERR,
                                     "Create_atoms region ID does not exist");
+      domain->regions[nregion]->init();
     }
     iarg = 5;
   } else error->all(FLERR,"Illegal create_atoms command");
@@ -234,9 +236,14 @@ void CreateAtoms::command(int narg, char **arg)
   // reset simulation now that more atoms are defined
   // add tags for newly created atoms if possible
   // if global map exists, reset it
-
   // change these to MAXTAGINT when allow tagint = bigint
-  if (atom->natoms > MAXSMALLINT) atom->tag_enable = 0;
+
+  if (atom->natoms > MAXSMALLINT) {
+    if (comm->me == 0) 
+      error->warning(FLERR,"Total atom count exceeds ID limit, "
+                     "atoms will not have individual IDs");
+    atom->tag_enable = 0;
+  }
   if (atom->natoms <= MAXSMALLINT) atom->tag_extend();
 
   if (atom->map_style) {
