@@ -14,7 +14,7 @@ nproc=1
 ndim=2
 sdpd_eta=25.0
 sdpd_background=0.0
-sdpd_c=1e3
+sdpd_c=1.0
 dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}gamma
 Nbeadsinswimmer=10
 

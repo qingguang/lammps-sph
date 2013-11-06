@@ -18,7 +18,7 @@ pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 special_bonds      lj 1 1 1 angle no
 
 angle_style        harmonic
-angle_coeff        * 3.0 90
+angle_coeff        * 1.0 90
 
 bond_style         fene
 bond_coeff         1 ${fene_H} ${fene_r0} 0 0
@@ -40,7 +40,8 @@ dump_modify        dump_id pad 8
 
 include            ${ndim}d-image.lmp
 
-thermo_style       custom step c_sdpd_kin v_nTemp
+variable           time  equal dt*step
+thermo_style       custom step c_sdpd_kin v_nTemp v_time
 thermo_modify      norm no
 thermo             100
 
@@ -56,7 +57,6 @@ restart 10000 ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-variable            hangle equal sin(${dt})
-run     200000 pre no post no every  10 &
-"angle_coeff        * v_hangle 90"
+run     10000 pre no post no
+
 
