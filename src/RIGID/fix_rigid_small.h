@@ -43,6 +43,7 @@ class FixRigidSmall : public Fix {
   virtual void final_integrate();
   void initial_integrate_respa(int, int, int);
   void final_integrate_respa(int, int);
+  void write_restart_file(char *);
 
   void grow_arrays(int);
   void copy_arrays(int, int, int);
@@ -59,7 +60,11 @@ class FixRigidSmall : public Fix {
   int dof(int);
   void deform(int);
   void reset_dt();
-  void *extract(const char*,int &);
+  void zero_momentum();
+  void zero_rotation();
+  void *extract(const char*, int &);
+  double extract_ke();
+  double extract_erotational();
   double compute_scalar();
   double memory_usage();
 
@@ -70,9 +75,11 @@ class FixRigidSmall : public Fix {
   int triclinic;
   double MINUSPI,TWOPI;
 
+  char *infile;             // file to read rigid body attributes from
   int firstflag;            // 1 for first-time setup of rigid bodies
   int commflag;             // various modes of forward/reverse comm
   int nbody;                // total # of rigid bodies
+  int maxmol;               // max mol-ID
   double maxextent;         // furthest distance from body owner to body atom
 
   struct Body {
@@ -154,7 +161,9 @@ class FixRigidSmall : public Fix {
   void set_xv();
   void set_v();
   void create_bodies();
-  void setup_bodies();
+  void setup_bodies_static();
+  void setup_bodies_dynamic();
+  void readfile(int, double **, int *);
   void grow_body();
   void reset_atom2body();
 

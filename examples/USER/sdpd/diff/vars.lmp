@@ -1,6 +1,6 @@
 variable           kb  equal 1.3806503e-23
 
-variable           Lx  equal 1.2
+variable           Lx  equal 1.2*${nx}/30
 variable           Ly  equal ${Lx}
 if "${ndim}==3" then "variable           Lz  equal ${Lx}"
 

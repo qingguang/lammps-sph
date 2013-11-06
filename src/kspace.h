@@ -48,7 +48,7 @@ class KSpace : protected Pointers {
   int slabflag;
   double slab_volfactor;
 
-  int order,order_6;
+  int order,order_6,order_allocated;
   double accuracy;                  // accuracy of KSpace solver (force units)
   double accuracy_absolute;         // user-specifed accuracy in force units
   double accuracy_relative;         // user-specified dimensionless accuracy
@@ -142,6 +142,9 @@ class KSpace : protected Pointers {
     } else
       return (-1.0/rho/rho);
   }
+  
+  double **get_gcons() { return gcons; }
+  double **get_dgcons() { return dgcons; }
 
  protected:
   int gridflag,gridflag_6;
@@ -156,6 +159,9 @@ class KSpace : protected Pointers {
   int eflag_either,eflag_global,eflag_atom;
   int vflag_either,vflag_global,vflag_atom;
   int maxeatom,maxvatom;
+
+  int kewaldflag;                   // 1 if kspace range set for Ewald sum
+  int kx_ewald,ky_ewald,kz_ewald;   // kspace settings for Ewald sum
 
   void pair_check();
   void ev_setup(int, int);
@@ -195,6 +201,10 @@ command-line option when running LAMMPS to see the offending line.
 E: Bad kspace_modify slab parameter
 
 Kspace_modify value for the slab/volume keyword must be >= 2.0.
+
+E: Bad kspace_modify kmax/ewald parameter
+
+Kspace_modify values for the kmax/ewald keyword must be integers > 0
 
 W: Kspace_modify slab param < 2.0 may cause unphysical behavior
 

@@ -17,7 +17,7 @@
 </PRE>
 <UL><LI>one or more keyword/value pairs may be listed 
 
-<LI>keyword = <I>mesh</I> or <I>order</I> or <I>order/disp</I> or <I>overlap</I> or <I>minorder</I> or <I>force</I> or <I>gewald</I> or <I>gewald/disp</I> or <I>slab</I> or (nozforce</I> or <I>compute</I> or <I>cutoff/adjust</I> or <I>diff</I> 
+<LI>keyword = <I>mesh</I> or <I>order</I> or <I>order/disp</I> or <I>overlap</I> or <I>minorder</I> or <I>force</I> or <I>gewald</I> or <I>gewald/disp</I> or <I>slab</I> or (nozforce</I> or <I>compute</I> or <I>cutoff/adjust</I> or <I>diff</I> or <I>kmax/ewald</I> 
 
 <PRE>  <I>mesh</I> value = x y z
     x,y,z = grid size in each dimension for long-range Coulombics
@@ -43,6 +43,8 @@
   <I>cutoff/adjust</I> value = <I>yes</I> or <I>no</I> 
   <I>fftbench</I> value = <I>yes</I> or <I>no</I> 
   <I>diff</I> value = <I>ad</I> or <I>ik</I> = 2 or 4 FFTs for PPPM in smoothed or non-smoothed mode 
+  <I>kmax/ewald</I> value = kx ky kz 
+    kx,ky,kz = number of Ewald sum kspace vectors in each dimension 
 </PRE>
 
 </UL>
@@ -167,14 +169,16 @@ value is inefficient; a smaller value introduces unwanted slab-slab
 interactions.  The use of fixed boundaries in z means that the user
 must prevent particle migration beyond the initial z-bounds, typically
 by providing a wall-style fix.  The methodology behind the <I>slab</I>
-option is explained in the paper by <A HREF = "#Yeh">(Yeh)</A>.  An alternative slab
-option can be invoked with the <I>nozforce</I> keyword in lieu of the
-volfactor. This turns off all kspace forces in the z direction. 
-The <I>nozforce</I> option is not supported by MSM. For MSM, any combination
-of periodic, non-periodic, or shrink-wrapped boundaries can be set 
-using <A HREF = "boundary.html">boundary</A> (the slab approximation in not needed).
-The <I>slab</I> keyword is not currently supported by Ewald or PPPM when
-using a triclinic simulation cell.
+option is explained in the paper by <A HREF = "#Yeh">(Yeh)</A>.  The <I>slab</I> option
+is also extended to non-neutral systems
+<A HREF = "#Ballenegger">(Ballenegger)</A>. An alternative slab option can be
+invoked with the <I>nozforce</I> keyword in lieu of the volfactor. This
+turns off all kspace forces in the z direction.  The <I>nozforce</I> option
+is not supported by MSM. For MSM, any combination of periodic,
+non-periodic, or shrink-wrapped boundaries can be set using
+<A HREF = "boundary.html">boundary</A> (the slab approximation in not needed).  The
+<I>slab</I> keyword is not currently supported by Ewald or PPPM when using
+a triclinic simulation cell.
 </P>
 <P>The <I>compute</I> keyword allows Kspace computations to be turned off,
 even though a <A HREF = "kspace_style.html">kspace_style</A> is defined.  This is
@@ -220,6 +224,17 @@ always used for MSM.
 <P>IMPORTANT NOTE: Currently, not all PPPM styles support the <I>ad</I>
 option.  Support for those PPPM variants will be added later.
 </P>
+<P>The <I>kmax/ewald</I> keyword sets the number of kspace vectors in
+each dimension for kspace style <I>ewald</I>.  The three values must
+be positive integers, or else (0,0,0), which unsets the option. 
+When this option is not 
+set, the Ewald sum scheme chooses its own kspace vectors, 
+consistent with the
+user-specified accuracy and pairwise cutoff. In any case,
+if kspace style <I>ewald</I> is invoked, the values used 
+are printed to the screen and
+the log file at the start of the run.
+</P>
 <P><B>Restrictions:</B> none
 </P>
 <P><B>Related commands:</B>
@@ -229,7 +244,7 @@ option.  Support for those PPPM variants will be added later.
 <P><B>Default:</B>
 </P>
 <P>The option defaults are mesh = mesh/disp = 0 0 0, order = order/disp =
-5 (PPPM), order = 8 (MSM), minorder = 2, overlap = yes, force = -1.0,
+5 (PPPM), order = 10 (MSM), minorder = 2, overlap = yes, force = -1.0,
 gewald = gewald/disp = 0.0, slab = 1.0, compute = yes, cutoff/adjust =
 yes (MSM), fftbench = yes (PPPM), and diff = ik (PPPM).
 </P>
@@ -243,6 +258,11 @@ Adam Hilger, NY (1989).
 <A NAME = "Yeh"></A>
 
 <P><B>(Yeh)</B> Yeh and Berkowitz, J Chem Phys, 111, 3155 (1999).
+</P>
+<A NAME = "Ballenegger"></A>
+
+<P><B>(Ballenegger)</B> Ballenegger, Arnold, Cerda, J Chem Phys, 131, 094107
+(2009).
 </P>
 <A NAME = "Hardy"></A>
 

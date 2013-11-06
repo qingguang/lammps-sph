@@ -63,7 +63,7 @@ if (test $1 = "style") then
   style BODY_CLASS      body_       body       atom_vec_body
   style BOND_CLASS      bond_       bond       force
   style COMMAND_CLASS   ""          command    input
-  style COMPUTE_CLASS   compute_    compute    modify
+  style COMPUTE_CLASS   compute_    compute    modify    modify_cuda
   style DIHEDRAL_CLASS  dihedral_   dihedral   force
   style DUMP_CLASS      dump_       dump       output
   style FIX_CLASS       fix_        fix        modify
@@ -71,7 +71,7 @@ if (test $1 = "style") then
   style INTEGRATE_CLASS ""          integrate  update
   style KSPACE_CLASS    ""          kspace     force
   style MINIMIZE_CLASS  min_        minimize   update
-  style PAIR_CLASS      pair_       pair       force      pair_hybrid
+  style PAIR_CLASS      pair_       pair       force
   style READER_CLASS    reader_     reader     read_dump
   style REGION_CLASS    region_     region     domain
 

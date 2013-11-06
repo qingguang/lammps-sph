@@ -89,6 +89,7 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
   int iarg;
 
   mol2body = NULL;
+  body2mol = NULL;
 
   // single rigid body
   // nbody = 1
@@ -138,13 +139,19 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
     for (i = 0; i < nlocal; i++)
       if (mask[i] & groupbit) ncount[molecule[i]]++;
 
-    memory->create(mol2body,maxmol+1,"rigid:ncount");
+    memory->create(mol2body,maxmol+1,"rigid:mol2body");
     MPI_Allreduce(ncount,mol2body,maxmol+1,MPI_INT,MPI_SUM,world);
 
     nbody = 0;
     for (i = 0; i <= maxmol; i++)
       if (mol2body[i]) mol2body[i] = nbody++;
       else mol2body[i] = -1;
+
+    memory->create(body2mol,nbody,"rigid:body2mol");
+
+    nbody = 0;
+    for (i = 0; i <= maxmol; i++)
+      if (mol2body[i] >= 0) body2mol[nbody++] = i;
 
     for (i = 0; i < nlocal; i++) {
       body[i] = -1;
@@ -356,7 +363,8 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
       pcouple = XYZ;
       p_start[0] = p_start[1] = p_start[2] = force->numeric(FLERR,arg[iarg+1]);
       p_stop[0] = p_stop[1] = p_stop[2] = force->numeric(FLERR,arg[iarg+2]);
-      p_period[0] = p_period[1] = p_period[2] = force->numeric(FLERR,arg[iarg+3]);
+      p_period[0] = p_period[1] = p_period[2] = 
+        force->numeric(FLERR,arg[iarg+3]);
       p_flag[0] = p_flag[1] = p_flag[2] = 1;
       if (dimension == 2) {
 	      p_start[2] = p_stop[2] = p_period[2] = 0.0;
@@ -370,7 +378,8 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
 	      error->all(FLERR,"Illegal fix rigid command");
       p_start[0] = p_start[1] = p_start[2] = force->numeric(FLERR,arg[iarg+1]);
       p_stop[0] = p_stop[1] = p_stop[2] = force->numeric(FLERR,arg[iarg+2]);
-      p_period[0] = p_period[1] = p_period[2] = force->numeric(FLERR,arg[iarg+3]);
+      p_period[0] = p_period[1] = p_period[2] = 
+        force->numeric(FLERR,arg[iarg+3]);
       p_flag[0] = p_flag[1] = p_flag[2] = 1;
       if (dimension == 2) {
       	p_start[2] = p_stop[2] = p_period[2] = 0.0;
@@ -451,6 +460,7 @@ FixRigid::FixRigid(LAMMPS *lmp, int narg, char **arg) :
       int n = strlen(arg[iarg+1]) + 1;
       infile = new char[n];
       strcpy(infile,arg[iarg+1]);
+      restart_file = 1;
       iarg += 2;
 
     } else error->all(FLERR,"Illegal fix rigid command");
@@ -537,6 +547,7 @@ FixRigid::~FixRigid()
   delete random;
   delete [] infile;
   memory->destroy(mol2body);
+  memory->destroy(body2mol);
 
   // delete locally stored arrays
 
@@ -628,10 +639,14 @@ void FixRigid::init()
     step_respa = ((Respa *) update->integrate)->step;
 
   // one-time initialization of rigid body attributes
-  // extended flags, masstotal, COM, inertia tensor
+  // setup_bodies_static = extended flags, masstotal, COM, inertia tensor
+  // setup_bodies_dynamic = vcm and angmom
 
-  if (firstflag) setup_bodies();
-  firstflag = 0;
+  if (firstflag) {
+    firstflag = 0;
+    setup_bodies_static();
+    setup_bodies_dynamic();
+  }
 
   // temperature scale factor
 
@@ -644,20 +659,19 @@ void FixRigid::init()
   else tfactor = 0.0;
 }
 
-/* ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+   compute initial fcm and torque on bodies, also initial virial
+   reset all particle velocities to be consistent with vcm and omega
+------------------------------------------------------------------------- */
 
 void FixRigid::setup(int vflag)
 {
   int i,n,ibody;
   double massone,radone;
 
-  // vcm = velocity of center-of-mass of each rigid body
   // fcm = force on center-of-mass of each rigid body
 
-  double **v = atom->v;
   double **f = atom->f;
-  double *rmass = atom->rmass;
-  double *mass = atom->mass;
   int *type = atom->type;
   int nlocal = atom->nlocal;
 
@@ -667,29 +681,19 @@ void FixRigid::setup(int vflag)
   for (i = 0; i < nlocal; i++) {
     if (body[i] < 0) continue;
     ibody = body[i];
-    if (rmass) massone = rmass[i];
-    else massone = mass[type[i]];
-
-    sum[ibody][0] += v[i][0] * massone;
-    sum[ibody][1] += v[i][1] * massone;
-    sum[ibody][2] += v[i][2] * massone;
-    sum[ibody][3] += f[i][0];
-    sum[ibody][4] += f[i][1];
-    sum[ibody][5] += f[i][2];
+    sum[ibody][0] += f[i][0];
+    sum[ibody][1] += f[i][1];
+    sum[ibody][2] += f[i][2];
   }
 
   MPI_Allreduce(sum[0],all[0],6*nbody,MPI_DOUBLE,MPI_SUM,world);
 
   for (ibody = 0; ibody < nbody; ibody++) {
-    vcm[ibody][0] = all[ibody][0]/masstotal[ibody];
-    vcm[ibody][1] = all[ibody][1]/masstotal[ibody];
-    vcm[ibody][2] = all[ibody][2]/masstotal[ibody];
-    fcm[ibody][0] = all[ibody][3];
-    fcm[ibody][1] = all[ibody][4];
-    fcm[ibody][2] = all[ibody][5];
+    fcm[ibody][0] = all[ibody][0];
+    fcm[ibody][1] = all[ibody][1];
+    fcm[ibody][2] = all[ibody][2];
   }
 
-  // angmom = angular momentum of each rigid body
   // torque = torque on each rigid body
 
   tagint *image = atom->image;
@@ -710,52 +714,23 @@ void FixRigid::setup(int vflag)
     dy = unwrap[1] - xcm[ibody][1];
     dz = unwrap[2] - xcm[ibody][2];
 
-    if (rmass) massone = rmass[i];
-    else massone = mass[type[i]];
-
-    sum[ibody][0] += dy * massone*v[i][2] - dz * massone*v[i][1];
-    sum[ibody][1] += dz * massone*v[i][0] - dx * massone*v[i][2];
-    sum[ibody][2] += dx * massone*v[i][1] - dy * massone*v[i][0];
-    sum[ibody][3] += dy * f[i][2] - dz * f[i][1];
-    sum[ibody][4] += dz * f[i][0] - dx * f[i][2];
-    sum[ibody][5] += dx * f[i][1] - dy * f[i][0];
+    sum[ibody][0] += dy * f[i][2] - dz * f[i][1];
+    sum[ibody][1] += dz * f[i][0] - dx * f[i][2];
+    sum[ibody][2] += dx * f[i][1] - dy * f[i][0];
   }
 
-  // extended particles add their rotation/torque to angmom/torque of body
+  // extended particles add their torque to torque of body
 
   if (extended) {
-    AtomVecLine::Bonus *lbonus;
-    if (avec_line) lbonus = avec_line->bonus;
-    double **omega_one = atom->omega;
-    double **angmom_one = atom->angmom;
     double **torque_one = atom->torque;
-    double *radius = atom->radius;
-    int *line = atom->line;
 
     for (i = 0; i < nlocal; i++) {
       if (body[i] < 0) continue;
       ibody = body[i];
-
-      if (eflags[i] & OMEGA) {
-        if (eflags[i] & SPHERE) {
-          radone = radius[i];
-          sum[ibody][0] += SINERTIA*rmass[i] * radone*radone * omega_one[i][0];
-          sum[ibody][1] += SINERTIA*rmass[i] * radone*radone * omega_one[i][1];
-          sum[ibody][2] += SINERTIA*rmass[i] * radone*radone * omega_one[i][2];
-        } else if (eflags[i] & LINE) {
-          radone = lbonus[line[i]].length;
-          sum[ibody][2] += LINERTIA*rmass[i] * radone*radone * omega_one[i][2];
-        }
-      }
-      if (eflags[i] & ANGMOM) {
-        sum[ibody][0] += angmom_one[i][0];
-        sum[ibody][1] += angmom_one[i][1];
-        sum[ibody][2] += angmom_one[i][2];
-      }
       if (eflags[i] & TORQUE) {
-        sum[ibody][3] += torque_one[i][0];
-        sum[ibody][4] += torque_one[i][1];
-        sum[ibody][5] += torque_one[i][2];
+        sum[ibody][0] += torque_one[i][0];
+        sum[ibody][1] += torque_one[i][1];
+        sum[ibody][2] += torque_one[i][2];
       }
     }
   }
@@ -763,17 +738,14 @@ void FixRigid::setup(int vflag)
   MPI_Allreduce(sum[0],all[0],6*nbody,MPI_DOUBLE,MPI_SUM,world);
 
   for (ibody = 0; ibody < nbody; ibody++) {
-    angmom[ibody][0] = all[ibody][0];
-    angmom[ibody][1] = all[ibody][1];
-    angmom[ibody][2] = all[ibody][2];
-    torque[ibody][0] = all[ibody][3];
-    torque[ibody][1] = all[ibody][4];
-    torque[ibody][2] = all[ibody][5];
+    torque[ibody][0] = all[ibody][0];
+    torque[ibody][1] = all[ibody][1];
+    torque[ibody][2] = all[ibody][2];
   }
 
   // zero langextra in case Langevin thermostat not used
   // no point to calling post_force() here since langextra
-  //   is only added to fcm/torque in final_integrate()
+  // is only added to fcm/torque in final_integrate()
 
   for (ibody = 0; ibody < nbody; ibody++)
     for (i = 0; i < 6; i++) langextra[ibody][i] = 0.0;
@@ -1094,6 +1066,8 @@ void FixRigid::pre_neighbor()
   }
 
   // adjust image flags of any atom in a rigid body whose xcm was remapped
+  // subtracting remapflag = new-old keeps ix,iy,iz near 0
+  //   so body is always in central simulation box
 
   tagint *image = atom->image;
   int nlocal = atom->nlocal;
@@ -1137,7 +1111,7 @@ void FixRigid::pre_neighbor()
 
 int FixRigid::dof(int tgroup)
 {
-  // cannot count DOF correctly unless setup_bodies() has been called
+  // cannot count DOF correctly unless setup_bodies_static() has been called
 
   if (firstflag) {
     if (comm->me == 0) 
@@ -1548,13 +1522,13 @@ void FixRigid::set_v()
 }
 
 /* ----------------------------------------------------------------------
-   one-time initialization of rigid body attributes
+   one-time initialization of static rigid body attributes
    extended flags, masstotal, center-of-mass
    Cartesian and diagonalized inertia tensor
    read per-body attributes from infile if specified
 ------------------------------------------------------------------------- */
 
-void FixRigid::setup_bodies()
+void FixRigid::setup_bodies_static()
 {
   int i,ibody;
 
@@ -2047,6 +2021,104 @@ void FixRigid::setup_bodies()
 }
 
 /* ----------------------------------------------------------------------
+   one-time initialization of dynamic rigid body attributes
+   Vcm and angmom, computed explicitly from constituent particles
+   even if wrong for overlapping particles, is OK,
+     since is just setting initial time=0 Vcm and angmom of the body
+     which can be estimated value
+------------------------------------------------------------------------- */
+
+void FixRigid::setup_bodies_dynamic()
+{
+  int i,n,ibody;
+  double massone,radone;
+
+  // vcm = velocity of center-of-mass of each rigid body
+  // angmom = angular momentum of each rigid body
+
+  double **x = atom->x;
+  double **v = atom->v;
+  double *rmass = atom->rmass;
+  double *mass = atom->mass;
+  tagint *image = atom->image;
+  int *type = atom->type;
+  int nlocal = atom->nlocal;
+
+  double dx,dy,dz;
+  double unwrap[3];
+
+  for (ibody = 0; ibody < nbody; ibody++)
+    for (i = 0; i < 6; i++) sum[ibody][i] = 0.0;
+
+  for (i = 0; i < nlocal; i++) {
+    if (body[i] < 0) continue;
+    ibody = body[i];
+
+    if (rmass) massone = rmass[i];
+    else massone = mass[type[i]];
+
+    sum[ibody][0] += v[i][0] * massone;
+    sum[ibody][1] += v[i][1] * massone;
+    sum[ibody][2] += v[i][2] * massone;
+
+    domain->unmap(x[i],image[i],unwrap);
+    dx = unwrap[0] - xcm[ibody][0];
+    dy = unwrap[1] - xcm[ibody][1];
+    dz = unwrap[2] - xcm[ibody][2];
+
+    sum[ibody][3] += dy * massone*v[i][2] - dz * massone*v[i][1];
+    sum[ibody][4] += dz * massone*v[i][0] - dx * massone*v[i][2];
+    sum[ibody][5] += dx * massone*v[i][1] - dy * massone*v[i][0];
+  }
+
+  // extended particles add their rotation to angmom of body
+
+  if (extended) {
+    AtomVecLine::Bonus *lbonus;
+    if (avec_line) lbonus = avec_line->bonus;
+    double **omega_one = atom->omega;
+    double **angmom_one = atom->angmom;
+    double *radius = atom->radius;
+    int *line = atom->line;
+
+    for (i = 0; i < nlocal; i++) {
+      if (body[i] < 0) continue;
+      ibody = body[i];
+
+      if (eflags[i] & OMEGA) {
+        if (eflags[i] & SPHERE) {
+          radone = radius[i];
+          sum[ibody][3] += SINERTIA*rmass[i] * radone*radone * omega_one[i][0];
+          sum[ibody][4] += SINERTIA*rmass[i] * radone*radone * omega_one[i][1];
+          sum[ibody][5] += SINERTIA*rmass[i] * radone*radone * omega_one[i][2];
+        } else if (eflags[i] & LINE) {
+          radone = lbonus[line[i]].length;
+          sum[ibody][5] += LINERTIA*rmass[i] * radone*radone * omega_one[i][2];
+        }
+      }
+      if (eflags[i] & ANGMOM) {
+        sum[ibody][3] += angmom_one[i][0];
+        sum[ibody][4] += angmom_one[i][1];
+        sum[ibody][5] += angmom_one[i][2];
+      }
+    }
+  }
+
+  MPI_Allreduce(sum[0],all[0],6*nbody,MPI_DOUBLE,MPI_SUM,world);
+
+  // normalize velocity of COM
+
+  for (ibody = 0; ibody < nbody; ibody++) {
+    vcm[ibody][0] = all[ibody][0]/masstotal[ibody];
+    vcm[ibody][1] = all[ibody][1]/masstotal[ibody];
+    vcm[ibody][2] = all[ibody][2]/masstotal[ibody];
+    angmom[ibody][0] = all[ibody][3];
+    angmom[ibody][1] = all[ibody][4];
+    angmom[ibody][2] = all[ibody][5];
+  }
+}
+
+/* ----------------------------------------------------------------------
    read per rigid body info from user-provided file
    which = 0 to read total mass and center-of-mass, store in vec and array
    which = 1 to read 6 moments of inertia, store in array
@@ -2057,7 +2129,7 @@ void FixRigid::setup_bodies()
 
 void FixRigid::readfile(int which, double *vec, double **array, int *inbody)
 {
-  int i,j,m,nchunk,id;
+  int i,j,m,nchunk,id,eofflag;
   int nlines;
   FILE *fp;
   char *eof,*start,*next,*buf;
@@ -2082,27 +2154,16 @@ void FixRigid::readfile(int which, double *vec, double **array, int *inbody)
   }
 
   MPI_Bcast(&nlines,1,MPI_INT,0,world);
+  if (nlines == 0) error->all(FLERR,"Fix rigid file has no lines");
 
   char *buffer = new char[CHUNK*MAXLINE];
   char **values = new char*[ATTRIBUTE_PERBODY];
 
   int nread = 0;
   while (nread < nlines) {
-    if (nlines-nread > CHUNK) nchunk = CHUNK;
-    else nchunk = nlines-nread;
-    if (me == 0) {
-      char *eof;
-      m = 0;
-      for (i = 0; i < nchunk; i++) {
-        eof = fgets(&buffer[m],MAXLINE,fp);
-        if (eof == NULL) error->one(FLERR,"Unexpected end of fix rigid file");
-        m += strlen(&buffer[m]);
-      }
-      if (buffer[m-1] != '\n') strcpy(&buffer[m++],"\n");
-      m++;
-    }
-    MPI_Bcast(&m,1,MPI_INT,0,world);
-    MPI_Bcast(buffer,m,MPI_CHAR,0,world);
+    nchunk = MIN(nlines-nread,CHUNK);
+    eofflag = comm->read_lines_from_file(fp,nchunk,MAXLINE,buffer);
+    if (eofflag) error->all(FLERR,"Unexpected end of fix rigid file");
 
     buf = buffer;
     next = strchr(buf,'\n');
@@ -2162,6 +2223,55 @@ void FixRigid::readfile(int which, double *vec, double **array, int *inbody)
 
   delete [] buffer;
   delete [] values;
+}
+
+/* ----------------------------------------------------------------------
+   write out restart info for mass, COM, inertia tensor to file
+   identical format to infile option, so info can be read in when restarting
+   only proc 0 writes list of global bodies to file
+------------------------------------------------------------------------- */
+
+void FixRigid::write_restart_file(char *file)
+{
+  if (me) return;
+
+  char outfile[128];
+  sprintf(outfile,"%s.rigid",file);
+  FILE *fp = fopen(outfile,"w");
+  if (fp == NULL) {
+    char str[128];
+    sprintf(str,"Cannot open fix rigid restart file %s",outfile);
+    error->one(FLERR,str);
+  }
+
+  fprintf(fp,"# fix rigid mass, COM, inertia tensor info for "
+          "%d bodies on timestep " BIGINT_FORMAT "\n\n",
+          nbody,update->ntimestep);
+  fprintf(fp,"%d\n",nbody);
+
+  // compute I tensor against xyz axes from diagonalized I and current quat
+  // Ispace = P Idiag P_transpose
+  // P is stored column-wise in exyz_space
+
+  double p[3][3],pdiag[3][3],ispace[3][3];
+
+  int id;
+  for (int i = 0; i < nbody; i++) {
+    if (rstyle == SINGLE || rstyle == GROUP) id = i;
+    else id = body2mol[i];
+
+    MathExtra::col2mat(ex_space[i],ey_space[i],ez_space[i],p);
+    MathExtra::times3_diag(p,inertia[i],pdiag);
+    MathExtra::times3_transpose(pdiag,p,ispace);
+
+    fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e "
+            "%-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e\n",
+            id,masstotal[i],xcm[i][0],xcm[i][1],xcm[i][2],
+            ispace[0][0],ispace[1][1],ispace[2][2],
+            ispace[0][1],ispace[0][2],ispace[1][2]);
+  }
+
+  fclose(fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -2289,6 +2399,36 @@ void FixRigid::reset_dt()
 }
 
 /* ----------------------------------------------------------------------
+   zero linear momentum of each rigid body
+   set Vcm to 0.0, then reset velocities of particles via set_v()
+------------------------------------------------------------------------- */
+
+void FixRigid::zero_momentum()
+{
+  for (int ibody = 0; ibody < nbody; ibody++)
+    vcm[ibody][0] = vcm[ibody][1] = vcm[ibody][2] = 0.0;
+
+  evflag = 0;
+  set_v();
+}
+
+/* ----------------------------------------------------------------------
+   zero angular momentum of each rigid body
+   set angmom/omega to 0.0, then reset velocities of particles via set_v()
+------------------------------------------------------------------------- */
+
+void FixRigid::zero_rotation()
+{
+  for (int ibody = 0; ibody < nbody; ibody++) {
+    angmom[ibody][0] = angmom[ibody][1] = angmom[ibody][2] = 0.0;
+    omega[ibody][0] = omega[ibody][1] = omega[ibody][2] = 0.0;
+  }
+
+  evflag = 0;
+  set_v();
+}
+
+/* ----------------------------------------------------------------------
    return temperature of collection of rigid bodies
    non-active DOF are removed by fflag/tflag and in tfactor
 ------------------------------------------------------------------------- */
@@ -2298,11 +2438,10 @@ double FixRigid::compute_scalar()
   double wbody[3],rot[3][3];
 
   double t = 0.0;
-
   for (int i = 0; i < nbody; i++) {
     t += masstotal[i] * (fflag[i][0]*vcm[i][0]*vcm[i][0] +
-                             fflag[i][1]*vcm[i][1]*vcm[i][1] +
-                             fflag[i][2]*vcm[i][2]*vcm[i][2]);
+                         fflag[i][1]*vcm[i][1]*vcm[i][1] +
+                         fflag[i][2]*vcm[i][2]*vcm[i][2]);
 
     // wbody = angular velocity in body frame
 
@@ -2342,6 +2481,51 @@ void *FixRigid::extract(const char *str, int &dim)
   }
 
   return NULL;
+}
+
+/* ----------------------------------------------------------------------
+   return translational KE for all rigid bodies
+   KE = 1/2 M Vcm^2
+------------------------------------------------------------------------- */
+
+double FixRigid::extract_ke()
+{
+  double ke = 0.0;
+  for (int i = 0; i < nbody; i++)
+    ke += masstotal[i] * 
+      (vcm[i][0]*vcm[i][0] + vcm[i][1]*vcm[i][1] + vcm[i][2]*vcm[i][2]);
+
+  return 0.5*ke;
+}
+
+/* ----------------------------------------------------------------------
+   return rotational KE for all rigid bodies
+   Erotational = 1/2 I wbody^2
+------------------------------------------------------------------------- */
+
+double FixRigid::extract_erotational()
+{
+  double wbody[3],rot[3][3];
+
+  double erotate = 0.0;
+  for (int i = 0; i < nbody; i++) {
+
+    // wbody = angular velocity in body frame
+
+    MathExtra::quat_to_mat(quat[i],rot);
+    MathExtra::transpose_matvec(rot,angmom[i],wbody);
+    if (inertia[i][0] == 0.0) wbody[0] = 0.0;
+    else wbody[0] /= inertia[i][0];
+    if (inertia[i][1] == 0.0) wbody[1] = 0.0;
+    else wbody[1] /= inertia[i][1];
+    if (inertia[i][2] == 0.0) wbody[2] = 0.0;
+    else wbody[2] /= inertia[i][2];
+
+    erotate += inertia[i][0]*wbody[0]*wbody[0] +
+      inertia[i][1]*wbody[1]*wbody[1] + inertia[i][2]*wbody[2]*wbody[2];
+  }
+
+  return 0.5*erotate;
 }
 
 /* ----------------------------------------------------------------------

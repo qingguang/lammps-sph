@@ -10,9 +10,34 @@
 
 #include <stdlib.h>
 
-struct FrcFieldItem ff_atomtypes, equivalence, ff_vdw,ff_bond, ff_ang, ff_tor, ff_oop,
+struct FrcFieldItem ff_atomtypes, equivalence, ff_vdw, ff_bond, ff_morse, ff_ang, ff_tor, ff_oop,
   ff_bonbon, ff_bonang, ff_angtor, ff_angangtor, ff_endbontor, ff_midbontor, ff_angang, ff_bonbon13;
 
+
+void ClearFrcData(void)
+{
+  ClearFrcItem(&ff_atomtypes);
+  ClearFrcItem(&equivalence);
+  ClearFrcItem(&ff_vdw);
+  ClearFrcItem(&ff_bond);
+  if (forcefield & FF_TYPE_CLASS1) {  /* Morse bond terms for class I */
+      ClearFrcItem(&ff_morse);
+  }
+  ClearFrcItem(&ff_ang);
+  ClearFrcItem(&ff_tor);
+  ClearFrcItem(&ff_oop);
+
+  if (forcefield & FF_TYPE_CLASS2) {  /* Cross terms for class II */
+    ClearFrcItem(&ff_bonbon);
+    ClearFrcItem(&ff_bonang);
+    ClearFrcItem(&ff_angtor);
+    ClearFrcItem(&ff_angangtor);
+    ClearFrcItem(&ff_endbontor);
+    ClearFrcItem(&ff_midbontor);
+    ClearFrcItem(&ff_bonbon13);
+    ClearFrcItem(&ff_angang);
+  }
+}
 
 void ReadFrcFile(void)
 {
@@ -30,11 +55,14 @@ void ReadFrcFile(void)
   SearchAndFill(&equivalence);
   SearchAndFill(&ff_vdw);
   SearchAndFill(&ff_bond);
+  if (forcefield & FF_TYPE_CLASS1) {  /* Morse bond terms for class I */
+      SearchAndFill(&ff_morse);
+  }
   SearchAndFill(&ff_ang);
   SearchAndFill(&ff_tor);
   SearchAndFill(&ff_oop);
 
-  if (forcefield != 1) {  /* Skip cross terms for class I */
+  if (forcefield & FF_TYPE_CLASS2) {  /* Cross terms for class II */
     SearchAndFill(&ff_bonbon);
     SearchAndFill(&ff_bonang);
     SearchAndFill(&ff_angtor);
@@ -54,9 +82,12 @@ void ReadFrcFile(void)
             ff_vdw.keyword,ff_vdw.entries);
     fprintf(stderr," Item %s has %d entries\n",
             ff_bond.keyword,ff_bond.entries);
+    if (forcefield & FF_TYPE_CLASS1)
+        fprintf(stderr," Item %s has %d entries\n",
+                ff_morse.keyword,ff_morse.entries);
     fprintf(stderr," Item %s has %d entries\n",
             ff_ang.keyword,ff_ang.entries);
-    if (forcefield > 1) {
+    if (forcefield & FF_TYPE_CLASS2) {
       fprintf(stderr," Item %s has %d entries\n",
               ff_bonbon.keyword,ff_bonbon.entries);
       fprintf(stderr," Item %s has %d entries\n",
@@ -64,7 +95,7 @@ void ReadFrcFile(void)
     }
     fprintf(stderr," Item %s has %d entries\n",
             ff_tor.keyword,ff_tor.entries);
-    if (forcefield > 1) {
+    if (forcefield & FF_TYPE_CLASS2) {
       fprintf(stderr," Item %s has %d entries\n",
               ff_angtor.keyword,ff_angtor.entries);
       fprintf(stderr," Item %s has %d entries\n",
@@ -78,7 +109,7 @@ void ReadFrcFile(void)
     }
     fprintf(stderr," Item %s has %d entries\n",
             ff_oop.keyword,ff_oop.entries);
-    if (forcefield > 1) {
+    if (forcefield & FF_TYPE_CLASS2) {
       fprintf(stderr," Item %s has %d entries\n",
               ff_angang.keyword,ff_angang.entries);
     }

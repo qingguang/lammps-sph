@@ -34,6 +34,8 @@
 #include "memory.h"
 #include "error.h"
 
+#include <map>
+
 using namespace LAMMPS_NS;
 using namespace FixConst;
 using namespace MathConst;
@@ -96,11 +98,31 @@ FixRigidSmall::FixRigidSmall(LAMMPS *lmp, int narg, char **arg) :
   if (strcmp(arg[3],"molecule") != 0) 
     error->all(FLERR,"Illegal fix rigid/small command");
 
+  if (atom->molecule_flag == 0)
+    error->all(FLERR,"Fix rigid/small requires atom attribute molecule");
+  if (atom->map_style == 0)
+    error->all(FLERR,"Fix rigid/small requires an atom map, see atom_modify");
+
+  // maxmol = largest molecule #
+
+  int *mask = atom->mask;
+  int *molecule = atom->molecule;
+  int nlocal = atom->nlocal;
+
+  maxmol = -1;
+  for (i = 0; i < nlocal; i++)
+    if (mask[i] & groupbit) maxmol = MAX(maxmol,molecule[i]);
+
+  int itmp;
+  MPI_Allreduce(&maxmol,&itmp,1,MPI_INT,MPI_MAX,world);
+  maxmol = itmp;
+
   // parse optional args
 
   int seed;
   langflag = 0;
-  
+  infile = NULL;
+
   int iarg = 4;
   while (iarg < narg) {
     if (strcmp(arg[iarg],"langevin") == 0) {
@@ -116,6 +138,16 @@ FixRigidSmall::FixRigidSmall(LAMMPS *lmp, int narg, char **arg) :
         error->all(FLERR,"Fix rigid/small langevin period must be > 0.0");
       if (seed <= 0) error->all(FLERR,"Illegal fix rigid/small command");
       iarg += 5;
+
+    } else if (strcmp(arg[iarg],"infile") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal fix rigid/small command");
+      delete [] infile;
+      int n = strlen(arg[iarg+1]) + 1;
+      infile = new char[n];
+      strcpy(infile,arg[iarg+1]);
+      restart_file = 1;
+      iarg += 2;
+
     } else error->all(FLERR,"Illegal fix rigid/small command");
   }
 
@@ -123,15 +155,11 @@ FixRigidSmall::FixRigidSmall(LAMMPS *lmp, int narg, char **arg) :
   // sets bodytag for owned atoms
   // body attributes are computed later by setup_bodies()
 
-  if (atom->molecule_flag == 0)
-    error->all(FLERR,"Fix rigid/small requires atom attribute molecule");
-
   create_bodies();
 
   // set nlocal_body and allocate bodies I own
 
   int *tag = atom->tag;
-  int nlocal = atom->nlocal;
 
   nlocal_body = nghost_body = 0;
   for (i = 0; i < nlocal; i++)
@@ -249,6 +277,8 @@ FixRigidSmall::~FixRigidSmall()
   memory->destroy(dorient);
 
   delete random;
+  delete [] infile;
+
   memory->destroy(langextra);
   memory->destroy(mass_body);
 }
@@ -307,18 +337,23 @@ void FixRigidSmall::init()
 /* ----------------------------------------------------------------------
    one-time initialization of rigid body attributes via local comm
    extended flags, mass, COM, inertia tensor, displacement of each atom
-   require communication stencil have been setup by comm->borders()
+   performed after init() b/c requires communication stencil
+     has been setup by comm->borders()
 ------------------------------------------------------------------------- */
 
 void FixRigidSmall::setup_pre_neighbor()
 {
   if (firstflag) {
     firstflag = 0;
-    setup_bodies();
+    setup_bodies_static();
+    setup_bodies_dynamic();
   } else pre_neighbor();
 }
 
-/* ---------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------
+   compute initial fcm and torque on bodies, also initial virial
+   reset all particle velocities to be consistent with vcm and omega
+------------------------------------------------------------------------- */
 
 void FixRigidSmall::setup(int vflag)
 {
@@ -327,32 +362,23 @@ void FixRigidSmall::setup(int vflag)
 
   //check(1);
 
-  // sum vcm, fcm, angmom, torque across all rigid bodies
-  // vcm = velocity of COM
+  // sum fcm, torque across all rigid bodies
   // fcm = force on COM
-  // angmom = angular momentum around COM
   // torque = torque around COM
 
   double **x = atom->x;
-  double **v = atom->v;
   double **f = atom->f;
-  double *rmass = atom->rmass;
-  double *mass = atom->mass;
   int *type = atom->type;
   int *image = atom->image;
   int nlocal = atom->nlocal;
 
-  double *xcm,*vcm,*fcm,*acm,*tcm;
+  double *xcm,*fcm,*tcm;
   double dx,dy,dz;
   double unwrap[3];
 
   for (ibody = 0; ibody < nlocal_body+nghost_body; ibody++) {
-    vcm = body[ibody].vcm;
-    vcm[0] = vcm[1] = vcm[2] = 0.0;
     fcm = body[ibody].fcm;
     fcm[0] = fcm[1] = fcm[2] = 0.0;
-    acm = body[ibody].angmom;
-    acm[0] = acm[1] = acm[2] = 0.0;
     tcm = body[ibody].torque;
     tcm[0] = tcm[1] = tcm[2] = 0.0;
   }
@@ -361,13 +387,6 @@ void FixRigidSmall::setup(int vflag)
     if (atom2body[i] < 0) continue;
     Body *b = &body[atom2body[i]];
 
-    if (rmass) massone = rmass[i];
-    else massone = mass[type[i]];
-
-    vcm = b->vcm;
-    vcm[0] += v[i][0] * massone;
-    vcm[1] += v[i][1] * massone;
-    vcm[2] += v[i][2] * massone;
     fcm = b->fcm;
     fcm[0] += f[i][0];
     fcm[1] += f[i][1];
@@ -379,10 +398,6 @@ void FixRigidSmall::setup(int vflag)
     dy = unwrap[1] - xcm[1];
     dz = unwrap[2] - xcm[2];
 
-    acm = b->angmom;
-    acm[0] += dy * massone*v[i][2] - dz * massone*v[i][1];
-    acm[1] += dz * massone*v[i][0] - dx * massone*v[i][2];
-    acm[2] += dx * massone*v[i][1] - dy * massone*v[i][0];
     tcm = b->torque;
     tcm[0] += dy * f[i][2] - dz * f[i][1];
     tcm[1] += dz * f[i][0] - dx * f[i][2];
@@ -392,36 +407,11 @@ void FixRigidSmall::setup(int vflag)
   // extended particles add their rotation/torque to angmom/torque of body
 
   if (extended) {
-    AtomVecLine::Bonus *lbonus;
-    if (avec_line) lbonus = avec_line->bonus;
-    double **omega = atom->omega;
-    double **angmom = atom->angmom;
     double **torque = atom->torque;
-    double *radius = atom->radius;
-    int *line = atom->line;
 
     for (i = 0; i < nlocal; i++) {
       if (atom2body[i] < 0) continue;
       Body *b = &body[atom2body[i]];
-
-      if (eflags[i] & OMEGA) {
-        if (eflags[i] & SPHERE) {
-          radone = radius[i];
-          acm = b->angmom;
-          acm[0] += SINERTIA*rmass[i] * radone*radone * omega[i][0];
-          acm[1] += SINERTIA*rmass[i] * radone*radone * omega[i][1];
-          acm[2] += SINERTIA*rmass[i] * radone*radone * omega[i][2];
-        } else if (eflags[i] & LINE) {
-          radone = lbonus[line[i]].length;
-          b->angmom[2] += LINERTIA*rmass[i] * radone*radone * omega[i][2];
-        }
-      }
-      if (eflags[i] & ANGMOM) {
-        acm = b->angmom;
-        acm[0] += angmom[i][0];
-        acm[1] += angmom[i][1];
-        acm[2] += angmom[i][2];
-      }
       if (eflags[i] & TORQUE) {
         tcm = b->torque;
         tcm[0] += torque[i][0];
@@ -431,28 +421,17 @@ void FixRigidSmall::setup(int vflag)
     }
   }
 
-  // reverse communicate vcm, fcm, angmom, torque of all bodies
+  // reverse communicate fcm, torque of all bodies
 
-  commflag = VCM_ANGMOM;
-  comm->reverse_comm_variable_fix(this);
   commflag = FORCE_TORQUE;
   comm->reverse_comm_variable_fix(this);
-
-  // normalize velocity of COM
-
-  for (ibody = 0; ibody < nlocal_body; ibody++) {
-    vcm = body[ibody].vcm;
-    vcm[0] /= body[ibody].mass;
-    vcm[1] /= body[ibody].mass;
-    vcm[2] /= body[ibody].mass;
-  }
 
   // virial setup before call to set_v
 
   if (vflag) v_setup(vflag);
   else evflag = 0;
 
-  // compute and forward communicate updated info of all bodies
+  // compute and forward communicate vcm and omega of all bodies
 
   for (ibody = 0; ibody < nlocal_body; ibody++) {
     Body *b = &body[ibody];
@@ -824,7 +803,7 @@ int FixRigidSmall::dof(int tgroup)
 {
   int i,j;
 
-  // cannot count DOF correctly unless setup_bodies() has been called
+  // cannot count DOF correctly unless setup_bodies_static() has been called
 
   if (firstflag) {
     if (comm->me == 0) 
@@ -1525,9 +1504,10 @@ void FixRigidSmall::ring_farthest(int n, char *cbuf)
    one-time initialization of rigid body attributes
    extended flags, mass, center-of-mass
    Cartesian and diagonalized inertia tensor
+   read per-body attributes from infile if specified
 ------------------------------------------------------------------------- */
 
-void FixRigidSmall::setup_bodies()
+void FixRigidSmall::setup_bodies_static()
 {
   int i,itype,ibody;
 
@@ -1662,6 +1642,16 @@ void FixRigidSmall::setup_bodies()
     xcm[2] /= body[ibody].mass;
   }
 
+  // overwrite masstotal and center-of-mass with file values
+  // inbody[i] = 0/1 if Ith rigid body is initialized by file
+
+  int *inbody;
+  if (infile) {
+    memory->create(inbody,nlocal_body,"rigid/small:inbody");
+    for (ibody = 0; ibody < nlocal_body; ibody++) inbody[ibody] = 0;
+    readfile(0,NULL,inbody);
+  }
+
   // set image flags for each rigid body to default values
   // then remap the xcm of each body back into simulation box if needed
 
@@ -1760,6 +1750,10 @@ void FixRigidSmall::setup_bodies()
 
   commflag = ITENSOR;
   comm->reverse_comm_variable_fix(this);
+
+  // overwrite Cartesian inertia tensor with file values
+
+  if (infile) readfile(1,itensor,inbody);
 
   // diagonalize inertia tensor for each body via Jacobi rotations
   // inertia = 3 eigenvalues = principal moments of inertia
@@ -1958,11 +1952,13 @@ void FixRigidSmall::setup_bodies()
   comm->reverse_comm_variable_fix(this);
 
   // error check that re-computed momemts of inertia match diagonalized ones
+  // do not do test for bodies with params read from infile
 
   double *inew;
 
   double norm;
   for (ibody = 0; ibody < nlocal_body; ibody++) {
+    if (infile && inbody[ibody]) continue;
     inertia = body[ibody].inertia;
 
     if (inertia[0] == 0.0) {
@@ -1996,6 +1992,344 @@ void FixRigidSmall::setup_bodies()
   // clean up
 
   memory->destroy(itensor);
+  if (infile) memory->destroy(inbody);
+}
+
+/* ----------------------------------------------------------------------
+   one-time initialization of dynamic rigid body attributes
+   Vcm and angmom, computed explicitly from constituent particles
+   even if wrong for overlapping particles, is OK,
+     since is just setting initial time=0 Vcm and angmom of the body
+     which can be estimated value
+------------------------------------------------------------------------- */
+
+void FixRigidSmall::setup_bodies_dynamic()
+{
+  int i,n,ibody;
+  double massone,radone;
+
+  // sum vcm, angmom across all rigid bodies
+  // vcm = velocity of COM
+  // angmom = angular momentum around COM
+
+  double **x = atom->x;
+  double **v = atom->v;
+  double *rmass = atom->rmass;
+  double *mass = atom->mass;
+  int *type = atom->type;
+  int *image = atom->image;
+  int nlocal = atom->nlocal;
+
+  double *xcm,*vcm,*acm;
+  double dx,dy,dz;
+  double unwrap[3];
+
+  for (ibody = 0; ibody < nlocal_body+nghost_body; ibody++) {
+    vcm = body[ibody].vcm;
+    vcm[0] = vcm[1] = vcm[2] = 0.0;
+    acm = body[ibody].angmom;
+    acm[0] = acm[1] = acm[2] = 0.0;
+  }
+
+  for (i = 0; i < nlocal; i++) {
+    if (atom2body[i] < 0) continue;
+    Body *b = &body[atom2body[i]];
+
+    if (rmass) massone = rmass[i];
+    else massone = mass[type[i]];
+
+    vcm = b->vcm;
+    vcm[0] += v[i][0] * massone;
+    vcm[1] += v[i][1] * massone;
+    vcm[2] += v[i][2] * massone;
+
+    domain->unmap(x[i],image[i],unwrap);
+    xcm = b->xcm;
+    dx = unwrap[0] - xcm[0];
+    dy = unwrap[1] - xcm[1];
+    dz = unwrap[2] - xcm[2];
+
+    acm = b->angmom;
+    acm[0] += dy * massone*v[i][2] - dz * massone*v[i][1];
+    acm[1] += dz * massone*v[i][0] - dx * massone*v[i][2];
+    acm[2] += dx * massone*v[i][1] - dy * massone*v[i][0];
+  }
+
+  // extended particles add their rotation to angmom of body
+
+  if (extended) {
+    AtomVecLine::Bonus *lbonus;
+    if (avec_line) lbonus = avec_line->bonus;
+    double **omega = atom->omega;
+    double **angmom = atom->angmom;
+    double *radius = atom->radius;
+    int *line = atom->line;
+
+    for (i = 0; i < nlocal; i++) {
+      if (atom2body[i] < 0) continue;
+      Body *b = &body[atom2body[i]];
+
+      if (eflags[i] & OMEGA) {
+        if (eflags[i] & SPHERE) {
+          radone = radius[i];
+          acm = b->angmom;
+          acm[0] += SINERTIA*rmass[i] * radone*radone * omega[i][0];
+          acm[1] += SINERTIA*rmass[i] * radone*radone * omega[i][1];
+          acm[2] += SINERTIA*rmass[i] * radone*radone * omega[i][2];
+        } else if (eflags[i] & LINE) {
+          radone = lbonus[line[i]].length;
+          b->angmom[2] += LINERTIA*rmass[i] * radone*radone * omega[i][2];
+        }
+      }
+      if (eflags[i] & ANGMOM) {
+        acm = b->angmom;
+        acm[0] += angmom[i][0];
+        acm[1] += angmom[i][1];
+        acm[2] += angmom[i][2];
+      }
+    }
+  }
+
+  // reverse communicate vcm, angmom of all bodies
+
+  commflag = VCM_ANGMOM;
+  comm->reverse_comm_variable_fix(this);
+
+  // normalize velocity of COM
+
+  for (ibody = 0; ibody < nlocal_body; ibody++) {
+    vcm = body[ibody].vcm;
+    vcm[0] /= body[ibody].mass;
+    vcm[1] /= body[ibody].mass;
+    vcm[2] /= body[ibody].mass;
+  }
+}
+
+/* ----------------------------------------------------------------------
+   read per rigid body info from user-provided file
+   which = 0 to read total mass and center-of-mass
+   which = 1 to read 6 moments of inertia, store in array
+   flag inbody = 0 for local bodies whose info is read from file
+   nlines = # of lines of rigid body info
+   one line = rigid-ID mass xcm ycm zcm ixx iyy izz ixy ixz iyz
+   and rigid-ID = mol-ID for fix rigid/small
+------------------------------------------------------------------------- */
+
+void FixRigidSmall::readfile(int which, double **array, int *inbody)
+{
+  int i,j,m,nchunk,id,eofflag;
+  int nlines;
+  FILE *fp;
+  char *eof,*start,*next,*buf;
+  char line[MAXLINE];
+  
+  // create local hash with key/value pairs
+  // key = mol ID of bodies my atoms own
+  // value = index into local body array
+
+  int *molecule = atom->molecule;
+  int nlocal = atom->nlocal;
+
+  hash = new std::map<int,int>();
+  for (int i = 0; i < nlocal; i++)
+    if (bodyown[i] >= 0) (*hash)[atom->molecule[i]] = bodyown[i];
+
+  // open file and read header
+
+  if (me == 0) {
+    fp = fopen(infile,"r");
+    if (fp == NULL) {
+      char str[128];
+      sprintf(str,"Cannot open fix rigid/small infile %s",infile);
+      error->one(FLERR,str);
+    }
+
+    while (1) {
+      eof = fgets(line,MAXLINE,fp);
+      if (eof == NULL) 
+        error->one(FLERR,"Unexpected end of fix rigid/small file");
+      start = &line[strspn(line," \t\n\v\f\r")];
+      if (*start != '\0' && *start != '#') break;
+    }
+
+    sscanf(line,"%d",&nlines);
+  }
+
+  MPI_Bcast(&nlines,1,MPI_INT,0,world);
+  if (nlines == 0) error->all(FLERR,"Fix rigid file has no lines");
+
+  char *buffer = new char[CHUNK*MAXLINE];
+  char **values = new char*[ATTRIBUTE_PERBODY];
+
+  int nread = 0;
+  while (nread < nlines) {
+    nchunk = MIN(nlines-nread,CHUNK);
+    eofflag = comm->read_lines_from_file(fp,nchunk,MAXLINE,buffer);
+    if (eofflag) error->all(FLERR,"Unexpected end of fix rigid/small file");
+
+    buf = buffer;
+    next = strchr(buf,'\n');
+    *next = '\0';
+    int nwords = atom->count_words(buf);
+    *next = '\n';
+
+    if (nwords != ATTRIBUTE_PERBODY)
+      error->all(FLERR,"Incorrect rigid body format in fix rigid/small file");
+    
+    // loop over lines of rigid body attributes
+    // tokenize the line into values
+    // id = rigid body ID = mol-ID
+    // for which = 0, store mass/com in vec/array
+    // for which = 1, store interia tensor array, invert 3,4,5 values to Voigt
+
+    for (int i = 0; i < nchunk; i++) {
+      next = strchr(buf,'\n');
+      
+      values[0] = strtok(buf," \t\n\r\f");
+      for (j = 1; j < nwords; j++)
+        values[j] = strtok(NULL," \t\n\r\f");
+
+      id = atoi(values[0]);
+      if (id <= 0 || id > maxmol) 
+        error->all(FLERR,"Invalid rigid body ID in fix rigid/small file");
+      if (hash->find(id) == hash->end()) {
+        buf = next + 1;
+        continue;
+      }
+      id = (*hash)[id];
+      inbody[id] = 1;
+
+      if (which == 0) {
+        body[id].mass = atof(values[1]);
+        body[id].xcm[0] = atof(values[2]);
+        body[id].xcm[1] = atof(values[3]);
+        body[id].xcm[2] = atof(values[4]);
+      } else {
+        array[id][0] = atof(values[5]);
+        array[id][1] = atof(values[6]);
+        array[id][2] = atof(values[7]);
+        array[id][3] = atof(values[10]);
+        array[id][4] = atof(values[9]);
+        array[id][5] = atof(values[8]);
+      }
+
+      buf = next + 1;
+    }
+    
+    nread += nchunk;
+  }
+
+  if (me == 0) fclose(fp);
+
+  delete [] buffer;
+  delete [] values;
+  delete hash;
+}
+
+/* ----------------------------------------------------------------------
+   write out restart info for mass, COM, inertia tensor to file
+   identical format to infile option, so info can be read in when restarting
+   each proc contributes info for rigid bodies it owns
+------------------------------------------------------------------------- */
+
+void FixRigidSmall::write_restart_file(char *file)
+{
+  FILE *fp;
+
+  // do not write file if bodies have not yet been intialized
+
+  if (firstflag) return;
+
+  // proc 0 opens file and writes header
+
+  if (me == 0) {
+    char outfile[128];
+    sprintf(outfile,"%s.rigid",file);
+    fp = fopen(outfile,"w");
+    if (fp == NULL) {
+      char str[128];
+      sprintf(str,"Cannot open fix rigid restart file %s",outfile);
+      error->one(FLERR,str);
+    }
+
+    fprintf(fp,"# fix rigid mass, COM, inertia tensor info for "
+            "%d bodies on timestep " BIGINT_FORMAT "\n\n",
+            nbody,update->ntimestep);
+    fprintf(fp,"%d\n",nbody);
+  }
+
+  // communication buffer for all my rigid body info
+  // max_size = largest buffer needed by any proc
+
+  int ncol = 11;
+  int sendrow = nlocal_body;
+  int maxrow;
+  MPI_Allreduce(&sendrow,&maxrow,1,MPI_INT,MPI_MAX,world);
+
+  double **buf;
+  if (me == 0) memory->create(buf,MAX(1,maxrow),ncol,"rigid/small:buf");
+  else memory->create(buf,MAX(1,sendrow),ncol,"rigid/small:buf");
+
+  // pack my rigid body info into buf
+  // compute I tensor against xyz axes from diagonalized I and current quat
+  // Ispace = P Idiag P_transpose
+  // P is stored column-wise in exyz_space
+
+  double p[3][3],pdiag[3][3],ispace[3][3];
+
+  for (int i = 0; i < nlocal_body; i++) {
+    MathExtra::col2mat(body[i].ex_space,body[i].ey_space,body[i].ez_space,p);
+    MathExtra::times3_diag(p,body[i].inertia,pdiag);
+    MathExtra::times3_transpose(pdiag,p,ispace);
+
+    buf[i][0] = atom->molecule[body[i].ilocal];
+    buf[i][1] = body[i].mass;
+    buf[i][2] = body[i].xcm[0];
+    buf[i][3] = body[i].xcm[1];
+    buf[i][4] = body[i].xcm[2];
+    buf[i][5] = ispace[0][0];
+    buf[i][6] = ispace[1][1];
+    buf[i][7] = ispace[2][2];
+    buf[i][8] = ispace[0][1];
+    buf[i][9] = ispace[0][2];
+    buf[i][10] = ispace[1][2];
+  }
+
+  // write one chunk of rigid body info per proc to file
+  // proc 0 pings each proc, receives its chunk, writes to file
+  // all other procs wait for ping, send their chunk to proc 0
+
+  int tmp,recvrow;
+  MPI_Status status;
+  MPI_Request request;
+
+  if (me == 0) {
+    for (int iproc = 0; iproc < nprocs; iproc++) {
+      if (iproc) {
+        MPI_Irecv(&buf[0][0],maxrow*ncol,MPI_DOUBLE,iproc,0,world,&request);
+        MPI_Send(&tmp,0,MPI_INT,iproc,0,world);
+        MPI_Wait(&request,&status);
+        MPI_Get_count(&status,MPI_DOUBLE,&recvrow);
+        recvrow /= ncol;
+      } else recvrow = sendrow;
+
+      for (int i = 0; i < recvrow; i++)
+        fprintf(fp,"%d %-1.16e %-1.16e %-1.16e %-1.16e "
+                "%-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e\n",
+                static_cast<int> (buf[i][0]),buf[i][1],
+                buf[i][2],buf[i][3],buf[i][4],
+                buf[i][5],buf[i][6],buf[i][7],buf[i][8],buf[i][9],buf[i][10]);
+    }
+    
+  } else {
+    MPI_Recv(&tmp,0,MPI_INT,0,0,world,&status);
+    MPI_Rsend(&buf[0][0],sendrow*ncol,MPI_DOUBLE,0,0,world);
+  }
+
+  // clean up and close file
+
+  memory->destroy(buf);
+  if (me == 0) fclose(fp);
 }
 
 /* ----------------------------------------------------------------------
@@ -2522,6 +2856,56 @@ void FixRigidSmall::reset_dt()
   dtq = 0.5 * update->dt;
 }
 
+/* ----------------------------------------------------------------------
+   zero linear momentum of each rigid body
+   set Vcm to 0.0, then reset velocities of particles via set_v()
+------------------------------------------------------------------------- */
+
+void FixRigidSmall::zero_momentum()
+{
+  double *vcm;
+  for (int ibody = 0; ibody < nlocal_body+nghost_body; ibody++) {
+    vcm = body[ibody].vcm;
+    vcm[0] = vcm[1] = vcm[2] = 0.0;
+  }
+
+  // forward communicate of vcm to all ghost copies
+
+  commflag = FINAL;
+  comm->forward_comm_variable_fix(this);
+
+  // set velocity of atoms in rigid bodues
+
+  evflag = 0;
+  set_v();
+}
+
+/* ----------------------------------------------------------------------
+   zero angular momentum of each rigid body
+   set angmom/omega to 0.0, then reset velocities of particles via set_v()
+------------------------------------------------------------------------- */
+
+void FixRigidSmall::zero_rotation()
+{
+  double *angmom,*omega;
+  for (int ibody = 0; ibody < nlocal_body+nghost_body; ibody++) {
+    angmom = body[ibody].angmom;
+    angmom[0] = angmom[1] = angmom[2] = 0.0;
+    omega = body[ibody].omega;
+    omega[0] = omega[1] = omega[2] = 0.0;
+  }
+
+  // forward communicate of omega to all ghost copies
+
+  commflag = FINAL;
+  comm->forward_comm_variable_fix(this);
+
+  // set velocity of atoms in rigid bodues
+
+  evflag = 0;
+  set_v();
+}
+
 /* ---------------------------------------------------------------------- */
 
 void *FixRigidSmall::extract(const char *str, int &dim)
@@ -2551,6 +2935,64 @@ void *FixRigidSmall::extract(const char *str, int &dim)
   }
 
   return NULL;
+}
+
+/* ----------------------------------------------------------------------
+   return translational KE for all rigid bodies
+   KE = 1/2 M Vcm^2
+   sum local body results across procs
+------------------------------------------------------------------------- */
+
+double FixRigidSmall::extract_ke()
+{
+  double *vcm;
+
+  double ke = 0.0;
+  for (int i = 0; i < nlocal_body; i++) {
+    vcm = body[i].vcm;
+    ke += body[i].mass * (vcm[0]*vcm[0] + vcm[1]*vcm[1] + vcm[2]*vcm[2]);
+  }
+
+  double keall;
+  MPI_Allreduce(&ke,&keall,1,MPI_DOUBLE,MPI_SUM,world);
+
+  return 0.5*keall;
+}
+
+/* ----------------------------------------------------------------------
+   return rotational KE for all rigid bodies
+   Erotational = 1/2 I wbody^2
+------------------------------------------------------------------------- */
+
+double FixRigidSmall::extract_erotational()
+{
+  double wbody[3],rot[3][3];
+  double *inertia;
+
+  double erotate = 0.0;
+  for (int i = 0; i < nlocal_body; i++) {
+
+    // for Iw^2 rotational term, need wbody = angular velocity in body frame 
+    // not omega = angular velocity in space frame
+
+    inertia = body[i].inertia;
+    MathExtra::quat_to_mat(body[i].quat,rot);
+    MathExtra::transpose_matvec(rot,body[i].angmom,wbody);
+    if (inertia[0] == 0.0) wbody[0] = 0.0;
+    else wbody[0] /= inertia[0];
+    if (inertia[1] == 0.0) wbody[1] = 0.0;
+    else wbody[1] /= inertia[1];
+    if (inertia[2] == 0.0) wbody[2] = 0.0;
+    else wbody[2] /= inertia[2];
+
+    erotate += inertia[0]*wbody[0]*wbody[0] + inertia[1]*wbody[1]*wbody[1] +
+      inertia[2]*wbody[2]*wbody[2];
+  }
+
+  double erotateall;
+  MPI_Allreduce(&erotate,&erotateall,1,MPI_DOUBLE,MPI_SUM,world);
+
+  return 0.5*erotateall;
 }
 
 /* ----------------------------------------------------------------------

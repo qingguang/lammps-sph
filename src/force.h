@@ -15,6 +15,8 @@
 #define LMP_FORCE_H
 
 #include "pointers.h"
+#include <map>
+#include <string>
 
 namespace LAMMPS_NS {
 
@@ -44,6 +46,9 @@ class Force : protected Pointers {
 
   class Pair *pair;
   char *pair_style;
+
+  typedef Pair *(*PairCreator)(LAMMPS *);
+  std::map<std::string,PairCreator> *pair_map;
 
   class Bond *bond;
   char *bond_style;
@@ -94,10 +99,13 @@ class Force : protected Pointers {
   class KSpace *kspace_match(const char *, int);
 
   void set_special(int, char **);
-  void bounds(char *, int, int &, int &);
+  void bounds(char *, int, int &, int &, int nmin=1);
   double numeric(const char *, int, char *);
   int inumeric(const char *, int, char *);
   bigint memory_usage();
+
+ private:
+  template <typename T> static Pair *pair_creator(LAMMPS *);
 };
 
 }

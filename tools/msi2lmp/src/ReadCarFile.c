@@ -9,20 +9,81 @@
 #include <string.h>
 #include <math.h>
 
+
+/* ----------------------------------------------------------------------
+   set global box params
+   assumes boxlo/hi and triclinic tilts are already set
+------------------------------------------------------------------------- */
+
+void set_box(double box[3][3], double *h, double *h_inv)
+{
+  h[0] = box[1][0] - box[0][0];
+  h[1] = box[1][1] - box[0][1];
+  h[2] = box[1][2] - box[0][2];
+
+  h_inv[0] = 1.0/h[0];
+  h_inv[1] = 1.0/h[1];
+  h_inv[2] = 1.0/h[2];
+
+  h[3] = box[2][0];
+  h[4] = box[2][1];
+  h[5] = box[2][2];
+  h_inv[3] = -h[3] / (h[1]*h[2]);
+  h_inv[4] = (h[3]*h[5] - h[1]*h[4]) / (h[0]*h[1]*h[2]);
+  h_inv[5] = -h[5] / (h[0]*h[1]);
+}
+
+
+/* ----------------------------------------------------------------------
+   convert triclinic 0-1 lamda coords to box coords for one atom
+   x = H lamda + x0;
+   lamda and x can point to same 3-vector
+------------------------------------------------------------------------- */
+
+void lamda2x(double *lamda, double *x, double *h, double *boxlo)
+{
+  x[0] = h[0]*lamda[0] + h[5]*lamda[1] + h[4]*lamda[2] + boxlo[0];
+  x[1] = h[1]*lamda[1] + h[3]*lamda[2] + boxlo[1];
+  x[2] = h[2]*lamda[2] + boxlo[2];
+}
+
+/* ----------------------------------------------------------------------
+   convert box coords to triclinic 0-1 lamda coords for one atom
+   lamda = H^-1 (x - x0)
+   x and lamda can point to same 3-vector
+------------------------------------------------------------------------- */
+
+void x2lamda(double *x, double *lamda, double *h_inv, double *boxlo)
+{
+  double delta[3];
+  delta[0] = x[0] - boxlo[0];
+  delta[1] = x[1] - boxlo[1];
+  delta[2] = x[2] - boxlo[2];
+
+  lamda[0] = h_inv[0]*delta[0] + h_inv[5]*delta[1] + h_inv[4]*delta[2];
+  lamda[1] = h_inv[1]*delta[1] + h_inv[3]*delta[2];
+  lamda[2] = h_inv[2]*delta[2];
+}
+
+
 void ReadCarFile(void)
 {
   char line[MAX_LINE_LENGTH];  /* Stores lines as they are read in */
-  int k,m,n;                        /* counters */
-  int skip;                        /* lines to skip at beginning of file */
-  double  lowest, highest;        /* temp coordinate finding variables */
+  int k,m,n;                   /* counters */
+  int skip;                    /* lines to skip at beginning of file */
+  double lowest, highest;      /* temp coordinate finding variables */
   double total_q;
   double sq_c;
-  double cos_alpha;  // Added by SLTM Sept 13, 2010
+  double cos_alpha;  /* Added by SLTM Sept 13, 2010 */
   double cos_gamma;
   double sin_gamma;
   double cos_beta;
   double sin_beta;
   double A, B, C;
+  double center[3];
+  double hmat[6];
+  double hinv[6];
+  double lamda[3];
 
   /* Open .car file for reading */
 
@@ -51,7 +112,7 @@ void ReadCarFile(void)
     fscanf(CarF,"%*s %lf %lf %lf %lf %lf %lf %*s",
            &pbc[0],&pbc[1],&pbc[2],&pbc[3],&pbc[4],&pbc[5]);
 
-    // Added triclinic flag for non-orthogonal boxes Oct 5, 2010 SLTM
+    /* Added triclinic flag for non-orthogonal boxes Oct 5, 2010 SLTM */
     if(pbc[3] != 90.0 || pbc[4] != 90.0 || pbc[5] != 90.0) {
       TriclinicFlag = 1;
     } else TriclinicFlag = 0;
@@ -115,7 +176,7 @@ void ReadCarFile(void)
   }
 
   /* Third pass through file -- Read+Parse Car File */
-
+  center[0] = center[1] = center[2] = 0.0;
   rewind(CarF);
   for(n=0; n < skip; n++)
     fgets(line,MAX_LINE_LENGTH,CarF);
@@ -127,7 +188,7 @@ void ReadCarFile(void)
       atoms[k].molecule = m;
       atoms[k].no = k;
 
-      fscanf(CarF,"%s %lf %lf %lf %*s %d %s %s %f",
+      fscanf(CarF,"%s %lf %lf %lf %*s %d %s %s %lf",
              atoms[k].name,
              &(atoms[k].x[0]),
              &(atoms[k].x[1]),
@@ -136,11 +197,25 @@ void ReadCarFile(void)
              atoms[k].potential,
              atoms[k].element,
              &(atoms[k].q));
+
+      atoms[k].x[0] += shift[0];
+      atoms[k].x[1] += shift[1];
+      atoms[k].x[2] += shift[2];
+
+      if (centerflag) {
+        center[0] += atoms[k].x[0];
+        center[1] += atoms[k].x[1];
+        center[2] += atoms[k].x[2];
+      }
     }
     fgets(line,MAX_LINE_LENGTH,CarF);
     fgets(line,MAX_LINE_LENGTH,CarF);
 
   } /* End m (molecule) loop */
+
+  center[0] /= (double) total_no_atoms;
+  center[1] /= (double) total_no_atoms;
+  center[2] /= (double) total_no_atoms;
 
   for (total_q=0.0,k=0; k < total_no_atoms; k++)
     total_q += atoms[k].q;
@@ -148,14 +223,16 @@ void ReadCarFile(void)
   if (pflag > 1) {
     printf("   There are %d atoms in %d molecules in this file\n",
            total_no_atoms,no_molecules);
-    printf("   The total charge in the system is %7.3f.\n\n",total_q);
+    printf("   The total charge in the system is %7.3f.\n",total_q);
   }
 
   /* Search coordinates to find lowest and highest for x, y, and z */
 
   if (periodic == 0) {
-    // Added if/else statment STLM Oct 5 2010
+    /* Added if/else statment STLM Oct 5 2010 */
     if (TriclinicFlag == 0) {
+      /* no need to re-center the box, if we use min/max values */
+      center[0] = center[1] = center[2] = 0.0;
       for ( k = 0; k < 3; k++) {
         lowest  = atoms[0].x[k];
         highest = atoms[0].x[k];
@@ -164,8 +241,9 @@ void ReadCarFile(void)
           if (atoms[m].x[k] < lowest)  lowest = atoms[m].x[k];
           if (atoms[m].x[k] > highest) highest = atoms[m].x[k];
         }
-        pbc[k] = lowest;
-        pbc[k+3] = highest;
+        box[0][k] = lowest  - 0.5;
+        box[1][k] = highest + 0.5;
+        box[2][k] = 0.0;
       }
     } else {
       printf("This tool only works for periodic systems with triclinic boxes");
@@ -173,11 +251,12 @@ void ReadCarFile(void)
     }
 
   } else {
-    // Modified lines 176 - 201 Oct 5th 2010
+
     if (TriclinicFlag == 0) {
       for (k=0; k < 3; k++) {
-        pbc[k+3] = pbc[k];
-        pbc[k] = 0.0;
+        box[0][k] = -0.5*pbc[k] + center[k] + shift[k];
+        box[1][k] =  0.5*pbc[k] + center[k] + shift[k];
+        box[2][k] =  0.0;
       }
     } else {
       sq_c = pbc[2]*pbc[2];
@@ -186,21 +265,57 @@ void ReadCarFile(void)
       sin_gamma = sin(pbc[5]*PI_180);
       cos_beta =  cos(pbc[4]*PI_180);
       sin_beta =  sin(pbc[4]*PI_180);
-      if (pflag > 1) {
-        printf("pbc[3] %f pbc[4] %f pbc[5] %f\n", pbc[3] ,pbc[4] ,pbc[5]);
-        printf("cos_alpha %f cos_beta %f cos_gamma %f\n", cos_alpha ,cos_beta ,cos_gamma);
+      if (pflag > 2) {
+        printf(" pbc[3] %f pbc[4] %f pbc[5] %f\n", pbc[3] ,pbc[4] ,pbc[5]);
+        printf(" cos_alpha %f cos_beta %f cos_gamma %f\n", cos_alpha ,cos_beta ,cos_gamma);
       }
       A = pbc[0];
       B = pbc[1];
       C = pbc[2];
 
 
-      pbc[0] = A;
-      pbc[1] = B*sin_gamma;
-      pbc[2] = sqrt(sq_c * sin_beta*sin_beta - C*(cos_alpha-cos_gamma*cos_beta)/sin_gamma);
-      pbc[3] = B * cos_gamma; // This is xy SLTM
-      pbc[4] = C * cos_beta; // This is xz SLTM
-      pbc[5] = C*(cos_alpha-cos_gamma*cos_beta)/sin_gamma; // This is yz SLTM
+      box[0][0] = -0.5*A + center[0] + shift[0];
+      box[1][0] =  0.5*A + center[0] + shift[0];
+      box[0][1] = -0.5*B*sin_gamma + center[1] + shift[1];
+      box[1][1] =  0.5*B*sin_gamma + center[1] + shift[1];
+      box[0][2] = -0.5*sqrt(sq_c * sin_beta*sin_beta - C*(cos_alpha-cos_gamma*cos_beta)/sin_gamma) + center[2] + shift[2];
+      box[1][2] =  0.5*sqrt(sq_c * sin_beta*sin_beta - C*(cos_alpha-cos_gamma*cos_beta)/sin_gamma) + center[2] + shift[2];
+      box[2][0] =  B * cos_gamma; /* This is xy SLTM */
+      box[2][1] =  C * cos_beta;  /* This is xz SLTM */
+      box[2][2] =  C*(cos_alpha-cos_gamma*cos_beta)/sin_gamma; /* This is yz SLTM */
+    }
+  }
+
+  /* compute image flags */
+
+  set_box(box,hmat,hinv);
+
+  n = 0;
+  for (m = 0; m < total_no_atoms; m++) {
+    double tmp;
+    int w=0;
+
+    x2lamda(atoms[m].x,lamda,hinv,box[0]);
+    for (k = 0; k < 3; ++k) {
+      tmp = floor(lamda[k]);
+      atoms[m].image[k] = tmp;
+      lamda[k] -= tmp;
+      if (tmp != 0.0) ++w;
+    }
+    lamda2x(lamda, atoms[m].x,hmat,box[0]);
+    if (w > 0) ++n;
+  }
+
+  /* warn if atoms are outside the box */
+  if (n > 0) {
+    if (periodic) {
+      if (pflag > 1)
+        printf("   %d of %d atoms with nonzero image flags\n\n",n,total_no_atoms);
+    } else {
+      if (iflag == 0 || (pflag > 1))
+        printf("   %d of %d atoms outside the box\n\n",n,total_no_atoms);
+
+      condexit(32);
     }
   }
 
