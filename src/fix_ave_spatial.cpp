@@ -17,6 +17,7 @@
 
 #include "stdlib.h"
 #include "string.h"
+#include "unistd.h"
 #include "fix_ave_spatial.h"
 #include "atom.h"
 #include "update.h"
@@ -75,7 +76,8 @@ FixAveSpatial::FixAveSpatial(LAMMPS *lmp, int narg, char **arg) :
     else if (strcmp(arg[iarg+1],"center") == 0) originflag[ndim] = CENTER;
     else if (strcmp(arg[iarg+1],"upper") == 0) originflag[ndim] = UPPER;
     else originflag[ndim] = COORD;
-    if (originflag[ndim] == COORD) origin[ndim] = force->numeric(FLERR,arg[iarg+1]);
+    if (originflag[ndim] == COORD) 
+      origin[ndim] = force->numeric(FLERR,arg[iarg+1]);
 
     delta[ndim] = force->numeric(FLERR,arg[iarg+2]);
     ndim++;
@@ -441,8 +443,9 @@ void FixAveSpatial::init()
   // # of bins cannot vary for ave = RUNNING or WINDOW
 
   if (ave == RUNNING || ave == WINDOW) {
-    if (scaleflag != REDUCED && domain->box_change)
-      error->all(FLERR,"Fix ave/spatial settings invalid with changing box");
+    if (scaleflag != REDUCED && domain->box_change_size)
+      error->all(FLERR,
+                 "Fix ave/spatial settings invalid with changing box size");
   }
 
   // set indices and check validity of all computes,fixes,variables
@@ -822,6 +825,10 @@ void FixAveSpatial::end_of_step()
       }
 
     fflush(fp);
+    if (overwrite) {
+      long fileend = ftell(fp);
+      ftruncate(fileno(fp),fileend);
+    }
   }
 }
 

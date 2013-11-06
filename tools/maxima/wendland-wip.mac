@@ -1,99 +1,23 @@
 /* returns a wendland polynom */
 load("pw.mac");
 load("romberg");
-
-laguerre(g, k):= buildq([body: fullratsimp(exp(r)*r^(-g)/k!*diff(exp(-r)*r^(k+g), r, k))], lambda([r], body));
-
-wendland(ndim, k):= block([w, r],
-  local(plusfun, I, p),
-  plusfun(x):= x*(signum(x)+1)/2,
-  I(phi):= ''(pwint(t*phi(t), t, 'r, +inf)),
-  p[l]:= if l=0 then 1 else buildq([g: plusfun(1-'r)^l], lambda([r], g)),
-  I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, 'r, 1)], lambda([r], g))
-  else I[k-1, I[1, f]],
-  w: I[k, p[floor(ndim/2)+k+1]],
-  buildq([g: fullratsimp(pwsimp(fullratsimp(w(abs('r))), 'r))], lambda([r], g))
-  );
-
-/* takes a kernel function and returns a normalized version of it */
-normkern(w, ndim, [cutoff]):= block([wr, A, r],
-  cutoff: if emptyp(cutoff) then +inf else first(cutoff),
-  wr: buildq([g: if ndim=1 then 2*w('r) else if ndim=2 then 2*%pi*w('r)*'r else if ndim=3 then 4*%pi*w('r)*r^2], lambda([r], g)),
-  A: fullratsimp(1/pwint( wr(r), r, 0, cutoff)),
-  buildq([g: A*w('r)], lambda([r], g)));
-
-/* returns Nth moment of the kernel */
-getkernmom(w, ndim, N, [cutoff]):= block([wr, r],
-  cutoff: if emptyp(cutoff) then +inf else first(cutoff),
-  wr: buildq([g: if ndim=1 then 2*w(r) else if ndim=2 then 2*%pi*w(r)*r else if ndim=3 then 4*%pi*w(r)*r^2], lambda([r], g)),
-  fullratsimp(pwint(r^N*wr(r), r, 0, cutoff)));
-
-plusfun(x)::= (signum(x) + 1)/2 * x;
-
-/*
-Define b-spline function with explicit formula and via convolution
-http://sepwww.stanford.edu/public/docs/sep105/sergey2/paper_html/node5.html
-http://crsouza.blogspot.de/2010/03/kernel-functions-for-machine-learning.html#bspline
-*/
-bspline(n):= block([x, r],
-  buildq([
-    g: fullratsimp(pwsimp(1/n!*sum(binomial(n+1,k)*(-1)^k*plusfun((n+1)/2*x+(n+1)/2-k)^n, k, 0, n+1), x))],
-    lambda([x], g)));
-
-bspline_c(k):= block([w, n, r],
-  local(unitbox, I),
-  unitbox(x):= (signum(x+1/2)-signum(x-1/2))/2,
-  I[n]:= if n=0 then lambda([x], unitbox(x)) else block([f: I[n-1]],
-    buildq([g: pwsimp(pwint(f(t)*unitbox(x-t), t, -inf, +inf), x)],
-      lambda([x], g))),
-  w: I[k],
-  buildq([g: fullratsimp(pwsimp(fullratsimp(w((k+1)/2*r)), r))], lambda([r], g))
-  );
-
-matchdeclare(www, true);
-tellsimp(bessel_j(1/2, www), sqrt(2/(%pi*www))*sin(www));
-load("romberg");
-Fn(w, ndim, ifun, cutoff):= subst(
-  [p=block([], local(r), assume(r>0), assume(t>0), fullratsimp(w(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)/t^(ndim/2-1))),
-  integrator=ifun,
-  c=cutoff,
-  nd=ndim],
-  lambda([t],
-      (2*%pi)*integrator(p, r, 1e-10, c)));
-linspace(a,b,n) := makelist(a+(i-1)*(b-a)/(n-1), i,1,n);
-
-matchdeclare(rr, true);
-matchdeclare(oo, freeof(x));
-defmatch(fsin, rr*sin(oo*x), x);
-/* integrate function of the form f(t)*sin(omega*t) */
-insin(F, x, a, b):= block([m, om, f],
-  m: fsin(F, x),
-  om: assoc('oo, m),
-  f:  assoc('rr, m),
-  quad_qawo(f, x, a, b, om, sin)[1]
-  );
+load("wendland.mac");
 
 ndim: 2;
 load("sph-kernel.mac");
-/* w: normkern(wendland(ndim, 3), ndim); */
 kill(wl, dwl, w);
 M: 2;
 
 ratprint: false;
 keepfloat: true;
-wraw: buildq([g: laguerre(ndim/2, M)(eps^2*r^2)*wendland(ndim, 2)(r)], lambda([r], g));
+wraw: buildq([g: laguerre(ndim/2, M)(eps^2*'r^2)*wendland(ndim, 2)('r)], lambda([r], g));
 eq: getkernmom(wraw, ndim, 2, 1);
 ro: sort(sublist(map('rhs, allroots(float(eq))), lambda([q], q>0)));
 
-w1: buildq([g: subst(0.1, eps, wraw('r))], lambda([r], g));
-w2: buildq([g: subst(3.0, eps, wraw('r))], lambda([r], g));
+w1: subst(subst(ro[1], eps, wraw('r)), body, lambda(['r], body));
+w2: subst(subst(ro[2], eps, wraw('r)), body, lambda(['r], body));
 
-/* eq_ab: subst(0, r, diff(w1(r), r, 2)) + B*subst(0, r, diff(w2(r), r, 2)) = 0; */
-eq_ab: getkernmom(lambda([r], w1('r)+B*w2('r)), ndim, 2);
-Bin: rhs(float(solve(eq_ab, B)[1]));
-wbn: buildq([g: fullratsimp(w1('r) + Bin*w2('r))], lambda([r], g));
-
-
+wbn: lambda([r], plusfun(1-'r)^4*(1+4*'r-15*'r^2));
 w: normkern(wbn, ndim, 1);
 w1: normkern(w1, ndim, 1);
 
@@ -121,7 +45,7 @@ plot2d(
 */
 
 load("dump2maxima.mac");
-finput: "~/work/lammps-sdpd/examples/USER/sdpd/diff/c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat";
+finput: "../../examples/USER/sdpd/diff/c1.44e+02-ndim2-eta8.0-sdpd_background0.0-nx30-n5.00e+00-ktypelaguerrewendland4/dump00040000.dat";
 [lmp_data, atom_data]: dump2maxima(finput)$
 Lx: lmp_data['xhi] - lmp_data['xlo]$
 Ly: lmp_data['yhi] - lmp_data['ylo]$

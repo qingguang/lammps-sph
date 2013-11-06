@@ -13,7 +13,7 @@ kspace_modify command :h3
 kspace_modify keyword value ... :pre
 
 one or more keyword/value pairs may be listed :ulb,l
-keyword = {mesh} or {order} or {order/disp} or {overlap} or {minorder} or {force} or {gewald} or {gewald/disp} or {slab} or (nozforce} or {compute} or {cutoff/adjust} or {diff} :l
+keyword = {mesh} or {order} or {order/disp} or {overlap} or {minorder} or {force} or {gewald} or {gewald/disp} or {slab} or (nozforce} or {compute} or {cutoff/adjust} or {diff} or {kmax/ewald} :l
   {mesh} value = x y z
     x,y,z = grid size in each dimension for long-range Coulombics
   {mesh/disp} value = x y z
@@ -37,7 +37,9 @@ keyword = {mesh} or {order} or {order/disp} or {overlap} or {minorder} or {force
   {compute} value = {yes} or {no} 
   {cutoff/adjust} value = {yes} or {no} 
   {fftbench} value = {yes} or {no} 
-  {diff} value = {ad} or {ik} = 2 or 4 FFTs for PPPM in smoothed or non-smoothed mode :pre
+  {diff} value = {ad} or {ik} = 2 or 4 FFTs for PPPM in smoothed or non-smoothed mode 
+  {kmax/ewald} value = kx ky kz 
+    kx,ky,kz = number of Ewald sum kspace vectors in each dimension :pre
 :ule
 
 [Examples:]
@@ -161,14 +163,16 @@ value is inefficient; a smaller value introduces unwanted slab-slab
 interactions.  The use of fixed boundaries in z means that the user
 must prevent particle migration beyond the initial z-bounds, typically
 by providing a wall-style fix.  The methodology behind the {slab}
-option is explained in the paper by "(Yeh)"_#Yeh.  An alternative slab
-option can be invoked with the {nozforce} keyword in lieu of the
-volfactor. This turns off all kspace forces in the z direction. 
-The {nozforce} option is not supported by MSM. For MSM, any combination
-of periodic, non-periodic, or shrink-wrapped boundaries can be set 
-using "boundary"_boundary.html (the slab approximation in not needed).
-The {slab} keyword is not currently supported by Ewald or PPPM when
-using a triclinic simulation cell.
+option is explained in the paper by "(Yeh)"_#Yeh.  The {slab} option
+is also extended to non-neutral systems
+"(Ballenegger)"_#Ballenegger. An alternative slab option can be
+invoked with the {nozforce} keyword in lieu of the volfactor. This
+turns off all kspace forces in the z direction.  The {nozforce} option
+is not supported by MSM. For MSM, any combination of periodic,
+non-periodic, or shrink-wrapped boundaries can be set using
+"boundary"_boundary.html (the slab approximation in not needed).  The
+{slab} keyword is not currently supported by Ewald or PPPM when using
+a triclinic simulation cell.
 
 The {compute} keyword allows Kspace computations to be turned off,
 even though a "kspace_style"_kspace_style.html is defined.  This is
@@ -214,6 +218,17 @@ always used for MSM.
 IMPORTANT NOTE: Currently, not all PPPM styles support the {ad}
 option.  Support for those PPPM variants will be added later.
 
+The {kmax/ewald} keyword sets the number of kspace vectors in
+each dimension for kspace style {ewald}.  The three values must
+be positive integers, or else (0,0,0), which unsets the option. 
+When this option is not 
+set, the Ewald sum scheme chooses its own kspace vectors, 
+consistent with the
+user-specified accuracy and pairwise cutoff. In any case,
+if kspace style {ewald} is invoked, the values used 
+are printed to the screen and
+the log file at the start of the run.
+
 [Restrictions:] none
 
 [Related commands:]
@@ -223,7 +238,7 @@ option.  Support for those PPPM variants will be added later.
 [Default:]
 
 The option defaults are mesh = mesh/disp = 0 0 0, order = order/disp =
-5 (PPPM), order = 8 (MSM), minorder = 2, overlap = yes, force = -1.0,
+5 (PPPM), order = 10 (MSM), minorder = 2, overlap = yes, force = -1.0,
 gewald = gewald/disp = 0.0, slab = 1.0, compute = yes, cutoff/adjust =
 yes (MSM), fftbench = yes (PPPM), and diff = ik (PPPM).
 
@@ -235,6 +250,10 @@ Adam Hilger, NY (1989).
 
 :link(Yeh)
 [(Yeh)] Yeh and Berkowitz, J Chem Phys, 111, 3155 (1999).
+
+:link(Ballenegger)
+[(Ballenegger)] Ballenegger, Arnold, Cerda, J Chem Phys, 131, 094107
+(2009).
 
 :link(Hardy)
 [(Hardy)] David Hardy thesis: Multilevel Summation for the Fast

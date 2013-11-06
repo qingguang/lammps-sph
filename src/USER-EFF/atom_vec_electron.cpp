@@ -24,6 +24,7 @@
 #include "modify.h"
 #include "force.h"
 #include "fix.h"
+#include "citeme.h"
 #include "memory.h"
 #include "error.h"
 
@@ -31,10 +32,23 @@ using namespace LAMMPS_NS;
 
 #define DELTA 10000
 
+static const char cite_user_eff_package[] =
+  "USER-EFF package:\n\n"
+  "@Article{Jaramillo-Botero11,\n"
+  " author = {A. Jaramillo-Botero, J. Su, A. Qi, W. A. Goddard III},\n"
+  " title = {Large-Scale, Long-Term Nonadiabatic Electron Molecular Dynamics for Describing Material Properties and Phenomena in Extreme Environments},\n"
+  " journal = {J.~Comp.~Chem.},\n"
+  " year =    2011,\n"
+  " volume =  32,\n"
+  " pages =   {497--512}\n"
+  "}\n\n";
+
 /* ---------------------------------------------------------------------- */
 
 AtomVecElectron::AtomVecElectron(LAMMPS *lmp) : AtomVec(lmp)
 {
+  if (lmp->citeme) lmp->citeme->add(cite_user_eff_package);
+
   comm_x_only = comm_f_only = 0;
 
   mass_type = 1;
@@ -397,6 +411,11 @@ int AtomVecElectron::pack_border(int n, int *list, double *buf,
       buf[m++] = eradius[j];
     }
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->pack_border(n,list,&buf[m]);
+
   return m;
 }
 
@@ -478,6 +497,11 @@ int AtomVecElectron::pack_border_vel(int n, int *list, double *buf,
       }
     }
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->pack_border(n,list,&buf[m]);
+
   return m;
 }
 
@@ -517,6 +541,11 @@ void AtomVecElectron::unpack_border(int n, int first, double *buf)
     spin[i] = static_cast<int> (buf[m++]);
     eradius[i] = buf[m++];
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->
+        unpack_border(n,first,&buf[m]);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -542,6 +571,11 @@ void AtomVecElectron::unpack_border_vel(int n, int first, double *buf)
     v[i][1] = buf[m++];
     v[i][2] = buf[m++];
   }
+
+  if (atom->nextra_border)
+    for (int iextra = 0; iextra < atom->nextra_border; iextra++)
+      m += modify->fix[atom->extra_border[iextra]]->
+        unpack_border(n,first,&buf[m]);
 }
 
 /* ---------------------------------------------------------------------- */

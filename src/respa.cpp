@@ -250,14 +250,6 @@ void Respa::init()
   if (modify->nfix == 0 && comm->me == 0)
     error->warning(FLERR,"No fixes defined, atoms won't move");
 
-  // warn about incorrect pressures when using rRESPA with fix SHAKE
-
-  int shakeflag = 0;
-  for (int i = 0; i < modify->nfix; i++)
-    if (strcmp(modify->fix[i]->style,"shake") == 0) shakeflag = 1;
-  if (shakeflag && comm->me == 0)
-    error->warning(FLERR,"Fix shake with rRESPA computes invalid pressures");
-
   // create fix needed for storing atom-based respa level forces
   // will delete it at end of run
 
@@ -286,7 +278,8 @@ void Respa::init()
 
   ev_setup();
 
-  // detect if fix omp is present and will clear force arrays for us
+  // detect if fix omp is present and will clear force arrays
+
   int ifix = modify->find_fix("package_omp");
   if (ifix >= 0) external_force_clear = 1;
 

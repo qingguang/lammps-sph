@@ -72,6 +72,28 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
 
   ncompute = maxcompute = 0;
   compute = NULL;
+
+  // fill map with fixes listed in style_fix.h
+
+  fix_map = new std::map<std::string,FixCreator>();
+
+#define FIX_CLASS
+#define FixStyle(key,Class) \
+  (*fix_map)[#key] = &fix_creator<Class>;
+#include "style_fix.h"
+#undef FixStyle
+#undef FIX_CLASS
+
+  // fill map with computes listed in style_compute.h
+
+  compute_map = new std::map<std::string,ComputeCreator>();
+
+#define COMPUTE_CLASS
+#define ComputeStyle(key,Class) \
+  (*compute_map)[#key] = &compute_creator<Class>;
+#include "style_compute.h"
+#undef ComputeStyle
+#undef COMPUTE_CLASS
 }
 
 /* ---------------------------------------------------------------------- */
@@ -114,6 +136,9 @@ Modify::~Modify()
   delete [] list_timeflag;
 
   restart_deallocate();
+
+  delete compute_map;
+  delete fix_map;
 }
 
 /* ----------------------------------------------------------------------
@@ -609,15 +634,16 @@ int Modify::min_reset_ref()
 
 void Modify::add_fix(int narg, char **arg, char *suffix)
 {
-  const char *exceptions[NEXCEPT] = {"GPU","OMP","atom/property","cmap"};
-
   if (narg < 3) error->all(FLERR,"Illegal fix command");
 
   // cannot define fix before box exists unless style is in exception list
   // don't like this way of checking for exceptions by adding fixes to list,
   //   but can't think of better way
   // too late if instantiate fix, then check flag set in fix constructor,
-  // since some fixes access domain settings in their constructor
+  //   since some fixes access domain settings in their constructor
+  // change NEXCEPT above when add new fix to this list
+
+  const char *exceptions[NEXCEPT] = {"GPU","OMP","property/atom","cmap"};
 
   if (domain->box_exist == 0) {
     int m;
@@ -666,39 +692,26 @@ void Modify::add_fix(int narg, char **arg, char *suffix)
     }
   }
 
-  // create the Fix, first with suffix appended
+  // create the Fix
+  // try first with suffix appended
 
-  int success = 0;
+  fix[ifix] = NULL;
 
   if (suffix && lmp->suffix_enable) {
     char estyle[256];
     sprintf(estyle,"%s/%s",arg[2],suffix);
-    success = 1;
-
-    if (0) return;
-
-#define FIX_CLASS
-#define FixStyle(key,Class) \
-    else if (strcmp(estyle,#key) == 0) fix[ifix] = new Class(lmp,narg,arg);
-#include "style_fix.h"
-#undef FixStyle
-#undef FIX_CLASS
-
-    else success = 0;
+    if (fix_map->find(estyle) != fix_map->end()) {
+      FixCreator fix_creator = (*fix_map)[estyle];
+      fix[ifix] = fix_creator(lmp,narg,arg);
+    }
   }
 
-  if (!success) {
-    if (0) return;
-
-#define FIX_CLASS
-#define FixStyle(key,Class) \
-    else if (strcmp(arg[2],#key) == 0) fix[ifix] = new Class(lmp,narg,arg);
-#include "style_fix.h"
-#undef FixStyle
-#undef FIX_CLASS
-
-    else error->all(FLERR,"Invalid fix style");
+  if (fix[ifix] == NULL && fix_map->find(arg[2]) != fix_map->end()) {
+    FixCreator fix_creator = (*fix_map)[arg[2]];
+    fix[ifix] = fix_creator(lmp,narg,arg);
   }
+
+  if (fix[ifix] == NULL) error->all(FLERR,"Invalid fix style");
 
   // set fix mask values and increment nfix (if new)
 
@@ -736,6 +749,16 @@ void Modify::add_fix(int narg, char **arg, char *suffix)
         if (logfile) fprintf(logfile,str,fix[ifix]->id,fix[ifix]->style);
       }
     }
+}
+
+/* ----------------------------------------------------------------------
+   one instance per fix in style_fix.h
+------------------------------------------------------------------------- */
+
+template <typename T>
+Fix *Modify::fix_creator(LAMMPS *lmp, int narg, char **arg)
+{
+  return new T(lmp,narg,arg);
 }
 
 /* ----------------------------------------------------------------------
@@ -811,43 +834,39 @@ void Modify::add_compute(int narg, char **arg, char *suffix)
       memory->srealloc(compute,maxcompute*sizeof(Compute *),"modify:compute");
   }
 
-  // create the Compute, first with suffix appended
+  // create the Compute
+  // try first with suffix appended
 
-  int success = 0;
+  compute[ncompute] = NULL;
 
   if (suffix && lmp->suffix_enable) {
     char estyle[256];
     sprintf(estyle,"%s/%s",arg[2],suffix);
-    success = 1;
-
-    if (0) return;
-
-#define COMPUTE_CLASS
-#define ComputeStyle(key,Class) \
-    else if (strcmp(estyle,#key) == 0) \
-      compute[ncompute] = new Class(lmp,narg,arg);
-#include "style_compute.h"
-#undef ComputeStyle
-#undef COMPUTE_CLASS
-
-    else success = 0;
+    if (compute_map->find(estyle) != compute_map->end()) {
+      ComputeCreator compute_creator = (*compute_map)[estyle];
+      compute[ncompute] = compute_creator(lmp,narg,arg);
+    }
   }
 
-  if (!success) {
-    if (0) return;
-
-#define COMPUTE_CLASS
-#define ComputeStyle(key,Class) \
-    else if (strcmp(arg[2],#key) == 0) \
-      compute[ncompute] = new Class(lmp,narg,arg);
-#include "style_compute.h"
-#undef ComputeStyle
-#undef COMPUTE_CLASS
-
-    else error->all(FLERR,"Invalid compute style");
+  if (compute[ncompute] == NULL && 
+      compute_map->find(arg[2]) != compute_map->end()) {
+    ComputeCreator compute_creator = (*compute_map)[arg[2]];
+    compute[ncompute] = compute_creator(lmp,narg,arg);
   }
+
+  if (compute[ncompute] == NULL) error->all(FLERR,"Invalid compute style");
 
   ncompute++;
+}
+
+/* ----------------------------------------------------------------------
+   one instance per compute in style_compute.h
+------------------------------------------------------------------------- */
+
+template <typename T>
+Compute *Modify::compute_creator(LAMMPS *lmp, int narg, char **arg)
+{
+  return new T(lmp,narg,arg);
 }
 
 /* ----------------------------------------------------------------------
@@ -976,6 +995,7 @@ void Modify::write_restart(FILE *fp)
 
   for (int i = 0; i < nfix; i++)
     if (fix[i]->restart_peratom) {
+      int maxsize_restart = fix[i]->maxsize_restart();
       if (me == 0) {
         n = strlen(fix[i]->id) + 1;
         fwrite(&n,sizeof(int),1,fp);
@@ -983,8 +1003,7 @@ void Modify::write_restart(FILE *fp)
         n = strlen(fix[i]->style) + 1;
         fwrite(&n,sizeof(int),1,fp);
         fwrite(fix[i]->style,sizeof(char),n,fp);
-        n = fix[i]->maxsize_restart();
-        fwrite(&n,sizeof(int),1,fp);
+        fwrite(&maxsize_restart,sizeof(int),1,fp);
       }
     }
 }

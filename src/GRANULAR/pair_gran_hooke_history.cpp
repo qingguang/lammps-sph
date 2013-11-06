@@ -28,6 +28,7 @@
 #include "modify.h"
 #include "fix.h"
 #include "fix_pour.h"
+#include "fix_deposit.h"
 #include "fix_shear_history.h"
 #include "comm.h"
 #include "neighbor.h"
@@ -366,7 +367,7 @@ void PairGranHookeHistory::settings(int narg, char **arg)
   if (dampflag == 0) gammat = 0.0;
 
   if (kn < 0.0 || kt < 0.0 || gamman < 0.0 || gammat < 0.0 ||
-      xmu < 0.0 || xmu > 1.0 || dampflag < 0 || dampflag > 1)
+      xmu < 0.0 || xmu > 10000.0 || dampflag < 0 || dampflag > 1)
     error->all(FLERR,"Illegal pair_style command");
 }
 
@@ -450,7 +451,7 @@ void PairGranHookeHistory::init_style()
   if (i < modify->nfix) freeze_group_bit = modify->fix[i]->groupbit;
   else freeze_group_bit = 0;
 
-  // check for FixPour and set pour_type and pour_maxdiam
+  // check for FixPour and set pour_type and pour_maxrad
 
   int pour_type = 0;
   double pour_maxrad = 0.0;
@@ -461,6 +462,17 @@ void PairGranHookeHistory::init_style()
     pour_maxrad = ((FixPour *) modify->fix[i])->radius_max;
   }
 
+  // check for FixDeposit and set deposit_type and deposit_maxrad
+
+  int deposit_type = 0;
+  double deposit_maxrad = 0.0;
+  for (i = 0; i < modify->nfix; i++)
+    if (strcmp(modify->fix[i]->style,"deposit") == 0) break;
+  if (i < modify->nfix) {
+    deposit_type = ((FixDeposit *) modify->fix[i])->ntype;
+    deposit_maxrad = 0.5;
+  }
+
   // check for FixRigid
 
   fix_rigid = NULL;
@@ -469,11 +481,13 @@ void PairGranHookeHistory::init_style()
   if (i < modify->nfix) fix_rigid = modify->fix[i];
 
   // set maxrad_dynamic and maxrad_frozen for each type
-  // include future Fix pour particles as dynamic
+  // include future FixPour and FixDeposit particles as dynamic
 
   for (i = 1; i <= atom->ntypes; i++)
     onerad_dynamic[i] = onerad_frozen[i] = 0.0;
   if (pour_type) onerad_dynamic[pour_type] = pour_maxrad;
+  if (deposit_type) onerad_dynamic[deposit_type] = 
+                      MAX(onerad_dynamic[deposit_type],deposit_maxrad);
 
   double *radius = atom->radius;
   int *mask = atom->mask;

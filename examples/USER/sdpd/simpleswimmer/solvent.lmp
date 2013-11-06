@@ -1,0 +1,62 @@
+echo               both
+log                ${dname}/log.lammps
+dimension          ${ndim}
+units              si
+atom_style         hybrid  angle meso
+communicate        single vel yes
+
+include            vars.lmp
+read_data          ${dname}/sdpd-with-poly.data
+
+mass               * ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+
+special_bonds      lj 1 1 1 angle no
+
+angle_style        harmonic
+angle_coeff        * 1.0 90
+
+bond_style         fene
+bond_coeff         1 ${fene_H} ${fene_r0} 0 0
+
+compute            rho_peratom all meso_rho/atom
+compute            ke all ke
+compute            sdpd_kin all temp
+
+fix                integrate_fix_full all meso
+
+# "profile" corrected temperature
+compute         pTemp all temp/profile 1 1 0 y 10
+variable        nTemp equal c_pTemp*${kb}
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+
+include            ${ndim}d-image.lmp
+
+variable           time  equal dt*step
+thermo_style       custom step c_sdpd_kin v_nTemp v_time
+thermo_modify      norm no
+thermo             100
+
+neighbor           0.0 bin
+variable           eps delete
+neigh_modify       every 1
+
+
+include            settimestep.lmp
+timestep           ${dt}
+
+restart 10000 ${dname}/sdpd.restart
+compute            cRDF  all rdf 50
+fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
+
+run     10000 pre no post no
+
+

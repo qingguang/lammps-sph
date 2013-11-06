@@ -80,9 +80,9 @@ This section has the following sub-sections:
 
 Building LAMMPS can be non-trivial.  You may need to edit a makefile,
 there are compiler options to consider, additional libraries can be
-used (MPI, FFT, JPEG), LAMMPS packages may be included or excluded,
-some of these packages use auxiliary libraries which need to be
-pre-built, etc.
+used (MPI, FFT, JPEG, PNG), LAMMPS packages may be included or
+excluded, some of these packages use auxiliary libraries which need to
+be pre-built, etc.
 
 Please read this section carefully.  If you are not comfortable with
 makefiles, or building codes on a Unix platform, or running an MPI job
@@ -182,6 +182,8 @@ within the LAMMPS code.  The options that are currently recogized are:
 
 -DLAMMPS_GZIP
 -DLAMMPS_JPEG
+-DLAMMPS_PNG
+-DLAMMPS_FFMPEG
 -DLAMMPS_MEMALIGN
 -DLAMMPS_XDR
 -DLAMMPS_SMALLBIG
@@ -193,13 +195,24 @@ within the LAMMPS code.  The options that are currently recogized are:
 -DPACK_MEMCPY :ul
 
 The read_data and dump commands will read/write gzipped files if you
-compile with -DLAMMPS_GZIP.  It requires that your Unix support the
-"popen" command.
+compile with -DLAMMPS_GZIP.  It requires that your machine supports
+the "popen" function in the standard runtime library and that a gzip
+executable can be found by LAMMPS during a run.
 
-If you use -DLAMMPS_JPEG, the "dump image"_dump.html command will be
-able to write out JPEG image files.  If not, it will only be able to
-write out text-based PPM image files.  For JPEG files, you must also
-link LAMMPS with a JPEG library, as described below.
+If you use -DLAMMPS_JPEG, the "dump image"_dump_image.html command
+will be able to write out JPEG image files. For JPEG files, you must
+also link LAMMPS with a JPEG library, as described below. If you use
+-DLAMMPS_PNG, the "dump image"_dump.html command will be able to write
+out PNG image files.  For PNG files, you must also link LAMMPS with a
+PNG library, as described below.  If neither of those two defines are
+used, LAMMPS will only be able to write out uncompressed PPM image
+files.
+
+If you use -DLAMMPS_FFMPEG, the "dump movie"_dump_image.html command
+will be available to support on-the-fly generation of rendered movies
+the need to store intermediate image files. It requires that your
+machines supports the "popen" function in the standard runtime library
+and that an FFmpeg executable can be found by LAMMPS during the run.
 
 Using -DLAMMPS_MEMALIGN=<bytes> enables the use of the
 posix_memalign() call instead of malloc() when large chunks or memory
@@ -343,16 +356,23 @@ been tested with the FFTW3, FFTW2, MKL, and KISS FFT options.
 
 [Step 7]
 
-The 3 JPG variables allow you to specify a JPEG library which LAMMPS
-uses when writing out JPEG files via the "dump image"_dump_image.html
-command.  These can be left blank if you do not use the -DLAMMPS_JPEG
-switch discussed above in Step 4, since in that case JPEG output will
-be disabled.
+The 3 JPG variables allow you to specify a JPEG and/or PNG library
+which LAMMPS uses when writing out JPEG or PNG files via the "dump
+image"_dump_image.html command.  These can be left blank if you do not
+use the -DLAMMPS_JPEG or -DLAMMPS_PNG switches discussed above in Step
+4, since in that case JPEG/PNG output will be disabled.
 
-A standard JPEG library usually goes by the name libjpeg.a and has an
-associated header file jpeglib.h.  Whichever JPEG library you have on
-your platform, you'll need to set the appropriate JPG_INC, JPG_PATH,
-and JPG_LIB variables, so that the compiler and linker can find it.
+A standard JPEG library usually goes by the name libjpeg.a or
+libjpeg.so and has an associated header file jpeglib.h.  Whichever
+JPEG library you have on your platform, you'll need to set the
+appropriate JPG_INC, JPG_PATH, and JPG_LIB variables, so that the
+compiler and linker can find it.
+
+A standard PNG library usually goes by the name libpng.a or libpng.so
+and has an associated header file png.h.  Whichever PNG library you
+have on your platform, you'll need to set the appropriate JPG_INC,
+JPG_PATH, and JPG_LIB variables, so that the compiler and linker can
+find it.
 
 As before, if these header and library files are in the usual place on
 your machine, you may not need to set these variables.
@@ -578,6 +598,12 @@ or
 
 make no-manybody
 make g++ :pre
+
+IMPORTANT NOTE: You should NOT include/exclude packages and build
+LAMMPS in a single make command by using multiple targets, e.g. make
+yes-colloid g++.  This is because the make procedure creates a list of
+source files that will be out-of-date for the build if the package
+configuration changes during the same command.
 
 Some packages have individual files that depend on other packages
 being included.  LAMMPS checks for this and does the right thing.
@@ -979,6 +1005,7 @@ letter abbreviation can be used:
 -i or -in
 -h or -help
 -l or -log
+-nc or -nocite
 -p or -partition
 -pl or -plog
 -ps or -pscreen
@@ -1045,6 +1072,13 @@ file.N.  For both one-partition and multi-partition mode, if the
 specified file is "none", then no log files are created.  Using a
 "log"_log.html command in the input script will override this setting.
 Option -plog will override the name of the partition log files file.N.
+
+-nocite :pre
+
+Disable writing the log.cite file which is normally written to list
+references for specific cite-able features used during a LAMMPS run.
+See the "citation page"_http://lammps.sandia.gov/cite.html for more
+details.
 
 -partition 8x2 4 5 ... :pre
 

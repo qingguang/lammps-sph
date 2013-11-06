@@ -1,0 +1,17 @@
+echo               both
+log                ${dname}/init.lammps
+dimension          ${ndim}
+units              si
+atom_style         hybrid  bond meso
+communicate        single vel yes
+# create simulation box
+
+#3D box
+include            vars.lmp
+# create fluid particles
+include            ${ndim}d-lattice.lmp
+create_atoms       1 region box
+mass               *  ${sdpd_mass}
+
+write_restart      ${dname}/sdpd.restart
+write_data         ${dname}/sdpd.data
