@@ -1,0 +1,31 @@
+kill(all);
+load(vect);
+A: 1;
+k: 1;
+omega: 1;
+
+
+x[t](s):=s;
+y[t](s):= A*sin(omega*t - k*x[t](s));
+
+
+
+/*
+x[t](s):=s;
+y[t](s):=s^2;
+*/
+
+
+load(draw);
+draw2d( parametric(x[0], y[0], s, 0, 10), color='red, parametric(x[0.1], y[0.1], s, 0, 10));
+
+k[t](s):= ''( (diff(x[t](s), s)*diff(y[t](s), s, 2) - diff(y[t](s), s)*diff(x[t](s), s, 2)) /
+(diff(x[t](s), s)^2 + diff(y[t](s), s)^2)^(3/2) );
+
+r[t](s):= [x[t](s), y[t](s)];
+
+norm(r):= (r.r)^(1/2);
+
+ka[t](s):= ''(express ( diff(r[t](s), s) ~ diff(r[t](s), s, 2) / norm(diff(r[t](s), s))^3 ) );
+
+integrate(norm(diff(r[t](z), z)), z, 0, z0);
