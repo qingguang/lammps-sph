@@ -7,7 +7,6 @@ laguerre(g, k):= subst(gen_laguerre(k, g, 'r), body, lambda([r], body));
 wendland(ndim, k):= block([w, r],
   local(plusfun, I, p),
   plusfun(x):= x*(signum(x)+1)/2,
-  I(phi):= ''(pwint(t*phi(t), t, 'r, +inf)),
   p[l]:= if l=0 then 1 else buildq([g: plusfun(1-'r)^l], lambda([r], g)),
   I[k, f]:= if k=0 then f elseif k=1 then buildq([g: pwint(t*f(t), t, 'r, 1)], lambda([r], g))
   else I[k-1, I[1, f]],
@@ -52,13 +51,13 @@ bspline_c(k):= block([w, n, r],
 
 matchdeclare(www, true);
 tellsimp(bessel_j(1/2, www), sqrt(2/(%pi*www))*sin(www));
-Fn(w, ndim, ifun, cutoff):= subst(
+Fn(w, ndim, ifun, cutoff):= block([r], subst(
   [p=block([], local(r), assume(r>0), assume(t>0), fullratsimp(w(r)*bessel_j(ndim/2-1, 2*%pi*r*t)*r^(ndim/2)/t^(ndim/2-1))),
   integrator=ifun,
   c=cutoff,
   nd=ndim],
   lambda([t],
-      (2*%pi)*integrator(p, r, 1e-10, c)));
+      (2*%pi)*integrator(p, r, 1e-10, c))));
 linspace(a,b,n) := makelist(a+(i-1)*(b-a)/(n-1), i,1,n);
 
 matchdeclare(rr, true);
