@@ -28,8 +28,10 @@ compute            ke all ke
 variable           etot equal c_ke+c_emeso # total energy
 
 # dump positions and local density
-dump               dump_id all custom 100 dump.3d id type x z y c_rhoatom
-dump_modify        dump_id first yes
+dump               dump_id all custom 100 dump*.3d id type x z y c_rhoatom
+dump_modify        dump_id first  yes
+dump_modify        dump_id sort  id
+dump_modify        dump_id pad    8
 
 neighbor           0.5 bin
 neigh_modify       every 5 delay 0 check yes

@@ -22,4 +22,4 @@ fix		2 all langevin 1.0 1.0 10.0 904297
 thermo          100
 timestep	0.012
 
-run		100
+run		1000
