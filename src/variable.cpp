@@ -22,10 +22,12 @@
 #include "update.h"
 #include "group.h"
 #include "domain.h"
+#include "comm.h"
 #include "region.h"
 #include "modify.h"
 #include "compute.h"
 #include "fix.h"
+#include "fix_store.h"
 #include "output.h"
 #include "thermo.h"
 #include "random_mars.h"
@@ -41,14 +43,16 @@ using namespace MathConst;
 #define VARDELTA 4
 #define MAXLEVEL 4
 #define MAXLINE 256
+#define CHUNK 1024
 
 #define MYROUND(a) (( a-floor(a) ) >= .5) ? ceil(a) : floor(a)
 
-enum{INDEX,LOOP,WORLD,UNIVERSE,ULOOP,STRING,FILEVAR,AFILEVAR,EQUAL,ATOM};
+enum{INDEX,LOOP,WORLD,UNIVERSE,ULOOP,STRING,GETENV,SCALARFILE,ATOMFILE,EQUAL,ATOM};
 enum{ARG,OP};
 
 // customize by adding a function
-// if add before OR, also set precedence level and precedence length in *.h
+// if add before OR,
+// also set precedence level in constructor and precedence length in *.h
 
 enum{DONE,ADD,SUBTRACT,MULTIPLY,DIVIDE,CARAT,MODULO,UNARY,
      NOT,EQ,NE,LT,LE,GT,GE,AND,OR,
@@ -276,39 +280,62 @@ void Variable::set(int narg, char **arg)
     data[nvar] = new char*[num[nvar]];
     copy(1,&arg[2],data[nvar]);
 
-  // FILEVAR for strings or numbers
+  // GETENV
+  // remove pre-existing var if also style GETENV (allows it to be reset)
+  // num = 1, which = 1st value
+  // data = 1 value, string to eval
+
+  } else if (strcmp(arg[1],"getenv") == 0) {
+    if (narg != 3) error->all(FLERR,"Illegal variable command");
+    if (find(arg[0]) >= 0) {
+      if (style[find(arg[0])] != GETENV)
+        error->all(FLERR,"Cannot redefine variable as a different style");
+      remove(find(arg[0]));
+    }
+    if (nvar == maxvar) grow();
+    style[nvar] = GETENV;
+    num[nvar] = 1;
+    which[nvar] = 0;
+    pad[nvar] = 0;
+    data[nvar] = new char*[num[nvar]];
+    copy(1,&arg[2],data[nvar]);
+    data[nvar][1] = NULL;
+
+  // SCALARFILE for strings or numbers
   // which = 1st value
+  // data = 1 value, string to eval
 
   } else if (strcmp(arg[1],"file") == 0) {
     if (narg != 3) error->all(FLERR,"Illegal variable command");
     if (find(arg[0]) >= 0) return;
     if (nvar == maxvar) grow();
-    style[nvar] = FILEVAR;
+    style[nvar] = SCALARFILE;
     num[nvar] = 1;
     which[nvar] = 0;
     pad[nvar] = 0;
     data[nvar] = new char*[num[nvar]];
     data[nvar][0] = new char[MAXLINE];
-    reader[nvar] = new VarReader(lmp,arg[2],FILEVAR);
-    int flag = reader[nvar]->read(data[nvar][0]);
+    reader[nvar] = new VarReader(lmp,arg[0],arg[2],SCALARFILE);
+    int flag = reader[nvar]->read_scalar(data[nvar][0]);
     if (flag) error->all(FLERR,"File variable could not read value");
 
-  // AFILEVAR for numbers
+  // ATOMFILE for numbers
   // which = 1st value
+  // data = NULL
 
-  } else if (strcmp(arg[1],"afile") == 0) {
+  } else if (strcmp(arg[1],"atomfile") == 0) {
     if (narg != 3) error->all(FLERR,"Illegal variable command");
     if (find(arg[0]) >= 0) return;
     if (nvar == maxvar) grow();
-    style[nvar] = AFILEVAR;
+    style[nvar] = ATOMFILE;
     num[nvar] = 1;
     which[nvar] = 0;
     pad[nvar] = 0;
-    //data[nvar] = new char*[num[nvar]];
-    //data[nvar][0] = new char[MAXLINE];
-    reader[nvar] = new VarReader(lmp,arg[2],AFILEVAR);
-    int flag = reader[nvar]->read(data[nvar][0]);
-    if (flag) error->all(FLERR,"Afile variable could not read values");
+    data[nvar] = new char*[num[nvar]];
+    data[nvar][0] = NULL;
+    reader[nvar] = new VarReader(lmp,arg[0],arg[2],ATOMFILE);
+    int flag = reader[nvar]->read_peratom();
+    if (flag) error->all(FLERR,"Atomfile variable could not read values");
 
   // EQUAL
   // remove pre-existing var if also style EQUAL (allows it to be reset)
@@ -407,10 +434,11 @@ int Variable::next(int narg, char **arg)
       error->all(FLERR,"All variables in next command must be same style");
   }
 
-  // invalid styles STRING or EQUAL or WORLD or ATOM
+  // invalid styles STRING or EQUAL or WORLD or ATOM or GETENV
 
   int istyle = style[find(arg[0])];
-  if (istyle == STRING || istyle == EQUAL || istyle == WORLD || istyle == ATOM)
+  if (istyle == STRING || istyle == EQUAL || istyle == WORLD
+      || istyle == GETENV || istyle == ATOM)
     error->all(FLERR,"Invalid variable style with next command");
 
   // increment all variables in list
@@ -428,11 +456,22 @@ int Variable::next(int narg, char **arg)
       }
     }
 
-  } else if (istyle == FILEVAR) {
+  } else if (istyle == SCALARFILE) {
 
     for (int iarg = 0; iarg < narg; iarg++) {
       ivar = find(arg[iarg]);
-      int done = reader[ivar]->read(data[ivar][0]);
+      int done = reader[ivar]->read_scalar(data[ivar][0]);
+      if (done) {
+        flag = 1;
+        remove(ivar);
+      }
+    }
+
+  } else if (istyle == ATOMFILE) {
+
+    for (int iarg = 0; iarg < narg; iarg++) {
+      ivar = find(arg[iarg]);
+      int done = reader[ivar]->read_peratom();
       if (done) {
         flag = 1;
         remove(ivar);
@@ -484,11 +523,14 @@ int Variable::next(int narg, char **arg)
 
 /* ----------------------------------------------------------------------
    return ptr to the data text associated with a variable
-   if INDEX or WORLD or UNIVERSE or STRING var, return ptr to stored string
+   if INDEX or WORLD or UNIVERSE or STRING or SCALARFILE var, 
+     return ptr to stored string
    if LOOP or ULOOP var, write int to data[0] and return ptr to string
    if EQUAL var, evaluate variable and put result in str
-   if ATOM var, return NULL
-   return NULL if no variable or which is bad, caller must respond
+   if GETENV var, query environment and put result in str
+   if ATOM or ATOMFILE var, return NULL
+   return NULL if no variable with name or which value is bad,
+     caller must respond
 ------------------------------------------------------------------------- */
 
 char *Variable::retrieve(char *name)
@@ -500,7 +542,7 @@ char *Variable::retrieve(char *name)
   char *str;
   if (style[ivar] == INDEX || style[ivar] == WORLD ||
       style[ivar] == UNIVERSE || style[ivar] == STRING || 
-      style[ivar] == FILEVAR) {
+      style[ivar] == SCALARFILE) {
     str = data[ivar][which[ivar]];
   } else if (style[ivar] == LOOP || style[ivar] == ULOOP) {
     char result[16];
@@ -524,7 +566,15 @@ char *Variable::retrieve(char *name)
     data[ivar][1] = new char[n];
     strcpy(data[ivar][1],result);
     str = data[ivar][1];
-  } else if (style[ivar] == ATOM) return NULL;
+  } else if (style[ivar] == GETENV) {
+    const char *result = getenv(data[ivar][0]);
+    if (data[ivar][1]) delete [] data[ivar][1];
+    if (result == NULL) result = (const char *)"";
+    int n = strlen(result) + 1;
+    data[ivar][1] = new char[n];
+    strcpy(data[ivar][1],result);
+    str = data[ivar][1];
+  } else if (style[ivar] == ATOM || style[ivar] == ATOMFILE) return NULL;
 
   return str;
 }
@@ -555,7 +605,7 @@ double Variable::compute_equal(char *str)
 }
 
 /* ----------------------------------------------------------------------
-   compute result of atom-style variable evaluation
+   compute result of atom-style and atomfile-style variable evaluation
    only computed for atoms in igroup, else result is 0.0
    answers are placed every stride locations into result
    if sumflag, add variable values to existing result
@@ -565,30 +615,53 @@ void Variable::compute_atom(int ivar, int igroup,
                             double *result, int stride, int sumflag)
 {
   Tree *tree;
-  double tmp = evaluate(data[ivar][0],&tree);
-  tmp = collapse_tree(tree);
+  double *vstore;
+  
+  if (style[ivar] == ATOM) {
+    double tmp = evaluate(data[ivar][0],&tree);
+    tmp = collapse_tree(tree);
+  } else vstore = reader[ivar]->fix->vstore;
 
   int groupbit = group->bitmask[igroup];
   int *mask = atom->mask;
   int nlocal = atom->nlocal;
 
-  if (sumflag == 0) {
-    int m = 0;
-    for (int i = 0; i < nlocal; i++) {
-      if (mask[i] & groupbit) result[m] = eval_tree(tree,i);
-      else result[m] = 0.0;
-      m += stride;
+  if (style[ivar] == ATOM) {
+    if (sumflag == 0) {
+      int m = 0;
+      for (int i = 0; i < nlocal; i++) {
+        if (mask[i] & groupbit) result[m] = eval_tree(tree,i);
+        else result[m] = 0.0;
+        m += stride;
+      }
+
+    } else {
+      int m = 0;
+      for (int i = 0; i < nlocal; i++) {
+        if (mask[i] & groupbit) result[m] += eval_tree(tree,i);
+        m += stride;
+      }
     }
 
   } else {
-    int m = 0;
-    for (int i = 0; i < nlocal; i++) {
-      if (mask[i] && groupbit) result[m] += eval_tree(tree,i);
-      m += stride;
+    if (sumflag == 0) {
+      int m = 0;
+      for (int i = 0; i < nlocal; i++) {
+        if (mask[i] & groupbit) result[m] = vstore[i];
+        else result[m] = 0.0;
+        m += stride;
+      }
+
+    } else {
+      int m = 0;
+      for (int i = 0; i < nlocal; i++) {
+        if (mask[i] & groupbit) result[m] += vstore[i];
+        m += stride;
+      }
     }
   }
 
-  free_tree(tree);
+  if (style[ivar] == ATOM) free_tree(tree);
 }
 
 /* ----------------------------------------------------------------------
@@ -614,17 +687,18 @@ int Variable::equalstyle(int ivar)
 }
 
 /* ----------------------------------------------------------------------
-   return 1 if variable is ATOM style, 0 if not
+   return 1 if variable is ATOM or ATOMFILE style, 0 if not
 ------------------------------------------------------------------------- */
 
 int Variable::atomstyle(int ivar)
 {
-  if (style[ivar] == ATOM) return 1;
+  if (style[ivar] == ATOM || style[ivar] == ATOMFILE) return 1;
   return 0;
 }
 
 /* ----------------------------------------------------------------------
    remove Nth variable from list and compact list
+   delete reader explicitly if it exists
 ------------------------------------------------------------------------- */
 
 void Variable::remove(int n)
@@ -633,6 +707,7 @@ void Variable::remove(int n)
   if (style[n] == LOOP || style[n] == ULOOP) delete [] data[n][0];
   else for (int i = 0; i < num[n]; i++) delete [] data[n][i];
   delete [] data[n];
+  delete reader[n];
 
   for (int i = n+1; i < nvar; i++) {
     names[i-1] = names[i];
@@ -961,6 +1036,10 @@ double Variable::evaluate(char *str, Tree **tree)
             peratom2global(1,NULL,&compute->array_atom[0][index2-1],
                            compute->size_peratom_cols,index1,
                            tree,treestack,ntreestack,argstack,nargstack);
+          else
+            peratom2global(1,NULL,NULL,
+                           compute->size_peratom_cols,index1,
+                           tree,treestack,ntreestack,argstack,nargstack);
 
         // c_ID = vector from per-atom vector
 
@@ -983,6 +1062,7 @@ double Variable::evaluate(char *str, Tree **tree)
           newtree->type = ATOMARRAY;
           newtree->array = compute->vector_atom;
           newtree->nstride = 1;
+          newtree->selfalloc = 0;
           newtree->left = newtree->middle = newtree->right = NULL;
           treestack[ntreestack++] = newtree;
 
@@ -1013,6 +1093,7 @@ double Variable::evaluate(char *str, Tree **tree)
           else
             newtree->array = NULL;
           newtree->nstride = compute->size_peratom_cols;
+          newtree->selfalloc = 0;
           newtree->left = newtree->middle = newtree->right = NULL;
           treestack[ntreestack++] = newtree;
 
@@ -1142,6 +1223,10 @@ double Variable::evaluate(char *str, Tree **tree)
             peratom2global(1,NULL,&fix->array_atom[0][index2-1],
                            fix->size_peratom_cols,index1,
                            tree,treestack,ntreestack,argstack,nargstack);
+          else
+            peratom2global(1,NULL,NULL,
+                           fix->size_peratom_cols,index1,
+                           tree,treestack,ntreestack,argstack,nargstack);
 
         // f_ID = vector from per-atom vector
 
@@ -1158,6 +1243,7 @@ double Variable::evaluate(char *str, Tree **tree)
           newtree->type = ATOMARRAY;
           newtree->array = fix->vector_atom;
           newtree->nstride = 1;
+          newtree->selfalloc = 0;
           newtree->left = newtree->middle = newtree->right = NULL;
           treestack[ntreestack++] = newtree;
 
@@ -1182,6 +1268,7 @@ double Variable::evaluate(char *str, Tree **tree)
           else
             newtree->array = NULL;
           newtree->nstride = fix->size_peratom_cols;
+          newtree->selfalloc = 0;
           newtree->left = newtree->middle = newtree->right = NULL;
           treestack[ntreestack++] = newtree;
 
@@ -1216,9 +1303,9 @@ double Variable::evaluate(char *str, Tree **tree)
           i = ptr-str+1;
         }
 
-        // v_name = scalar from non atom-style global scalar
+        // v_name = scalar from non atom/atomfile variable
 
-        if (nbracket == 0 && style[ivar] != ATOM) {
+        if (nbracket == 0 && style[ivar] != ATOM && style[ivar] != ATOMFILE) {
 
           char *var = retrieve(id);
           if (var == NULL)
@@ -1231,7 +1318,8 @@ double Variable::evaluate(char *str, Tree **tree)
             treestack[ntreestack++] = newtree;
           } else argstack[nargstack++] = atof(var);
 
-        // v_name = vector from atom-style per-atom vector
+        // v_name = per-atom vector from atom-style variable
+        // evaluate the atom-style variable as newtree
 
         } else if (nbracket == 0 && style[ivar] == ATOM) {
 
@@ -1242,7 +1330,22 @@ double Variable::evaluate(char *str, Tree **tree)
           evaluate(data[ivar][0],&newtree);
           treestack[ntreestack++] = newtree;
 
-        // v_name[N] = scalar from atom-style per-atom vector
+        // v_name = per-atom vector from atomfile-style variable
+
+        } else if (nbracket == 0 && style[ivar] == ATOMFILE) {
+
+          if (tree == NULL)
+            error->all(FLERR,"Atomfile-style variable in "
+                       "equal-style variable formula");
+          Tree *newtree = new Tree();
+          newtree->type = ATOMARRAY;
+          newtree->array = reader[ivar]->fix->vstore;
+          newtree->nstride = 1;
+          newtree->selfalloc = 0;
+          newtree->left = newtree->middle = newtree->right = NULL;
+          treestack[ntreestack++] = newtree;
+
+        // v_name[N] = scalar from atom-style variable
         // compute the per-atom variable in result
         // use peratom2global to extract single value from result
 
@@ -1254,6 +1357,13 @@ double Variable::evaluate(char *str, Tree **tree)
           peratom2global(1,NULL,result,1,index,
                          tree,treestack,ntreestack,argstack,nargstack);
           memory->destroy(result);
+
+        // v_name[N] = scalar from atomfile-style variable
+
+        } else if (nbracket && style[ivar] == ATOMFILE) {
+
+          peratom2global(1,NULL,reader[ivar]->fix->vstore,1,index,
+                         tree,treestack,ntreestack,argstack,nargstack);
 
         } else error->all(FLERR,"Mismatched variable in variable formula");
 
@@ -2234,6 +2344,10 @@ void Variable::free_tree(Tree *tree)
   if (tree->left) free_tree(tree->left);
   if (tree->middle) free_tree(tree->middle);
   if (tree->right) free_tree(tree->right);
+
+  if (tree->type == ATOMARRAY && tree->selfalloc)
+    memory->destroy(tree->array);
+
   delete tree;
 }
 
@@ -2915,6 +3029,11 @@ int Variable::region_function(char *id)
   int iregion = domain->find_region(id);
   if (iregion == -1)
     error->all(FLERR,"Region ID in variable formula does not exist");
+
+  // init region in case sub-regions have been deleted
+
+  domain->regions[iregion]->init();
+
   return iregion;
 }
 
@@ -2925,7 +3044,7 @@ int Variable::region_function(char *id)
    contents = str between parentheses with one,two,three args
    return 0 if not a match, 1 if successfully processed
    customize by adding a special function:
-     sum(x),min(x),max(x),ave(x),trap(x),gmask(x),rmask(x),grmask(x,y)
+     sum(x),min(x),max(x),ave(x),trap(x),gmask(x),rmask(x),grmask(x,y),next(x)
 ------------------------------------------------------------------------- */
 
 int Variable::special_function(char *word, char *contents, Tree **tree,
@@ -3153,13 +3272,13 @@ int Variable::special_function(char *word, char *contents, Tree **tree,
     int iregion = region_function(arg2);
 
     Tree *newtree = new Tree();
-    newtree->type = RMASK;
+    newtree->type = GRMASK;
     newtree->ivalue1 = group->bitmask[igroup];
     newtree->ivalue2 = iregion;
     newtree->left = newtree->middle = newtree->right = NULL;
     treestack[ntreestack++] = newtree;
 
-  // file variable special function
+  // special function for file-style or atomfile-style variables
 
   } else if (strcmp(word,"next") == 0) {
     if (narg != 1) 
@@ -3168,21 +3287,47 @@ int Variable::special_function(char *word, char *contents, Tree **tree,
     int ivar = find(arg1);
     if (ivar == -1)
       error->all(FLERR,"Variable ID in variable formula does not exist");
-    if (style[ivar] != FILEVAR)
-      error->all(FLERR,"Invalid variable in special function next");
 
-    double value = atof(data[ivar][0]);
-    reader[ivar]->read(data[ivar][0]);
-
+    // SCALARFILE has single current value, read next one
     // save value in tree or on argstack
 
-    if (tree) {
+    if (style[ivar] == SCALARFILE) {
+      double value = atof(data[ivar][0]);
+      int done = reader[ivar]->read_scalar(data[ivar][0]);
+      if (done) remove(ivar);
+
+      if (tree) {
+        Tree *newtree = new Tree();
+        newtree->type = VALUE;
+        newtree->value = value;
+        newtree->left = newtree->middle = newtree->right = NULL;
+        treestack[ntreestack++] = newtree;
+      } else argstack[nargstack++] = value;
+
+    // ATOMFILE has per-atom values, save values in tree
+    // copy current per-atom values into result so can read next ones
+    // set selfalloc = 1 so result will be deleted by free_tree() after eval
+
+    } else if (style[ivar] == ATOMFILE) {
+      if (tree == NULL) 
+        error->all(FLERR,"Atomfile variable in equal-style variable formula");
+
+      double *result;
+      memory->create(result,atom->nlocal,"variable:result");
+      memcpy(result,reader[ivar]->fix->vstore,atom->nlocal*sizeof(double));
+
+      int done = reader[ivar]->read_peratom();
+      if (done) remove(ivar);
+
       Tree *newtree = new Tree();
-      newtree->type = VALUE;
-      newtree->value = value;
+      newtree->type = ATOMARRAY;
+      newtree->array = result;
+      newtree->nstride = 1;
+      newtree->selfalloc = 1;
       newtree->left = newtree->middle = newtree->right = NULL;
       treestack[ntreestack++] = newtree;
-    } else argstack[nargstack++] = value;
+
+    } else error->all(FLERR,"Invalid variable style in special function next");
   }
 
   delete [] arg1;
@@ -3199,7 +3344,7 @@ int Variable::special_function(char *word, char *contents, Tree **tree,
    id = positive global ID of atom, converted to local index
    push result onto tree or arg stack
    customize by adding an atom vector:
-     mass,type,x,y,z,vx,vy,vz,fx,fy,fz
+     id,mass,type,x,y,z,vx,vy,vz,fx,fy,fz
 ------------------------------------------------------------------------- */
 
 void Variable::peratom2global(int flag, char *word,
@@ -3217,7 +3362,8 @@ void Variable::peratom2global(int flag, char *word,
   if (index >= 0 && index < atom->nlocal) {
 
     if (flag == 0) {
-      if (strcmp(word,"mass") == 0) {
+      if (strcmp(word,"id") == 0) mine = atom->tag[index];
+      else if (strcmp(word,"mass") == 0) {
         if (atom->rmass) mine = atom->rmass[index];
         else mine = atom->mass[atom->type[index]];
       }
@@ -3254,11 +3400,12 @@ void Variable::peratom2global(int flag, char *word,
    check if word matches an atom vector
    return 1 if yes, else 0
    customize by adding an atom vector:
-     mass,type,x,y,z,vx,vy,vz,fx,fy,fz
+     id,mass,type,x,y,z,vx,vy,vz,fx,fy,fz
 ------------------------------------------------------------------------- */
 
 int Variable::is_atom_vector(char *word)
 {
+  if (strcmp(word,"id") == 0) return 1;
   if (strcmp(word,"mass") == 0) return 1;
   if (strcmp(word,"type") == 0) return 1;
   if (strcmp(word,"x") == 0) return 1;
@@ -3278,7 +3425,7 @@ int Variable::is_atom_vector(char *word)
    push result onto tree
    word = atom vector
    customize by adding an atom vector:
-     mass,type,x,y,z,vx,vy,vz,fx,fy,fz
+     id,mass,type,x,y,z,vx,vy,vz,fx,fy,fz
 ------------------------------------------------------------------------- */
 
 void Variable::atom_vector(char *word, Tree **tree,
@@ -3290,10 +3437,15 @@ void Variable::atom_vector(char *word, Tree **tree,
   Tree *newtree = new Tree();
   newtree->type = ATOMARRAY;
   newtree->nstride = 3;
+  newtree->selfalloc = 0;
   newtree->left = newtree->middle = newtree->right = NULL;
   treestack[ntreestack++] = newtree;
 
-  if (strcmp(word,"mass") == 0) {
+  if (strcmp(word,"id") == 0) {
+    newtree->type = INTARRAY;
+    newtree->nstride = 1;
+    newtree->iarray = atom->tag;
+  } else if (strcmp(word,"mass") == 0) {
     if (atom->rmass) {
       newtree->nstride = 1;
       newtree->array = atom->rmass;
@@ -3618,7 +3770,7 @@ unsigned int Variable::data_mask(char *str)
     // compute
     // ----------------
 
-    if ((strncmp(word,"c_",2) == 0) && (i>0) && (not isalnum(str[i-1]))){
+    if ((strncmp(word,"c_",2) == 0) && (i>0) && (!isalnum(str[i-1]))) {
       if (domain->box_exist == 0)
         error->all(FLERR,
                    "Variable evaluation before simulation box is defined");
@@ -3636,7 +3788,7 @@ unsigned int Variable::data_mask(char *str)
       delete [] id;
     }
 
-    if ((strncmp(word,"f_",2) == 0) && (i>0) && (not isalnum(str[i-1]))) {
+    if ((strncmp(word,"f_",2) == 0) && (i>0) && (!isalnum(str[i-1]))) {
         if (domain->box_exist == 0)
           error->all(FLERR,
                      "Variable evaluation before simulation box is defined");
@@ -3652,7 +3804,7 @@ unsigned int Variable::data_mask(char *str)
         delete [] id;
     }
 
-    if ((strncmp(word,"v_",2) == 0) && (i>0) && (not isalnum(str[i-1]))) {
+    if ((strncmp(word,"v_",2) == 0) && (i>0) && (!isalnum(str[i-1]))) {
       int ivar = find(word);
       datamask &= data_mask(ivar);
     }
@@ -3664,12 +3816,15 @@ unsigned int Variable::data_mask(char *str)
 }
 
 /* ----------------------------------------------------------------------
-   class to read variable values from a file, line by line
+   class to read variable values from a file
+   for flag = SCALARFILE, reads one value per line
+   for flag = ATOMFILE, reads set of one value per atom
 ------------------------------------------------------------------------- */
 
-VarReader::VarReader(LAMMPS *lmp, char *file, int flag) : Pointers(lmp)
+VarReader::VarReader(LAMMPS *lmp, char *name, char *file, int flag) : 
+  Pointers(lmp)
 {
-  MPI_Comm_rank(world,&me);
+  me = comm->me;
   style = flag;
 
   if (me == 0) {
@@ -3679,6 +3834,37 @@ VarReader::VarReader(LAMMPS *lmp, char *file, int flag) : Pointers(lmp)
       sprintf(str,"Cannot open file variable file %s",file);
       error->one(FLERR,str);
     }
+  } else fp = NULL;
+
+  // if atomfile-style variable, must store per-atom values read from file
+  // allocate a new fix STORE, so they persist
+  // id = variable-ID + VARIABLE_STORE, fix group = all
+
+  fix = NULL;
+  id_fix = NULL;
+  buffer = NULL;
+
+  if (style == ATOMFILE) {
+    if (atom->map_style == 0)
+      error->all(FLERR,
+                 "Cannot use atomfile-style variable unless atom map exists");
+
+    int n = strlen(name) + strlen("_VARIABLE_STORE") + 1;
+    id_fix = new char[n];
+    strcpy(id_fix,name);
+    strcat(id_fix,"_VARIABLE_STORE");
+
+    char **newarg = new char*[5];
+    newarg[0] = id_fix;
+    newarg[1] = (char *) "all";
+    newarg[2] = (char *) "STORE";
+    newarg[3] = (char *) "0";
+    newarg[4] = (char *) "1";
+    modify->add_fix(5,newarg);
+    fix = (FixStore *) modify->fix[modify->nfix-1];
+    delete [] newarg;
+
+    buffer = new char[CHUNK*MAXLINE];
   }
 }
 
@@ -3687,19 +3873,29 @@ VarReader::VarReader(LAMMPS *lmp, char *file, int flag) : Pointers(lmp)
 VarReader::~VarReader()
 {
   if (me == 0) fclose(fp);
+
+  // check modify in case all fixes have already been deleted
+
+  if (fix) {
+    if (modify) modify->delete_fix(id_fix);
+    delete [] id_fix;
+    delete [] buffer;
+  }
 }
 
 /* ----------------------------------------------------------------------
-   read for FILEVAR style
-   read next value from file into str
+   read for SCALARFILE style
+   read next value from file into str for file-style variable
    strip comments, skip blank lines
    return 0 if successful, 1 if end-of-file
 ------------------------------------------------------------------------- */
 
-int VarReader::read(char *str)
+int VarReader::read_scalar(char *str)
 {
   int n;
   char *ptr;
+
+  // read one string from file
 
   if (me == 0) {
     while (1) {
@@ -3721,10 +3917,67 @@ int VarReader::read(char *str)
 }
 
 /* ----------------------------------------------------------------------
-   read for AFILEVAR style
+   read snapshot of per-atom values from file
+   into str for atomfile-style variable
+   return 0 if successful, 1 if end-of-file
 ------------------------------------------------------------------------- */
 
-int VarReader::read(double *)
+int VarReader::read_peratom()
 {
+  int i,m,n,tagdata,nchunk,eof;
+  char *ptr,*next;
+  double value;
+
+  // set all per-atom values to 0.0
+  // values that appear in file will overwrite this
+
+  double *vstore = fix->vstore;
+
+  int nlocal = atom->nlocal;
+  for (i = 0; i < nlocal; i++) vstore[i] = 0.0;
+
+  // read one string from file, convert to Nlines
+
+  char str[MAXLINE];
+  if (me == 0) {
+    while (1) {
+      if (fgets(str,MAXLINE,fp) == NULL) n = 0;
+      else n = strlen(str);
+      if (n == 0) break;                                 // end of file
+      str[n-1] = '\0';                                   // strip newline
+      if (ptr = strchr(str,'#')) *ptr = '\0';            // strip comment
+      if (strtok(str," \t\n\r\f") == NULL) continue;     // skip if blank
+      n = strlen(str) + 1;
+      break;
+    }
+  }
+
+  MPI_Bcast(&n,1,MPI_INT,0,world);
+  if (n == 0) return 1;
+
+  MPI_Bcast(str,n,MPI_CHAR,0,world);
+  bigint nlines = ATOBIGINT(str);
+  int map_tag_max = atom->map_tag_max;
+
+  bigint nread = 0;
+  while (nread < nlines) {
+    nchunk = MIN(nlines-nread,CHUNK);
+    eof = comm->read_lines_from_file(fp,nchunk,MAXLINE,buffer);
+    if (eof) return 1;
+
+    char *buf = buffer;
+    for (i = 0; i < nchunk; i++) {
+      next = strchr(buf,'\n');
+      *next = '\0';
+      sscanf(buf,"%d %lg",&tagdata,&value);
+      if (tagdata <= 0 || tagdata > map_tag_max)
+        error->one(FLERR,"Invalid atom ID in variable file");
+      if ((m = atom->map(tagdata)) >= 0) vstore[m] = value;
+      buf = next + 1;
+    }
+
+    nread += nchunk;
+  }
+
   return 0;
 }

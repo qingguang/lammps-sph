@@ -36,6 +36,8 @@ class Comm : protected Pointers {
                                     // -1 if no recv or send
   int other_partition_style;        // 0 = recv layout dims must be multiple of
                                     //     my layout dims
+  int maxexchange_atom;             // max contribution to exchange from AtomVec
+  int maxexchange_fix;              // max contribution to exchange from Fixes
   int nthreads;                     // OpenMP threads per MPI process
 
   Comm(class LAMMPS *);
@@ -63,6 +65,7 @@ class Comm : protected Pointers {
 
   void ring(int, int, void *, int, void (*)(int, char *),   // ring comm
             void *, int self = 1);
+  int read_lines_from_file(FILE *, int, int, char *);  // read/bcast file lines
 
   virtual void set(int, char **);         // set communication style
   void set_processors(int, char **);      // set 3d processor grid attributes
@@ -115,6 +118,9 @@ class Comm : protected Pointers {
   double *buf_recv;                 // recv buffer for all comm
   int maxsend,maxrecv;              // current size of send/recv buffer
   int maxforward,maxreverse;        // max # of datums in forward/reverse comm
+
+  int maxexchange;                  // max # of datums/atom in exchange comm 
+  int bufextra;                     // extra space beyond maxsend in send buffer
 
   int updown(int, int, int, double, int, double *);
                                             // compare cutoff to procs

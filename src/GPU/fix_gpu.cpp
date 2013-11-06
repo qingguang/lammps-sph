@@ -17,15 +17,19 @@
 #include "atom.h"
 #include "force.h"
 #include "pair.h"
+#include "pair_hybrid.h"
+#include "pair_hybrid_overlay.h"
 #include "respa.h"
 #include "input.h"
-#include "error.h"
 #include "timer.h"
 #include "modify.h"
+#include "update.h"
 #include "domain.h"
 #include "universe.h"
 #include "gpu_extra.h"
 #include "neighbor.h"
+#include "citeme.h"
+#include "error.h"
 
 using namespace LAMMPS_NS;
 using namespace FixConst;
@@ -36,16 +40,37 @@ extern int lmp_init_device(MPI_Comm world, MPI_Comm replica,
                            const int first_gpu, const int last_gpu,
                            const int gpu_mode, const double particle_split,
                            const int nthreads, const int t_per_atom,
-                           const double cell_size);
+                           const double cell_size, char *opencl_flags);
 extern void lmp_clear_device();
 extern double lmp_gpu_forces(double **f, double **tor, double *eatom,
                              double **vatom, double *virial, double &ecoul);
+
+static const char cite_gpu_package[] =
+  "GPU package (short-range and long-range):\n\n"
+  "@Article{Brown11,\n"
+  " author = {W. M. Brown, P. Wang, S. J. Plimpton, A. N. Tharrington},\n"
+  " title = {Implementing Molecular Dynamics on Hybrid High Performance Computers - Short Range Forces},\n"
+  " journal = {Comp.~Phys.~Comm.},\n"
+  " year =    2011,\n"
+  " volume =  182,\n"
+  " pages =   {898--911}\n"
+  "}\n\n"
+  "@Article{Brown12,\n"
+  " author = {W. M. Brown, A. Kohlmeyer, S. J. Plimpton, A. N. Tharrington},\n"
+  " title = {Implementing Molecular Dynamics on Hybrid High Performance Computers - Particle-Particle Particle-Mesh},\n"
+  " journal = {Comp.~Phys.~Comm.},\n"
+  " year =    2012,\n"
+  " volume =  183,\n"
+  " pages =   {449--459}\n"
+  "}\n\n";
 
 /* ---------------------------------------------------------------------- */
 
 FixGPU::FixGPU(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg)
 {
+  if (lmp->citeme) lmp->citeme->add(cite_gpu_package);
+
   if (lmp->cuda)
     error->all(FLERR,"Cannot use fix GPU with USER-CUDA mode enabled");
 
@@ -80,6 +105,7 @@ FixGPU::FixGPU(LAMMPS *lmp, int narg, char **arg) :
   double cell_size = -1;
 
   int iarg = 7;
+  char *opencl_flags = NULL;
   while (iarg < narg) {
     if (iarg+2 > narg) error->all(FLERR,"Illegal fix GPU command");
 
@@ -89,6 +115,8 @@ FixGPU::FixGPU(LAMMPS *lmp, int narg, char **arg) :
       nthreads = force->inumeric(FLERR,arg[iarg+1]);
     else if (strcmp(arg[iarg],"cellsize") == 0)
       cell_size = force->numeric(FLERR,arg[iarg+1]);
+    else if (strcmp(arg[iarg],"device") == 0)
+      opencl_flags = arg[iarg+1];
     else
       error->all(FLERR,"Illegal fix GPU command");
 
@@ -105,7 +133,7 @@ FixGPU::FixGPU(LAMMPS *lmp, int narg, char **arg) :
 
   int gpu_flag = lmp_init_device(universe->uworld, world, first_gpu, last_gpu,
                                  _gpu_mode, _particle_split, nthreads,
-                                 threads_per_atom, cell_size);
+                                 threads_per_atom, cell_size, opencl_flags);
   GPU_EXTRA::check_flag(gpu_flag,error,world);
 }
 
@@ -123,6 +151,7 @@ int FixGPU::setmask()
   int mask = 0;
   mask |= POST_FORCE;
   mask |= MIN_POST_FORCE;
+  mask |= POST_FORCE_RESPA;
   return mask;
 }
 
@@ -135,11 +164,30 @@ void FixGPU::init()
   if (_gpu_mode == GPU_NEIGH || _gpu_mode == GPU_HYB_NEIGH)
     if (force->pair_match("hybrid",1) != NULL ||
         force->pair_match("hybrid/overlay",1) != NULL)
-      error->all(FLERR,"Cannot use pair hybrid with GPU neighbor builds");
+      error->all(FLERR,"Cannot use pair hybrid with GPU neighbor list builds");
   if (_particle_split < 0)
     if (force->pair_match("hybrid",1) != NULL ||
         force->pair_match("hybrid/overlay",1) != NULL)
-      error->all(FLERR,"Fix GPU split must be positive for hybrid pair styles");
+      error->all(FLERR,"GPU 'split' must be positive for hybrid pair styles");
+
+  // Make sure fdotr virial is not accumulated multiple times
+  
+  if (force->pair_match("hybrid",1) != NULL) {
+    PairHybrid *hybrid = (PairHybrid *) force->pair;
+    for (int i = 0; i < hybrid->nstyles; i++)
+      if (strstr(hybrid->keywords[i],"/gpu")==NULL)
+        force->pair->no_virial_fdotr_compute = 1;
+  } else if (force->pair_match("hybrid/overlay",1) != NULL) {
+    PairHybridOverlay *hybrid = (PairHybridOverlay *) force->pair;
+    for (int i = 0; i < hybrid->nstyles; i++)
+      if (strstr(hybrid->keywords[i],"/gpu")==NULL)
+        force->pair->no_virial_fdotr_compute = 1;
+  }
+
+  // r-RESPA support
+
+  if (strstr(update->integrate_style,"respa"))
+    _nlevels_respa = ((Respa *) update->integrate)->nlevels;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -150,7 +198,15 @@ void FixGPU::setup(int vflag)
     if (neighbor->exclude_setting()!=0)
       error->all(FLERR,
                  "Cannot use neigh_modify exclude with GPU neighbor builds");
-  post_force(vflag);
+
+  if (strstr(update->integrate_style,"verlet"))
+    post_force(vflag);
+  else {
+    // In setup only, all forces calculated on gpu are put in the outer level
+    ((Respa *) update->integrate)->copy_flevel_f(_nlevels_respa-1);
+    post_force(vflag);
+    ((Respa *) update->integrate)->copy_f_flevel(_nlevels_respa-1);
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -192,9 +248,17 @@ void FixGPU::min_post_force(int vflag)
 
 /* ---------------------------------------------------------------------- */
 
+void FixGPU::post_force_respa(int vflag, int ilevel, int iloop)
+{
+  post_force(vflag);
+}
+
+/* ---------------------------------------------------------------------- */
+
 double FixGPU::memory_usage()
 {
   double bytes = 0.0;
   // Memory usage currently returned by pair routine
   return bytes;
 }
+

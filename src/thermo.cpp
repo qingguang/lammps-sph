@@ -22,6 +22,7 @@
 #include "comm.h"
 #include "domain.h"
 #include "lattice.h"
+#include "group.h"
 #include "modify.h"
 #include "fix.h"
 #include "compute.h"
@@ -45,10 +46,11 @@ using namespace MathConst;
 
 // customize a new keyword by adding to this list:
 
-// step, elapsed, elaplong, dt, time, cpu, tpcpu, spcpu
+// step, elapsed, elaplong, dt, time, cpu, tpcpu, spcpu, cpuremain
 // atoms, temp, press, pe, ke, etotal, enthalpy
 // evdwl, ecoul, epair, ebond, eangle, edihed, eimp, emol, elong, etail
-// vol, lx, ly, lz, xlo, xhi, ylo, yhi, zlo, zhi, xy, xz, yz, xlat, ylat, zlat
+// vol, density, lx, ly, lz, xlo, xhi, ylo, yhi, zlo, zhi, xy, xz, yz,
+// xlat, ylat, zlat
 // pxx, pyy, pzz, pxy, pxz, pyz
 // fmax, fnorm
 // cella, cellb, cellc, cellalpha, cellbeta, cellgamma
@@ -655,6 +657,8 @@ void Thermo::parse_fields(char *str)
       addfield("T/CPU",&Thermo::compute_tpcpu,FLOAT);
     } else if (strcmp(word,"spcpu") == 0) {
       addfield("S/CPU",&Thermo::compute_spcpu,FLOAT);
+    } else if (strcmp(word,"cpuremain") == 0) {
+      addfield("CPULeft",&Thermo::compute_cpuremain,FLOAT);
 
     } else if (strcmp(word,"atoms") == 0) {
       addfield("Atoms",&Thermo::compute_atoms,BIGINT);
@@ -713,6 +717,8 @@ void Thermo::parse_fields(char *str)
 
     } else if (strcmp(word,"vol") == 0) {
       addfield("Volume",&Thermo::compute_vol,FLOAT);
+    } else if (strcmp(word,"density") == 0) {
+      addfield("Density",&Thermo::compute_density,FLOAT);
     } else if (strcmp(word,"lx") == 0) {
       addfield("Lx",&Thermo::compute_lx,FLOAT);
     } else if (strcmp(word,"ly") == 0) {
@@ -1011,6 +1017,12 @@ int Thermo::evaluate_keyword(char *word, double *answer)
                  "This variable thermo keyword cannot be used between runs");
     compute_spcpu();
 
+  } else if (strcmp(word,"cpuremain") == 0) {
+    if (update->whichflag == 0)
+      error->all(FLERR,
+                 "This variable thermo keyword cannot be used between runs");
+    compute_cpuremain();
+
   } else if (strcmp(word,"atoms") == 0) {
     compute_atoms();
     dvalue = bivalue;
@@ -1223,6 +1235,7 @@ int Thermo::evaluate_keyword(char *word, double *answer)
     compute_etail();
 
   } else if (strcmp(word,"vol") == 0) compute_vol();
+  else if (strcmp(word,"density") == 0) compute_density();
   else if (strcmp(word,"lx") == 0) compute_lx();
   else if (strcmp(word,"ly") == 0) compute_ly();
   else if (strcmp(word,"lz") == 0) compute_lz();
@@ -1499,6 +1512,16 @@ void Thermo::compute_spcpu()
 
 /* ---------------------------------------------------------------------- */
 
+void Thermo::compute_cpuremain()
+{
+  if (firststep == 0) dvalue = 0.0;
+  else dvalue = timer->elapsed(TIME_LOOP) * 
+         (update->laststep - update->ntimestep) /
+         (update->ntimestep - update->firststep);
+}
+
+/* ---------------------------------------------------------------------- */
+
 void Thermo::compute_atoms()
 {
   bivalue = atom->natoms;
@@ -1694,6 +1717,15 @@ void Thermo::compute_vol()
     dvalue = domain->xprd * domain->yprd * domain->zprd;
   else
     dvalue = domain->xprd * domain->yprd;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Thermo::compute_density()
+{
+  double mass = group->mass(0);
+  compute_vol();
+  dvalue = force->mv2d * mass/dvalue;
 }
 
 /* ---------------------------------------------------------------------- */

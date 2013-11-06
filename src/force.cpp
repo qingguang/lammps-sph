@@ -73,6 +73,17 @@ Force::Force(LAMMPS *lmp) : Pointers(lmp)
   strcpy(improper_style,str);
   kspace_style = new char[n];
   strcpy(kspace_style,str);
+
+  // fill pair map with pair styles listed in style_pair.h
+
+  pair_map = new std::map<std::string,PairCreator>();
+
+#define PAIR_CLASS
+#define PairStyle(key,Class) \
+  (*pair_map)[#key] = &pair_creator<Class>;
+#include "style_pair.h"
+#undef PairStyle
+#undef PAIR_CLASS
 }
 
 /* ---------------------------------------------------------------------- */
@@ -92,6 +103,8 @@ Force::~Force()
   if (dihedral) delete dihedral;
   if (improper) delete improper;
   if (kspace) delete kspace;
+
+  delete pair_map;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -134,7 +147,8 @@ void Force::create_pair(const char *style, const char *suffix)
 }
 
 /* ----------------------------------------------------------------------
-   generate a pair class, first with suffix appended
+   generate a pair class
+   try first with suffix appended
 ------------------------------------------------------------------------- */
 
 Pair *Force::new_pair(const char *style, const char *suffix, int &sflag)
@@ -144,29 +158,32 @@ Pair *Force::new_pair(const char *style, const char *suffix, int &sflag)
     char estyle[256];
     sprintf(estyle,"%s/%s",style,suffix);
 
-    if (0) return NULL;
-
-#define PAIR_CLASS
-#define PairStyle(key,Class) \
-    else if (strcmp(estyle,#key) == 0) return new Class(lmp);
-#include "style_pair.h"
-#undef PairStyle
-#undef PAIR_CLASS
-
+    if (pair_map->find(estyle) != pair_map->end()) {
+      PairCreator pair_creator = (*pair_map)[estyle];
+      return pair_creator(lmp);
+    }
   }
 
   sflag = 0;
 
   if (strcmp(style,"none") == 0) return NULL;
+  if (pair_map->find(style) != pair_map->end()) {
+    PairCreator pair_creator = (*pair_map)[style];
+    return pair_creator(lmp);
+  }
 
-#define PAIR_CLASS
-#define PairStyle(key,Class) \
-  else if (strcmp(style,#key) == 0) return new Class(lmp);
-#include "style_pair.h"
-#undef PAIR_CLASS
-
-  else error->all(FLERR,"Invalid pair style");
+  error->all(FLERR,"Invalid pair style");
   return NULL;
+}
+
+/* ----------------------------------------------------------------------
+   one instance per pair style in style_pair.h
+------------------------------------------------------------------------- */
+
+template <typename T>
+Pair *Force::pair_creator(LAMMPS *lmp)
+{
+  return new T(lmp);
 }
 
 /* ----------------------------------------------------------------------
@@ -638,22 +655,22 @@ void Force::set_special(int narg, char **arg)
    compute bounds implied by numeric str with a possible wildcard asterik
    1 = lower bound, nmax = upper bound
    5 possibilities:
-     (1) i = i to i, (2) * = 1 to nmax,
-     (3) i* = i to nmax, (4) *j = 1 to j, (5) i*j = i to j
+     (1) i = i to i, (2) * = nmin to nmax,
+     (3) i* = i to nmax, (4) *j = nmin to j, (5) i*j = i to j
    return nlo,nhi
 ------------------------------------------------------------------------- */
 
-void Force::bounds(char *str, int nmax, int &nlo, int &nhi)
+void Force::bounds(char *str, int nmax, int &nlo, int &nhi, int nmin)
 {
   char *ptr = strchr(str,'*');
 
   if (ptr == NULL) {
     nlo = nhi = atoi(str);
   } else if (strlen(str) == 1) {
-    nlo = 1;
+    nlo = nmin;
     nhi = nmax;
   } else if (ptr == str) {
-    nlo = 1;
+    nlo = nmin;
     nhi = atoi(ptr+1);
   } else if (strlen(ptr+1) == 0) {
     nlo = atoi(str);
@@ -663,7 +680,8 @@ void Force::bounds(char *str, int nmax, int &nlo, int &nhi)
     nhi = atoi(ptr+1);
   }
 
-  if (nlo < 1 || nhi > nmax) error->all(FLERR,"Numeric index is out of bounds");
+  if (nlo < nmin || nhi > nmax) 
+    error->all(FLERR,"Numeric index is out of bounds");
 }
 
 /* ----------------------------------------------------------------------

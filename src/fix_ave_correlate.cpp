@@ -55,6 +55,7 @@ FixAveCorrelate::FixAveCorrelate(LAMMPS * lmp, int narg, char **arg):
   nfreq = force->inumeric(FLERR,arg[5]);
 
   global_freq = nfreq;
+
   // parse values until one isn't recognized
 
   which = new int[narg-6];
@@ -541,7 +542,7 @@ void FixAveCorrelate::accumulate()
     for (k = 0; k < nsample; k++) {
       ipair = 0;
       for (i = 0; i < nvalues; i++)
-        for (j = 0; j < i-1; j++)
+        for (j = 0; j < i; j++)
           corr[k][ipair++] += values[m][i]*values[n][j];
       m--;
       if (m < 0) m = nrepeat-1;
@@ -561,7 +562,7 @@ void FixAveCorrelate::accumulate()
     for (k = 0; k < nsample; k++) {
       ipair = 0;
       for (i = 0; i < nvalues; i++)
-        for (j = 0; j < i; j++)
+        for (j = 0; j <= i; j++)
           corr[k][ipair++] += values[m][i]*values[n][j];
       m--;
       if (m < 0) m = nrepeat-1;
