@@ -22,7 +22,8 @@ set             region right meso_e 2.0
 set             group all meso_rho 10.0 # mesoscopic density is also needed for this pair style
 #               For correct temperature profiles, mescoscopic density and mass * number density must coincide!
 
-pair_style      sph/heatconduction
+#pair_style      sph/heatconduction
+pair_style      sph/sdpd
 #               i j diffusion coeff. cutoff
 pair_coeff      1 1 1.0e-4           2.0e-2
 neighbor	0.2e-2 bin

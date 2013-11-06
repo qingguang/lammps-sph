@@ -11,7 +11,7 @@ binary2txt:	binary2txt.o
 	g++ -g binary2txt.o -o binary2txt
 
 restart2data:	restart2data.o
-	g++ -g restart2data.o -o restart2data
+	g++ -g -O0 restart2data.o -o restart2data
 
 chain:	chain.o
 	ifort chain.o -o chain
