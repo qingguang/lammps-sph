@@ -1,0 +1,29 @@
+
+echo               both
+dimension          3
+units              si
+atom_style   hybrid  bond meso
+boundary          p p p
+
+
+# create simulation box
+#3D box
+variable           L  equal 2.0e-4
+region             box block 0.0 ${L}  0.0 ${L} 0.0 ${L} units box
+create_box         1 box
+
+# create fluid particles
+lattice            fcc 0.025e-3
+#lattice            sc 0.025e-3
+create_atoms       1 region box
+
+variable           sdpd_mass equal 3.90625e-12
+mass               1 ${sdpd_mass}
+
+variable  sdpd_temp index 0.0
+
+
+timestep           0.0e-5
+
+write_restart      poly3d.restart
+

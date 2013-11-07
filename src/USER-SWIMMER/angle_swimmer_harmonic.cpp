@@ -120,7 +120,6 @@ void AngleSwimmerHarmonic::compute(int eflag, int vflag)
     f3[2] = a22*delz2 + a12*delz1;
 
     // apply force to each of 3 atoms
-
     if (newton_bond || i1 < nlocal) {
       f[i1][0] += f1[0];
       f[i1][1] += f1[1];
@@ -185,8 +184,8 @@ void AngleSwimmerHarmonic::coeff(int narg, char **arg)
 
 double AngleSwimmerHarmonic::equilibrium_angle(int i)
 {
-  /// TODO: I do not know what I should return.
-  return 0.0;
+  /// TODO: assume the type is the same as an atom's tag
+  return theta_current(update->dt * update->ntimestep, i);
 }
 
 /* ----------------------------------------------------------------------
@@ -254,10 +253,13 @@ double AngleSwimmerHarmonic::single(int type, int i1, int i2, int i3)
 }
 
 double AngleSwimmerHarmonic::theta_current(double physical_time, int n) {
-  if (physical_time>1e-2)  {
-    return(90.0/MY_PI*180.0);
-  }  else {
-    return(0);
-  }
+  double T = 20.0 - 3.0;
+  double v = 10.0;
 
+  double A = MY_PI - 20.0*MY_PI/180.0;
+  double B = MY_PI + 20.0*MY_PI/180.0;
+
+  double omega = 2.0*MY_PI/T;
+  double th =  A + (B-A)/A*sin(omega*n + v*physical_time);
+  return(th);
 }

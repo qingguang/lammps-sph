@@ -35,6 +35,7 @@
 #include "atom_masks.h"
 #include "memory.h"
 #include "error.h"
+#include <iostream>
 
 using namespace LAMMPS_NS;
 
@@ -559,9 +560,10 @@ void Atom::data_atoms(int n, char *buf)
   *next = '\0';
   int nwords = count_words(buf);
   *next = '\n';
-
-  if (nwords != avec->size_data_atom && nwords != avec->size_data_atom + 3)
+  std::cerr << "nwords, avec->size_data_atom: " << nwords << " " << avec->size_data_atom << '\n';
+  if (nwords != avec->size_data_atom && nwords != avec->size_data_atom + 3) {
     error->all(FLERR,"Incorrect atom format in data file");
+  }
 
   char **values = new char*[nwords];
 

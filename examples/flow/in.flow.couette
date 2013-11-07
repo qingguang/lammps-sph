@@ -3,7 +3,7 @@
 dimension	2
 boundary	p s p
 
-atom_style	atomic
+atom_style	meso
 neighbor	0.3 bin
 neigh_modify	delay 5
 
@@ -49,7 +49,7 @@ velocity     lower set 0.0 0.0 0.0
 velocity     upper set 3.0 0.0 0.0
 fix	     3 boundary setforce 0.0 0.0 0.0
 fix	     4 all enforce2d
-
+ 
 # Poiseuille flow
 
 #velocity     boundary set 0.0 0.0 0.0
@@ -65,10 +65,5 @@ timestep	0.003
 thermo		500
 thermo_modify	temp mobile
 
-#dump		1 all atom 500 dump.flow
-
-#dump		1 all image 100 image.*.jpg type type &
-#		zoom 1.6 adiam 1.2
-#dump_modify	1 pad 5
-
-run		10000
+dump		1 all atom 10 dump.flow
+run		100000

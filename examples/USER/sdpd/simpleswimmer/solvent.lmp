@@ -15,13 +15,13 @@ pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
 pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 
-special_bonds      lj 1 1 1 angle no
+special_bonds      lj 1 1 1 angle yes
 
-angle_style        harmonic
-angle_coeff        * 1.0 90
+angle_style        swimmer/harmonic
+angle_coeff        * 200.0
 
-bond_style         fene
-bond_coeff         1 ${fene_H} ${fene_r0} 0 0
+bond_style         fene/expand
+bond_coeff         1 ${fene_H} ${fene_r0} 0 0 ${fene_delta}
 
 compute            rho_peratom all meso_rho/atom
 compute            ke all ke
@@ -57,6 +57,6 @@ restart 10000 ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-run     10000 pre no post no
+run     1000000 pre no post no
 
 
