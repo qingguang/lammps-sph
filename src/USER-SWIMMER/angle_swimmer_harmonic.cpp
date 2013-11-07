@@ -23,6 +23,7 @@
 #include "memory.h"
 #include "error.h"
 #include "update.h"
+#include "assert.h"
 
 using namespace LAMMPS_NS;
 using namespace MathConst;
@@ -64,8 +65,12 @@ void AngleSwimmerHarmonic::compute(int eflag, int vflag)
   int nlocal = atom->nlocal;
   int newton_bond = force->newton_bond;
   double physical_time = update->dt * update->ntimestep;
+  double theta;
+  double dortx, dorty, cdort;
 
   for (n = 0; n < nanglelist; n++) {
+    assert(tag[i1]<=tag[i2]);
+    assert(tag[i2]<=tag[i3]);
     i1 = anglelist[n][0];
     i2 = anglelist[n][1];
     i3 = anglelist[n][2];
@@ -90,19 +95,13 @@ void AngleSwimmerHarmonic::compute(int eflag, int vflag)
     r2 = sqrt(rsq2);
 
     // angle (cos and sin)
-
-    c = delx1*delx2 + dely1*dely2 + delz1*delz2;
-    c /= r1*r2;
-
-    if (c > 1.0) c = 1.0;
-    if (c < -1.0) c = -1.0;
-
-    s = sqrt(1.0 - c*c);
-    if (s < SMALL) s = SMALL;
+    theta = gettheta(delx1, dely1, delz1, delx2, dely2, delz2,     r1, r2);
+    c = cos(theta);
+    s = sin(theta);
     s = 1.0/s;
-
+    
     // force & energy
-    dtheta = acos(c) - theta_current(physical_time, tag[i2]);
+    dtheta = theta - theta_current(physical_time, tag[i2]);
     tk = k[type] * dtheta;
 
     if (eflag) eangle = tk*dtheta;
@@ -242,24 +241,40 @@ double AngleSwimmerHarmonic::single(int type, int i1, int i2, int i3)
   domain->minimum_image(delx2,dely2,delz2);
   double r2 = sqrt(delx2*delx2 + dely2*dely2 + delz2*delz2);
 
-  double c = delx1*delx2 + dely1*dely2 + delz1*delz2;
-  c /= r1*r2;
-  if (c > 1.0) c = 1.0;
-  if (c < -1.0) c = -1.0;
-
-  double dtheta = acos(c) - theta_current(update->dt * update->ntimestep, tag[i2]);
+  double theta = gettheta(delx1, dely1, delz1, delx2, dely2, delz2,     r1, r2);
+  double dtheta = theta - theta_current(update->dt * update->ntimestep, tag[i2]);
   double tk = k[type] * dtheta;
   return tk*dtheta;
 }
 
 double AngleSwimmerHarmonic::theta_current(double physical_time, int n) {
-  double T = 20.0 - 3.0;
+  bigint Nb = 40;
+  double T = double(Nb)/2.0;
   double v = 10.0;
 
-  double A = MY_PI - 20.0*MY_PI/180.0;
-  double B = MY_PI + 20.0*MY_PI/180.0;
+  double A = MY_PI - 6.0*MY_PI/180.0;
+  double B = MY_PI + 6.0*MY_PI/180.0;
 
   double omega = 2.0*MY_PI/T;
-  double th =  A + (B-A)/A*sin(omega*n + v*physical_time);
-  return(th);
+  //double th =  A + (B-A)/A*sin(omega*n + v*physical_time);
+  double th;
+  if (fmod(double(n) + physical_time*v, T) > 0.5*T) {
+    th = B;
+  } else {
+    th = A;
+  }
+  return th;
+}
+
+double AngleSwimmerHarmonic::gettheta(double delx1, double dely1, double delz1,
+				      double delx2, double dely2, double delz2,
+				      double r1, double r2) {
+    double dortx = - dely1;
+    double dorty = delx1;
+    double cdort = delx2*dortx + dely2*dorty;
+    cdort /= r1*r2;
+
+    if (cdort > 1.0) cdort = 1.0;
+    if (cdort < -1.0) cdort = -1.0;
+    return acos(cdort) + MY_PI/2;
 }

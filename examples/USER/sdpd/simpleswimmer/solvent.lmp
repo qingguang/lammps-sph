@@ -18,7 +18,7 @@ pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 special_bonds      lj 1 1 1 angle yes
 
 angle_style        swimmer/harmonic
-angle_coeff        * 200.0
+angle_coeff        * 500
 
 bond_style         fene/expand
 bond_coeff         1 ${fene_H} ${fene_r0} 0 0 ${fene_delta}
@@ -43,7 +43,7 @@ include            ${ndim}d-image.lmp
 variable           time  equal dt*step
 thermo_style       custom step c_sdpd_kin v_nTemp v_time
 thermo_modify      norm no
-thermo             100
+thermo             500
 
 neighbor           0.0 bin
 variable           eps delete
@@ -53,10 +53,10 @@ neigh_modify       every 1
 include            settimestep.lmp
 timestep           ${dt}
 
-restart 10000 ${dname}/sdpd.restart
+restart            ${Nrestart} ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-run     1000000 pre no post no
+run     9000000 pre no post no
 
 

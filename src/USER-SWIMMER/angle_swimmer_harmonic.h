@@ -42,6 +42,9 @@ class AngleSwimmerHarmonic : public Angle {
 
   void allocate();
   double theta_current(double physical_time, int n);
+  double gettheta(double delx1, double dely1, double delz1,
+		  double delx2, double dely2, double elz2,
+		  double r1, double r2);
 };
 
 

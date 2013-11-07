@@ -2,8 +2,9 @@ variable  adiam equal 0.5*${dx}
 variable  abond equal 0.25*${dx}
 variable  ximgsize equal 1600
 variable  yimgsize equal round(${ximgsize}*${Ly}/${Lx})
+variable  zoom     equal 1.8*${Lx}/${Ly}
 
-dump imgDump all image ${Nfreqimage}  ${dname}/imageg.*.ppm type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom 1.8 &
+dump imgDump all image ${Nfreqimage}  ${dname}/imageg.*.ppm type type atom yes bond atom ${abond} adiam ${adiam} view 0 0 zoom ${zoom} &
 box no 0.01 size ${ximgsize} ${yimgsize}
 
 
