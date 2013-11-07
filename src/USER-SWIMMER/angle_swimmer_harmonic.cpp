@@ -252,8 +252,8 @@ double AngleSwimmerHarmonic::theta_current(double physical_time, int n) {
   double T = double(Nb)/2.0;
   double v = 10.0;
 
-  double A = MY_PI - 6.0*MY_PI/180.0;
-  double B = MY_PI + 6.0*MY_PI/180.0;
+  double A = MY_PI - 8.0*MY_PI/180.0;
+  double B = MY_PI + 8.0*MY_PI/180.0;
 
   double omega = 2.0*MY_PI/T;
   //double th =  A + (B-A)/A*sin(omega*n + v*physical_time);

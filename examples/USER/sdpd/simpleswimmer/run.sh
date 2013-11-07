@@ -14,14 +14,18 @@ nproc=8
 ndim=2
 sdpd_eta=25.0
 sdpd_background=0.0
-sdpd_c=1e2
-dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}
+sdpd_c=3e2
+dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}p
 Nbeadsinswimmer=40
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
 mkdir -p ${dname}
 
 ${lmp} ${vars} -in initial.lmp
-awk --lint=fatal -v Nbeadsinswimmer=${Nbeadsinswimmer}  \
-    -f addswimmer.awk ${dname}/sdpd.data > ${dname}/sdpd-with-poly.data
+awk --lint=fatal -v Nbeadsinswimmer=${Nbeadsinswimmer}  -v Nbeads=10 -v Nsolvent=21 -v Npoly=full \
+    -f addswimmer.awk ${dname}/sdpd.data > ${dname}/sdpd-with-poly.data.aux
+
+nbounds=$(awk '/Angles/{exit} NF' ${dname}/sdpd-with-poly.data.aux | tail -n 1  | awk '{print $1}')
+sed -e "s/_NUMBER_OF_BOUNDS_/$nbounds/1" ${dname}/sdpd-with-poly.data.aux > ${dname}/sdpd-with-poly.data
+
 ${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp

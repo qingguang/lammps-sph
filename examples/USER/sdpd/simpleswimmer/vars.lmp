@@ -1,8 +1,8 @@
 variable           kb  equal 1.3806503e-23
 
 variable           dx   equal 1.2/15.0
-variable           Ly  equal 10*${dx}
-variable           Lx  equal 50*${dx}
+variable           Ly  equal 40*${dx}
+variable           Lx  equal 150*${dx}
 if "${ndim}==3" then "variable           Lz  equal 15*${dx}"
 
 variable           sdpd_rho equal  1.0
@@ -10,15 +10,28 @@ variable           sdpd_rho0 equal 0.0
 variable           sdpd_gamma equal 1.0
 variable           dt_factor equal 1.0
 
-#variable           sdpd_temp equal 1.0/${kb}
-variable           sdpd_temp equal 0.0
+variable           sdpd_temp equal 1.0/${kb}
+#variable           sdpd_temp equal 0.0
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal 3.0*${dx}
 variable           ktype string quintic
-variable           Nfreq equal 1000
-variable           Nfreqimage equal 1000
+variable           Nfreq equal 5000
+variable           Nfreqimage equal 5000
 variable           Nrestart   equal 100000
-variable           fene_delta equal 0.9*${dx}
-variable           fene_r0 equal 1.0*${dx}
-variable           fene_H  equal 100*(1.0/${kb})*${kb}/${fene_r0}^2
+
+variable           swimmer_fene_delta equal 0.9*${dx}
+variable           swimmer_fene_r0 equal 1.0*${dx}
+variable           swimmer_fene_H  equal 100*${sdpd_temp}*${kb}/${swimmer_fene_r0}^2
+
+variable           polymer_fene_r0 equal 1.2*${dx}
+variable           polymer_fene_H  equal 100*${sdpd_temp}*${kb}/${polymer_fene_r0}^2
+
+
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}
+
+variable           solventatomtype equal 1
+variable           swimmeratomtype equal 2
+variable           polymeratomtype equal 3
+
+variable           swimmerbondtype equal 1
+variable           polymerbondtype equal 2

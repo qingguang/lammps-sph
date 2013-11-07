@@ -3,10 +3,12 @@ function fabs(var) {
 }
 
 function isbound(atom_number,        period, rem, current_npoly) {
-  period = Nbeads + Nsolvent
-  rem = (atom_number-1)%(period) # from 0 to period-1
-  current_npoly = int(atom_number/period) + 1
-  return (rem<Nbeads-1) && (atom_number<iatom)  && (current_npoly<=Npoly)
+    if (atom_number<=Nbeadsinswimmer) return 0;
+
+    period = Nbeads + Nsolvent
+    rem = (atom_number-1)%(period) # from 0 to period-1
+    current_npoly = int(atom_number/period) + 1
+    return (rem<Nbeads-1) && (atom_number<iatom)  && (current_npoly<=Npoly)
 }
 
 BEGIN {

@@ -12,16 +12,36 @@ mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${solventatomtype} ${solventatomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${solventatomtype} ${swimmeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${solventatomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${swimmeratomtype} ${swimmeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${swimmeratomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${polymeratomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
 pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+
 
 special_bonds      lj 1 1 1 angle yes
 
 angle_style        swimmer/harmonic
 angle_coeff        * 500
 
-bond_style         fene/expand
-bond_coeff         1 ${fene_H} ${fene_r0} 0 0 ${fene_delta}
+bond_style         hybrid fene/expand fene
+bond_coeff         ${swimmerbondtype} fene/expand ${swimmer_fene_H} ${swimmer_fene_r0} 0 0 ${swimmer_fene_delta}
+bond_coeff         ${polymerbondtype} fene        ${polymer_fene_H} ${polymer_fene_r0} 0 0
 
 compute            rho_peratom all meso_rho/atom
 compute            ke all ke
