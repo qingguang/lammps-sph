@@ -271,7 +271,6 @@ class Data {
   void write_atom_atomic(FILE *, int, int, int, int);
   void write_atom_bond(FILE *, int, int, int, int);
   void write_atom_charge(FILE *, int, int, int, int);
-  void write_atom_meso(FILE *, int, int, int, int);
   void write_atom_dipole(FILE *, int, int, int, int);
   void write_atom_ellipsoid(FILE *, int, int, int, int);
   void write_atom_full(FILE *, int, int, int, int);
@@ -287,7 +286,6 @@ class Data {
   void write_atom_atomic_extra(FILE *, int);
   void write_atom_bond_extra(FILE *, int);
   void write_atom_charge_extra(FILE *, int);
-  void write_atom_meso_extra(FILE *, int);
   void write_atom_dipole_extra(FILE *, int);
   void write_atom_ellipsoid_extra(FILE *, int);
   void write_atom_full_extra(FILE *, int);
@@ -303,7 +301,6 @@ class Data {
   void write_vel_atomic(FILE *, int);
   void write_vel_bond(FILE *, int);
   void write_vel_charge(FILE *, int);
-  void write_vel_meso(FILE *, int);
   void write_vel_dipole(FILE *, int);
   void write_vel_ellipsoid(FILE *, int);
   void write_vel_full(FILE *, int);
@@ -319,7 +316,6 @@ class Data {
   void write_vel_atomic_extra(FILE *, int);
   void write_vel_bond_extra(FILE *, int);
   void write_vel_charge_extra(FILE *, int);
-  void write_vel_meso_extra(FILE *, int);
   void write_vel_dipole_extra(FILE *, int);
   void write_vel_ellipsoid_extra(FILE *, int);
   void write_vel_full_extra(FILE *, int);
@@ -353,7 +349,6 @@ void allocate_angle(Data &data);
 void allocate_atomic(Data &data);
 void allocate_bond(Data &data);
 void allocate_charge(Data &data);
-void allocate_meso(Data &data);
 void allocate_dipole(Data &data);
 void allocate_ellipsoid(Data &data);
 void allocate_full(Data &data);
@@ -369,7 +364,6 @@ int atom_angle(double *, Data &, int);
 int atom_atomic(double *, Data &, int);
 int atom_bond(double *, Data &, int);
 int atom_charge(double *, Data &, int);
-int atom_meso(double *, Data &, int);
 int atom_dipole(double *, Data &, int);
 int atom_ellipsoid(double *, Data &, int);
 int atom_full(double *, Data &, int);
@@ -1038,30 +1032,6 @@ int atom_charge(double *buf, Data &data, int iatoms)
   return m;
 }
 
-int atom_meso(double *buf, Data &data, int iatoms)
-{
-  int m = 1;
-  data.x[iatoms] = buf[m++];
-  data.y[iatoms] = buf[m++];
-  data.z[iatoms] = buf[m++];
-  data.tag[iatoms] = static_cast<int> (buf[m++]);
-  data.type[iatoms] = static_cast<int> (buf[m++]);
-  data.mask[iatoms] = static_cast<int> (buf[m++]);
-  data.image[iatoms] = static_cast<int> (buf[m++]);
-  data.vx[iatoms] = buf[m++];
-  data.vy[iatoms] = buf[m++];
-  data.vz[iatoms] = buf[m++];
-
-  data.rho[iatoms]=buf[m++];
-  data.e[iatoms]=buf[m++];
-  data.cv[iatoms]=buf[m++];
-  data.vestx[iatoms]=buf[m++];
-  data.vesty[iatoms]=buf[m++];
-  data.vestz[iatoms]=buf[m++];
-
-  return m;
-}
-
 
 int atom_dipole(double *buf, Data &data, int iatoms)
 {
@@ -1520,16 +1490,6 @@ void allocate_line(Data &data)
 {
   fprintf(stderr,"support for atom style line is not fully implemented\n");
   exit(1);
-}
-
-void allocate_meso(Data &data)
-{
-  data.rho = new double[data.natoms];
-  data.e = new double[data.natoms];
-  data.cv = new double[data.natoms];
-  data.vestx = new double[data.natoms];
-  data.vesty = new double[data.natoms];
-  data.vestz = new double[data.natoms];
 }
 
 void allocate_tri(Data &data)
@@ -4063,11 +4023,6 @@ void Data::write_atom_line(FILE *fp, int i, int ix, int iy, int iz)
   exit(1);
 }
 
-void Data::write_atom_meso(FILE *fp, int i, int ix, int iy, int iz)
-{
-  fprintf(fp,"%d %d %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e %d %d %d",
-	  tag[i],type[i],rho[i],e[i],cv[i],x[i],y[i],z[i],ix,iy,iz);
-}
 
 void Data::write_atom_molecular(FILE *fp, int i, int ix, int iy, int iz)
 {
@@ -4119,12 +4074,6 @@ void Data::write_atom_bond_extra(FILE *fp, int i)
 void Data::write_atom_charge_extra(FILE *fp, int i)
 {
   fprintf(fp," %-1.16e",q[i]);
-}
-
-void Data::write_atom_meso_extra(FILE *fp, int i)
-{
-  //fprintf(fp," %-1.16e %-1.16e %-1.16e %-1.16e %-1.16e",rho[i],e[i],vestx[i],vesty[i],vestz[i]);
-  fprintf(fp," %-1.16e %-1.16e %-1.16e",rho[i],e[i],cv[i]);
 }
 
 
@@ -4235,11 +4184,6 @@ void Data::write_vel_line(FILE *fp, int i)
   exit(1);
 }
 
-void Data::write_vel_meso(FILE *fp, int i)
-{
-  fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
-}
-
 void Data::write_vel_molecular(FILE *fp, int i)
 {
   fprintf(fp,"%d %-1.16e %-1.16e %-1.16e",tag[i],vx[i],vy[i],vz[i]);
@@ -4277,7 +4221,6 @@ void Data::write_vel_angle_extra(FILE *fp, int i) {}
 void Data::write_vel_atomic_extra(FILE *fp, int i) {}
 void Data::write_vel_bond_extra(FILE *fp, int i) {}
 void Data::write_vel_charge_extra(FILE *fp, int i) {}
-void Data::write_vel_meso_extra(FILE *fp, int i) {}
 void Data::write_vel_dipole_extra(FILE *fp, int i) {}
 
 void Data::write_vel_ellipsoid_extra(FILE *fp, int i)
