@@ -1,0 +1,26 @@
+kill(all);
+reset();
+MY_PI: %pi;
+T: 20.0 - 3.0;
+v: 50.0;
+
+A: MY_PI - 20.0*MY_PI/180.0;
+B: MY_PI + 20.0*MY_PI/180.0;
+
+omega: 2.0*MY_PI/T;
+th[t](n):=  A + (B-A)/A*sin(omega*n + v*t^2);
+
+x[t](k):= if k<=0 then 0 else float(x[t](k-1)) - cos(th[t](k));
+y[t](k):= if k<=0 then 0 else float(y[t](k-1)) + sin(th[t](k));
+
+dplot(t):= apply(points, [makelist(x[t](k), k, 0, 20), makelist(y[t](k), k, 0, 20)]);
+
+load(draw);
+draw2d(
+  points_joined = true,
+  point_type    = circle, point_size=2,
+  dplot(0.1),
+  'color = 'red,
+  dplot(0.3),
+  'color = 'green,
+  dplot(0.5));
