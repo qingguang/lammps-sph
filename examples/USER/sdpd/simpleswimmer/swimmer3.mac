@@ -1,0 +1,26 @@
+kill(all);
+reset();
+
+norm(r):=sqrt(r.r);
+r1: [x1, y1];
+r2: [x2, y2];
+
+F2: f0* (alpha*r1 + beta*r2);
+eq1: F2.r2 = 0;
+eq2: norm(F2)^2 = tk^2;
+so: solve([eq1, eq2], [alpha, beta])[2];
+
+radcan(ev(F2, so));
+
+load(vect);
+ang2(x, y):= atan2(norm(express(x ~ y)), x.y);
+ang(x, y):=2 * atan(norm(x*norm(y) - norm(x)*y) / norm(x * norm(y) + norm(x) * y));
+
+a(phi):=ang2([1, 0], [cos(phi), sin(phi)]);
+
+plot2d(express(a(phi)), [phi, 0, 2*%pi]);
+
+express([0, 0, 1]~[x1, y1, 0]);
+express([0, 0, 1]~[1, 1, 0]);
+
+express([1, 0, 0]~[0, 1, 0]);

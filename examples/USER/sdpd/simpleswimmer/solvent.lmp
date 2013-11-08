@@ -66,9 +66,18 @@ thermo_modify      norm no
 thermo             500
 
 neighbor           0.0 bin
-variable           eps delete
 neigh_modify       every 1
 
+#  calculate the center of mass of the swimmer                
+group              swimmergroup type ${swimmeratomtype}
+compute            swimmercom swimmergroup com
+variable           swimmercomx equal c_swimmercom[1]
+variable           swimmercomy equal c_swimmercom[2]
+variable           swimmercomz equal c_swimmercom[3]
+fix                cpp swimmergroup print 100 &
+"$(xcm(swimmergroup,x)) $(xcm(swimmergroup,y)) $(xcm(swimmergroup,z)) &
+$(vcm(swimmergroup,x)) $(vcm(swimmergroup,y)) $(vcm(swimmergroup,z))" &
+screen no file ${dname}/swimmercom.dat
 
 include            settimestep.lmp
 timestep           ${dt}
@@ -77,6 +86,8 @@ restart            ${Nrestart} ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-run     9000000 pre no post no
+if      "${ndim}==2" then "fix f2d all enforce2d"
+run     9000000 pre no post no every 100000 "velocity all zero linear" &
+"velocity all zero angular"
 
 

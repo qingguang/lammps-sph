@@ -1,7 +1,7 @@
 variable           kb  equal 1.3806503e-23
 
 variable           dx   equal 1.2/15.0
-variable           Ly  equal 40*${dx}
+variable           Ly  equal 100*${dx}
 variable           Lx  equal 150*${dx}
 if "${ndim}==3" then "variable           Lz  equal 15*${dx}"
 
@@ -23,9 +23,8 @@ variable           swimmer_fene_delta equal 0.9*${dx}
 variable           swimmer_fene_r0 equal 1.0*${dx}
 variable           swimmer_fene_H  equal 100*${sdpd_temp}*${kb}/${swimmer_fene_r0}^2
 
-variable           polymer_fene_r0 equal 1.2*${dx}
-variable           polymer_fene_H  equal 100*${sdpd_temp}*${kb}/${polymer_fene_r0}^2
-
+variable           polymer_fene_r0 equal 2.0*${dx}
+variable           polymer_fene_H  equal 25*${sdpd_temp}*${kb}/${polymer_fene_r0}^2
 
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}
 
