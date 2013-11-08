@@ -15,7 +15,6 @@ using namespace std;
 Wiener::Wiener(const int dimension):
   dimension(dimension)
 {
-  std::cout << "dimenshion: " << dimension << std::endl;
     //creat the Wiener matrix
     randoms = new double*[dimension];
     for(int k = 0; k < dimension; k++) randoms[k] = new double[dimension];
