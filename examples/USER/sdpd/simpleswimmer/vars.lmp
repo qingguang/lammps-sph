@@ -1,8 +1,8 @@
 variable           kb  equal 1.3806503e-23
 
 variable           dx   equal 1.2/15.0
-variable           Ly  equal 20*${dx}
-variable           Lx  equal 80*${dx}
+variable           Ly  equal ${dsize}*${dx}
+variable           Lx  equal ${dsize}*${dx}
 if "${ndim}==3" then "variable           Lz  equal 15*${dx}"
 
 variable           sdpd_rho equal  1.0
@@ -11,14 +11,13 @@ variable           sdpd_gamma equal 1.0
 variable           dt_factor equal 1.0
 
 variable           sdpd_temp equal 1.0/${kb}
-#variable           sdpd_temp equal 0.0
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal 3.0*${dx}
 variable           ktype string quintic
 variable           Nfreq equal 5000
 variable           Nfreqimage equal 5000
 variable           Nfreqstress equal 5000
-variable           Nrestart   equal 100000
+variable           Nrestart   equal 1000000
 variable           Nprint   equal 100
 
 variable           swimmer_fene_delta equal 0.9*${dx}
@@ -28,9 +27,9 @@ variable           swimmer_fene_H  equal 100*${sdpd_temp}*${kb}/${swimmer_fene_r
 variable           polymer_fene_r0 equal 2.0*${dx}
 variable           polymer_fene_H  equal 25*${sdpd_temp}*${kb}/${polymer_fene_r0}^2
 
-variable           K_wave          equal 500
-variable           T_wave          equal 20
-variable           v_wave          equal -10
+#variable           K_wave          equal 500
+#variable           T_wave          equal 20
+#variable           v_wave          equal 10
 variable           theta_min       equal 172
 variable           theta_max       equal 188
 

@@ -53,7 +53,7 @@ fix                integrate_fix_full all meso
 variable           time  equal dt*step
 thermo_style       custom step v_time
 thermo_modify      norm no
-thermo             500
+thermo             50000
 
 neighbor           0.0 bin
 neigh_modify       every 1
@@ -74,7 +74,7 @@ include            ${ndim}d-image.lmp
 
 restart            ${Nrestart} ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
-fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
+fix                fRDF  all ave/time 10000 1 10000 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
 if      "${ndim}==2" then "fix f2d all enforce2d"
 run     9000000 pre no post no every 100000 "velocity all zero linear" &
