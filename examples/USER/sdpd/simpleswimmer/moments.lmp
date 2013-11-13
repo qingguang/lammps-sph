@@ -3,8 +3,8 @@ fix                all_totmoments all print ${Nprint} &
 "$(xcm(all,x)) $(xcm(all,y)) $(xcm(all,z)) &
 $(vcm(all,x)) $(vcm(all,y)) $(vcm(all,z)) &
 $(angmom(all,x)) $(angmom(all,y)) $(angmom(all,z)) &
-$(ke(all)/count(all)) $(ke(solventgroup)/count(solventgroup)) & 
-$(ke(polymergroup)/count(polymergroup)) $(ke(swimmergroup)/count(swimmergroup))" &
+$(ke(all)) $(ke(solventgroup)) & 
+$(ke(polymergroup)) $(ke(swimmergroup))" &
 screen no file ${dname}/moments_all.dat
 
 # prints total moments, angular moments, and kinetic energies
@@ -13,7 +13,7 @@ fix               swimmer_totmoments swimmergroup print ${Nprint} &
 $(vcm(swimmergroup,x)) $(vcm(swimmergroup,y)) $(vcm(swimmergroup,z)) &
 $(angmom(swimmergroup,x)) $(angmom(swimmergroup,y)) $(angmom(swimmergroup,z)) &
 $(torque(swimmergroup,x)) $(torque(swimmergroup,y)) $(torque(swimmergroup,z)) &
-$(ke(swimmergroup)/count(swimmergroup))" &
+$(ke(swimmergroup))" &
 screen no file ${dname}/moments_swimmercom.dat
 
 compute swimmer_rg swimmergroup gyration
