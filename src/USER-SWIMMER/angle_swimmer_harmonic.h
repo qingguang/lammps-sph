@@ -39,16 +39,20 @@ class AngleSwimmerHarmonic : public Angle {
 
  protected:
   double *k;
+  double *T_wave;
+  double *v_wave;
+  double *theta_min;
+  double *theta_max;
 
   void allocate();
-  double theta_current(double physical_time, int n);
+  /// returns an equilibrium angle(physical time, id of the atom, type of the angle)
+  double theta_current(double physical_time, int n, int type);
   double gettheta(double delx1, double dely1, double delz1,
 		  double delx2, double dely2, double elz2,
 		  double r1, double r2);
 };
-
-
-
+ 
+ double periodic_fmod(double x, double T);
 }
 
 #endif
