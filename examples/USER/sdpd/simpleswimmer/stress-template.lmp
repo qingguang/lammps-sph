@@ -1,0 +1,9 @@
+# a stress dump template
+compute ${m4_type}_${m4_part}_stress ${m4_type}group stress/atom bond
+
+variable tmpprefix string ${m4_type}_${m4_part}
+dump dump_stress_${tmpprefix} ${m4_type}group custom ${Nfreqstress} ${dname}/stress_${tmpprefix}.*.dat &
+    id type x y z vx vy vz &
+    c_${tmpprefix}_stress[1] c_${tmpprefix}_stress[2] c_${tmpprefix}_stress[3] &
+    c_${tmpprefix}_stress[4] c_${tmpprefix}_stress[5] c_${tmpprefix}_stress[6]
+dump_modify dump_stress_${tmpprefix} first yes sort id pad 9

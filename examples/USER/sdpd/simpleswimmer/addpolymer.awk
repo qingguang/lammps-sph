@@ -28,17 +28,20 @@ BEGIN {
 
 /xlo xhi/{
   box[x,lo]=$1
-  box[x,hi]=$1
+  box[x,hi]=$2
+  L[x]=$2-$1
 }
 
 /ylo yhi/{
   box[y,lo]=$1
   box[y,hi]=$2
+  L[y]=$2-$1
 }
 
 /zlo zhi/{
   box[z,lo]=$1
   box[z,hi]=$2
+  L[z]=$2-$1
 }
 
 /atom types/{
@@ -79,7 +82,7 @@ inatoms{
   if (iatom>1) {
     for (idim=1; idim<=3; idim++) {
       if (fabs(R[idim]- prevR[idim])>cutoff) {
-        if (R[idim]<prevR[idim]) image[idim]++; else image[idim]--
+        if (R[idim]<prevR[idim]) image[idim]--; else image[idim]++
       }
     }
   } else {

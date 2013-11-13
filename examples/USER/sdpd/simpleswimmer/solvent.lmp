@@ -37,7 +37,7 @@ pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 special_bonds      lj 1 1 1 angle yes
 
 angle_style        swimmer/harmonic
-angle_coeff        * 500
+angle_coeff        * ${K_wave} ${T_wave} ${v_wave} ${theta_min} ${theta_max}
 
 bond_style         hybrid fene/expand fene
 bond_coeff         ${swimmerbondtype} fene/expand ${swimmer_fene_H} ${swimmer_fene_r0} 0 0 ${swimmer_fene_delta}
@@ -49,38 +49,29 @@ compute            sdpd_kin all temp
 
 fix                integrate_fix_full all meso
 
-# "profile" corrected temperature
-compute         pTemp all temp/profile 1 1 0 y 10
-variable        nTemp equal c_pTemp*${kb}
-
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom
-dump_modify        dump_id first yes
-dump_modify        dump_id sort id
-dump_modify        dump_id pad 8
-
+dump               dump_id all custom ${Nfreq} ${dname}/dump.*.dat id type x y z vx vy vz c_rho_peratom mol
+dump_modify        dump_id first yes sort id pad 9
 include            ${ndim}d-image.lmp
 
 variable           time  equal dt*step
-thermo_style       custom step c_sdpd_kin v_nTemp v_time
+thermo_style       custom step v_time
 thermo_modify      norm no
 thermo             500
 
 neighbor           0.0 bin
 neigh_modify       every 1
 
-#  calculate the center of mass of the swimmer                
 group              swimmergroup type ${swimmeratomtype}
-compute            swimmercom swimmergroup com
-variable           swimmercomx equal c_swimmercom[1]
-variable           swimmercomy equal c_swimmercom[2]
-variable           swimmercomz equal c_swimmercom[3]
-fix                cpp swimmergroup print 100 &
-"$(xcm(swimmergroup,x)) $(xcm(swimmergroup,y)) $(xcm(swimmergroup,z)) &
-$(vcm(swimmergroup,x)) $(vcm(swimmergroup,y)) $(vcm(swimmergroup,z))" &
-screen no file ${dname}/swimmercom.dat
+group              polymergroup type ${polymeratomtype}
+group              solventgroup type ${solventatomtype}
+
 
 include            settimestep.lmp
 timestep           ${dt}
+
+include            stress.lmp
+include            dumpforces.lmp
+include            moments.lmp
 
 restart            ${Nrestart} ${dname}/sdpd.restart
 compute            cRDF  all rdf 50

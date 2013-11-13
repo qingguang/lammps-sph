@@ -1,0 +1,34 @@
+# add computes and dumps for stresses
+
+####################### solvent ##################
+variable m4_type string solvent
+variable m4_part string ke
+include stress-template.lmp
+
+variable m4_part string pair
+include stress-template.lmp
+
+####################### swimmer ##################
+variable m4_type string swimmer
+variable m4_part string angle
+include stress-template.lmp
+
+variable m4_part string bond
+include stress-template.lmp
+
+variable m4_part string ke
+include stress-template.lmp
+
+variable m4_part string pair
+include stress-template.lmp
+
+####################### polymer ##################
+variable m4_type string polymer
+variable m4_part string bond
+include stress-template.lmp
+
+variable m4_part string ke
+include stress-template.lmp
+
+variable m4_part string pair
+include stress-template.lmp

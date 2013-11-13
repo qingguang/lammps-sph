@@ -1,6 +1,6 @@
-#function fabs(var) {
-#  return var>0?var:-var
-#}
+function fabs(var) {
+  return var>0?var:-var
+}
 
 function isbond(atom_number,        period, rem, current_npoly) {
     if (atom_number>=natoms) return 0;
@@ -17,6 +17,8 @@ BEGIN {
   inatoms=0
   lo=1; hi=2
   x=1; y=2; z=3
+  solventatomtype=1
+
   swimmeratomtype=2
   swimmerbondtype=1
   
@@ -24,6 +26,10 @@ BEGIN {
   polymeratomtype=3
 
   if (Npoly=="full") Npoly=1e30
+  image[x]=0; image[y]=0; image[z]=0
+  current_atom=0
+  # start with 2 because 0 is for the solvent and 1 is for the swimmer
+  current_molid = 1
 }
 
 /LAMMPS/{
@@ -33,17 +39,20 @@ BEGIN {
 
 /xlo xhi/{
   box[x,lo]=$1
-  box[x,hi]=$1
+  box[x,hi]=$2
+  L[x]=$2-$1
 }
 
 /ylo yhi/{
   box[y,lo]=$1
   box[y,hi]=$2
+  L[y]=$2-$1
 }
 
 /zlo zhi/{
   box[z,lo]=$1
   box[z,hi]=$2
+  L[z]=$2-$1
 }
 
 /atom types/{
@@ -78,15 +87,42 @@ inatoms && (NF==0) {
 }
 
 inatoms{
-  id = $1
-  if (id<=Nbeadsinswimmer) {
-      $2=swimmeratomtype
-  }
-  if (isbond(id) || isbond(id-1) ) {
-     $2=polymeratomtype
-  }
-  print
-  next
+    # order: 
+    # atom-ID, atom-type, x, y, z, molecule-ID, rho, e, cv, image-flag, image-flag, image-flag
+    current_atom++
+    id = $1
+    if (id<=Nbeadsinswimmer) {
+	$2=swimmeratomtype
+    } else if (isbond(id) || isbond(id-1) ) {
+	$2=polymeratomtype
+	if (!(isbond(id-1))) {
+	    current_molid++
+	}
+    } else {
+	$2=solventatomtype
+    }
+    R[x]=$3; R[y]=$4; R[z]=$5
+    if (current_atom>1) {
+	for (idim=1; idim<=3; idim++) {
+	    if (fabs(R[idim]- prevR[idim])>L[idim]/2) {
+		if (R[idim]<prevR[idim]) image[idim]++; else image[idim]--
+	    }
+	}
+    }
+    prevR[x]=R[x]; prevR[y]=R[y]; prevR[z]=R[z]
+    # change image field
+    $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
+    if ($2==solventatomtype) {
+	print_molid = 0
+    } else if ($2==swimmeratomtype) {
+	print_molid = 1
+    } else {
+	print_molid = current_molid
+    }
+
+    $6=print_molid
+    print
+    next
 }
 
 !inatoms {

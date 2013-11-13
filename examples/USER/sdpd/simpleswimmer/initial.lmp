@@ -2,7 +2,7 @@ echo               both
 log                ${dname}/init.lammps
 dimension          ${ndim}
 units              si
-atom_style         hybrid  bond meso
+atom_style         hybrid  angle meso
 communicate        single vel yes
 # create simulation box
 
