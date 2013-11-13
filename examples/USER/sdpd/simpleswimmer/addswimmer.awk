@@ -20,10 +20,12 @@ BEGIN {
   solventatomtype=1
 
   swimmeratomtype=2
+  swimmerheadatomtype=3
+
   swimmerbondtype=1
   
   polymerbondtype=2
-  polymeratomtype=3
+  polymeratomtype=4
 
   if (Npoly=="full") Npoly=1e30
   image[x]=0; image[y]=0; image[z]=0
@@ -91,8 +93,10 @@ inatoms{
     # atom-ID, atom-type, x, y, z, molecule-ID, rho, e, cv, image-flag, image-flag, image-flag
     current_atom++
     id = $1
-    if (id<=Nbeadsinswimmer) {
+    if (id<Nbeadsinswimmer) {
 	$2=swimmeratomtype
+    } else if (id==Nbeadsinswimmer) {
+	$2=swimmerheadatomtype
     } else if (isbond(id) || isbond(id-1) ) {
 	$2=polymeratomtype
 	if (!(isbond(id-1))) {
@@ -114,7 +118,7 @@ inatoms{
     $(NF-2)=image[x]; $(NF-1)=image[y];   $(NF)=image[z];
     if ($2==solventatomtype) {
 	print_molid = 0
-    } else if ($2==swimmeratomtype) {
+    } else if ( ($2==swimmeratomtype) || ($2==swimmerheadatomtype) ) {
 	print_molid = 1
     } else {
 	print_molid = current_molid

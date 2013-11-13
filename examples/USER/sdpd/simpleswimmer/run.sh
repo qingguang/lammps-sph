@@ -15,16 +15,16 @@ ndim=2
 sdpd_eta=25.0
 sdpd_background=0.0
 sdpd_c=3e2
-Nbeads=1
+Nbeads=10
 
-Nsolvent=20
+Nsolvent=5
 v_wave=50
 
 K_wave=500
 T_wave=20
 
 dsize=150
-dname=supermuc-data/c${sdpd_c}-nbeads${Nbeads}-nsolvent${Nsolvent}-K_wave${K_wave}-T_wave${T_wave}-v_wave${v_wave}-dsize${dsize}
+dname=supermuc-data/c${sdpd_c}-nbeads${Nbeads}-nsolvent${Nsolvent}-K_wave${K_wave}-T_wave${T_wave}-v_wave${v_wave}-dsize${dsize}mass3
 Nbeadsinswimmer=40
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} -var K_wave ${K_wave} -var T_wave ${T_wave} -var v_wave ${v_wave} -var dsize ${dsize} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background}"
@@ -50,7 +50,7 @@ if [ $(hostname) = "login05" ]; then
     llsubmit ${rfile}
     printf "submitting file: %s\n" ${rfile}
 else
-    ${mpirun} -n ${nproc} -in solvent.lmp
+    ${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
 fi
 #
 

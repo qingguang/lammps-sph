@@ -1,0 +1,7 @@
+variable            fx_mill atom ${A_mill}*mass*sin(2*PI*x/${Lx})*cos(2*PI*y/${Ly})
+variable            fy_mill atom -${A_mill}*mass*cos(2*PI*x/${Lx})*sin(2*PI*y/${Ly})
+fix                 fourroller all addforce v_fx_mill v_fy_mill 0.0
+
+run                 ${time_prerun}
+velocity            all zero linear
+velocity            all zero angular
