@@ -3,7 +3,7 @@ variable           kb  equal 1.3806503e-23
 variable           dx   equal 1.2/15.0
 variable           Ly  equal ${dsize}*${dx}
 variable           Lx  equal ${dsize}*${dx}
-if "${ndim}==3" then "variable           Lz  equal 15*${dx}"
+if "${ndim}==3" then "variable           Lz  equal ${dsize}*${dx}"
 
 variable           sdpd_rho equal  1.0
 variable           sdpd_rho0 equal 0.0
