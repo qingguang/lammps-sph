@@ -8,7 +8,7 @@
 #@ class = fat
 #@ node = 1
 #@ total_tasks= 40
-#@ wall_clock_limit = 20:00:00
+#@ wall_clock_limit = 10:00:00
 #@ job_name = M4_JOB_NAME
 #@ network.MPI = sn_all,not_shared,us
 #@ output = job$(jobid).out

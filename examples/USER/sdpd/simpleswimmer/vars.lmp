@@ -14,11 +14,11 @@ variable           sdpd_temp equal 1.0/${kb}
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal 3.0*${dx}
 variable           ktype string quintic
-variable           Nfreq equal 5000
-variable           Nfreqimage equal 5000
-variable           Nfreqstress equal 5000
+variable           Nfreq equal 20000
+variable           Nfreqimage equal 20000
+variable           Nfreqstress equal 20000
 variable           Nrestart   equal 1000000
-variable           Nprint   equal 100
+variable           Nprint   equal 500
 
 variable           swimmer_fene_delta equal 0.9*${dx}
 variable           swimmer_fene_r0 equal 1.0*${dx}
