@@ -27,6 +27,9 @@ variable           swimmer_fene_H  equal 100*${sdpd_temp}*${kb}/${swimmer_fene_r
 variable           polymer_fene_r0 equal 2.0*${dx}
 variable           polymer_fene_H  equal 25*${sdpd_temp}*${kb}/${polymer_fene_r0}^2
 
+variable           A_mill          equal 2e3
+variable           time_prerun     equal 10000
+
 #variable           K_wave          equal 500
 #variable           T_wave          equal 20
 #variable           v_wave          equal 10
@@ -34,10 +37,13 @@ variable           theta_min       equal 172
 variable           theta_max       equal 188
 
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}
+variable           swimmer_head_mass equal 3*${sdpd_mass}
 
 variable           solventatomtype equal 1
 variable           swimmeratomtype equal 2
-variable           polymeratomtype equal 3
+variable           swimmerheadatomtype equal 3
+
+variable           polymeratomtype equal 4
 
 variable           swimmerbondtype equal 1
 variable           polymerbondtype equal 2

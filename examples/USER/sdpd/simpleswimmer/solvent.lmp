@@ -8,24 +8,30 @@ communicate        single vel yes
 include            vars.lmp
 read_data          ${dname}/sdpd-with-poly.data
 
-mass               * ${sdpd_mass}
+if      "${ndim}==2" then "fix f2d all enforce2d"
+
+mass               ${solventatomtype} ${sdpd_mass}
+mass               ${polymeratomtype} ${sdpd_mass}
+mass               ${swimmeratomtype} ${sdpd_mass}
+mass               ${swimmerheadatomtype} ${swimmer_head_mass}
 set                group all meso_rho ${sdpd_rho}
+
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 
 pair_coeff         ${solventatomtype} ${solventatomtype} sdpd  ${h} ${ktype} &
                    ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
 
-pair_coeff         ${solventatomtype} ${swimmeratomtype} sdpd  ${h} ${ktype} &
+pair_coeff         ${solventatomtype} ${swimmeratomtype}*${swimmerheadatomtype} sdpd  ${h} ${ktype} &
                    ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
 
 pair_coeff         ${solventatomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
                    ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
 
-pair_coeff         ${swimmeratomtype} ${swimmeratomtype} sdpd  ${h} ${ktype} &
+pair_coeff         ${swimmeratomtype}*${swimmerheadatomtype} ${swimmeratomtype}*${swimmerheadatomtype} sdpd  ${h} ${ktype} &
                    ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
 
-pair_coeff         ${swimmeratomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+pair_coeff         ${swimmeratomtype}*${swimmerheadatomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
                    ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
 
 pair_coeff         ${polymeratomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
@@ -65,18 +71,19 @@ group              solventgroup type ${solventatomtype}
 
 include            settimestep.lmp
 timestep           ${dt}
-
 include            dumpconfig.lmp
+include            ${ndim}d-image.lmp
+
+# include            prerun.lmp
+
 include            stress.lmp
 include            dumpforces.lmp
 include            moments.lmp
-include            ${ndim}d-image.lmp
 
 restart            ${Nrestart} ${dname}/sdpd.restart
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 10000 1 10000 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-if      "${ndim}==2" then "fix f2d all enforce2d"
 run     9000000 pre no post no every 100000 "velocity all zero linear" &
 "velocity all zero angular"
 
