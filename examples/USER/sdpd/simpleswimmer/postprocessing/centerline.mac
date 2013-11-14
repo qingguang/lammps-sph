@@ -1,0 +1,19 @@
+kill(all);
+
+simpsum: true;
+declare(sum, linear);
+F: sum( (a*x[i]+b*y[i]+c)^2/(a^2+b^2), i, 1, Np);
+F: ev(F, b=1);
+expand(F);
+
+sbf: [sum(x[i], i, 1, Np)=Mx, sum(y[i], i, 1, Np)=My,
+sum(x[i]*y[i], i, 1, Np)=Mxy, sum(x[i]^2, i, 1, Np)=Mx2,
+sum(y[i]^2, i, 1, Np)=My2];
+
+ev(expand(F), sbf);
+
+eq1: diff(scanmap(expand, F), a);
+eq2: diff(scanmap(expand, F), c);
+
+load(to_poly_solve);
+to_poly_solve([radcan(eq1), radcan(eq2)], [a, c], use_grobner = true);

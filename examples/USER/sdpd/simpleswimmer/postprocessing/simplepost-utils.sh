@@ -38,9 +38,18 @@ function getp() {
     fi
 }
 
+function makemsd() {
+    d=$1
+    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $1-cuttime}' $f > ${d}/msd.dat.time
+    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $2, $3, $4}' $f | msd -f "/dev/stdin" >  ${d}/msd.dat.aux
+    paste ${d}/msd.dat.time ${d}/msd.dat.aux > ${d}/msd.dat
+    rm ${d}/msd.dat.time ${d}/msd.dat.aux
+    echo ${d}/msd.dat
+}
 
-getp ../supermuc-data/c3e2-nbeads10-nsolvent5-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
-getp ../supermuc-data/c3e2-nbeads10-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
-getp ../supermuc-data/c3e2-nbeads0-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
 
-getp ../supermuc-data/c3e2-nbeads0-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ v_wave
+# getp ../supermuc-data/c3e2-nbeads10-nsolvent5-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
+# getp ../supermuc-data/c3e2-nbeads10-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
+# getp ../supermuc-data/c3e2-nbeads0-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
+
+# getp ../supermuc-data/c3e2-nbeads0-nsolvent20-K_wave500-T_wave20-v_wave2-dsize150mass3/ v_wave
