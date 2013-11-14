@@ -1,0 +1,3 @@
+load("gentran");
+gentranlanguage(fortran);
+gentran( m: matrix(1, 2));
