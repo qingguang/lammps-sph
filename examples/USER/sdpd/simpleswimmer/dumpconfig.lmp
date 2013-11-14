@@ -1,7 +1,10 @@
 # dump configurations
 
-dump               dump_id_all all custom ${Nfreq} ${dname}/dump.*.dat id type x y z vx vy vz c_rho_peratom mol
+shell              "mkdir -p" ${dname}/confs
+dump               dump_id_all all custom ${Nfreq} ${dname}/confs/dump.*.dat id type x y z vx vy vz c_rho_peratom mol
 dump_modify        dump_id_all first yes sort id pad 9
 
-dump               dump_id_swur swimmergroup custom ${Nfreq} ${dname}/swimmer.*.dat id type xu yu zu vx vy vz c_rho_peratom mol
+shell              "mkdir -p" ${dname}/swimmer_confs_unwrapped
+dump               dump_id_swur swimmergroup custom ${Nfreq} ${dname}/swimmer_confs_unwrapped/swimmer.*.dat &
+id type xu yu zu vx vy vz c_rho_peratom mol
 dump_modify        dump_id_swur first yes sort id pad 9

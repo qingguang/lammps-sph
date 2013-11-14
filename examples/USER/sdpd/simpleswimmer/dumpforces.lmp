@@ -1,4 +1,5 @@
 # dump forces on the swimmer
 
-dump               dump_forces_swimmer swimmergroup custom ${Nfreq} ${dname}/forces_swimmer.*.dat id type x y z fx fy fz
+shell "mkdir -p" ${dname}/forces_swimmer/
+dump               dump_forces_swimmer swimmergroup custom ${Nfreq} ${dname}/forces_swimmer/fs.*.dat id type x y z fx fy fz
 dump_modify        dump_forces_swimmer first yes sort id pad 9

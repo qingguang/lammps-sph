@@ -25,7 +25,11 @@ K_wave=500
 T_wave=20
 
 dsize=150
-prefix=/gpfs/scratch/pr32ma/lu79buz2/supermuc-data/
+if [ $(hostname) = "login05" ]; then
+    prefix=/gpfs/scratch/pr32ma/lu79buz2/supermuc-data/
+else
+    prefix=kana-data
+fi
 dname=${prefix}/c${sdpd_c}-nbeads${Nbeads}-nsolvent${Nsolvent}-K_wave${K_wave}-T_wave${T_wave}-v_wave${v_wave}-dsize${dsize}mass3
 Nbeadsinswimmer=40
 
