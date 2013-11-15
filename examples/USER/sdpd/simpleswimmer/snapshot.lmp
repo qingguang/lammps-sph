@@ -1,0 +1,90 @@
+echo               both
+log                ${dname}/log.lammps
+shell              "mkdir -p" ${dname}/prints/
+dimension          ${ndim}
+units              si
+atom_style         hybrid  angle meso
+communicate        single vel yes
+
+include            vars.lmp
+#read_data          ${dname}/sdpd-with-poly.data
+
+if      "${ndim}==2" then "fix f2d all enforce2d"
+
+mass               ${solventatomtype} ${sdpd_mass}
+mass               ${polymeratomtype} ${sdpd_mass}
+mass               ${swimmeratomtype} ${sdpd_mass}
+mass               ${swimmerheadatomtype} ${swimmer_head_mass}
+set                group all meso_rho ${sdpd_rho}
+
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+
+pair_coeff         ${solventatomtype} ${solventatomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${solventatomtype} ${swimmeratomtype}*${swimmerheadatomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${solventatomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${swimmeratomtype}*${swimmerheadatomtype} ${swimmeratomtype}*${swimmerheadatomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta}           0 ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${swimmeratomtype}*${swimmerheadatomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         ${polymeratomtype} ${polymeratomtype} sdpd  ${h} ${ktype} &
+                   ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+
+
+special_bonds      lj 1 1 1 angle yes
+
+angle_style        swimmer/harmonic
+angle_coeff        * ${K_wave} ${T_wave} ${v_wave} ${theta_min} ${theta_max}
+
+bond_style         hybrid fene/expand fene
+bond_coeff         ${swimmerbondtype} fene/expand ${swimmer_fene_H} ${swimmer_fene_r0} 0 0 ${swimmer_fene_delta}
+bond_coeff         ${polymerbondtype} fene        ${polymer_fene_H} ${polymer_fene_r0} 0 0
+
+compute            rho_peratom all meso_rho/atom
+compute            ke all ke
+compute            sdpd_kin all temp
+
+fix                integrate_fix_full all meso
+
+variable           physical_time  equal dt*step
+thermo_style       custom step v_physical_time
+thermo_modify      norm no
+thermo             50000
+
+neighbor           0.0 bin
+neigh_modify       every 1
+
+group              swimmergroup type ${swimmeratomtype}
+group              polymergroup type ${polymeratomtype}
+group              solventgroup type ${solventatomtype}
+
+
+include            settimestep.lmp
+timestep           ${dt}
+include            dumpconfig.lmp
+include            ${ndim}d-image.lmp
+
+# include            prerun.lmp
+
+include            stress.lmp
+include            dumpforces.lmp
+include            moments.lmp
+
+restart            ${Nrestart} ${dname}/sdpd.restart
+
+#compute            cRDF  all rdf 50
+#fix                fRDF  all ave/time 10000 1 10000 c_cRDF file ${dname}/lrdf.dat mode vector ave running
+
+rerun               dump.000000000.dat dump x y box yes
+
+

@@ -59,5 +59,3 @@ if [ $(hostname) = "login05" ]; then
 else
     ${mpirun} -np ${nproc} ${lmp} ${vars} -in solvent.lmp
 fi
-#
-

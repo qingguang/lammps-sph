@@ -40,7 +40,7 @@ function getp() {
 
 function makemsd() {
     d=$1
-    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $1-cuttime}' $f > ${d}/msd.dat.time
+    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime' $f | awk 'NR==1{t0=$1} {print $1-t0}' > ${d}/msd.dat.time
     awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $2, $3, $4}' $f | msd -f "/dev/stdin" >  ${d}/msd.dat.aux
     paste ${d}/msd.dat.time ${d}/msd.dat.aux > ${d}/msd.dat
     rm ${d}/msd.dat.time ${d}/msd.dat.aux

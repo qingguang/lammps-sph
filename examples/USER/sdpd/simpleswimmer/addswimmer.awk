@@ -90,6 +90,7 @@ inatoms && (NF==0) {
 
 inatoms{
     # order: 
+    # http://lammps.sandia.gov/doc/read_data.html
     # atom-ID, atom-type, x, y, z, molecule-ID, rho, e, cv, image-flag, image-flag, image-flag
     current_atom++
     id = $1
