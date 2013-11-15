@@ -4,12 +4,11 @@ A: 1;
 k: 1;
 omega: 1;
 
-
 x[t](s):=s;
-y[t](s):= A*sin(omega*t - k*x[t](s));
+y[t](s):=A*sin(omega*t - k*x[t](s));
 
 load(draw);
-
+draw2d( parametric(x[0], y[0], s, 0, 10), color=red, parametric(x[0.1], y[0.1], s, 0, 10));
 
 r[t](s):= [x[t](s), y[t](s)];
 norm(r):= (r.r)^(1/2);

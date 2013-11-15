@@ -8,12 +8,15 @@ A: MY_PI - 20.0*MY_PI/180.0;
 B: MY_PI + 20.0*MY_PI/180.0;
 
 omega: 2.0*MY_PI/T;
-th[t](n):=  A + (B-A)/A*sin(omega*n + v*t^2);
+th[t](n):=  (B+A)/2 + (A-B)/2*sin(omega*n + v*t^2);
+
+solve( [al + be*1 = A, al + be*(-1) = B], [al, be]);
+
 
 x[t](k):= if k<=0 then 0 else float(x[t](k-1)) - cos(th[t](k));
 y[t](k):= if k<=0 then 0 else float(y[t](k-1)) + sin(th[t](k));
 
-dplot(t):= apply(points, [makelist(x[t](k), k, 0, 20), makelist(y[t](k), k, 0, 20)]);
+dplot(t):= apply(points, [makelist(x[t](k), k, 0, 100), makelist(y[t](k), k, 0, 100)]);
 
 load(draw);
 draw2d(
@@ -24,3 +27,5 @@ draw2d(
   dplot(0.3),
   'color = 'green,
   dplot(0.5));
+
+plot2d( [th[0](n), MY_PI], [n, 0, 100]);
