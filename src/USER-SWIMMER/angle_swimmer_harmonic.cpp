@@ -9,7 +9,7 @@
    the GNU General Public License.
 
    See the README file in the top-level LAMMPS directory.
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 #include "math.h"
 #include "stdlib.h"
@@ -23,7 +23,6 @@
 #include "memory.h"
 #include "error.h"
 #include "update.h"
-#include "assert.h"
 
 using namespace LAMMPS_NS;
 using namespace MathConst;
@@ -100,7 +99,7 @@ void AngleSwimmerHarmonic::compute(int eflag, int vflag)
     c = cos(theta);
     s = sin(theta);
     s = 1.0/s;
-    
+
     // force & energy
     dtheta = theta - theta_current(physical_time, tag[i2], type);
     tk = k[type] * dtheta;
@@ -139,7 +138,7 @@ void AngleSwimmerHarmonic::compute(int eflag, int vflag)
     }
 
     if (evflag) ev_tally(i1,i2,i3,nlocal,newton_bond,eangle,f1,f3,
-                         delx1,dely1,delz1,delx2,dely2,delz2);
+			 delx1,dely1,delz1,delx2,dely2,delz2);
   }
 }
 
@@ -162,7 +161,7 @@ void AngleSwimmerHarmonic::allocate()
 
 /* ----------------------------------------------------------------------
    set coeffs for one or more types
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void AngleSwimmerHarmonic::coeff(int narg, char **arg)
 {
@@ -204,7 +203,7 @@ double AngleSwimmerHarmonic::equilibrium_angle(int i)
 
 /* ----------------------------------------------------------------------
    proc 0 writes out coeffs to restart file
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void AngleSwimmerHarmonic::write_restart(FILE *fp)
 {
@@ -217,7 +216,7 @@ void AngleSwimmerHarmonic::write_restart(FILE *fp)
 
 /* ----------------------------------------------------------------------
    proc 0 reads coeffs from restart file, bcasts them
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void AngleSwimmerHarmonic::read_restart(FILE *fp)
 {
@@ -241,7 +240,7 @@ void AngleSwimmerHarmonic::read_restart(FILE *fp)
 
 /* ----------------------------------------------------------------------
    proc 0 writes to data file
-------------------------------------------------------------------------- */
+   ------------------------------------------------------------------------- */
 
 void AngleSwimmerHarmonic::write_data(FILE *fp)
 {
@@ -275,8 +274,6 @@ double AngleSwimmerHarmonic::single(int type, int i1, int i2, int i3)
 }
 
 double AngleSwimmerHarmonic::theta_current(double physical_time, int n, int type) {
-  //double A = MY_PI - 8.0*MY_PI/180.0;
-  //double B = MY_PI + 8.0*MY_PI/180.0;
   double th;
   if (periodic_fmod(double(n) + physical_time*v_wave[type], T_wave[type]) > 0.5*T_wave[type]) {
     th = theta_max[type];
@@ -289,18 +286,16 @@ double AngleSwimmerHarmonic::theta_current(double physical_time, int n, int type
 double AngleSwimmerHarmonic::gettheta(double delx1, double dely1, double,
 				      double delx2, double dely2, double,
 				      double r1, double r2) {
-    double dortx = - dely1;
-    double dorty = delx1;
-    double cdort = delx2*dortx + dely2*dorty;
-    cdort /= r1*r2;
+  double dortx = - dely1;
+  double dorty = delx1;
+  double cdort = delx2*dortx + dely2*dorty;
+  cdort /= r1*r2;
 
-    if (cdort > 1.0) cdort = 1.0;
-    if (cdort < -1.0) cdort = -1.0;
-    return acos(cdort) + MY_PI/2;
+  if (cdort > 1.0) cdort = 1.0;
+  if (cdort < -1.0) cdort = -1.0;
+  return acos(cdort) + MY_PI/2;
 }
 
 double LAMMPS_NS::periodic_fmod(double x, double T) {
   return remainder(x+T/2, T) + T/2;
 }
-
-
