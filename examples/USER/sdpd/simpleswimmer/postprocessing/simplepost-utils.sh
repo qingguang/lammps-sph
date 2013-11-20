@@ -40,12 +40,18 @@ function getp() {
 
 function makemsd() {
     d=$1
-    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime' $f | awk 'NR==1{t0=$1} {print $1-t0}' > ${d}/msd.dat.time
-    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $2, $3, $4}' $f | msd -f "/dev/stdin" >  ${d}/msd.dat.aux
-    paste ${d}/msd.dat.time ${d}/msd.dat.aux > ${d}/msd.dat
-    rm ${d}/msd.dat.time ${d}/msd.dat.aux
-    echo ${d}/msd.dat
+    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime' $f | awk 'NR==1{t0=$1} {print $1-t0}' > ${d}/prints/msd.dat.time
+    awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $2, $3, $4}' $f | msd -f "/dev/stdin" >  ${d}/prints/msd.dat.aux
+    paste ${d}/prints/msd.dat.time ${d}/prints/msd.dat.aux > ${d}/prints/msd.dat
+    rm ${d}/prints/msd.dat.time ${d}/prints/msd.dat.aux
 }
+
+function linreg() {
+    d=$1
+    awk -v cuttime=$2 'NF==2&&$1<cuttime{print $1, sqrt($2)}' ${d}/prints/msd.dat | awk -f linreg.awk 
+}
+
+
 
 
 # getp ../supermuc-data/c3e2-nbeads10-nsolvent5-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration

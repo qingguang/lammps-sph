@@ -15,5 +15,55 @@ ev(expand(F), sbf);
 eq1: diff(scanmap(expand, F), a);
 eq2: diff(scanmap(expand, F), c);
 
-load(to_poly_solve);
-to_poly_solve([radcan(eq1), radcan(eq2)], [a, c], use_grobner = true);
+system_eq: subst(sbf, [radcan(eq1), radcan(eq2)]);
+
+load(to_poly_solve)$
+sol: to_poly_solve(system_eq, [a, c], use_grobner = true);
+
+sol_mm: args(subst(sbf, sol))[2];
+
+load("dump2maxima.mac");
+[lmp_data, atom_data]: dump2maxima("../supermuc-data/c3e2-nbeads0-nsolvent20-K_wave500-T_wave20-v_wave50-dsize150mass3/swimmer_confs_unwrapped/swimmer.001000000.dat")$
+data: reset(data, 3);
+
+/*
+find a projection of the center of the mass of the swimmer on the line a*x+c
+*/
+L: ('x-'xcm)^2 + ('y-'ycm)^2 + 'la*('a*'x+'y+'c);
+proj_sol: args(to_poly_solve( [diff(L, 'x), diff(L, 'y), diff(L, 'la)], ['y, 'x, 'la]))[1];
+
+Mx: apply("+", atom_data['xu]);
+My: apply("+", atom_data['yu]);
+Mxy: apply("+", atom_data['xu]*atom_data['yu]);
+Mx2: apply("+", atom_data['xu]^2);
+My2: apply("+", atom_data['yu]^2);
+Np: lmp_data['natoms];
+xcm: Mx/Np;
+ycm: My/Np;
+
+ac_def: ev(sol_mm);
+
+/* "move" line to a center of coordinates and rotate it with the following matrix */
+load ("eigen");
+Minv: subst(ac_def, matrix([1, a], [-a, 1])/sqrt(a^2+1));
+M: Minv^^(-1);
+
+Rcm: [xcm, ycm];
+ptransform([R]):= flatten(args((M.(R-Rcm))));
+/* ptransform([R]):= R - Rcm; */
+
+Rnew: map(ptransform, atom_data['xu], atom_data['yu])$
+
+load("draw");
+draw2d( points (atom_data['xu], atom_data['yu] ),
+  'xrange=[-lmp_data['xhi], lmp_data['xhi]],
+  'yrange=[-lmp_data['yhi], lmp_data['yhi]],
+  'points_joined=true,
+  'ip_grid=[450, 450],
+  implicit(subst(ac_def, a*x+y+c), x, -lmp_data['xhi], lmp_data['xhi], y, -lmp_data['yhi], lmp_data['yhi]),
+  'point_size=10,
+  points ( ev([['x, 'y]], ac_def, proj_sol, infeval) ),
+  'point_size=1,
+  points(Rnew));
+
+
