@@ -1,0 +1,23 @@
+* Output
+** Dumps
+all atoms configs
+[[file:dumpconfig.lmp::dump%20dump_id_all%20all%20custom%20${Nfreq}%20${dname}/confs/dump.*.dat%20id%20type%20x%20y%20z%20vx%20vy%20vz%20c_rho_peratom%20mol][file:dumpconfig.lmp::dump dump_id_all all custom ${Nfreq} ${dname}/confs/dump.*.dat id type x y z vx vy vz c_rho_peratom mol]]
+id type x y z vx vy vz c_rho_peratom mol
+
+swimmer configuration in unwrapped coordinates
+id type xu yu zu vx vy vz c_rho_peratom mol
+[[file:dumpconfig.lmp::shell%20"mkdir%20-p"%20${dname}/swimmer_confs_unwrapped][file:dumpconfig.lmp::shell "mkdir -p" ${dname}/swimmer_confs_unwrapped]]
+
+stresses
+id type x y z vx vy vz <six components of the stress>
+[[file:stress.lmp]]
+
+** Prints
+[[file:moments.lmp]]
+total moments for all the atoms
+<xcm> <vcm> <angmom> <ke solvent> <ke solvent> <ke polymers> <ke swimmer>
+
+total moments for the swimmer
+<xcm> <vcm> <angmom> <torque> <ke>
+
+Rg tensor of the swimmer

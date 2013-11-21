@@ -1,0 +1,55 @@
+kill(all);
+load("integer_sequence")$
+
+list_slice(l,n,m):=if (n>0) then rest(rest(l,n+m-1-length(l)),n-1)
+  else rest(rest(l,m+n-1),length(l)+n)$
+
+data: read_nested_list("../supermuc-data/c3e2-nbeads10-nsolvent20-K_wave500-T_wave20-v_wave50-dsize150mass3/prints/moments_swimmercom.dat")$
+
+/* remove a first line */
+data: rest(data)$
+
+/* indexes for the corresponding variables */
+timeidx: 1;
+vcmxidx: 5;
+vcmxidy: 6;
+vcmxidz: 7;
+ntimesteps: length(data);
+
+load (descriptive)$
+t:   map(lambda([q], part(q, timeidx)), data)$
+vmx: map(lambda([q], part(q, vcmxidx)), data)$
+mean(vmx);
+
+nav: 100;
+s: sum(data[k][vcmxidx], k, 1, nav);
+moving: [];
+for k: nav+1 thru ntimesteps-1 do (moving: endcons(s, moving), s: s+data[k][vcmxidx]-data[k-nav][vcmxidx])$
+
+load("draw")$
+draw2d (points( rest(t, nav+1), moving/nav ), points(t, vmx ));
+
+load(fft);
+
+hipow2(n):= 2^floor( log(n)/log(2) );
+
+nfft: hipow2(length(vmx));
+x   : 1 .. nfft$
+/* gfun(x, x0, sigma):= exp(-(x-x0)^2/sigma^2)$ */
+gfun(x, x0, sigma):= if abs(x-x0)<sigma then 1 else 0;
+
+sigma0: nav/2;
+x0: nfft/2;
+assume(sigma>0);
+I: quad_qag(lambda([z], gfun(z, x0, sigma0)), z, 0, nfft, 3, 'epsrel=5d-8)[1];
+
+gaus: float(map(lambda([q], gfun(q, x0, sigma0)), x)/I)$
+gaus_fft: fft(gaus)$
+vmx_fft: fft(list_slice(vmx, 1, nfft))$
+
+conv_fft: vmx_fft*gaus_fft$
+smoothed: inverse_fft(conv_fft)$
+
+draw2d (color='red, point_type=0, points_joined=true, points(nfft*realpart(smoothed)),
+  color='green,
+  points( moving/nav ))$
