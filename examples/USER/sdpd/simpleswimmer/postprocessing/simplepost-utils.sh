@@ -39,7 +39,8 @@ function getp() {
 }
 
 function makemsd() {
-    d=$1
+    local d=$1
+    local f=$2
     awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime' $f | awk 'NR==1{t0=$1} {print $1-t0}' > ${d}/prints/msd.dat.time
     awk --lint=fatal -v cuttime=${cuttime} '$1>cuttime{print $2, $3, $4}' $f | msd -f "/dev/stdin" >  ${d}/prints/msd.dat.aux
     paste ${d}/prints/msd.dat.time ${d}/prints/msd.dat.aux > ${d}/prints/msd.dat
@@ -47,11 +48,22 @@ function makemsd() {
 }
 
 function linreg() {
-    d=$1
-    awk -v cuttime=$2 'NF==2&&$1<cuttime{print $1, sqrt($2)}' ${d}/prints/msd.dat | awk -f linreg.awk 
+    local d=$1
+    awk -v cuttime=$2 'NF==2&&$1<cuttime{print $1, sqrt($2)}' ${d}/prints/msd.dat > ${d}/prints/fit.dat
+    awk -v cuttime=$2 'NF==2&&$1<cuttime{print $1, sqrt($2)}' ${d}/prints/msd.dat | awk -f linreg.awk
 }
 
+function movingave() {
+    local d=$1
+    local f=$2
+    awk --lint=fatal -v cuttime=${cuttime} 'NR>1&&$1>cuttime' ${f} | \
+	awk -v xidx=5 -v tidx=1 -f moving-average.awk  > ${d}/prints/movingave.dat
+}
 
+function gist () {
+    awk --lint=fatal -v cuttime=${cuttime} 'NR>1&&$1>cuttime{print $5}' ${f} | gsl-histogram -5.0 5.0 20 > \
+	${d}/prints/vx-mom.hist
+}
 
 
 # getp ../supermuc-data/c3e2-nbeads10-nsolvent5-K_wave500-T_wave20-v_wave2-dsize150mass3/ polymer_concentration
