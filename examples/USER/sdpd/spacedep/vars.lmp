@@ -1,22 +1,22 @@
 variable           kb  equal 1.3806503e-23
 
 variable           dx   equal 1.2/15.0
-variable           Ly  equal 30*${dx}
-variable           Lx  equal 30*${dx}
+variable           Ly  equal ${nx}*${dx}
+variable           Lx  equal ${nx}*${dx}
 if "${ndim}==3" then "variable           Lz  equal 15*${dx}"
 
 variable           sdpd_rho equal  1.0
 variable           sdpd_rho0 equal 1.0
-variable           sdpd_gamma equal 7.0
-variable           dt_factor equal 0.1
+variable           sdpd_gamma equal 1.0
+variable           dt_factor equal 0.05
 
 #variable           sdpd_c equal    300.0
 #variable           sdpd_eta equal  20.0
 
 #variable           sdpd_background equal 0.9
-variable           sdpd_temp equal 1.0/${kb}
+variable           sdpd_temp equal 0.0/${kb}
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
-variable           h equal 4.0*${dx}
-variable           ktype string wendland4
+variable           h equal ${nkernel}*${dx}
+#variable           ktype string ${ktype}
 variable           Nfreq equal 1000
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}

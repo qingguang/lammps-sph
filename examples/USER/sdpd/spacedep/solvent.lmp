@@ -10,16 +10,21 @@ communicate        single vel yes
 include            vars.lmp
 # create fluid particles
 include            ${ndim}d-lattice.lmp
-create_atoms       1 region box
+variable            natoms equal ${nx}^${ndim}
+create_atoms        1 random ${natoms} 12345678 box
 mass               *  ${sdpd_mass}
 #read_data          ${dname}/poly3d.txt
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
 
-pair_style         hybrid/overlay sdpd/rhosum/spacedep 1 sdpd/spacedep
-pair_coeff         * * sdpd/spacedep     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
-pair_coeff         * * sdpd/rhosum/spacedep   ${h} ${ktype}
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd    ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+
+#pair_style         hybrid/overlay sdpd/rhosum/spacedep 1 sdpd/spacedep
+#pair_coeff         * * sdpd/spacedep     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+#pair_coeff         * * sdpd/rhosum/spacedep   ${h} ${ktype}
 
 compute            rho_peratom all meso_rho/atom
 compute            ke all ke
@@ -50,8 +55,17 @@ timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-run     2000
+variable           ntprerun equal round(0.016/${dt})
+run                ${ntprerun}
+
+pair_style         hybrid/overlay sdpd/rhosum/spacedep 1 sdpd/spacedep
+pair_coeff         * * sdpd/spacedep     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum/spacedep   ${h} ${ktype}
+
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
-run     200000
+
+variable           nsteps equal round(0.16/${dt})
+run                ${nsteps}
+
 

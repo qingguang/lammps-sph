@@ -87,7 +87,7 @@ void PairSDPDSpaceDepMass::compute(int eflag, int vflag) {
   double xtmp, ytmp, ztmp, delx, dely, delz, fpair;
 
   int *ilist, *jlist, *numneigh, **firstneigh;
-  double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, ihsq, velx, vely, velz;
+  double vxtmp, vytmp, vztmp, fi, fj, h, ih, ihsq, velx, vely, velz;
   double rsq, delVdotDelR;
 
   if (eflag || vflag)
@@ -151,10 +151,14 @@ void PairSDPDSpaceDepMass::compute(int eflag, int vflag) {
     itype = type[i];
     jlist = firstneigh[i];
     jnum = numneigh[i];
-
-    imass = mass[itype];
-    if (x[i][0]>0.5*(domain->boxlo[0]+domain->boxhi[0])) imass=2*imass;
-
+    double imass = mass[itype];
+    if (
+	(x[i][0]>0.25*(domain->boxlo[0]+domain->boxhi[0])) && 
+	(x[i][0]<0.75*(domain->boxlo[0]+domain->boxhi[0])) &&
+	(x[i][1]>0.25*(domain->boxlo[1]+domain->boxhi[1])) && 
+	(x[i][1]<0.75*(domain->boxlo[1]+domain->boxhi[1]))
+	) imass=2*imass;
+    
     fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
@@ -167,9 +171,13 @@ void PairSDPDSpaceDepMass::compute(int eflag, int vflag) {
       rsq = delx * delx + dely * dely + delz * delz;
       jtype = type[j];
 
-      jmass = mass[jtype];
-      if (x[j][0]>0.5*(domain->boxlo[0]+domain->boxhi[0])) jmass=2*jmass;
-
+      double jmass = mass[jtype];
+      if (
+	  (x[j][0]>0.25*(domain->boxlo[0]+domain->boxhi[0])) && 
+	  (x[j][0]<0.75*(domain->boxlo[0]+domain->boxhi[0])) &&
+	  (x[j][1]>0.25*(domain->boxlo[1]+domain->boxhi[1])) && 
+	  (x[j][1]<0.75*(domain->boxlo[1]+domain->boxhi[1]))
+	  ) jmass=2*jmass;
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;
