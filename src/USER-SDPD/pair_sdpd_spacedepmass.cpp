@@ -157,7 +157,7 @@ void PairSDPDSpaceDepMass::compute(int eflag, int vflag) {
 	(x[i][0]<0.75*(domain->boxlo[0]+domain->boxhi[0])) &&
 	(x[i][1]>0.25*(domain->boxlo[1]+domain->boxhi[1])) && 
 	(x[i][1]<0.75*(domain->boxlo[1]+domain->boxhi[1]))
-	) imass=2*imass;
+	) imass=4*imass;
     
     fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
@@ -177,7 +177,7 @@ void PairSDPDSpaceDepMass::compute(int eflag, int vflag) {
 	  (x[j][0]<0.75*(domain->boxlo[0]+domain->boxhi[0])) &&
 	  (x[j][1]>0.25*(domain->boxlo[1]+domain->boxhi[1])) && 
 	  (x[j][1]<0.75*(domain->boxlo[1]+domain->boxhi[1]))
-	  ) jmass=2*jmass;
+	  ) jmass=4*jmass;
       if (rsq < cutsq[itype][jtype]) {
         h = cut[itype][jtype];
         ih = 1.0 / h;

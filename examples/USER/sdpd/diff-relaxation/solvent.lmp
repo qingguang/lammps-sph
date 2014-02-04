@@ -1,0 +1,94 @@
+echo               both
+log                ${dname}/log.lammps
+shell              "mkdir -p" ${dname}/prints/
+dimension          ${ndim}
+units              si
+atom_style         hybrid  bond meso
+communicate        single vel yes
+# create simulation box
+
+#3D box
+include            vars.lmp
+# create fluid particles
+include            ${ndim}d-lattice.lmp
+#create_atoms       1 region box
+variable            natoms equal ${nx}^${ndim}
+create_atoms        1 random ${natoms} 12345678 box
+mass               *  ${sdpd_mass}
+#read_data          ${dname}/poly3d.txt
+
+mass               * ${sdpd_mass}
+set                group all meso_rho ${sdpd_rho}
+
+# ************************ 
+variable           lambda       equal 1.0
+variable           maxD         equal 2*PI*${Lx}/${lambda}
+variable           A            atom   sin(2*PI*x/${Lx}/${lambda})
+variable           dA           atom   2*PI/${Lx}/${lambda}*cos(2*PI*x/${Lx}/${lambda})
+compute            sph_diff     all meso_diff/atom ${h} ${ktype} v_A
+variable           dAsphx       atom c_sph_diff[1]
+variable           dA_err       atom abs(v_dA-v_dAsphx)/${maxD}
+compute            cave         all reduce ave v_dA_err
+# ***********************
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
+
+compute            rho_peratom all meso_rho/atom
+compute            ke all ke
+compute            sdpd_kin all temp
+
+# min(rho) and max(rho)
+compute            max_rho_peratom all reduce max c_rho_peratom
+compute            min_rho_peratom all reduce min c_rho_peratom
+# ave(rho)
+compute            ave_rho_peratom all reduce ave c_rho_peratom
+# (rho - ave(rho))^2
+variable           dsq_rho_peratom atom (c_rho_peratom-c_ave_rho_peratom)^2
+# ave( (rho - ave(rho))^2 )
+compute            ave_dsq_rho_peratom all reduce ave v_dsq_rho_peratom
+
+fix                all_rhostatistics all print ${Nprint} &
+"${physical_time} $(c_min_rho_peratom ) $(c_max_rho_peratom) $(c_ave_dsq_rho_peratom)" &
+screen no file ${dname}/prints/rho.dat
+
+
+fix                integrate_fix_full all meso
+
+# "profile" corrected temperature
+compute         pTemp all temp/profile 1 1 0 y 10
+variable        nTemp equal c_pTemp*${kb}
+
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom  v_dAsphx v_dA v_dA_err
+dump_modify        dump_id first yes
+dump_modify        dump_id sort id
+dump_modify        dump_id pad 8
+
+thermo_style       custom step c_sdpd_kin v_nTemp c_cave
+thermo_modify      norm no
+thermo             100
+
+neighbor           0.0 bin
+neigh_modify       every 1
+
+restart 10000 ${dname}/sdpd.restart
+run                20000
+
+variable           sdpd_eta_relax equal ${sdpd_eta}/10
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta_relax} 0.0 ${sdpd_gamma} ${sdpd_background}
+run                20000
+
+variable           sdpd_eta_relax equal ${sdpd_eta}/100
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta_relax} 0.0 ${sdpd_gamma} ${sdpd_background}
+run                20000
+
+variable           sdpd_eta_relax equal ${sdpd_eta}/1000
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta_relax} 0.0 ${sdpd_gamma} ${sdpd_background}
+run                20000
+
+variable           sdpd_eta_relax equal 0.0
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta_relax} 0.0 ${sdpd_gamma} ${sdpd_background}
+compute            cRDF  all rdf 50
+fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
+run                20000

@@ -55,7 +55,7 @@ timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-variable           ntprerun equal round(0.016/${dt})
+variable           ntprerun equal round(0.0016/${dt})
 run                ${ntprerun}
 
 pair_style         hybrid/overlay sdpd/rhosum/spacedep 1 sdpd/spacedep
@@ -65,7 +65,7 @@ pair_coeff         * * sdpd/rhosum/spacedep   ${h} ${ktype}
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
-variable           nsteps equal round(0.16/${dt})
+variable           nsteps equal round(0.016/${dt})
 run                ${nsteps}
 
 
