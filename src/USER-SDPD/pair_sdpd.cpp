@@ -36,6 +36,8 @@
 #include "update.h"
 #include <iostream>
 
+#define EPSILON 1e-6
+
 using namespace LAMMPS_NS;
 
 void PairSDPD::init_style()
@@ -469,6 +471,11 @@ void PairSDPD::ev_tally_sdpd(int i, int j, int nlocal, int newton_pair,
 
 double LAMMPS_NS::sdpd_equation_of_state(double rho, double rho0, double c, 
 			      double gamma, double rbackground) {
+  if (abs(gamma)<EPSILON) {
+    // if gamma = 0 use only fixed background pressure
+    return pow(c,2)*rbackground;
+  } else {
     return pow(c,2)*pow(rho,gamma)*pow(rho0,1-gamma)*pow(gamma,-1)
       -pow(c,2)*pow(rbackground,gamma)*rho0*pow(gamma,-1);
+  }
 }

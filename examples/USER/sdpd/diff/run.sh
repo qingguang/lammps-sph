@@ -12,14 +12,15 @@ fi
 
 nproc=8
 ndim=2
-sdpd_eta=1.00e+00
-sdpd_background=0.0
+sdpd_eta=1e-1
+sdpd_background=1.0
 sdpd_c=1.00e+01
-nx=256
-n=4.20
+nx=32
+n=3.50
 ktype=laguerre2wendland4eps
+#ktype=quintic
 
-dname=big-c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
+dname=c${sdpd_c}-ndim${ndim}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
 vars="-var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
       -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background} \
