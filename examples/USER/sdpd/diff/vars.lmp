@@ -8,7 +8,7 @@ variable           dx   equal ${Lx}/${nx}
 
 variable           sdpd_rho equal  1.0
 variable           sdpd_rho0 equal 1.0
-variable           sdpd_gamma equal 0.0
+#variable           sdpd_gamma equal 0.0
 variable           dt_factor equal 0.1
 
 #variable           sdpd_c equal    300.0
@@ -19,5 +19,5 @@ variable           sdpd_temp equal 1.0/${kb}
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal ${n}*${dx}
 #variable           ktype string ${ktype}
-variable           Nfreq equal 1000
+variable           Nfreq equal 10000
 variable           sdpd_mass equal ${sdpd_rho}*${dx}^${ndim}

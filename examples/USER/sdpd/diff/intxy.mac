@@ -1,7 +1,7 @@
-define_variable(ncut, 3.0, float)$
+define_variable(ncut, 3.5, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
-define_variable(finput, "c1.00e+01-ndim2-eta1e-2-sdpd_background1.0-nx32-n3.00-ktypequintic/dump00021000.dat", any)$
+define_variable(finput, "c1.00e+01-ndim2-eta1e-1-sdpd_background1.0-nx32-n3.50-ktypequintic/dump00073000.dat", any)$
 define_variable(ktype, ['quintic, 2], any)$
 
 /*
