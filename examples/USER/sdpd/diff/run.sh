@@ -10,16 +10,15 @@ else
     exit -1
 fi
 
-nproc=4
+nproc=8
 ndim=2
-sdpd_eta=1e-2
-sdpd_background=0.0
+sdpd_eta=1e-1
+sdpd_background=0.99
 sdpd_c=10.00
 sdpd_gamma=1.00
 nx=32
 n=4.00
-#ktype=laguerrewendland4eps
-ktype=quintic
+ktype=wendland4
 
 dname=c${sdpd_c}-gamma${sdpd_gamma}-eta${sdpd_eta}-sdpd_background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
