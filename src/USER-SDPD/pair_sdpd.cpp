@@ -88,7 +88,7 @@ void PairSDPD::compute(int eflag, int vflag) {
   double xtmp, ytmp, ztmp, delx, dely, delz, fpair;
 
   int *ilist, *jlist, *numneigh, **firstneigh;
-  double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, ihsq, velx, vely, velz;
+  double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, velx, vely, velz;
   double rsq, delVdotDelR;
 
   if (eflag || vflag)
@@ -105,7 +105,6 @@ void PairSDPD::compute(int eflag, int vflag) {
   double *Vol  = atom->e;
   double *dVol = atom->de;
 
-  double *drho = atom->drho;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -226,7 +225,8 @@ void PairSDPD::compute(int eflag, int vflag) {
             _dUi[di] = 0.0;
           }
         }
-	fpair = - (imass*imass*fi/(rho[i]*rho[i]) + jmass*jmass*fj/(rho[j]*rho[j])) * wfd;
+	//fpair = - (imass*imass*fi/(rho[i]*rho[i]) + jmass*jmass*fj/(rho[j]*rho[j])) * wfd;
+	fpair = -imass*jmass* (fi/(rho[i]*rho[i]) + fj/(rho[j]*rho[j])) * wfd;
 	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
 	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
 	if (ndim ==3 ) {
