@@ -19,7 +19,7 @@ sdpd_gamma=1.00
 nx=30
 n=3.80
 ktype=wendland4
-temp=0.001
+temp=0.0001
 
 dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
 
