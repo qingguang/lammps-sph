@@ -65,11 +65,6 @@ timestep           ${dt}
 restart 10000 ${dname}/sdpd.restart
 
 variable           nstep equal round(2000.0/${dt})
-# run with temperature
-run                0.0
-
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
-
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 run                ${nstep}
