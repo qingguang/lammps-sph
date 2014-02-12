@@ -1,0 +1,8 @@
+# prints total moments, angular moments, and kinetic energies
+fix                all_totmoments all print ${Nprint} &
+"${physical_time} &
+$(xcm(all,x)) $(xcm(all,y)) $(xcm(all,z)) &
+$(vcm(all,x)) $(vcm(all,y)) $(vcm(all,z)) &
+$(angmom(all,x)) $(angmom(all,y)) $(angmom(all,z)) &
+$(ke(all))" &
+screen no file ${dname}/prints/moments_all.dat
