@@ -13,12 +13,19 @@ include            vars.lmp
 include            ${ndim}d-lattice.lmp
 #create_atoms       1 region box
 variable            natoms equal ${nx}^${ndim}
-create_atoms        1 random ${natoms} 12345678 box
+if                  "${grid}==1" then &
+    "create_atoms    1 box" &
+else &
+    "create_atoms        1 random ${natoms} 12345678 box"
 mass               *  ${sdpd_mass}
 #read_data          ${dname}/poly3d.txt
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
+
+pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 
 # ************************ 
 variable           lambda       equal 1.0
@@ -30,10 +37,6 @@ variable           dAsphx           atom c_sph_diff[1]
 variable           dA_err       atom abs(v_dA-v_dAsphx)/${maxD}
 compute            cave         all reduce ave v_dA_err
 # ***********************
-
-pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
-pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 
 compute            rho_peratom all meso_rho/atom
 compute            ke all ke
@@ -55,7 +58,7 @@ thermo_modify      norm no
 thermo             100
 
 neighbor           0.0 bin
-neigh_modify       every 1
+neigh_modify       every 1 delay 1 check no
 
 
 include            settimestep.lmp
@@ -63,20 +66,23 @@ timestep           ${dt}
 
 restart 10000 ${dname}/sdpd.restart
 
-variable           nstep equal round(2000.0/${dt})
+if "${grid}==1" then &                
+    "variable           nstep equal round(2.0/${dt})" &
+else &
+    "variable           nstep equal round(20.0/${dt})"
+
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
 variable           physical_time  equal dt*step
 include            moments.lmp
-
 if "${ndim}==2" then "fix e2d all enforce2d"
 
-run                30000
+#run                10000
 
 velocity           all set 0 0 0
-variable           sdpd_temp   equal 0
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}
+pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 
 run                ${nstep}
 

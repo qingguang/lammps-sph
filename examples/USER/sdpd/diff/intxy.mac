@@ -1,8 +1,10 @@
-define_variable(ncut, 3.8, float)$
+define_variable(ncut, 4.67, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
-define_variable(finput, "c10.00-temp0.0001-gamma1.00-eta1.0-background0.00-nx30-n3.80-ktypewendland4-p0.1/dump00283000.dat", any)$
+define_variable(finput, "c10.00-temp0.0001-gamma1.00-eta1.0-background0.00-nx30-n4.67e+00-ktypelaguerrewendland4eps-grid0/dump00082000.dat", any)$
 define_variable(ktype, wendland4, any)$
+
+print("processing: ", finput);
 
 
 /*
@@ -59,7 +61,7 @@ nselect: npart;
 getcell():= block([i, j, cell_lst], 
   cell_lst: makelist([], i, 1, nselect),
   for i: 1 thru nselect do (
-    if mod(i, 100)=0 then print("creating a cell list: ", i, "/", nselect),
+    if mod(i, 10)=0 then print("creating a cell list: ", i, "/", nselect),
      for j: 1 thru npart do block([
       rr: vabs(dR(r[i], r[j]))],
       if rr<cutoff then cell_lst[i]: cons(j, cell_lst[i])

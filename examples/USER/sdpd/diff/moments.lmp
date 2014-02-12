@@ -6,3 +6,9 @@ $(vcm(all,x)) $(vcm(all,y)) $(vcm(all,z)) &
 $(angmom(all,x)) $(angmom(all,y)) $(angmom(all,z)) &
 $(ke(all))" &
 screen no file ${dname}/prints/moments_all.dat
+
+# print a error of dA approximation
+variable          vave equal c_cave
+fix               all_totalerro all print ${Nprint} &
+"${physical_time} ${vave}" &
+screen no file ${dname}/prints/error_all.dat
