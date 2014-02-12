@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=2
 sdpd_eta=1.0
 sdpd_background=0.00
@@ -21,7 +21,7 @@ n=3.80
 ktype=wendland4
 temp=0.0001
 
-dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}
+dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}-p0.1
 
 vars="-var sdpd_gamma ${sdpd_gamma} -var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
       -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background} \

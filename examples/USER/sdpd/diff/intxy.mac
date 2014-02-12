@@ -1,20 +1,16 @@
 define_variable(ncut, 3.8, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
-define_variable(finput, "c10.00-temp0.001-gamma1.00-eta1.0-background0.00-nx30-n3.80-ktypewendland4/dump00199000.dat", any)$
-define_variable(ktype, ['quintic, 2], any)$
+define_variable(finput, "c10.00-temp0.0001-gamma1.00-eta1.0-background0.00-nx30-n3.80-ktypewendland4-p0.1/dump00283000.dat", any)$
+define_variable(ktype, wendland4, any)$
 
-/*
-load(interpol)$
-rdf: read_matrix(sconcat(finput, ".rdf"))$
-g(x):= if x>cutoff then 1 else ''(cspline(rdf, d1=0, dn=0))$
-*/
 
 /*
 if file dump2maxima.mac is not found run script
 lammps-sdpd/tools/maxima/setupt.sh from lammps-sdpd/tools/maxima/
 directory
 */
+
 load("dump2maxima.mac");
 [lmp_data, atom_data]: dump2maxima(finput)$
 Lx: lmp_data['xhi] - lmp_data['xlo]$
@@ -29,7 +25,6 @@ define_variable(np, 40, integer)$
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
-define_kernel(2, cutoff, ktype, 'wq, 'dwq);
 wxy(x, y):= block([r: sqrt(x^2+y^2)], w(r));
 dwxy(x, y):= block([r: sqrt(x^2+y^2)], dw(r) * x/r);
 
@@ -47,6 +42,7 @@ npart: lmp_data['natoms];
 sdpd_mass: 1.0*(1.2/30.0)^2;
 
 vabs(R):= sqrt(R.R);
+/* minimal distance between two particles (including effects of periodic boundaries) */
 dR(A, B):= block([del, dmin, d, dV],
   dmin: +inf,
   for del in map(lambda([idx], idx*[Lx, Ly]), listify(cartesian_product( {-1, 0, 1}, {-1, 0, 1}))) do (
@@ -63,7 +59,7 @@ nselect: npart;
 getcell():= block([i, j, cell_lst], 
   cell_lst: makelist([], i, 1, nselect),
   for i: 1 thru nselect do (
-    print(i),
+    if mod(i, 100)=0 then print("creating a cell list: ", i, "/", nselect),
      for j: 1 thru npart do block([
       rr: vabs(dR(r[i], r[j]))],
       if rr<cutoff then cell_lst[i]: cons(j, cell_lst[i])
@@ -78,64 +74,33 @@ if emptyp(errcatch(load(cellfile))) then
 
 /* get masses */
 m: makelist(sdpd_mass, i, 1, npart)$
+/* get density using summation formula */
 rho: makelist(
   block([],
     if mod(i, 100)=0 then print("calculating rho: ", i),
     m[i]*lsum(block(
         [dist: vabs(dR(r[i], r[j]))],
-        wq(dist)),
+        w(dist)),
       j, cell_lst[i])),
     i, 1, nselect
   )$
 float([apply('min, rho), apply('max, rho)]);
 
-/*
-nden: makelist(
-  block([],
-    if mod(i, 100)=0 then print("calculating nden: ", i),
-    lsum(block(
-        [dist: vabs(dR(r[i], r[j]))],
-        if dist<cutoff then 1 else 0),
-      j, cell_lst[i])),
-    i, 1, nselect
-  )$
-*/
-
-/* get dirivatives with respect to `x' */
-di: makelist(
-  (if mod(i, 100)=0 then print("calculating du/dx", i),
-    lsum(
-      if i=j then 0 else
-      block([rr: dR(r[i], r[j]),
-        ee: dR(r[i], r[j])/vabs(dR(r[i], r[j]))],
-        float(m[j]*dw(vabs(rr))/g(dist)*(A(r[i][1], r[i][2])/rho[i] + A(r[j][1], r[j][2])/rho[j]) * ee[1])
-        ),
-      j, cell_lst[i])
-    ),
-  i, 1, npart
-  )$
-
-/* select randomly np points, if np=0 select all points */
-xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx], di, rho))$
+/* randomly select  np points, if np=0 select all points */
+xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx], rho))$
 if np>0 then block([per], 
   per: random_permutation( makelist(i, i, length(xy_data))),
   per: sublist_indices(per, lambda([id], id<=np)),
   xy_data:  map( lambda([id], xy_data[id]), per))$
 
 q: 0$
-/* dF(xx, yy) */
 res: map(lambda([el],
-        block([xx: el[1], yy: el[2], dAsphx: el[3], dA_local: el[4], rho_local: el[5], d],
+        block([xx: el[1], yy: el[2], dAsphx: el[3], rho_local: el[4]],
           q: q + 1,
           print(q, "/", length(xy_data)),
-          [xx, yy, 1.0, dA(xx, yy), dAsphx, dA_local, rho_local])), xy_data)$
+          /* <xx> <yy> <smothed dA>, <exact dA> <dA SPH>, <density SPH> */
+          [xx, yy, dF(xx,yy), dA(xx, yy), dAsphx, rho_local])), xy_data)$
 
-foutput: printf(false, "~a.n~f.ktype~a.smoothd", finput, ncut, if listp(ktype) then first(ktype) else ktype)$
+foutput: printf(false, "~a.n~f.ktype~a.smoothed", finput, ncut, if listp(ktype) then first(ktype) else ktype)$
 write_data(float(res), foutput)$
 print(foutput)$
- 
-/* 
-ysmoth: map(lambda([x], dF(x, 0.0)), x)$
-plot2d([[discrete, x, abs(ysmoth-dy)]])$
-plot2d([[discrete, x, dy], [discrete, x, ysmoth]])$
-*/
