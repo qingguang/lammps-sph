@@ -18,7 +18,7 @@ sdpd_c=1.44e2
 sdpd_gamma=1.00
 nx=30
 n=$1
-ktype=laguerrewendland4eps
+ktype=quintic
 temp=0.0001
 grid=$2
 

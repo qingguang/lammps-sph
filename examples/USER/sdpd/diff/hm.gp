@@ -1,6 +1,12 @@
 lr(n, g)=sprintf("c1.44e2-temp0.0001-gamma1.00-eta8.0-background0.00-nx30-n%s-ktypelaguerrewendland4eps-grid%s/prints/error_all.dat", n, g)
 
+lr_b(n, g, b)=sprintf("c1.44e2-temp0.0001-gamma1.00-eta8.0-background%s-nx30-n%s-ktypelaguerrewendland4eps-grid%s/prints/error_all.dat", b, n, g)
+
+
 rdf(n, g)=sprintf("<tail -n 50 c1.44e2-temp0.0001-gamma1.00-eta8.0-background0.00-nx30-n%s-ktypelaguerrewendland4eps-grid%s/lrdf.dat", n, g)
+
+rdf_b(n, g, b)=sprintf("<tail -n 50 c1.44e2-temp0.0001-gamma1.00-eta8.0-background%s-nx30-n%s-ktypelaguerrewendland4eps-grid%s/lrdf.dat", b, n, g)
+
 
 set term x11 1
 set log y
@@ -25,4 +31,5 @@ plot \
      rdf("4.39e+00", "0") u 2:3 w lp,\
      rdf("4.61e+00", "0") u 2:3 w lp,\
      rdf("4.83e+00", "0") u 2:3 w lp,\
-     rdf("5.06e+00", "0") u 2:3 w lp
+     rdf("5.06e+00", "0") u 2:3 w lp,\
+     rdf("5.50e+00", "0") u 2:3 w lp

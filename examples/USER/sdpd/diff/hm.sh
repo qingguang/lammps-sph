@@ -7,7 +7,7 @@ for d in $(ls -d c*grid${grid}*); do
     finput="\"${f}\""
     ktype=laguerrewendland4eps
     
-    err=$(awk '$1>0.19{print $2; exit}' ${d}/prints/error_all.dat)
+    err=$(awk '$1>0.8{print $2; exit}' ${d}/prints/error_all.dat)
     echo ${n} ${err}
 done
 
