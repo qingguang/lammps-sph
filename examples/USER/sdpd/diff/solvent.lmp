@@ -22,6 +22,8 @@ mass               *  ${sdpd_mass}
 
 mass               * ${sdpd_mass}
 set                group all meso_rho ${sdpd_rho}
+variable           pVolume equal ${dx}^${ndim}
+set                group all meso_e   ${pVolume}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
@@ -48,7 +50,9 @@ fix                integrate_fix_full all meso
 compute         pTemp all temp/profile 1 1 0 y 10
 variable        nTemp equal c_pTemp*${kb}
 
-dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom  v_dAsphx v_dA v_dA_err
+compute            ie_atom all meso_e/atom
+compute            ie all reduce sum c_ie_atom
+dump               dump_id all custom ${Nfreq} ${dname}/dump*.dat id type x y z vx vy vz c_rho_peratom  v_dAsphx v_dA v_dA_err c_ie_atom
 dump_modify        dump_id first yes
 dump_modify        dump_id sort id
 dump_modify        dump_id pad 8
@@ -72,13 +76,13 @@ else &
     "variable           nstep equal round(20.0/${dt})"
 
 compute            cRDF  all rdf 50
-fix                fRDF  all ave/time 100 1 100 c_cRDF file ${dname}/lrdf.dat mode vector ave running
+fix                fRDF  all ave/time ${Nprint} 1 ${Nprint} c_cRDF file ${dname}/lrdf.dat mode vector ave running
 
 variable           physical_time  equal dt*step
 include            moments.lmp
 if "${ndim}==2" then "fix e2d all enforce2d"
 
-#run                10000
+run                10000
 
 velocity           all set 0 0 0
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}

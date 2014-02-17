@@ -14,10 +14,7 @@ variable           dt_factor equal 1.0
 #variable           sdpd_c equal    300.0
 #variable           sdpd_eta equal  20.0
 
-if "${grid}==1" then &
-    "variable           sdpd_temp equal 0.0" &
-else &
-    "variable           sdpd_temp equal ${temp}/${kb}"
+variable           sdpd_temp equal ${temp}/${kb}
 
 variable           sdpd_mu  equal ${sdpd_eta}/${sdpd_rho} 
 variable           h equal ${n}*${dx}
