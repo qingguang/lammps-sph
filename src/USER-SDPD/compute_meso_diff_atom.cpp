@@ -135,6 +135,7 @@ void ComputeMesoDiffAtom::compute_peratom()
 {
   double **x = atom->x;
   double *rho = atom->rho;
+  double *Vol = atom->e;
   int *type = atom->type;
   double *mass = atom->mass;
 
@@ -205,8 +206,10 @@ void ComputeMesoDiffAtom::compute_peratom()
 	if (domain->dimension == 3) {
 	  eij[2]= delz/sqrt(rsq);
 	}
+	
+	rho[i] = mass[itype]/Vol[i];
+	rho[j] = mass[jtype]/Vol[j];
 	double diff = mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]);
-	//double diff = mass[jtype] * wfd * varVector[j]/rho[j]);
 	diffVector[i][0] += diff * eij[0];
 	diffVector[i][1] += diff * eij[1];
 	if (domain->dimension == 3) {

@@ -154,6 +154,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
+    rho[i] = imass/Vol[i];
     fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
@@ -177,6 +178,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  wfd = ker->dw2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
+	rho[j] = imass/Vol[j];
 	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
 
         velx=vxtmp - v[j][0];
@@ -232,16 +234,16 @@ void PairSDPD::compute(int eflag, int vflag) {
 	if (ndim ==3 ) {
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	}
-   
         // change volume
-	dVol[i] += Vol[j] * delVdotDelR * wfd;
+	dVol[i] -= Vol[i] * Vol[j] * delVdotDelR * wfd * sqrt(rsq);
+
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (ndim ==3 ) {
 	    f[j][2] -= delz*fpair + velz*fvisc + _dUi[2];
 	  }
-	  dVol[j] += Vol[i] * delVdotDelR * wfd;
+	  dVol[j] += Vol[i] * Vol[j] * delVdotDelR * wfd;
         }
         //modify until this line
         if (evflag)
