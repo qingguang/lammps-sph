@@ -1,0 +1,7 @@
+kill(all);
+
+
+eq: diff(rho_a(t), t) = m_b*dv*dW;
+eq_s: ev(eq, rho_a(t)=m_a/V_a(t), diff);
+
+solve(eq_s, diff(V_a(t), t));
