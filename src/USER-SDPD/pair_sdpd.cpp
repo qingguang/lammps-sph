@@ -178,7 +178,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  wfd = ker->dw2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
-	rho[j] = imass/Vol[j];
+	rho[j] = jmass/Vol[j];
 	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
 
         velx=vxtmp - v[j][0];
@@ -235,7 +235,8 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	}
         // change volume
-	dVol[i] -= Vol[i] * Vol[j] * delVdotDelR * wfd * sqrt(rsq);
+	///         delVdotDelR = delx * velx + dely * vely + delz * velz;
+	dVol[i] -= Vol[i] * Vol[j] * delVdotDelR * wfd;
 
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
