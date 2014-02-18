@@ -17,9 +17,9 @@ sdpd_background=0.00
 sdpd_c=1.44e2
 sdpd_gamma=1.00
 nx=16
-n=3.0
-ktype=quintic
-temp=0.01
+n=4.5
+ktype=wendland4
+temp=0.05
 grid=1
 
 dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}-grid${grid}
