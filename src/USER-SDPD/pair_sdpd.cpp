@@ -99,12 +99,10 @@ void PairSDPD::compute(int eflag, int vflag) {
   double **v = atom->vest;
   double **x = atom->x;
   double **f = atom->f;
-  // double *rho = atom->rho;
   double *mass = atom->mass;
   // TODO: I "reuse" atom->e and atom->de to update volume of the atom
   double *Vol  = atom->e;
   double *dVol = atom->de;
-  double *rho = atom->rho;
 
   int *type = atom->type;
   int nlocal = atom->nlocal;
@@ -156,7 +154,7 @@ void PairSDPD::compute(int eflag, int vflag) {
     imass = mass[itype];
 
     double rhoi = imass/Vol[i];
-    fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
+    fi = sdpd_equation_of_state(rhoi, rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -180,7 +178,7 @@ void PairSDPD::compute(int eflag, int vflag) {
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
 	double rhoj = jmass/Vol[j];
-	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
+	fj = sdpd_equation_of_state(rhoj, rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
@@ -238,7 +236,7 @@ void PairSDPD::compute(int eflag, int vflag) {
         // change volume
 	///         delVdotDelR = delx * velx + dely * vely + delz * velz;
 	double dV =  - Vol[i]*Vol[j]*delVdotDelR*wfd;
-	dVol[i] -=  dV;
+	dVol[i] +=  dV;
 
 	if (newton_pair || j < nlocal) {
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
