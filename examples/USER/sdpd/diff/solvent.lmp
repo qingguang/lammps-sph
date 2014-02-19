@@ -82,7 +82,7 @@ variable           physical_time  equal dt*step
 include            moments.lmp
 if "${ndim}==2" then "fix e2d all enforce2d"
 
-run                10000
+run                20000
 
 velocity           all set 0 0 0
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}

@@ -10,13 +10,13 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=2
 sdpd_eta=1.0
 sdpd_background=0.00
 sdpd_c=1.44e2
-sdpd_gamma=2.00
-nx=30
+sdpd_gamma=1.00
+nx=16
 n=3.0
 ktype=quintic
 temp=0.05

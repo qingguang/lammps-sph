@@ -1,7 +1,6 @@
 kill(all);
 
+eq: diff(rho[a](t), t) = sum(m[b]*dv[a,b].dW[a,b], b, 1, N);
+eq_s: ev(eq, rho[a](t)=m[a]/V[a](t), diff);
 
-eq: diff(rho_a(t), t) = m_b*dv*dW;
-eq_s: ev(eq, rho_a(t)=m_a/V_a(t), diff);
-
-solve(eq_s, diff(V_a(t), t));
+factor(solve(eq_s, diff(V[a](t), t)));
