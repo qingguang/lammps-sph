@@ -1,10 +1,13 @@
+variable ftotal atom sqrt(fx^2+fy^2+fz^2)
+compute  fo all reduce max v_ftotal
+
 # prints total moments, angular moments, and kinetic energies
 fix                all_totmoments all print ${Nprint} &
 "${physical_time} &
 $(xcm(all,x)) $(xcm(all,y)) $(xcm(all,z)) &
 $(vcm(all,x)) $(vcm(all,y)) $(vcm(all,z)) &
 $(angmom(all,x)) $(angmom(all,y)) $(angmom(all,z)) &
-$(ke(all)) $(c_ie)" &
+$(ke(all)) $(c_ie) $(c_fo)" &
 screen no file ${dname}/prints/moments_all.dat
 
 # print a error of dA approximation

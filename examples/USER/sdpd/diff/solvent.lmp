@@ -26,8 +26,6 @@ variable           pVolume equal ${dx}^${ndim}
 set                group all meso_e   ${pVolume}
 
 pair_style         hybrid/overlay sdpd/rhosum 1 sdpd
-pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} ${sdpd_temp} ${sdpd_gamma} ${sdpd_background}
-pair_coeff         * * sdpd/rhosum   ${h} ${ktype}
 
 # ************************ 
 variable           lambda       equal 1.0
@@ -81,8 +79,6 @@ fix                fRDF  all ave/time ${Nprint} 1 ${Nprint} c_cRDF file ${dname}
 variable           physical_time  equal dt*step
 include            moments.lmp
 if "${ndim}==2" then "fix e2d all enforce2d"
-
-run                20000
 
 velocity           all set 0 0 0
 pair_coeff         * * sdpd     ${h} ${ktype} ${sdpd_rho0} ${sdpd_c} ${sdpd_eta} 0.0 ${sdpd_gamma} ${sdpd_background}

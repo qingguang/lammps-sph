@@ -1,5 +1,5 @@
-grid = [0, 1];
-n = linspace(3.5, 5.5, 10);
-dlmwrite("n.dat", n', " ", "precision", "%6.2e")
-dlmwrite("grid.dat", grid', " ", "precision", "%1.0f")
+n = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0];
+c = (n./4.0).^3 * 10
+dlmwrite("n.dat", n', " ", "precision", "%.2f")
+dlmwrite("c.dat", c', " ", "precision", "%2.2f")
 

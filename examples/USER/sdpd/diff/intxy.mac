@@ -1,17 +1,10 @@
-define_variable(ncut, 4.67, float)$
+define_variable(ncut, 3.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
-define_variable(finput, "c10.00-temp0.0001-gamma1.00-eta1.0-background0.00-nx30-n4.67e+00-ktypelaguerrewendland4eps-grid0/dump00082000.dat", any)$
+define_variable(finput, "c1.0-temp0.00-gamma1.00-eta1e-3-background0.00-nx30-n3.0-ktypewendland6-grid0/dump00003000.dat", any)$
 define_variable(ktype, wendland4, any)$
 
 print("processing: ", finput);
-
-
-/*
-if file dump2maxima.mac is not found run script
-lammps-sdpd/tools/maxima/setupt.sh from lammps-sdpd/tools/maxima/
-directory
-*/
 
 load("dump2maxima.mac");
 [lmp_data, atom_data]: dump2maxima(finput)$
@@ -86,7 +79,6 @@ rho: makelist(
       j, cell_lst[i])),
     i, 1, nselect
   )$
-float([apply('min, rho), apply('max, rho)]);
 
 /* randomly select  np points, if np=0 select all points */
 xy_data: transpose(matrix(atom_data['x], atom_data['y], atom_data['v_dAsphx], rho))$

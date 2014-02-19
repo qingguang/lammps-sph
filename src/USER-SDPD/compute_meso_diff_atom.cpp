@@ -134,7 +134,7 @@ void ComputeMesoDiffAtom::init_list(int id, NeighList *ptr)
 void ComputeMesoDiffAtom::compute_peratom()
 {
   double **x = atom->x;
-  double *Vol = atom->e;
+  double *rho = atom->rho;
   int *type = atom->type;
   double *mass = atom->mass;
 
@@ -206,9 +206,7 @@ void ComputeMesoDiffAtom::compute_peratom()
 	  eij[2]= delz/sqrt(rsq);
 	}
 	
-	double rhoi = mass[itype]/Vol[i];
-	double rhoj = mass[jtype]/Vol[j];
-	double diff = mass[jtype] * wfd * (varVector[i]/rhoi + varVector[j]/rhoj);
+	double diff = mass[jtype] * wfd * (varVector[i]/rho[i] + varVector[j]/rho[j]);
 	diffVector[i][0] += diff * eij[0];
 	diffVector[i][1] += diff * eij[1];
 	if (domain->dimension == 3) {

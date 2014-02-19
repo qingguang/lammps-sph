@@ -3,15 +3,15 @@
 }
 
 NF==2 {
-    if (p) {
-	print p
-    }
-    p = 0
+    n++
     next
 }
 
-$3>p {
-    p = $3
+n==nsnap && NF>2 {
+    print $2, $3
 }
 
+n>nsnap{
+    exit
+}
 
