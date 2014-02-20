@@ -1,16 +1,23 @@
 #!/bin/bash
 
-for d in $(ls -d c*); do
-    echo $d
-    n=$(echo $d | awk -v RS="-" '$1~"^n[0-9]"{gsub("n", ""); print}')
-    f=$(ls -1 ${d}/dump*.dat  | tail -n1)
-    finput="\"${f}\""
-    ktype=laguerrewendland4eps
+MAXIMA=/scratch/prefix-maxima-v5.28.0/bin/maxima
+#MAXIMA=maxima
+tr=3.0e-5
 
-    if [ ! -f "${f}.smothed" ]; then
-	/scratch/prefix-maxima/bin/maxima -r "ktype: ${ktype}$ n: ${n}$ finput: ${finput}$ batchload(\"intxy.mac\")$"
-    fi
+# needs an older version of maxima becouse of 
+# http://article.gmane.org/gmane.comp.mathematics.maxima.general/44570/
+
+for k in laguerrewendland4eps wendland6 quintic ; do
+    for n in 3.00 3.50 4.00 4.50 5.00 5.50 6.00; do
+	c=$(awk -v n=${n} '$1==n{print $2}' par.dat)
+	dname=c${c}-temp0.00-gamma1.00-eta1.0-background0.00-nx30-n${n}-ktype${k}-grid0
+	nn=$(awk -v tr=${tr} '$13<tr&&NR>3{print NR; exit}' ${dname}/prints/moments_all.dat)
+	finput=$(ls ${dname}/dump*.dat | awk -v n=${nn} 'NR==n')
+	finput="\"${finput}\""
+	${MAXIMA} -r "ktype: ${k}; ncut: ${n}$ finput: ${finput}$ batchload(\"intxy.mac\")$"
+    done
 done
+
 
 
 
