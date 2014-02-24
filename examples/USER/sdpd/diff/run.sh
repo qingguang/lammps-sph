@@ -10,7 +10,7 @@ else
     exit -1
 fi
 
-nproc=8
+nproc=1
 ndim=2
 sdpd_eta=1.0
 sdpd_background=0.00
@@ -19,10 +19,10 @@ sdpd_gamma=1.00
 nx=30
 n=$1
 ktype=laguerrewendland4eps
-temp=0.00
-grid=0
+temp=0.0025
+grid=1
 
-dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}-grid${grid}
+dname=c${sdpd_c}-temp${temp}-gamma${sdpd_gamma}-eta${sdpd_eta}-background${sdpd_background}-nx${nx}-n${n}-ktype${ktype}-grid${grid}-cons
 
 vars="-var sdpd_gamma ${sdpd_gamma} -var ndim ${ndim} -var dname ${dname} -var sdpd_c ${sdpd_c} \
       -var nx   ${nx} -var sdpd_eta ${sdpd_eta} -var sdpd_background ${sdpd_background} \

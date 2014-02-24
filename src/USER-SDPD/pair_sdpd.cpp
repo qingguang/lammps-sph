@@ -89,7 +89,7 @@ void PairSDPD::compute(int eflag, int vflag) {
 
   int *ilist, *jlist, *numneigh, **firstneigh;
   double vxtmp, vytmp, vztmp, imass, jmass, fi, fj, h, ih, velx, vely, velz;
-  double rsq, delVdotDelR;
+  double rsq;
 
   if (eflag || vflag)
     ev_setup(eflag, vflag);
@@ -100,8 +100,9 @@ void PairSDPD::compute(int eflag, int vflag) {
   double **x = atom->x;
   double **f = atom->f;
   double *mass = atom->mass;
-  double *rho  = atom->rho;
-  // TODO: I "reuse" atom->e and atom->de to update volume of the atom
+  //double *rho  = atom->rho;
+  double *Vol  = atom->e;
+  double *dVol = atom->de;
   int *type = atom->type;
   int nlocal = atom->nlocal;
   int newton_pair = force->newton_pair;
@@ -151,7 +152,9 @@ void PairSDPD::compute(int eflag, int vflag) {
 
     imass = mass[itype];
 
-    fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
+    double rhoi = imass/Vol[i];
+    fi = sdpd_equation_of_state(rhoi, rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);  
+    //fi = sdpd_equation_of_state(rho[i], rho0[itype], soundspeed[itype], sdpd_gamma[itype], sdpd_background[itype]);
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
@@ -174,14 +177,21 @@ void PairSDPD::compute(int eflag, int vflag) {
 	  wfd = ker->dw2d(sqrt(rsq)*ih);
           wfd = wfd * ih * ih * ih / sqrt(rsq);
         }
-	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
+	double rhoj = jmass/Vol[j];
+	fj = sdpd_equation_of_state(rhoj, rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
+//	fj = sdpd_equation_of_state(rho[j], rho0[jtype], soundspeed[jtype], sdpd_gamma[jtype], sdpd_background[jtype]);
 
         velx=vxtmp - v[j][0];
         vely=vytmp - v[j][1];
         velz=vztmp - v[j][2];
 
+        double svx=vxtmp + v[j][0];
+        double svy=vytmp + v[j][1];
+        double svz=vztmp + v[j][2];
+
         // dot product of velocity delta and distance vector
-        delVdotDelR = delx * velx + dely * vely + delz * velz;
+        double delVdotDelR = delx * velx + dely * vely + delz * velz;
+        double sumVdotDelR = delx * svx + dely * svy + delz * svz;
        
 	// Morris Viscosity (Morris, 1996)
 
@@ -197,7 +207,8 @@ void PairSDPD::compute(int eflag, int vflag) {
 	    eij[2]= delz/sqrt(rsq);
 	  }
  
-        double fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
+	double fvisc = 2 * viscosity[itype][jtype] / (rhoi * rhoj);
+        //double fvisc = 2 * viscosity[itype][jtype] / (rho[i] * rho[j]);
         fvisc *= imass * jmass * wfd;
         //define random force
         wiener.get_wiener_Espanol(sqrtdt);
@@ -222,13 +233,17 @@ void PairSDPD::compute(int eflag, int vflag) {
             _dUi[di] = 0.0;
           }
         }
-	fpair = -imass*jmass* (fi/(rho[i]*rho[i]) + fj/(rho[j]*rho[j])) * wfd;
+	//fpair = -(imass/rho[i])*(jmass/rho[j])*(fi + fj) * wfd  / 2.0;
+	fpair = -(imass/rhoi)*(jmass/rhoj)*(fi + fj) * wfd;
+	double dV =  Vol[i]*Vol[j]*sumVdotDelR*wfd / 2;
+	dVol[i] +=  dV;
 	f[i][0] += delx * fpair + velx * fvisc+_dUi[0];
 	f[i][1] += dely * fpair + vely * fvisc+_dUi[1];
 	if (ndim ==3 ) {
 	  f[i][2] += delz * fpair + velz * fvisc +_dUi[2];
 	}
 	if (newton_pair || j < nlocal) {
+	  dVol[j] -=  dV;
 	  f[j][0] -= delx*fpair + velx*fvisc + _dUi[0];
 	  f[j][1] -= dely*fpair + vely*fvisc + _dUi[1];
 	  if (ndim ==3 ) {
