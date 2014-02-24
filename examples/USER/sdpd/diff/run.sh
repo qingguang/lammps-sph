@@ -18,7 +18,7 @@ sdpd_c=$2
 sdpd_gamma=1.00
 nx=30
 n=$1
-ktype=wendland6
+ktype=laguerrewendland4eps
 temp=0.00
 grid=0
 

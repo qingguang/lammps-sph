@@ -16,7 +16,7 @@ define_variable(expr,  sin(2*%pi*x/Lx), any)$
 
 /* the number of points to sample, 0 means use all points in the dump
 file */
-define_variable(np, 40, integer)$
+define_variable(np, 300, integer)$
 
 load("sph-kernel.mac");
 define_kernel(2, cutoff, ktype, 'w, 'dw);
