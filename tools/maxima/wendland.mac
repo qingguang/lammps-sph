@@ -1,8 +1,7 @@
 /* returns a wendland polynom */
 load("pw.mac");
-load("romberg");
 
-laguerre(g, k):= subst(gen_laguerre(k, g, 'r), body, lambda([r], body));
+/* laguerre(g, k):= subst(gen_laguerre(k, g, 'r), body, lambda([r], body)); */
 
 wendland(ndim, k):= block([w, r],
   local(plusfun, I, p),

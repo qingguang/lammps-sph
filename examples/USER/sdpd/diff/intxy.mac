@@ -1,8 +1,9 @@
-define_variable(ncut, 3.0, float)$
+define_variable(ncut, 4.0, float)$
 define_variable(cutoff, 1.2/30.0 * ncut, float)$
 define_variable(ndim, 2, integer)$
-define_variable(finput, "c1.0-temp0.00-gamma1.00-eta1e-3-background0.00-nx30-n3.0-ktypewendland6-grid0/dump00003000.dat", any)$
+define_variable(finput, "c10.00-temp0.00-gamma1.00-eta1.0-background0.00-nx30-n4.00-ktypelaguerrewendland4eps-grid0/dump00280000.dat", any);
 define_variable(ktype, wendland4, any)$
+define_variable(lambda, 1.0, float);
 
 print("processing: ", finput);
 
