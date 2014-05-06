@@ -1,5 +1,5 @@
 define_variable(ncut, 6.0, float)$
-define_variable(ktype, wendland4, any)$
+define_variable(ktype, wendland6, any)$
 define_variable(finput, "c4.20-temp0.00-gamma1.00-eta1.00-background0.00-nx30-n3.00-ktypewendland6-grid0-beta/dump00013600.dat", any)$
 nx             : 30*ncut/3.0;
 dx             : 1.2/nx;
@@ -61,7 +61,7 @@ load ("descriptive")$
 load ("basic")
 l1_one(x, y):= abs(x -y);
 
-cutoff_list: float(Lx*logspace(1/1000, 1, 50));
+cutoff_list: float(Lx*logspace(1/1000, 1, 10));
 out : [];
 for cutoff in cutoff_list do ( 
   define_kernel(2, cutoff, ktype, 'w, 'dw),
