@@ -1,6 +1,7 @@
 define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr, dwexpr, b, ww, bs, sc, par: []],
   if listp(ktype) then (par: rest(ktype), ktype: first(ktype)),
   if ktype='quintic then (
+    norm[1]: 1/40,
     norm[2]: 63/(478*%pi),
     norm[3]: 9/(40*%pi),
     n:       3,
@@ -173,8 +174,8 @@ define_kernel(ndim, cutoff, ktype, w, dw):= block([norm, eps, fsim, dfsim, wexpr
     wvect(g):= subst(s=abs(g), if s<n then wexpr else 0),
     dwvect(g):= subst(s=abs(g), if s<n then dwexpr else 0)
     ),
-  define(funmake(w, [R]), norm[ndim]*wvect(n*R/cutoff)/cutoff^ndim),
-  define(funmake(dw, [R]), n*norm[ndim]/cutoff*dwvect(n*R/cutoff)/cutoff^ndim),
+  define(funmake(w, ['R]), norm[ndim]*wvect(n*'R/cutoff)/cutoff^ndim),
+  define(funmake(dw, ['R]), n*norm[ndim]/cutoff*dwvect(n*'R/cutoff)/cutoff^ndim),
   'done);
 
 /*

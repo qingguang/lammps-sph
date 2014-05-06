@@ -23,4 +23,4 @@ plot [:3.0][:] \
      n="6.00", c="33.75", rdf(k, n, c, f(tr, n, c, k)) @u lc 9
      
 
-call "saver.gp" "lrdf"     
+call "saver.gp" "lrdf"

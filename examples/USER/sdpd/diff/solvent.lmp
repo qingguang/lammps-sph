@@ -69,9 +69,9 @@ timestep           ${dt}
 restart 10000 ${dname}/sdpd.restart
 
 if "${grid}==1" then &                
-    "variable           nstep equal round(200.0/${dt})" &
+    "variable           nstep equal round(2000.0/${dt})" &
 else &
-    "variable           nstep equal round(200.0/${dt})"
+    "variable           nstep equal round(2000.0/${dt})"
 
 compute            cRDF  all rdf 50
 fix                fRDF  all ave/time ${Nprint} 1 ${Nprint} c_cRDF file ${dname}/lrdf.dat mode vector ave running

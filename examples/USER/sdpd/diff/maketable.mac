@@ -1,0 +1,9 @@
+kill(all);
+/* nx: 45; */
+nx: 10*ncut;
+Lx: 6/5*nx/30;
+dx: Lx/nx;
+h: ncut*dx;
+lmb: Lx;
+lmb/h;
+
