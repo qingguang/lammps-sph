@@ -21,12 +21,14 @@ if (test $1 = 1) then
   cp -p compute_meso_rho_atom.cpp ..
   cp -p compute_meso_colorgradient_atom.cpp ..
   cp -p compute_meso_t_atom.cpp ..
+  cp -p fix_adjust_mass.cpp ..
   cp -p fix_meso.cpp ..
   cp -p fix_setmeso.cpp ..
   cp -p fix_setmesode.cpp ..
   cp -p fix_meso_stationary.cpp ..
 
   cp -p fix_phase_change.h ..
+  cp -p fix_adjust_mass.h  ..
   cp -p pair_sph_colorgradient.h ..
   cp -p atom_vec_meso.h ..
   cp -p pair_sph_heatconduction.h ..
@@ -52,6 +54,7 @@ if (test $1 = 1) then
 
 elif (test $1 = 0) then
   rm -f ../fix_phase_change.cpp
+  rm -f ../fix_adjust_mass.cpp
   rm -f ../pair_sph_colorgradient.cpp
   rm -f ../atom_vec_meso.cpp
   rm -f ../pair_sph_heatconduction.cpp
@@ -76,6 +79,7 @@ elif (test $1 = 0) then
   rm -f ../fix_meso_stationary.cpp
 
   rm -f ../fix_phase_change.h
+  rm -f ../fix_adjust_mass.h
   rm -f ../pair_sph_colorgradient.h
   rm -f ../atom_vec_meso.h
   rm -f ../pair_sph_heatconduction.h
