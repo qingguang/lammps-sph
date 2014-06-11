@@ -18,12 +18,24 @@ else &
 "region             box block 0.0 ${Lx}  0.0 ${Ly} 0 ${Lz} units box"
 
 # crate one type of the particles
-create_box         1 box
+create_box         ${ncolors} box
 if ${ndim}==3 then &
 "lattice            sc ${dx} origin 0.5 0.5 0.5" &
 else &
 "lattice            sq ${dx} origin 0.5 0.5 0.0"
 create_atoms       1 region box
+
+label loop
+variable LoopVar loop ${ncolors}
+print "LoopVar = ${LoopVar}"
+variable           nc_block equal ${LoopVar}
+variable           nc_type  equal ${LoopVar}
+variable           nc_total equal ${ncolors}
+include            color_block.lmp
+next LoopVar
+jump SELF loop
+print "end of the uloop"
+
 
 # do full time integration for all particles
 fix                integrate_fix_full all meso

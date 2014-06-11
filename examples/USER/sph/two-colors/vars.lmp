@@ -23,3 +23,5 @@ variable          Nfreqimage equal 100
 
 variable          gx         equal 1e-4
 variable          sph_mass equal ${dx}^${ndim}*${sph_rho}
+
+variable          ncolors equal 10

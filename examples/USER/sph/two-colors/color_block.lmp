@@ -1,0 +1,16 @@
+# input variables
+# `nc_block' number of a new block
+# `nc_total' total number of blocks
+# `nc_type'  type of atoms in the block
+
+variable            nc_x1   equal (${nc_block}-1)*${Lx}/${nc_total}
+variable            nc_x2   equal ${nc_block}*${Lx}/${nc_total}
+variable            nc_y1   equal 0
+variable            nc_y2   equal ${Ly}
+
+variable            bname string bname${nc_block}
+region              ${bname} block ${nc_x1} ${nc_x2} ${nc_y1} ${nc_y2} ${nLz} ${pLz} units box
+set                 region ${bname} type ${nc_type}
+
+variable            bname delete
+variable            nc_x1 delete
